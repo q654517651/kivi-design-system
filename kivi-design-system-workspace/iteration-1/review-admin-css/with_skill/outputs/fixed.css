@@ -1,0 +1,196 @@
+/* 模型管理页 - 按 KIVI 设计规范 v2 修正
+ * 所有值都用 CSS 变量 + 兜底值：项目里还没加 v2 变量时按兜底值显示，加了以后自动跟着变量走。
+ * 「占位」= 规范里取值待定，照用，以后统一替换。
+ */
+
+/* ---------- 页面 ---------- */
+body {
+  background: var(--color-bg-fill-base, #0F1012);
+  color: var(--color-text-fill-primary, #FFFFFF);
+  font-family: var(--font-family, "PingFang SC"), sans-serif;
+  font-size: var(--font-size-13, 13px);              /* 界面主文字 13，阅读内容才用 14 */
+  line-height: var(--font-line-height-20, 20px);
+}
+
+.page-title {
+  font-size: var(--font-size-24, 24px);              /* 页面标题 24/32 */
+  line-height: var(--font-line-height-32, 32px);
+  font-weight: var(--font-weight-medium, 500);
+  margin-bottom: var(--spacing-xl, 24px);
+}
+
+/* ---------- 卡片：页面里的区域用 light-2，不用实色，不加投影 ---------- */
+.model-card {
+  background: var(--color-bg-fill-container-light-2, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--border-radius-md, 12px);
+  padding: var(--spacing-lg, 16px);
+}
+.model-card .desc {
+  color: var(--color-text-fill-secondary, rgba(255, 255, 255, 0.6));
+  font-size: var(--font-size-14, 14px);              /* 说明文字属于阅读内容，14/22 */
+  line-height: var(--font-line-height-22, 22px);
+}
+
+/* ---------- 按钮：默认中号 32 ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--spacing-xxs, 4px);
+  height: 32px; min-width: 64px;
+  padding: 0 var(--spacing-md, 12px);
+  border: 0; border-radius: var(--border-radius-sm, 8px);
+  font-size: var(--font-size-13, 13px);
+  line-height: var(--font-line-height-20, 20px);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text-fill-primary, #FFFFFF);
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));   /* 次要按钮 */
+  cursor: pointer;
+}
+.btn:hover  { background: var(--color-bg-fill-container-light-1-hover, rgba(255, 255, 255, 0.12)); }
+.btn:active { background: var(--color-bg-fill-container-light-1-pressed, rgba(255, 255, 255, 0.16)); }
+
+/* 大号 36：弹窗底栏、表单提交、页面上的主操作 */
+.btn--lg { height: 36px; min-width: 80px; padding: 0 var(--spacing-lg, 16px); }
+
+/* 主要按钮（生成）：品牌渐变 + 黑字，圆角跟普通按钮一样，不做胶囊。一屏只放一个。 */
+.btn-generate {
+  color: var(--color-text-fill-on-brand, #000000);
+  background: linear-gradient(90deg, var(--color-brand-gradient-1, #CEFF5D), var(--color-brand-gradient-2, #2BFF75));
+}
+.btn-generate:hover {
+  background:
+    linear-gradient(var(--color-bg-fill-container-light-1-hover, rgba(255, 255, 255, 0.12)) 0 0),
+    linear-gradient(90deg, var(--color-brand-gradient-1, #CEFF5D), var(--color-brand-gradient-2, #2BFF75));
+}
+.btn-generate:active {
+  background: linear-gradient(90deg, var(--color-brand-gradient-1, #CEFF5D), var(--color-brand-gradient-2, #2BFF75));
+  opacity: 0.8;
+}
+
+/* 危险按钮：只用在删除确认弹窗的底栏里，替换掉主要按钮。danger 取值是占位。 */
+.btn-delete {
+  color: var(--color-text-fill-primary, #FFFFFF);
+  background: var(--color-status-danger, #FF4D4F);
+}
+.btn-delete:hover {
+  background:
+    linear-gradient(var(--color-bg-fill-container-light-1-hover, rgba(255, 255, 255, 0.12)) 0 0),
+    var(--color-status-danger, #FF4D4F);
+}
+.btn-delete:active { background: var(--color-status-danger, #FF4D4F); opacity: 0.8; }
+
+/* 禁用：放在最后，压过上面所有类型的悬停和按下 */
+.btn:disabled {
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+  color: var(--color-text-fill-disabled, rgba(255, 255, 255, 0.2));
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* ---------- 标签：只展示，不能点 ---------- */
+.tag {
+  display: inline-flex; align-items: center;
+  gap: var(--spacing-xxs, 4px);
+  height: 24px;
+  padding: 0 var(--spacing-xs, 6px);
+  border-radius: var(--border-radius-xxs, 4px);
+  font-size: var(--font-size-12, 12px);
+  line-height: var(--font-line-height-20, 20px);
+  color: var(--color-text-fill-secondary, rgba(255, 255, 255, 0.6));
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));   /* 默认：参数、状态 */
+}
+/* 盖在模型封面图上的角标用这个 */
+.tag--on-media {
+  color: var(--color-on-media-text, #FFFFFF);
+  background: var(--color-on-media-fill, rgba(0, 0, 0, 0.4));
+}
+
+/* ---------- 下拉列表：菜单模板，玻璃，不加投影 ---------- */
+.dropdown {
+  background: var(--color-bg-fill-glass, rgba(24, 24, 24, 0.7));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: var(--border-radius-md, 12px);
+  padding: var(--spacing-xxs, 4px);
+  min-width: 160px; max-width: 320px; max-height: 360px;
+  overflow-y: auto;
+}
+.dropdown-item {
+  display: flex; align-items: center;
+  gap: var(--spacing-sm, 8px);
+  height: 36px;
+  padding: 0 var(--spacing-md, 12px);
+  border-radius: var(--border-radius-sm, 8px);
+  font-size: var(--font-size-13, 13px);
+  line-height: var(--font-line-height-20, 20px);
+  font-weight: var(--font-weight-regular, 400);
+  color: var(--color-text-fill-primary, #FFFFFF);
+  cursor: pointer;
+}
+.dropdown-item:hover { background: var(--color-bg-fill-container-light-2-hover, rgba(255, 255, 255, 0.08)); }
+/* 删除入口放菜单最后一项，用分割线隔开；danger 取值是占位 */
+.dropdown-item--danger { color: var(--color-status-danger, #FF4D4F); }
+.dropdown-item--danger:hover { background: var(--color-status-danger-subtle, rgba(255, 77, 79, 0.12)); }
+.dropdown-item.is-disabled {
+  background: transparent;
+  color: var(--color-text-fill-disabled, rgba(255, 255, 255, 0.2));
+  cursor: not-allowed;
+}
+.dropdown-divider {
+  height: 1px;
+  margin: var(--spacing-xxs, 4px) 0;
+  background: var(--color-border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+/* ---------- Tooltip：popup 实色，不加描边、模糊、投影 ---------- */
+.tooltip {
+  background: var(--color-bg-fill-popup, #2C2D2E);
+  color: var(--color-text-fill-primary, #FFFFFF);
+  font-size: var(--font-size-12, 12px);
+  line-height: var(--font-line-height-20, 20px);
+  padding: var(--spacing-xs, 6px) var(--spacing-md, 12px);   /* 总高 32 */
+  border-radius: var(--border-radius-sm, 8px);
+}
+
+/* ---------- 输入框：页面里用中号 32，弹窗里用大号 36 ---------- */
+.input {
+  height: 32px;
+  padding: 0 var(--spacing-md, 12px);
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+  border: 1px solid transparent;                     /* 留着透明描边，出错时加红边不跳位 */
+  border-radius: var(--border-radius-sm, 8px);
+  font-size: var(--font-size-13, 13px);
+  line-height: var(--font-line-height-20, 20px);
+  color: var(--color-text-fill-primary, #FFFFFF);
+}
+.input::placeholder { color: var(--color-text-fill-placeholder, rgba(255, 255, 255, 0.3)); }
+.input:hover { background: var(--color-bg-fill-container-light-1-hover, rgba(255, 255, 255, 0.12)); }
+/* 聚焦不加描边，只出现光标 */
+.input:focus {
+  outline: none;
+  border-color: transparent;
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+}
+.input--error,
+.input--error:focus { border-color: var(--color-status-danger, #FF4D4F); }   /* 占位色；下面的提示文字也换成 danger 并写清原因 */
+.input:disabled {
+  background: var(--color-bg-fill-container-light-2, rgba(255, 255, 255, 0.04));
+  color: var(--color-text-fill-disabled, rgba(255, 255, 255, 0.2));
+  cursor: not-allowed;
+}
+
+/* ---------- 弹窗：surface 底 + mask 遮罩，不模糊、不描边、不投影 ---------- */
+.modal-mask {
+  background: var(--color-bg-fill-mask, rgba(0, 0, 0, 0.6));
+}
+.modal {
+  width: 400px;                                      /* 尺寸 S；表单多的用 M 720 */
+  max-height: 80vh;
+  display: flex; flex-direction: column;
+  gap: var(--spacing-lg, 16px);
+  padding: var(--spacing-xl, 24px);
+  border-radius: var(--border-radius-lg, 16px);
+  background: var(--color-bg-fill-surface, #191A1B);
+}
+.modal .input { height: 36px; }                     /* 弹窗里的输入框用大号 */

@@ -1,0 +1,41 @@
+/* 模型管理页 - 后端同学写的 */
+body { background: #05080a; color: #fff; font-family: 'PingFang SC'; font-size: 14px; }
+
+.page-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+
+.model-card {
+  background: #191b1d;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.model-card .desc { color: rgba(255, 255, 255, 0.5); font-size: 14px; }
+
+.btn {
+  height: 40px; padding: 0 16px; border-radius: 12px;
+  font-size: 14px; font-weight: 600;
+  background: rgba(255, 255, 255, 0.06); color: #fff;
+}
+.btn:hover { background: rgba(255, 255, 255, 0.1); }
+.btn-generate {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ceff5d, #2bff75); color: #000;
+}
+.btn-delete { background: #2b2d31; color: #ff4d4f; }
+
+.tag { height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; background: rgba(0, 0, 0, 0.45); }
+
+.dropdown {
+  background: #2b2d31; border-radius: 16px; padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.dropdown-item { height: 44px; padding: 0 16px; border-radius: 12px; font-size: 14px; }
+.dropdown-item:hover { background: rgba(255, 255, 255, 0.1); }
+
+.tooltip { background: #36393d; font-size: 14px; padding: 8px 12px; border-radius: 8px; }
+
+.input { height: 40px; background: rgba(255, 255, 255, 0.04); border: 1px solid transparent; border-radius: 8px; }
+.input:focus { border-color: #2bff75; }
+
+.modal-mask { background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(24px); }
+.modal { background: #2b2d31; border-radius: 16px; padding: 24px; width: 480px; border: 1px solid rgba(255,255,255,.12); }

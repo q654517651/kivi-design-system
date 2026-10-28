@@ -1,0 +1,211 @@
+/*
+ * 模型管理页（按 KIVI 规范修正）
+ *
+ * - 颜色 / 间距 / 圆角 / 字号全部走 src/variable.less 的 token，写法 var(--token, 兜底值)
+ * - 不再改 body：页面背景和字体由 HeroUI dark 主题 + global.less 提供
+ * - 类名按 BEM 收进 .model-admin，建议放到页面目录的 index.module.less（CSS Modules 再隔离一层）
+ *
+ * 旧类名 → 新类名
+ *   body                 → .model-admin（页面根节点）
+ *   .page-title          → .model-admin__title
+ *   .model-card          → .model-admin__card
+ *   .model-card .desc    → .model-admin__card-desc
+ *   .btn                 → .model-admin__btn
+ *   .btn-generate        → .model-admin__btn .model-admin__btn--generate
+ *   .btn-delete          → 去掉，直接用 .model-admin__btn，点击后走 ConfirmModal 二次确认
+ *   .tag                 → .model-admin__tag（叠在封面图上时加 .model-admin__tag--on-media）
+ *   .dropdown            → .model-admin__dropdown
+ *   .dropdown-item       → .model-admin__dropdown-item
+ *   .tooltip             → .model-admin__tooltip
+ *   .input               → .model-admin__input
+ *   .modal-mask          → .model-admin__mask
+ *   .modal               → .model-admin__modal
+ */
+
+/* ========== 页面 ========== */
+.model-admin {
+  min-height: 100%;
+  background: var(--background, #05080a);
+  color: var(--color-text-fill-primary, #fff);
+  font-size: var(--font-size-md, 14px);
+}
+
+.model-admin__title {
+  margin-bottom: var(--spacing-lg, 16px);
+  color: var(--color-text-fill-primary, #fff);
+  font-size: var(--font-size-lg, 16px);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+/* ========== 卡片 ========== */
+/* 白 8% 叠在 #05080a 上 ≈ #191c1e，和原来的 #191b1d 看起来基本一样；暗色界面不用投影分层 */
+.model-admin__card {
+  padding: var(--spacing-lg, 16px);
+  border-radius: var(--border-radius-md, 12px);
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+}
+
+.model-admin__card-desc {
+  color: var(--color-text-fill-secondary, rgba(255, 255, 255, 0.5));
+  font-size: var(--font-size-md, 14px);
+}
+
+/* ========== 按钮 ========== */
+.model-admin__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xxs, 4px);
+  height: 36px;
+  padding: 0 var(--spacing-lg, 16px);
+  border: none;
+  border-radius: var(--border-radius-sm, 8px);
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+  color: var(--color-text-fill-primary, #fff);
+  font-size: var(--font-size-md, 14px);
+  font-weight: var(--font-weight-semibold, 600);
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
+}
+
+.model-admin__btn:hover:not(:disabled),
+.model-admin__btn:active:not(:disabled) {
+  background: var(--color-bg-fill-container-light-1-hover-active, rgba(255, 255, 255, 0.12));
+}
+
+.model-admin__btn:disabled {
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+  color: var(--color-text-fill-disabled, rgba(255, 255, 255, 0.2));
+  cursor: not-allowed;
+}
+
+/* 主操作（生成）：品牌渐变 + 黑字。hover/active 必须重新声明渐变，否则会被上面的通用 hover 底色盖掉 */
+.model-admin__btn--generate,
+.model-admin__btn--generate:hover:not(:disabled),
+.model-admin__btn--generate:active:not(:disabled) {
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-gradient-1, #ceff5d) 0%,
+    var(--color-brand-gradient-2, #2bff75) 100%
+  );
+  color: var(--black-100, #000);
+}
+
+.model-admin__btn--generate:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.model-admin__btn--generate:active:not(:disabled) {
+  opacity: 0.8;
+}
+
+.model-admin__btn--generate:disabled {
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+  color: var(--color-text-fill-disabled, rgba(255, 255, 255, 0.2));
+}
+
+/* ========== 标签 ========== */
+/* 放在卡片上 */
+.model-admin__tag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--spacing-xxs, 4px);
+  border-radius: var(--border-radius-xxs, 4px);
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+  color: var(--color-text-fill-secondary, rgba(255, 255, 255, 0.5));
+  font-size: var(--font-size-sm, 12px);
+}
+
+/* 叠在封面图上 */
+.model-admin__tag--on-media {
+  background: var(--color-bg-fill-container-dark, rgba(0, 0, 0, 0.4));
+  backdrop-filter: blur(4px);
+  color: var(--color-text-fill-primary, #fff);
+}
+
+/* ========== 下拉菜单（对齐 CustomMenu） ========== */
+.model-admin__dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs, 4px);
+  padding: var(--spacing-xxs, 4px);
+  border-radius: var(--border-radius-lg, 16px);
+  background: var(--color-bg-fill-popup-light-2, #2b2d31);
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.32);
+}
+
+.model-admin__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  height: 44px;
+  padding: 0 var(--spacing-md, 12px);
+  border-radius: var(--border-radius-md, 12px);
+  color: var(--color-text-fill-primary, #fff);
+  font-size: var(--font-size-md, 14px);
+  cursor: pointer;
+}
+
+.model-admin__dropdown-item:hover,
+.model-admin__dropdown-item:active {
+  background: var(--color-bg-fill-container-light-2-hover-active, rgba(255, 255, 255, 0.08));
+}
+
+/* ========== Tooltip ========== */
+.model-admin__tooltip {
+  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
+  border-radius: var(--border-radius-sm, 8px);
+  background: var(--color-bg-fill-popup-light-1, #36393d);
+  color: var(--color-text-fill-primary, #fff);
+  font-size: var(--font-size-md, 14px);
+}
+
+/* ========== 输入框 ========== */
+/* focus 不用品牌绿，靠底色加深 + 中性描边 */
+.model-admin__input {
+  height: 40px;
+  padding: 0 var(--spacing-md, 12px);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-sm, 8px);
+  background: var(--color-bg-fill-container-light-2, rgba(255, 255, 255, 0.04));
+  color: var(--color-text-fill-primary, #fff);
+  font-size: var(--font-size-md, 14px);
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.model-admin__input::placeholder {
+  color: var(--color-text-fill-placeholder, rgba(255, 255, 255, 0.3));
+}
+
+.model-admin__input:hover {
+  background: var(--color-bg-fill-container-light-2-hover-active, rgba(255, 255, 255, 0.08));
+}
+
+.model-admin__input:focus {
+  background: var(--color-bg-fill-container-light-2-hover-active, rgba(255, 255, 255, 0.08));
+  border-color: var(--color-border, rgba(255, 255, 255, 0.12));
+}
+
+/* ========== 弹窗（对齐 BaseModal / ConfirmModal） ========== */
+.model-admin__mask {
+  position: fixed;
+  inset: 0;
+  z-index: var(--zindex-shadow-model, 500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--black-60, rgba(0, 0, 0, 0.6));
+  backdrop-filter: blur(24px);
+}
+
+.model-admin__modal {
+  width: 480px;
+  padding: var(--spacing-xl, 24px);
+  border-radius: var(--border-radius-lg, 16px);
+  background: var(--color-bg-fill-popup-light-2, #2b2d31);
+}

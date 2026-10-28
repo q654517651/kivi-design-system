@@ -1,0 +1,47 @@
+// 结构与 MyAssetsContent 一致：外层滚动容器 + 内层 flex column，BatchActionBar 才能 sticky 吸底
+.batch_manage_demo {
+  height: 100vh;
+  overflow: auto;
+  background: var(--background, #05080a);
+
+  &-content {
+    min-height: 100%;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-top {
+    position: sticky;
+    top: 0;
+    z-index: var(--zindex-fixed, 400);
+    display: flex;
+    height: 78px;
+    padding-top: 14px;
+    padding-bottom: 24px;
+    gap: 24px;
+    background-color: var(--background, #05080a);
+  }
+
+  &-title {
+    align-self: center;
+    color: var(--color-text-fill-primary, #fff);
+    font-size: var(--font-size-lg, 16px);
+    font-weight: var(--font-weight-semibold, 600);
+  }
+
+  &-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-bottom: var(--spacing-lg, 16px);
+  }
+
+  &-card {
+    position: relative;
+    flex: 0 0 calc((100% - (7 - 1) * 4px) / 7);
+    aspect-ratio: 1 / 1;
+    border-radius: var(--border-radius-sm, 8px);
+    overflow: hidden;
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "指出 #05080a 应改为 base #0F1012（--color-bg-fill-base）",
+      "passed": false,
+      "evidence": "review.md 第四节称「body 背景 #05080a……本来就对」；fixed.css 写 `var(--background, #05080a)`，没改成 #0F1012。"
+    },
+    {
+      "text": "指出卡片和下拉的 box-shadow 都要去掉",
+      "passed": false,
+      "evidence": "卡片的投影去掉了，但下拉还保留了投影：fixed.css .model-admin__dropdown `box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.32)`（review 写的是对齐 CustomMenu）。"
+    },
+    {
+      "text": "指出按钮 40 高 / 圆角 12 / 14 号 600 应改为 36 或 32 高、圆角 8、13 号 500",
+      "passed": false,
+      "evidence": "高度改成 36、圆角改成 8，但字号字重没改：fixed.css `font-size: 14px`、`font-weight: 600`，不是 13 号 500。"
+    },
+    {
+      "text": "指出下拉菜单应改成玻璃（rgba(24,24,24,.7) + 1px 白 12% 描边 + blur 16 + 圆角 12），菜单项 36 高、圆角 8、13 号",
+      "passed": false,
+      "evidence": "下拉还是实色 `#2b2d31`，圆角 16，带投影，没用玻璃；菜单项仍是 `height: 44px`、圆角 12、14 号。review 称这些「本来就对」。"
+    },
+    {
+      "text": "指出 Tooltip 底色 #36393d 应改为 popup #2C2D2E，字号 12",
+      "passed": false,
+      "evidence": "fixed.css .model-admin__tooltip 仍是 `#36393d`、`font-size: 14px`；review 称 tooltip 底色「本来就对」。"
+    },
+    {
+      "text": "指出弹窗遮罩应为黑 60% 且不模糊，弹窗底色 surface #191A1B 且不加描边",
+      "passed": false,
+      "evidence": "遮罩改成了 60%，但还保留 `backdrop-filter: blur(24px)`；弹窗描边去掉了，底色仍是 `#2b2d31`，不是 #191A1B。"
+    },
+    {
+      "text": "指出「生成」胶囊按钮应改为普通主要按钮（圆角 8，不做胶囊）",
+      "passed": true,
+      "evidence": "review.md 第 2 条：999px 不对，带文字的渐变主按钮都用 8px 圆角，改成 `--border-radius-sm`；fixed.css 的 --generate 继承了 .model-admin__btn 的 `border-radius: 8px`。"
+    },
+    {
+      "text": "指出输入框聚焦不加绿色描边，输入框底色应为白 8%",
+      "passed": false,
+      "evidence": "去掉了绿色描边，但聚焦改成加中性描边 `border-color: rgba(255,255,255,0.12)`；默认底色仍是白 4%（`--color-bg-fill-container-light-2`），review 称「白 4% 本来就对」。"
+    },
+    {
+      "text": "指出次要文字白 50% 应为 secondary 白 60%，白 6% / 10% 叠加应并入 8% / 12%",
+      "passed": false,
+      "evidence": "白 6%/10% 已并入 8%/12%，但次要文字保留 50%：fixed.css `rgba(255, 255, 255, 0.5)`，review 称「次级文字 50% 本来就对」。"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 8,
+    "total": 9,
+    "pass_rate": 0.11
+  }
+}

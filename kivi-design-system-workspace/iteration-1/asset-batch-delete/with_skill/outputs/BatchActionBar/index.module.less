@@ -1,0 +1,122 @@
+// 底部批量操作条
+// 临时做法：规范里没有「批量操作条」，按「盖在内容上的常驻浮条」处理——
+// surface 不透明底 + 1px border-subtle，圆角 12，不加投影；里面放 Button · 文字 · 中（32）。
+.bar {
+  position: fixed;
+  bottom: var(--spacing-xl, 24px);
+  left: 50%;
+  z-index: var(--zindex-fixed, 400);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs, 4px);
+  padding: var(--spacing-sm, 8px) var(--spacing-sm, 8px) var(--spacing-sm, 8px) var(--spacing-lg, 16px);
+  border: var(--border-width-sm, 1px) solid var(--color-border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--border-radius-md, 12px);
+  background: var(--color-bg-fill-surface, #191a1b);
+  font-family: var(--font-family, 'PingFang SC');
+  transform: translateX(-50%);
+  animation: ic-batch-bar-in 0.2s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes ic-batch-bar-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+// 「已选 N 项」：界面主文字 13 号；数字等宽，选的时候宽度不跳
+.count {
+  color: var(--color-text-fill-primary, #ffffff);
+  font-size: var(--font-size-13, 13px);
+  font-weight: var(--font-weight-regular, 400);
+  line-height: var(--font-line-height-20, 20px);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// 数量和操作之间的分隔线 1×16
+.divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 16px;
+  margin: 0 var(--spacing-sm, 8px);
+  background: var(--color-border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.moveTo {
+  position: relative;
+}
+
+// 「移动到」菜单：按菜单模板，玻璃浮层，从按钮上方弹出
+// 按钮上沿到操作条上沿还有 8 + 1，这里取 16，让菜单和操作条之间留出约 7 的空
+.menu {
+  position: absolute;
+  bottom: calc(100% + var(--spacing-lg, 16px));
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 160px;
+  max-width: 320px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: var(--spacing-xxs, 4px);
+  border: var(--border-width-sm, 1px) solid var(--color-border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--border-radius-md, 12px);
+  background: var(--color-bg-fill-glass, rgba(24, 24, 24, 0.7));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.menuItem {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--spacing-md, 12px);
+  border: 0;
+  border-radius: var(--border-radius-sm, 8px);
+  color: var(--color-text-fill-primary, #ffffff);
+  background: transparent;
+  font-family: var(--font-family, 'PingFang SC');
+  font-size: var(--font-size-13, 13px);
+  font-weight: var(--font-weight-regular, 400);
+  line-height: var(--font-line-height-20, 20px);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-bg-fill-container-light-2-hover, rgba(255, 255, 255, 0.08));
+    outline: none;
+  }
+}
+
+// 文件夹名太长时单行省略，完整名字在 title 里
+.menuItemLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// MenuDivider：1px border-subtle，上下各留 4
+.menuDivider {
+  flex-shrink: 0;
+  height: 1px;
+  margin: var(--spacing-xxs, 4px) 0;
+  background: var(--color-border-subtle, rgba(255, 255, 255, 0.08));
+}

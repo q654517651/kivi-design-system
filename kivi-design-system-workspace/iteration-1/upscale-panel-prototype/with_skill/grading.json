@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "单个 HTML 文件，定义了 v2 变量（如 --color-bg-fill-glass，页面底色 #0F1012）",
+      "passed": true,
+      "evidence": "outputs 里只有 index.html（+NOTES.md），只外链 Lucide 脚本。:root 里有完整 v2 变量表：--color-bg-fill-glass: rgba(24,24,24,0.7)、--color-bg-fill-base: #0F1012，body background 解析后为 #0F1012。"
+    },
+    {
+      "text": "面板用玻璃：rgba(24,24,24,0.7) 底 + 1px 白 12% 描边 + backdrop-filter blur(16px) + 圆角 12",
+      "passed": true,
+      "evidence": "面板是 .upscale-panel.glass，.glass 解析后：background rgba(24,24,24,0.7)；border 1px solid rgba(255,255,255,0.12)；backdrop-filter blur(16px)（含 -webkit-）；border-radius 12px。"
+    },
+    {
+      "text": "2x / 4x 用分段选择器：底槽白 8%、圆角 12、内边距 4，选中项白 12%，不是两个独立按钮",
+      "passed": true,
+      "evidence": ".segmented（role=radiogroup）包两个 .segment：底槽 background rgba(255,255,255,0.08)、border-radius 12px、padding 4px；.segment.is-selected background rgba(255,255,255,0.12)；段高 32、圆角 8。点击切换 state.scale。"
+    },
+    {
+      "text": "「保留面部细节」用开关：36×20，开为品牌绿 #2BFF75，关为白 16%",
+      "passed": true,
+      "evidence": ".switch：width 36px、height 20px、关 background rgba(255,255,255,0.16)；.switch.is-on background #2BFF75，滑块 16px 平移 16px；role=switch，可点击切换。"
+    },
+    {
+      "text": "「开始放大」是唯一的主要按钮：品牌渐变 #CEFF5D→#2BFF75、黑字、圆角 8（不是胶囊）",
+      "passed": true,
+      "evidence": "全页只有 1 个 .btn--primary（#startBtn）。解析后 background linear-gradient(90deg,#CEFF5D,#2BFF75)、color #000000、border-radius 8px、高 32。"
+    },
+    {
+      "text": "控件文字 13 号；行标签 13 号 secondary（白 60%）",
+      "passed": true,
+      "evidence": ".segment 13px、.btn 13px；行标签 .field-label（放大倍数、保留面部细节）13px、color rgba(255,255,255,0.6)。提示行 .cost 为 12px 白 40%，标题 16px，不属于控件/行标签。"
+    },
+    {
+      "text": "没有 box-shadow 投影",
+      "passed": true,
+      "evidence": "全文件 grep box-shadow / boxShadow / drop-shadow 均 0 处。"
+    },
+    {
+      "text": "图标用 Lucide 1.54.0、线宽 1.5，或等价的 1.5 线宽线性图标",
+      "passed": true,
+      "evidence": "加载 unpkg lucide@1.54.0，createIcons 传 attrs stroke-width 1.5，.icon 也设 stroke-width 1.5。小瑕疵：Toast 里的 check 写死 stroke-width=\"3\"；左侧工具栏 data-lucide=\"text\" 在 1.54.0 里不存在（核对过包内导出），该按钮图标会空白。"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

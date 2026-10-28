@@ -1,0 +1,62 @@
+// 规范 Checkbox · 圆形（图片多选）
+.checkbox {
+  position: absolute;
+  top: var(--spacing-sm, 8px);
+  right: var(--spacing-sm, 8px);
+  z-index: 2;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--border-radius-round, 999px);
+  // 没选：黑 40% 底 + 白 50% 描边，放在亮图、暗图上都看得清
+  // 占位：--color-border-strong 取值待视觉确定
+  border: var(--border-width-sm, 1px) solid var(--color-border-strong, rgba(255, 255, 255, 0.5));
+  background: var(--color-on-media-fill, rgba(0, 0, 0, 0.4));
+  color: var(--color-text-fill-on-brand, #000000);
+  cursor: pointer;
+  outline: none;
+
+  // 16 太小，向外多给 8 的点击区域（不影响视觉）
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: inherit;
+  }
+
+  // 键盘聚焦：规范没定义，临时用 border-focus 画一圈
+  &:focus-visible {
+    outline: var(--border-width-lg, 1.5px) solid var(--color-border-focus, #2bff75);
+    outline-offset: 2px;
+  }
+}
+
+// 选中：品牌绿底 + 黑色对勾；描边透明，保持 16 整圆
+.checked {
+  border-color: transparent;
+  background: var(--color-brand-solid, #2bff75);
+
+  // 占位：--color-brand-hover 取值待视觉确定
+  &:not(.disabled):hover {
+    background: var(--color-brand-hover, #5cff95);
+  }
+}
+
+// 禁用：整体透明度 30%
+.disabled {
+  opacity: var(--opacity-30, 0.3);
+  cursor: not-allowed;
+}
+
+.check {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

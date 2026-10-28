@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "单个 HTML 文件，定义了 v2 变量（如 --color-bg-fill-glass，页面底色 #0F1012）",
+      "passed": false,
+      "evidence": "是单个 HTML（图片 base64 内嵌，外链 alicdn iconfont CSS），但没有 --color-bg-fill-glass；页面底色 --background: #05080a，不是 #0F1012；--color-text-fill-secondary 取白 50%。变量来自旧 variable.less，不是 v2 表。"
+    },
+    {
+      "text": "面板用玻璃：rgba(24,24,24,0.7) 底 + 1px 白 12% 描边 + backdrop-filter blur(16px) + 圆角 12",
+      "passed": false,
+      "evidence": ".ic-upscale-panel：background #191b1d 实色、无 border、无 backdrop-filter，只有圆角 12px。（玻璃样式只用在了顶部工具栏 .ic-topbar 上。）"
+    },
+    {
+      "text": "2x / 4x 用分段选择器：底槽白 8%、圆角 12、内边距 4，选中项白 12%，不是两个独立按钮",
+      "passed": false,
+      "evidence": "是两个独立按钮：容器 .ic-options 无底色、无内边距、gap 6px；每个 .ic-option 自带 rgba(255,255,255,0.04) 底、圆角 8。只有选中态白 12% 对上。"
+    },
+    {
+      "text": "「保留面部细节」用开关：36×20，开为品牌绿 #2BFF75，关为白 16%",
+      "passed": false,
+      "evidence": ".ic-switch 36×20、开 #2bff75 都对，但关态 background rgba(255,255,255,0.12)（白 12%），不是白 16%。"
+    },
+    {
+      "text": "「开始放大」是唯一的主要按钮：品牌渐变 #CEFF5D→#2BFF75、黑字、圆角 8（不是胶囊）",
+      "passed": true,
+      "evidence": "全页只有 1 个 .ic-generate-btn：linear-gradient(90deg,#ceff5d,#2bff75)、color #000000、border-radius 8px。（高 36、字 14/600，不是规范中按钮 32/13，但本条不考。）"
+    },
+    {
+      "text": "控件文字 13 号；行标签 13 号 secondary（白 60%）",
+      "passed": false,
+      "evidence": ".ic-option 14px、.ic-generate-btn 14px；行标签 .ic-label 14px、color #ffffff（primary），且带全角冒号。"
+    },
+    {
+      "text": "没有 box-shadow 投影",
+      "passed": false,
+      "evidence": ".ic-toast 有 box-shadow: 0 6px 16px rgba(0,0,0,.08), 0 3px 6px -4px rgba(0,0,0,.12), 0 9px 28px 8px rgba(0,0,0,.05)（antd 投影），放大完成和点未接入入口时都会出现。面板本身没有投影。"
+    },
+    {
+      "text": "图标用 Lucide 1.54.0、线宽 1.5，或等价的 1.5 线宽线性图标",
+      "passed": false,
+      "evidence": "没用 Lucide，用 at.alicdn.com 的 iconfont 字体图标（24 个 icon-kivi-* 类），线宽无法确认，离线不显示；只有「历史」一个手写 SVG 是 1.5 线宽。Toast 图标是 antd 实心圆。"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 7,
+    "total": 8,
+    "pass_rate": 0.125
+  }
+}

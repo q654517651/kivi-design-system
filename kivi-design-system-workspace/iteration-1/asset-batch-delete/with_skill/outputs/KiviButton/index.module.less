@@ -1,0 +1,161 @@
+// 规范 v2 Button / IconButton。v2 新变量（--font-size-13、--font-family 等）代码里还没有，全部带兜底值。
+
+.button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xxs, 4px);
+  margin: 0;
+  border: 0;
+  font-family: var(--font-family, 'PingFang SC');
+  font-weight: var(--font-weight-medium, 500);
+  line-height: var(--font-line-height-20, 20px);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+// ---------- 尺寸 ----------
+.sizeSm {
+  height: 28px;
+  padding: 0 var(--spacing-sm, 8px);
+  border-radius: var(--border-radius-xs, 6px);
+  font-size: var(--font-size-12, 12px);
+}
+
+.sizeMd {
+  height: 32px;
+  min-width: 64px;
+  padding: 0 var(--spacing-md, 12px);
+  border-radius: var(--border-radius-sm, 8px);
+  font-size: var(--font-size-13, 13px);
+}
+
+.sizeLg {
+  height: 36px;
+  min-width: 80px;
+  padding: 0 var(--spacing-lg, 16px);
+  border-radius: var(--border-radius-sm, 8px);
+  font-size: var(--font-size-13, 13px);
+}
+
+// IconButton：正方形，圆角和同高的 Button 一致
+.iconButton {
+  padding: 0;
+}
+
+.iconSize28 {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--border-radius-xs, 6px);
+}
+
+.iconSize32 {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-sm, 8px);
+}
+
+.iconSize36 {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--border-radius-sm, 8px);
+}
+
+// ---------- 类型（悬停、按下只在 .interactive 上生效：禁用和加载中不响应） ----------
+
+// 主要：品牌渐变 + 黑字，一屏只放一个
+.primary {
+  color: var(--color-text-fill-on-brand, #000000);
+  background: linear-gradient(90deg, var(--color-brand-gradient-1, #ceff5d), var(--color-brand-gradient-2, #2bff75));
+
+  &.interactive:hover {
+    background:
+      linear-gradient(var(--color-bg-fill-container-light-1-hover, rgba(255, 255, 255, 0.12)) 0 0),
+      linear-gradient(90deg, var(--color-brand-gradient-1, #ceff5d), var(--color-brand-gradient-2, #2bff75));
+  }
+
+  &.interactive:active {
+    opacity: 0.8;
+  }
+}
+
+// 次要：最常用
+.secondary {
+  color: var(--color-text-fill-primary, #ffffff);
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+
+  &.interactive:hover {
+    background: var(--color-bg-fill-container-light-1-hover, rgba(255, 255, 255, 0.12));
+  }
+
+  &.interactive:active {
+    background: var(--color-bg-fill-container-light-1-pressed, rgba(255, 255, 255, 0.16));
+  }
+}
+
+// 文字：工具条里的操作
+.text {
+  color: var(--color-text-fill-primary, #ffffff);
+  background: transparent;
+
+  &.interactive:hover {
+    background: var(--color-bg-fill-container-light-2-hover, rgba(255, 255, 255, 0.08));
+  }
+
+  &.interactive:active {
+    background: var(--color-bg-fill-container-light-2-pressed, rgba(255, 255, 255, 0.12));
+  }
+}
+
+// 危险：删除这类不能撤销的操作的确认
+// 占位：--color-status-danger 取值待视觉确定，以后统一替换
+.danger {
+  color: var(--color-text-fill-primary, #ffffff);
+  background: var(--color-status-danger, #ff4d4f);
+
+  &.interactive:hover {
+    background:
+      linear-gradient(var(--color-bg-fill-container-light-1-hover, rgba(255, 255, 255, 0.12)) 0 0),
+      var(--color-status-danger, #ff4d4f);
+  }
+
+  &.interactive:active {
+    opacity: 0.8;
+  }
+}
+
+// ---------- 禁用：底色白 8%（文字型保持透明），文字和图标 disabled ----------
+.button:disabled {
+  color: var(--color-text-fill-disabled, rgba(255, 255, 255, 0.2));
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+  cursor: not-allowed;
+}
+
+.text:disabled {
+  background: transparent;
+}
+
+.button[aria-busy='true'] {
+  cursor: progress;
+}
+
+// ---------- Tooltip · 简单 ----------
+// popup 实色，高 32，内边距 6 12，圆角 8，12 号常规字；不带箭头、描边、阴影、模糊。
+// 双类名是为了盖过 HeroUI 默认的 bg-content1 和 shadow。
+.tooltip.tooltip {
+  min-height: 32px;
+  padding: var(--spacing-xs, 6px) var(--spacing-md, 12px);
+  border-radius: var(--border-radius-sm, 8px);
+  color: var(--color-text-fill-primary, #ffffff);
+  background: var(--color-bg-fill-popup, #2c2d2e);
+  font-family: var(--font-family, 'PingFang SC');
+  font-size: var(--font-size-12, 12px);
+  font-weight: var(--font-weight-regular, 400);
+  line-height: var(--font-line-height-20, 20px);
+  box-shadow: none;
+}

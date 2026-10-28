@@ -1,0 +1,434 @@
+{
+  "metadata": {
+    "skill_name": "kivi-design-system",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-10-27T04:01:09Z",
+    "evals_run": [
+      "asset-batch-delete",
+      "review-admin-css",
+      "upscale-panel-prototype"
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": "asset-batch-delete",
+      "eval_name": "asset-batch-delete",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 535.0,
+        "tokens": 179487,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "样式用 CSS 变量并带兜底值（如 var(--color-bg-fill-surface, #191A1B)），Less 里几乎没有不在 var() 兜底位置的裸色值",
+          "passed": true,
+          "evidence": "脚本统计 7 个 .less 共 43 处色值，全部在 var() 兜底位置，裸色值 0；tsx 里的 #37FF74、#2B2D31 只在注释中。例：DeleteConfirmDialog .dialog background: var(--color-bg-fill-surface, #191a1b)。"
+        },
+        {
+          "text": "删除确认弹窗：宽 400、底色 surface（#191A1B）、圆角 16、内边距 24；遮罩黑 60% 且不模糊",
+          "passed": true,
+          "evidence": "DeleteConfirmDialog/index.module.less：.dialog width 400px、background var(--color-bg-fill-surface, #191a1b)、border-radius var(--border-radius-lg, 16px)、padding var(--spacing-xl, 24px)；.mask background var(--color-bg-fill-mask, rgba(0,0,0,0.6))，没有 backdrop-filter。"
+        },
+        {
+          "text": "删除确认的确认按钮是危险类型（status/danger 红底），取消是次要按钮（白 8%），底栏按钮高 36",
+          "passed": true,
+          "evidence": "DeleteConfirmDialog/index.tsx：删除 variant=\"danger\" size=\"lg\"，取消 variant=\"secondary\" size=\"lg\"；KiviButton/index.module.less .danger background var(--color-status-danger, #ff4d4f)（红，注释标为占位），.secondary var(--color-bg-fill-container-light-1, rgba(255,255,255,0.08))，.sizeLg height 36px。"
+        },
+        {
+          "text": "图片上的勾选框：没选时黑 40% 底 + 白 50% 描边，选中时品牌绿底 + 黑勾，放在图片右上角",
+          "passed": true,
+          "evidence": "AssetCheckbox/index.module.less：未选 background var(--color-on-media-fill, rgba(0,0,0,0.4)) + border 1px var(--color-border-strong, rgba(255,255,255,0.5))；.checked background var(--color-brand-solid, #2bff75)，对勾 stroke=currentColor=var(--color-text-fill-on-brand, #000000)；position absolute，top/right 8px，圆形 16。"
+        },
+        {
+          "text": "按钮高度只出现 28 / 32 / 36，按钮文字 13 号、字重 500（小号 12）",
+          "passed": true,
+          "evidence": "KiviButton/index.module.less：.sizeSm 28px/12px，.sizeMd 32px/13px，.sizeLg 36px/13px，.button font-weight var(--font-weight-medium, 500)；IconButton 28/32/36。其它 height（勾选框 16、分隔线 16/1、菜单项 36）都不是按钮。"
+        },
+        {
+          "text": "浮层、操作条和弹窗都没有 box-shadow 投影",
+          "passed": true,
+          "evidence": "所有 .less 里唯一的 box-shadow 是 KiviButton .tooltip 的 box-shadow: none；操作条 .bar、菜单 .menu、弹窗 .dialog 都没有投影（菜单用 backdrop-filter blur(16px) 做玻璃，不算投影）。"
+        },
+        {
+          "text": "「批量管理」按钮不是品牌渐变的主要按钮",
+          "passed": true,
+          "evidence": "BatchManageButton/index.tsx：KiviButton variant=\"secondary\" size=\"md\"（白 8% 底，高 32），不是 .primary 品牌渐变。"
+        },
+        {
+          "text": "图标使用 KIVI 图标名（如 Delete、Download、MoveTo、Close）",
+          "passed": true,
+          "evidence": "Icon name 用了 Stacking、Close、MoveTo、Download、Delete、AddSmall、Folder、Loading，都是仓库 Icon 组件（icon-kivi-*）的名字。MoveTo 在 src/components/CustomMenu/index.tsx 已有用法（NOTES 说「代码里还没用过」不准确）。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": "review-admin-css",
+      "eval_name": "review-admin-css",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 157.1,
+        "tokens": 97342,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "指出 #05080a 应改为 base #0F1012（--color-bg-fill-base）",
+          "passed": true,
+          "evidence": "review.md 全局 body 表：`background: #05080a` 旧的全局底色 → `--color-bg-fill-base`（#0F1012）；fixed.css body `background: var(--color-bg-fill-base, #0F1012)`。"
+        },
+        {
+          "text": "指出卡片和下拉的 box-shadow 都要去掉",
+          "passed": true,
+          "evidence": "review.md 卡片和下拉表里 `box-shadow` 都写「规范里不用投影 → 去掉」；fixed.css 的 .model-card 和 .dropdown 均无 box-shadow。"
+        },
+        {
+          "text": "指出按钮 40 高 / 圆角 12 / 14 号 600 应改为 36 或 32 高、圆角 8、13 号 500",
+          "passed": true,
+          "evidence": "review.md：40 → 默认中号 32、大号 36；圆角 12 → 8；14 号 600 → 13 号 500。fixed.css .btn `height: 32px`、`border-radius: 8px`、`font-size: 13px`、`font-weight: 500`，另有 .btn--lg 36。"
+        },
+        {
+          "text": "指出下拉菜单应改成玻璃（rgba(24,24,24,.7) + 1px 白 12% 描边 + blur 16 + 圆角 12），菜单项 36 高、圆角 8、13 号",
+          "passed": true,
+          "evidence": "fixed.css .dropdown：`rgba(24, 24, 24, 0.7)` + `border: 1px solid rgba(255,255,255,0.12)` + `backdrop-filter: blur(16px)` + `border-radius: 12px`；.dropdown-item `height: 36px`、`border-radius: 8px`、`font-size: 13px`。review.md 逐项列出。"
+        },
+        {
+          "text": "指出 Tooltip 底色 #36393d 应改为 popup #2C2D2E，字号 12",
+          "passed": true,
+          "evidence": "review.md：#36393d 已废弃 → `--color-bg-fill-popup`（#2C2D2E），14 号 → 12 号；fixed.css .tooltip `#2C2D2E`、`font-size: 12px`。"
+        },
+        {
+          "text": "指出弹窗遮罩应为黑 60% 且不模糊，弹窗底色 surface #191A1B 且不加描边",
+          "passed": true,
+          "evidence": "fixed.css .modal-mask 只有 `rgba(0, 0, 0, 0.6)`，删掉了 blur；.modal `background: #191A1B`，无 border。review.md 指出遮罩 45%→60%、去模糊、弹窗用 surface #191A1B、去描边。"
+        },
+        {
+          "text": "指出「生成」胶囊按钮应改为普通主要按钮（圆角 8，不做胶囊）",
+          "passed": true,
+          "evidence": "review.md：「生成」不做胶囊，用普通主要按钮，跟 .btn 一样圆角 8；fixed.css .btn-generate 去掉了 999px，继承 .btn 的 `border-radius: 8px`。"
+        },
+        {
+          "text": "指出输入框聚焦不加绿色描边，输入框底色应为白 8%",
+          "passed": true,
+          "evidence": "review.md：`:focus` 品牌绿描边 → 聚焦不加描边；底色 4% → 8%。fixed.css .input `rgba(255,255,255,0.08)`，:focus `outline: none; border-color: transparent`。"
+        },
+        {
+          "text": "指出次要文字白 50% 应为 secondary 白 60%，白 6% / 10% 叠加应并入 8% / 12%",
+          "passed": true,
+          "evidence": "review.md：.desc 白 50% → secondary 60%；按钮白 6%/10% → 8%/12%；菜单项悬停 10% → 8%。fixed.css .desc `0.6`，.btn `0.08` / hover `0.12`。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": "upscale-panel-prototype",
+      "eval_name": "upscale-panel-prototype",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 536.5,
+        "tokens": 151127,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "单个 HTML 文件，定义了 v2 变量（如 --color-bg-fill-glass，页面底色 #0F1012）",
+          "passed": true,
+          "evidence": "outputs 里只有 index.html（+NOTES.md），只外链 Lucide 脚本。:root 里有完整 v2 变量表：--color-bg-fill-glass: rgba(24,24,24,0.7)、--color-bg-fill-base: #0F1012，body background 解析后为 #0F1012。"
+        },
+        {
+          "text": "面板用玻璃：rgba(24,24,24,0.7) 底 + 1px 白 12% 描边 + backdrop-filter blur(16px) + 圆角 12",
+          "passed": true,
+          "evidence": "面板是 .upscale-panel.glass，.glass 解析后：background rgba(24,24,24,0.7)；border 1px solid rgba(255,255,255,0.12)；backdrop-filter blur(16px)（含 -webkit-）；border-radius 12px。"
+        },
+        {
+          "text": "2x / 4x 用分段选择器：底槽白 8%、圆角 12、内边距 4，选中项白 12%，不是两个独立按钮",
+          "passed": true,
+          "evidence": ".segmented（role=radiogroup）包两个 .segment：底槽 background rgba(255,255,255,0.08)、border-radius 12px、padding 4px；.segment.is-selected background rgba(255,255,255,0.12)；段高 32、圆角 8。点击切换 state.scale。"
+        },
+        {
+          "text": "「保留面部细节」用开关：36×20，开为品牌绿 #2BFF75，关为白 16%",
+          "passed": true,
+          "evidence": ".switch：width 36px、height 20px、关 background rgba(255,255,255,0.16)；.switch.is-on background #2BFF75，滑块 16px 平移 16px；role=switch，可点击切换。"
+        },
+        {
+          "text": "「开始放大」是唯一的主要按钮：品牌渐变 #CEFF5D→#2BFF75、黑字、圆角 8（不是胶囊）",
+          "passed": true,
+          "evidence": "全页只有 1 个 .btn--primary（#startBtn）。解析后 background linear-gradient(90deg,#CEFF5D,#2BFF75)、color #000000、border-radius 8px、高 32。"
+        },
+        {
+          "text": "控件文字 13 号；行标签 13 号 secondary（白 60%）",
+          "passed": true,
+          "evidence": ".segment 13px、.btn 13px；行标签 .field-label（放大倍数、保留面部细节）13px、color rgba(255,255,255,0.6)。提示行 .cost 为 12px 白 40%，标题 16px，不属于控件/行标签。"
+        },
+        {
+          "text": "没有 box-shadow 投影",
+          "passed": true,
+          "evidence": "全文件 grep box-shadow / boxShadow / drop-shadow 均 0 处。"
+        },
+        {
+          "text": "图标用 Lucide 1.54.0、线宽 1.5，或等价的 1.5 线宽线性图标",
+          "passed": true,
+          "evidence": "加载 unpkg lucide@1.54.0，createIcons 传 attrs stroke-width 1.5，.icon 也设 stroke-width 1.5。小瑕疵：Toast 里的 check 写死 stroke-width=\"3\"；左侧工具栏 data-lucide=\"text\" 在 1.54.0 里不存在（核对过包内导出），该按钮图标会空白。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": "asset-batch-delete",
+      "eval_name": "asset-batch-delete",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.375,
+        "passed": 3,
+        "failed": 5,
+        "total": 8,
+        "time_seconds": 348.2,
+        "tokens": 128688,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "样式用 CSS 变量并带兜底值（如 var(--color-bg-fill-surface, #191A1B)），Less 里几乎没有不在 var() 兜底位置的裸色值",
+          "passed": true,
+          "evidence": "自己写的 5 个 .less 共 15 处色值，14 处在 var() 兜底里；裸色值只有 1 处：AssetSelectOverlay/index.module.less L35 --custom-checkbox-active-border-color: #061320。算「几乎没有」。注意它复用的 CustomCheckbox、BaseModal 的 less 里有裸色值（#fff、#37ff74、rgba(0,0,0,0.6)）。"
+        },
+        {
+          "text": "删除确认弹窗：宽 400、底色 surface（#191A1B）、圆角 16、内边距 24；遮罩黑 60% 且不模糊",
+          "passed": false,
+          "evidence": "BatchDeleteConfirm 复用 ConfirmModal：宽 400、padding 24、圆角 var(--spacing-lg,16px) 对；但底色 var(--color-bg-fill-popup-light-2, #2b2d31)，不是 surface #191A1B；BaseModal 遮罩 rgba(0,0,0,0.6) 带 backdrop-filter: blur(24px)，是模糊的。"
+        },
+        {
+          "text": "删除确认的确认按钮是危险类型（status/danger 红底），取消是次要按钮（白 8%），底栏按钮高 36",
+          "passed": false,
+          "evidence": "ConfirmModal 确认按钮 btnType=\"balance\"（品牌渐变 #ceff5d→#2bff75），不是红色危险按钮，NOTES 第 7 条也写了「确认按钮是品牌色，不是红色」；两个按钮 height=\"32px\"，不是 36。取消按钮 btnType=\"primary\"（light-1 = 白 8%）这一项是对的。"
+        },
+        {
+          "text": "图片上的勾选框：没选时黑 40% 底 + 白 50% 描边，选中时品牌绿底 + 黑勾，放在图片右上角",
+          "passed": false,
+          "evidence": "复用 CustomCheckbox（没传 rounded，圆角 4 的方形）：未选 border 1px solid #fff（白 100%）+ background rgba(0,0,0,0.2)（黑 20%），不是黑 40% + 白 50%；选中底 #37ff74（不是 #2bff75），对勾 #061320。位置 top/right 12px，在右上角。"
+        },
+        {
+          "text": "按钮高度只出现 28 / 32 / 36，按钮文字 13 号、字重 500（小号 12）",
+          "passed": false,
+          "evidence": "按钮高度都是 32（BatchActionBar BUTTON_PROPS height 32、BatchManageButton height 32、ConfirmModal 32px），这一项符合；但 fontSize=\"sm\" → --font-size-sm 12px，fontWeight regular 400（ConfirmModal 是 semibold 600），不是 13 号 / 500。"
+        },
+        {
+          "text": "浮层、操作条和弹窗都没有 box-shadow 投影",
+          "passed": false,
+          "evidence": "BatchActionBar/index.module.less L18：box-shadow: 0 8px 24px var(--black-40, rgba(0,0,0,0.4))，操作条有投影。另外 AssetSelectOverlay 用 inset box-shadow 做选中描边。"
+        },
+        {
+          "text": "「批量管理」按钮不是品牌渐变的主要按钮",
+          "passed": true,
+          "evidence": "BatchManageButton 用 CustomButton btnType=\"primary\"；仓库里 .custom-btn__primary 是 var(--color-bg-fill-container-light-1)（白 8%）底，不是渐变，渐变是 btnType=\"balance\"。"
+        },
+        {
+          "text": "图标使用 KIVI 图标名（如 Delete、Download、MoveTo、Close）",
+          "passed": true,
+          "evidence": "Icon name 用了 Stacking、Close、MoveTo、DownArrowSmall、Download、Delete，都是仓库 Icon 组件（icon-kivi-*）已有的名字。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": "review-admin-css",
+      "eval_name": "review-admin-css",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.11,
+        "passed": 1,
+        "failed": 8,
+        "total": 9,
+        "time_seconds": 342.3,
+        "tokens": 142967,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "指出 #05080a 应改为 base #0F1012（--color-bg-fill-base）",
+          "passed": false,
+          "evidence": "review.md 第四节称「body 背景 #05080a……本来就对」；fixed.css 写 `var(--background, #05080a)`，没改成 #0F1012。"
+        },
+        {
+          "text": "指出卡片和下拉的 box-shadow 都要去掉",
+          "passed": false,
+          "evidence": "卡片的投影去掉了，但下拉还保留了投影：fixed.css .model-admin__dropdown `box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.32)`（review 写的是对齐 CustomMenu）。"
+        },
+        {
+          "text": "指出按钮 40 高 / 圆角 12 / 14 号 600 应改为 36 或 32 高、圆角 8、13 号 500",
+          "passed": false,
+          "evidence": "高度改成 36、圆角改成 8，但字号字重没改：fixed.css `font-size: 14px`、`font-weight: 600`，不是 13 号 500。"
+        },
+        {
+          "text": "指出下拉菜单应改成玻璃（rgba(24,24,24,.7) + 1px 白 12% 描边 + blur 16 + 圆角 12），菜单项 36 高、圆角 8、13 号",
+          "passed": false,
+          "evidence": "下拉还是实色 `#2b2d31`，圆角 16，带投影，没用玻璃；菜单项仍是 `height: 44px`、圆角 12、14 号。review 称这些「本来就对」。"
+        },
+        {
+          "text": "指出 Tooltip 底色 #36393d 应改为 popup #2C2D2E，字号 12",
+          "passed": false,
+          "evidence": "fixed.css .model-admin__tooltip 仍是 `#36393d`、`font-size: 14px`；review 称 tooltip 底色「本来就对」。"
+        },
+        {
+          "text": "指出弹窗遮罩应为黑 60% 且不模糊，弹窗底色 surface #191A1B 且不加描边",
+          "passed": false,
+          "evidence": "遮罩改成了 60%，但还保留 `backdrop-filter: blur(24px)`；弹窗描边去掉了，底色仍是 `#2b2d31`，不是 #191A1B。"
+        },
+        {
+          "text": "指出「生成」胶囊按钮应改为普通主要按钮（圆角 8，不做胶囊）",
+          "passed": true,
+          "evidence": "review.md 第 2 条：999px 不对，带文字的渐变主按钮都用 8px 圆角，改成 `--border-radius-sm`；fixed.css 的 --generate 继承了 .model-admin__btn 的 `border-radius: 8px`。"
+        },
+        {
+          "text": "指出输入框聚焦不加绿色描边，输入框底色应为白 8%",
+          "passed": false,
+          "evidence": "去掉了绿色描边，但聚焦改成加中性描边 `border-color: rgba(255,255,255,0.12)`；默认底色仍是白 4%（`--color-bg-fill-container-light-2`），review 称「白 4% 本来就对」。"
+        },
+        {
+          "text": "指出次要文字白 50% 应为 secondary 白 60%，白 6% / 10% 叠加应并入 8% / 12%",
+          "passed": false,
+          "evidence": "白 6%/10% 已并入 8%/12%，但次要文字保留 50%：fixed.css `rgba(255, 255, 255, 0.5)`，review 称「次级文字 50% 本来就对」。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": "upscale-panel-prototype",
+      "eval_name": "upscale-panel-prototype",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.125,
+        "passed": 1,
+        "failed": 7,
+        "total": 8,
+        "time_seconds": 791.7,
+        "tokens": 237976,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "单个 HTML 文件，定义了 v2 变量（如 --color-bg-fill-glass，页面底色 #0F1012）",
+          "passed": false,
+          "evidence": "是单个 HTML（图片 base64 内嵌，外链 alicdn iconfont CSS），但没有 --color-bg-fill-glass；页面底色 --background: #05080a，不是 #0F1012；--color-text-fill-secondary 取白 50%。变量来自旧 variable.less，不是 v2 表。"
+        },
+        {
+          "text": "面板用玻璃：rgba(24,24,24,0.7) 底 + 1px 白 12% 描边 + backdrop-filter blur(16px) + 圆角 12",
+          "passed": false,
+          "evidence": ".ic-upscale-panel：background #191b1d 实色、无 border、无 backdrop-filter，只有圆角 12px。（玻璃样式只用在了顶部工具栏 .ic-topbar 上。）"
+        },
+        {
+          "text": "2x / 4x 用分段选择器：底槽白 8%、圆角 12、内边距 4，选中项白 12%，不是两个独立按钮",
+          "passed": false,
+          "evidence": "是两个独立按钮：容器 .ic-options 无底色、无内边距、gap 6px；每个 .ic-option 自带 rgba(255,255,255,0.04) 底、圆角 8。只有选中态白 12% 对上。"
+        },
+        {
+          "text": "「保留面部细节」用开关：36×20，开为品牌绿 #2BFF75，关为白 16%",
+          "passed": false,
+          "evidence": ".ic-switch 36×20、开 #2bff75 都对，但关态 background rgba(255,255,255,0.12)（白 12%），不是白 16%。"
+        },
+        {
+          "text": "「开始放大」是唯一的主要按钮：品牌渐变 #CEFF5D→#2BFF75、黑字、圆角 8（不是胶囊）",
+          "passed": true,
+          "evidence": "全页只有 1 个 .ic-generate-btn：linear-gradient(90deg,#ceff5d,#2bff75)、color #000000、border-radius 8px。（高 36、字 14/600，不是规范中按钮 32/13，但本条不考。）"
+        },
+        {
+          "text": "控件文字 13 号；行标签 13 号 secondary（白 60%）",
+          "passed": false,
+          "evidence": ".ic-option 14px、.ic-generate-btn 14px；行标签 .ic-label 14px、color #ffffff（primary），且带全角冒号。"
+        },
+        {
+          "text": "没有 box-shadow 投影",
+          "passed": false,
+          "evidence": ".ic-toast 有 box-shadow: 0 6px 16px rgba(0,0,0,.08), 0 3px 6px -4px rgba(0,0,0,.12), 0 9px 28px 8px rgba(0,0,0,.05)（antd 投影），放大完成和点未接入入口时都会出现。面板本身没有投影。"
+        },
+        {
+          "text": "图标用 Lucide 1.54.0、线宽 1.5，或等价的 1.5 线宽线性图标",
+          "passed": false,
+          "evidence": "没用 Lucide，用 at.alicdn.com 的 iconfont 字体图标（24 个 icon-kivi-* 类），线宽无法确认，离线不显示；只有「历史」一个手写 SVG 是 1.5 线宽。Toast 图标是 antd 实心圆。"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 409.5333,
+        "stddev": 218.615,
+        "min": 157.1,
+        "max": 536.5
+      },
+      "tokens": {
+        "mean": 142652.0,
+        "stddev": 41723.1288,
+        "min": 97342,
+        "max": 179487
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.2033,
+        "stddev": 0.1489,
+        "min": 0.11,
+        "max": 0.375
+      },
+      "time_seconds": {
+        "mean": 494.0667,
+        "stddev": 257.7749,
+        "min": 342.3,
+        "max": 791.7
+      },
+      "tokens": {
+        "mean": 169877.0,
+        "stddev": 59406.0419,
+        "min": 128688,
+        "max": 237976
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.80",
+      "time_seconds": "-84.5",
+      "tokens": "-27225"
+    }
+  },
+  "notes": [
+    "用 skill 的 3 个测试全部通过（25/25）；不用 skill 平均 20%。差距主要来自：不用 skill 时照着仓库旧代码的取值做（#05080a、#2b2d31、遮罩模糊、14 号按钮字、投影），而 v2 规范已经改了这些。",
+    "区分度低的检查项：批量删除里的「变量带兜底」和「用 KIVI 图标名」两组都能过，因为仓库本身就有这些习惯。",
+    "原型测试的题目写的是「和线上一样」，评分按 v2 规范。不用 skill 的那份更像现在的线上（真图、点阵画布），用 skill 的那份更符合新规范但图片是黑色占位块。下一轮把原型的占位图和画布点阵补进 skill。",
+    "耗时和 token：CSS 评审用 skill 更快更省（157s / 97k vs 342s / 143k）；原型也更快（537s vs 792s）；批量删除用 skill 更慢（535s vs 348s），因为它按新规格自己写了按钮、勾选框和弹窗，没复用旧组件。"
+  ]
+}

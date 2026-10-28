@@ -1,0 +1,15 @@
+.batch_manage_button {
+  // 顶部筛选条是 flex 且未设置 align-items，这里自己居中并推到最右侧
+  margin-left: auto;
+  align-self: center;
+  flex-shrink: 0;
+  font-family: 'PingFang SC';
+
+  &:active {
+    background: var(--color-bg-fill-container-light-1-hover-active, rgba(255, 255, 255, 0.12));
+  }
+
+  &__active {
+    background: var(--color-bg-fill-container-light-1-hover-active, rgba(255, 255, 255, 0.12));
+  }
+}

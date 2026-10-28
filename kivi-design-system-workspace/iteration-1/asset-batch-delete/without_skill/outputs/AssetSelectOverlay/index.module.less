@@ -1,0 +1,38 @@
+.asset_select_overlay {
+  position: absolute;
+  inset: 0;
+  // 高于卡片 hover 操作按钮（11），盖住它们，批量模式下不可误触
+  z-index: 12;
+  border-radius: inherit;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover {
+    background: var(--black-30, rgba(0, 0, 0, 0.3));
+  }
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--white-50, rgba(255, 255, 255, 0.5));
+  }
+
+  &__checked,
+  &__checked:hover,
+  &__checked:focus-visible {
+    background: var(--black-30, rgba(0, 0, 0, 0.3));
+    box-shadow: inset 0 0 0 2px var(--color-brand-solid, #2bff75);
+  }
+
+  // 用后代选择器提高优先级，覆盖 CustomCheckbox 的 gap（无文案时空 span 会多占 8px）
+  .asset_select_overlay-checkbox {
+    position: absolute;
+    top: var(--spacing-md, 12px);
+    right: var(--spacing-md, 12px);
+    gap: 0;
+    // 勾选态对勾颜色，与现有卡片勾选框一致
+    --custom-checkbox-active-border-color: #061320;
+    pointer-events: none;
+  }
+}
