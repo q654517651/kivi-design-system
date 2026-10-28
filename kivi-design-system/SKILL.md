@@ -16,7 +16,7 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范：设
 | 写代码（React、Vue、纯 HTML，任何栈） | 样式全部用 CSS 变量，变量名和取值见「变量」。项目里已有对应组件就用组件，没有就按组件规格实现。 |
 | HTML 原型、可点击 demo | 读「原型做法」，做成单文件 HTML。 |
 | 评审设计稿或样式 | 逐条对照下面的规则和组件规格，指出哪里不对、应改成哪个变量或组件。看到旧变量名、旧组件名，读「旧名对照」。 |
-| 在 Figma 里搭 | 用已发布的「KIVI UI KIT V2」库组件；颜色、间距、圆角、字号都绑定变量，不手填数值。用户作品的位置放「占位图」里的图。 |
+| 在 Figma 里搭 | 用已发布的「KIVI UI KIT V2」库组件；颜色、间距、圆角、字号都绑定变量，不手填数值。用户作品占位统一用 PlaceholderImage 实例，先选图片，再选比例，见「占位图」。 |
 | 编辑 Figma 组件库本身 | 读「组件库维护」。只有加组件、改变体、改名、整理页面时才读，其他场景不用。 |
 
 ## 核心规则
@@ -144,6 +144,7 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范：设
 | Dialog | 模态弹窗 | 弹窗 |
 | Toast、Loading、Skeleton、EmptyState | 操作反馈、加载、空状态 | 反馈 |
 | TabItem、Tag、Avatar | 选项卡、标签、头像 | 选项卡、标签和头像 |
+| PlaceholderImage | 用户作品占位：先选图片，再选比例 | 占位图 |
 | NodeCard、NodeMedia、NodeWrapper、ConnectorDot、Connector | 画布节点和连线 | 画布 · 节点 |
 | NodeToolbar、ToolbarItem、CropHandles | 节点上方的工具栏 | 画布 · 节点顶部工具栏 |
 | NodePanel、PanelPrompt、MentionChip | 节点下方的生成面板 | 画布 · 节点底部生成面板 |
