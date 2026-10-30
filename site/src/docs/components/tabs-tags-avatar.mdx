@@ -1,0 +1,128 @@
+import { Demo, PageHeader } from '@shell';
+import {
+  AssetThumbPlayground,
+  AvatarPlayground,
+  TabItemPlayground,
+  TagPlayground,
+} from './tabs-tags-avatar.demos';
+
+<PageHeader
+  eyebrow="通用组件"
+  title="选项卡、标签和头像"
+  lead="TabItem 管选项卡和分段，Tag 展示参数和状态，Avatar 是用户头像，AssetThumb 是素材的小预览。"
+  figma={['选项卡、标签和头像', '183:627']}
+  status="待确认 0.1.0"
+  code="kivi/tabs-tags-avatar"
+/>
+
+## TabItem
+
+<TabItemPlayground />
+
+### 切换内容
+
+<Demo code={`
+() => {
+  const [tab, setTab] = useState('all');
+  const TEXT = { all: '全部作品', image: '图片作品', video: '视频作品', fav: '收藏的作品' };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 'var(--spacing-16)', width: '100%' }}>
+      <Tabs size="lg" value={tab} onChange={setTab} aria-label="作品类型">
+        <TabItem value="all" id="tab-all" aria-controls="works-panel">全部</TabItem>
+        <TabItem value="image" id="tab-image" aria-controls="works-panel">图片</TabItem>
+        <TabItem value="video" id="tab-video" aria-controls="works-panel">视频</TabItem>
+        <TabItem value="fav" id="tab-fav" aria-controls="works-panel">收藏</TabItem>
+      </Tabs>
+      <div role="tabpanel" id="works-panel" aria-labelledby={'tab-' + tab} style={{ color: 'var(--color-text-fill-secondary)' }}>
+        {TEXT[tab]}
+      </div>
+    </div>
+  );
+}
+`} />
+
+## Tag
+
+<TagPlayground />
+
+## Avatar
+
+<AvatarPlayground />
+
+## AssetThumb
+
+<AssetThumbPlayground />
+
+## 参数
+
+### TabItem
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 文字。字重常规 400，选中也不加粗 |
+| `value` | `string` | — | 这一项的值，放在 `Tabs` 里时必填 |
+| `variant` | `"tab"` `"segment"` | `"tab"` | 选项卡（切换下面整块内容）/ 分段（在底槽里选一个参数值）。放在 `Tabs` 里跟着 `Tabs` |
+| `layout` | `"horizontal"` `"vertical"` | `"horizontal"` | 竖排只有分段、中号：图标 20 在上，12 号字在下，间距 4，56 × 56，必须传 `icon` |
+| `size` | `"md"` `"lg"` | `"md"` | 高 32 / 36，左右内边距 12 / 16（`--spacing-12` · `--spacing-16`），字 13 / 14，圆角 8（`--border-radius-8`），图标和文字间距 6。竖排不分尺寸 |
+| `icon` | `IconName` | — | 左图标 16，只有选项卡横排有，分段横排没有 |
+| `selected` | `boolean` | — | 选中。放在 `Tabs` 里由 `Tabs` 管，单独摆放才传 |
+| `disabled` | `boolean` | `false` | 禁用 |
+
+选项卡：默认文字 secondary，悬停文字变 primary，选中底白 8%。分段：悬停底白 4%，选中底白 12%。禁用文字白 20%。颜色变化 100ms ease-in-out。没有按下状态。
+
+其余原生 `<button>` 属性都能传，比如 `id`、`aria-controls`。
+
+### Tabs
+
+把一组 `TabItem` 管起来：同一时间只有一个选中，方向键移动选中（横排 ← →，竖排 ↑ ↓；跳过禁用项，到头绕回），Home、End 到头尾。根元素带 `aria-orientation`。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `variant` | `"tab"` `"segment"` | `"tab"` | 里面的 `TabItem` 都跟着它。选项卡是 `role="tablist"`，没有底槽，选项间距 4。分段是 `radiogroup`，带底槽：内边距 4（`--spacing-4`），圆角 12（`--border-radius-12`），底白 8%，选项等宽平分 |
+| `layout` | `"horizontal"` `"vertical"` | `"horizontal"` | 同 `TabItem`。决定方向键：横排左右，竖排上下 |
+| `size` | `"md"` `"lg"` | `"md"` | 同 `TabItem`。分段底槽比选项高 8：中 40，大 44，竖排 64 |
+| `value` | `string` | — | 选中的值（受控），和 `onChange` 一起用 |
+| `defaultValue` | `string` | — | 默认选中的值（非受控）。没有选中项、或选中的那项禁用了 / 不在了，第一个可用项能 Tab 进来 |
+| `onChange` | `(value: string) => void` | — | 选中变化 |
+
+其余原生 `<div>` 属性都能传，比如 `aria-label="分辨率"` 说明这一组是做什么的。
+
+### Tag
+
+不能点，没有悬停、按下、禁用。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 文字，12 / 20 常规 |
+| `variant` | `"default"` `"on-media"` `"brand"` | `"default"` | 默认（白 8% 底，文字 secondary）/ 覆盖（黑 40% 底，白字，盖在图片、视频上，离边缘 8，没有背景模糊）/ 品牌（品牌绿 12% 底，品牌色字） |
+| `thumb` | `string` | — | 缩略图地址，16，圆角 2，放参考图 |
+| `icon` | `IconName` | — | 左图标 16，比如模型 Logo。默认类型的图标白 50% |
+
+高 24，左右内边距 6（`--spacing-6`），元素间距 4（`--spacing-4`），圆角 6（`--border-radius-6`）。其余原生 `<span>` 属性都能传。
+
+### Avatar
+
+没有悬停、按下、禁用。会员头像框是运营装饰，不放进组件。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `name` | `string` | — | 用户名，必填。图片的 `alt`，文字的 `aria-label` |
+| `size` | `16` `24` `32` | `16` | 16 卡片作者（首字 10）/ 24 列表、对话（首字 12）/ 32 详情作者、导航（首字 14）。和名字间距 8 |
+| `src` | `string` | — | 头像图地址，加载前垫白 8% |
+| `type` | `"image"` `"text"` | 有 `src` 是图片，没有是文字 | 图片 / 文字。文字类型底白 16%，首字 primary，粗 500 |
+| `initial` | `string` | `name` 第一个字 | 首字，文字类型用 |
+
+圆角 `--border-radius-round`。其余原生 `<span>` 属性都能传。
+
+### AssetThumb
+
+序号、时长这类角标由外层叠加，不放进来。没有悬停、按下、禁用。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `16` `24` `56` `72` | `16` | 圆角 4 / 4 / 8 / 8（`--border-radius-4` · `--border-radius-8`），音符、占位图标 12 / 12 / 24 / 24 |
+| `type` | `"image"` `"audio"` `"icon"` | `"image"` | 图片（图片、视频首帧，铺满）/ 音频（渐变 #89A0BE → #7286AA + 白色 Music）/ 图标（白 8% 底 + 图标，不透明度 30%）。三种都有 1 的内描边 `--color-border-subtle` |
+| `src` | `string` | — | 图片类型的图片地址 |
+| `icon` | `IconName` | `"Message"` | 图标类型的图标：对话用 `Message`，画布用 `Canvas`。音频固定是 `Music` |
+
+其余原生 `<span>` 属性都能传。

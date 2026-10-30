@@ -1,0 +1,45 @@
+import { Demo, PageHeader } from '@shell';
+import { PlaceholderImagePlayground } from './placeholder-images.demos';
+
+<PageHeader
+  eyebrow="基础"
+  title="占位图"
+  lead="用户作品的位置用它占位：生成结果、素材、节点图片、视频封面。"
+  figma={['占位图', '504:2114']}
+  status="Figma 待确认"
+  code="kivi/placeholder-image"
+/>
+
+## PlaceholderImage
+
+<PlaceholderImagePlayground />
+
+### 一组比例不一致
+
+<Demo code={`
+<>
+  {['1:1', '3:4', '16:9', '9:16'].map((ratio) => (
+    <div key={ratio} style={{ width: 144, height: 144, borderRadius: 'var(--border-radius-8)', overflow: 'hidden' }}>
+      <PlaceholderImage image="ip-gouache" ratio={ratio} fill="blur" />
+    </div>
+  ))}
+</>
+`} />
+
+## 参数
+
+### PlaceholderImage
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `image` | `"kiwi-glass"` `"kivi-future"` `"kiwi-light"` `"bunny-gouache"` `"monstera-dots"` `"ip-peek"` `"ip-gouache"` `"ip-kiwi-pile"` `"ip-future"` | `"kiwi-glass"` | 9 款，值是文件名前缀：晶莹猕猴桃 / KIVI 极繁未来 / 光影线条 / 水粉兔 / 点阵龟背竹 / IP 探头 / IP 水粉 / IP 猕猴桃堆 / IP 极繁未来。共 35 张，WebP，长边 1024 |
+| `ratio` | `"1:1"` `"3:4"` `"16:9"` `"9:16"` | `"1:1"` | 只决定用哪张原图，不改外框形状。文件名最后一段是比例：`1x1`、`3x4`、`16x9`、`9x16`。晶莹猕猴桃没有 16:9，其余 8 款四种都有；没有的用最接近的那张，晶莹猕猴桃的 16:9 用 1:1 |
+| `fill` | `"cover"` `"blur"` | `"cover"` | 铺满 / 模糊垫底。铺满：画面盖满格子，居中裁切。模糊垫底：底下垫同一张原图，放大到 336 / 256（每边超出约 15.6%）铺满；上面盖一层 `--color-bg-fill-glass`（自带 70% 透明度）加背景模糊 24；最上面原图完整显示 |
+| `base` | `string` | `"./placeholders/"` | 图片所在目录，文件名是「前缀-比例.webp」，比如 `ip-gouache-1x1.webp`。前端项目把图放在别处时改它 |
+| `alt` | `string` | — | 说明。传了，根元素带 `role="img"` 和 `aria-label`；不传就当装饰 |
+
+大小跟着所在格子走（宽高 100%），不带圆角，由外层容器裁切。其余原生 `<div>` 属性都能传。
+
+### placeholderImageSrc
+
+`placeholderImageSrc(image?, ratio?, base?)` 返回图片地址，参数、默认值、没有的比例怎么办都同上。不用 PlaceholderImage、只要地址时用，比如传给 `src`、写 CSS 背景。`PLACEHOLDER_IMAGES` 是 9 款的列表，每项有 `id`（前缀）、`name`（中文名）、`ratios`（有哪几种比例）。

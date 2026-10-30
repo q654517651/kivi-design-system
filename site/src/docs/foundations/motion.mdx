@@ -1,0 +1,118 @@
+import { PageHeader } from '@shell';
+import { DialogDemo, DurationDemo, EaseDemo, LoadingDemo, MenuDemo, SkeletonDemo, SwitchDemo, ToastDemo, TooltipDemo } from './motion.demos';
+
+<PageHeader
+  eyebrow="基础"
+  title="动效"
+  lead="动效只用来交代「东西从哪来、到哪去、变成了什么」，不做装饰。先看「怎么动」选缓动，再看「动多远」选时长。"
+  figma={['变量', '6:2']}
+  status="草稿 2026-10-29"
+  code="kivi/tokens.css"
+/>
+
+变量在 Figma「变量」页的「17 动效」分区，scale 集合的 `motion/`。
+
+## 缓动：按怎么动选
+
+| 怎么动 | 缓动 | CSS |
+|---|---|---|
+| 在屏幕内移动、变大变小、展开收起、换颜色 | 先加速后减速（ease-in-out） | `var(--motion-ease-in-out)` |
+| 进入：从屏幕外移进来，或从无到有（出现、淡入） | 减速（ease-out） | `var(--motion-ease-out)` |
+| 退出：移出屏幕，或在屏幕内消失（淡出） | 加速（ease-in） | `var(--motion-ease-in)` |
+| 循环：转圈、骨架屏扫光 | 匀速（linear） | `linear` |
+| 展开、收起一组东西：主站参考区 | 起步很快，慢慢停稳 | `var(--motion-ease-expand)` |
+| 展开、收起一组东西：画布多图节点 | 冲过头约 4% 再回来（弹簧） | `var(--motion-ease-spring)` |
+
+- 不用 CSS 默认的 `ease`，它不属于上面任何一种。
+- 同一个东西出现和消失分开写：出现用 ease-out，消失用 ease-in。
+
+点「播放」对比四种曲线。演示放慢到 1 秒，方便看出差别。
+
+<EaseDemo />
+
+## 时长：按动多远选
+
+| 时长 | 变量 | 用在哪 |
+|---|---|---|
+| 100ms | `--motion-duration-100` | 只换颜色：悬停、按下的底色和文字颜色 |
+| 150ms | `--motion-duration-150` | 小东西出现、消失：Tooltip、删除按钮、角标、开关滑块 |
+| 200ms | `--motion-duration-200` | 移动 100px 以内；菜单、下拉列表、Toast 出现 |
+| 300ms | `--motion-duration-300` | 移动 100–400px：参考区展开收起、面板展开收起、弹窗出现 |
+| 400ms | `--motion-duration-400` | 移动 400px 以上，或整屏：侧栏、抽屉滑进滑出 |
+
+- 消失比出现短一档：菜单出现 200ms，消失 150ms。
+- 一般最长 400ms，再长就拖了。
+- 一组东西一起展开、收起（主站参考区、画布多图节点），按张数加时长：400ms 起，每多一张加 10ms，最多 700ms。参考区用 `--motion-ease-expand`，多图节点用 `--motion-ease-spring`。
+- 几样东西依次出现时，每个错开 20–30ms，整体不超过 400ms。
+- 悬停触发的展开，鼠标离开后等 150ms 再收起，免得划过时来回闪。
+- 系统开了「减少动态效果」时，去掉位移和缩放，只留透明度，或者直接切换。`tokens.css` 里已经把时长归零。
+
+每一档按它该走的距离播放，真实速度。
+
+<DurationDemo />
+
+## 写法
+
+出现和消失的缓动不同时，把消失的写在默认状态上，出现的写在出现后的状态上。
+
+```css
+.menu {
+  opacity: 0;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+.menu.is-open {
+  opacity: 1;
+  transition: opacity var(--motion-duration-200) var(--motion-ease-out);
+}
+```
+
+## 常见场景
+
+| 场景 | 出现 | 消失 |
+|---|---|---|
+| 按钮、菜单项悬停 | 底色 100ms ease-in-out | 同左 |
+| Tooltip | 延迟 500ms，再 150ms ease-out 淡入 | 100ms ease-in 淡出 |
+| 菜单、下拉列表、右键、双击快捷添加 | 200ms ease-out：淡入 + 从锚点那一边 96% 放大、移 4 | 150ms ease-in 倒着播 |
+| Toast | 200ms ease-out，从上方移入 | 150ms ease-in 淡出 |
+| 模态弹窗 | 遮罩和弹窗一起 300ms ease-out 淡入，弹窗从 96% 放大到 100% | 200ms ease-in 淡出 |
+| 开关 | 滑块 150ms ease-in-out | 同左 |
+| 主站输入框参考区 | 照 BytePlus：`--motion-ease-expand`，400ms 起每多一张加 10ms，最多 700ms；盖字的遮罩同步 | 同一条缓动收回叠放 |
+| 画布多图节点 | `--motion-ease-spring`，400ms 起每多一张加 10ms，最多 700ms；卡片一起动 | 同一条缓动收回叠放 |
+
+下面都能点。菜单、Tooltip、Toast、弹窗的正式组件在通用组件各页里，这里只示意动效。
+
+### Tooltip
+
+鼠标停在按钮上 500ms 才出现，移开马上淡出。
+
+<TooltipDemo />
+
+### 菜单、下拉列表
+
+<MenuDemo />
+
+### Toast
+
+<ToastDemo />
+
+### 模态弹窗
+
+<DialogDemo />
+
+### 开关
+
+<SwitchDemo />
+
+### 加载
+
+Loading 图标 1 秒一圈，匀速。和按钮「加载中」用的是同一个。知道内容长什么样，用骨架屏；不知道、或者很快就好的，才用转圈。
+
+<LoadingDemo />
+
+骨架屏：底色白 8%，高光白 12% 从左往右扫，1.4 秒一轮，匀速。
+
+<SkeletonDemo />
+
+import Generating from './motion-generating.mdx';
+
+<Generating components={props.components} />

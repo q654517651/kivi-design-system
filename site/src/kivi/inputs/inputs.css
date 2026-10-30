@@ -1,0 +1,345 @@
+/*
+  KIVI · 输入控件
+  Figma「输入控件」页：Input（输入框）、NumberInput（数字输入框）、Select（下拉选择）、Textarea（多行输入框）。
+  依赖 tokens.css、base.css。Select 展开的列表用菜单和提示页的 Dropdown + Menu + MenuItem（kv-popup、kv-menu、kv-menu-item）。
+
+  写法（React，见 Input.tsx、NumberInput.tsx、Select.tsx、Textarea.tsx）
+    <Input leftIcon="Search" placeholder="搜索" aria-label="搜索" counter="0/50" />
+    <NumberInput value="12" unit="秒" aria-label="时长（秒）" />
+    <Select variant="fill" placeholder="请选择" options={[{ value: 'png', label: 'PNG' }]} />
+    <Textarea placeholder="请输入描述" counter="0/500" aria-label="描述" />
+  渲染出来的结构
+    <label class="kv-input">
+      <span class="kv-icon" data-icon="Search"></span>
+      <input class="kv-input__field" placeholder="请输入">
+      <span class="kv-input__counter">0/50</span>
+    </label>
+
+    <label class="kv-number-input">
+      <input class="kv-number-input__field" inputmode="numeric" value="12">
+      <span class="kv-number-input__unit">秒</span>
+    </label>
+
+    <span class="kv-dropdown kv-select__wrap">
+      <button class="kv-select kv-select--fill" aria-haspopup="menu" aria-expanded="false">
+        <span class="kv-select__text kv-select__text--placeholder">请选择</span>
+        <span class="kv-icon" data-icon="DownArrowSmall"></span>
+      </button>
+    </span>
+    展开后，Dropdown 把列表挂在 body 上（出现 200ms ease-out，消失 150ms ease-in）：
+    <div class="kv-popup kv-popup--match">
+      <div class="kv-menu" role="listbox">
+        <button class="kv-menu-item" role="option" aria-selected="false"><span>选项一</span></button>
+      </div>
+    </div>
+
+    <label class="kv-textarea">
+      <textarea class="kv-textarea__field" placeholder="请输入描述"></textarea>
+      <span class="kv-textarea__counter">0/500</span>
+    </label>
+
+  状态（输入框、数字输入框、多行输入框共用）
+    悬停    鼠标触发
+    聚焦    输入框获得焦点；Figma 没有聚焦样式，只出现光标，不加描边
+    已输入  有内容，文字 primary
+    错误    <input> 上写 aria-invalid="true"（invalid 属性），加 1px danger 描边（数字输入框没有错误）
+    禁用    <input> 上写 disabled
+  下拉选择
+    展开    触发器上写 aria-expanded="true"（Dropdown 写），右边箭头换成 UpArrowSmall，列表出现
+            当前项：role="option" aria-selected="true"，白 8% 底，不打勾（MenuItem 的「选中」）
+    已选    文字用 kv-select__text；没选用 kv-select__text--placeholder；左图标（kv-select__lead）写 data-filled，变成和文字一样白
+    禁用    disabled
+    位置    placement，默认在触发器下方 4、左对齐，放不下会自己翻到上方
+  is-hover、is-focus 只给文档摆静态的悬停、聚焦用，项目里不用写；
+  Select 的静态悬停写在最外层的 kv-select__wrap 上
+  打字、字数、展开收起、选中、点外面和 Esc 关闭、键盘都在组件里，受控、非受控都支持
+*/
+
+/* ---------- 共用：输入框、数字输入框、多行输入框的外框 ---------- */
+
+.kv-input,
+.kv-number-input,
+.kv-textarea {
+  /* 1px 透明边留给错误描边，内边距各减 1，文字位置不变 */
+  display: flex;
+  box-sizing: border-box;
+  margin: 0;
+  border: var(--border-width-1) solid transparent;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  cursor: text;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 里面真正输入的框：没有自己的底色、描边，光标 primary */
+.kv-input__field,
+.kv-number-input__field,
+.kv-textarea__field {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  caret-color: var(--color-text-fill-primary);
+  font: inherit;
+}
+
+.kv-input__field::placeholder,
+.kv-number-input__field::placeholder,
+.kv-textarea__field::placeholder {
+  color: var(--color-text-fill-placeholder);
+  opacity: 1;
+}
+
+/* 悬停：白 12% */
+:is(.kv-input, .kv-number-input, .kv-textarea):where(:hover, .is-hover):not(:has(:disabled)) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+/* 聚焦：底色回到白 8%，不加描边 */
+:is(.kv-input, .kv-number-input, .kv-textarea):where(:focus-within, .is-focus):not(:has(:disabled)) {
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 错误：1px danger 描边 */
+:is(.kv-input, .kv-textarea):has([aria-invalid="true"]) {
+  border-color: var(--color-status-danger);
+}
+
+/* 禁用：底色白 4%，文字 disabled */
+:is(.kv-input, .kv-number-input, .kv-textarea):has(:disabled) {
+  background: var(--color-bg-fill-container-light-2);
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+:is(.kv-input__field, .kv-number-input__field, .kv-textarea__field):disabled {
+  cursor: not-allowed;
+}
+
+:is(.kv-input__field, .kv-number-input__field, .kv-textarea__field):disabled::placeholder {
+  color: var(--color-text-fill-disabled);
+}
+
+/* ---------- Input ---------- */
+
+/* 高 32，左右 12，元素间距 8。宽度在使用时设成填满 */
+.kv-input {
+  align-items: center;
+  gap: var(--spacing-8);
+  width: 100%;
+  height: 32px;
+  padding: 0 11px;
+}
+
+.kv-input__field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+}
+
+/* 左图标 16，右边字数 12 号 tertiary */
+.kv-input > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-tertiary);
+}
+
+.kv-input__counter {
+  flex: none;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.kv-input:has(:disabled) > .kv-icon,
+.kv-input:has(:disabled) .kv-input__counter {
+  color: var(--color-text-fill-disabled);
+}
+
+/* ---------- NumberInput ---------- */
+
+/* 高 32，最小宽 64，宽度跟着内容走；左右 8，数值和单位间距 4 */
+.kv-number-input {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-4);
+  min-width: 64px;
+  height: 32px;
+  padding: 0 7px;
+}
+
+/* 输入框宽度跟着字数走；不支持 field-sizing 的旧浏览器退回固定 4 个字符宽 */
+.kv-number-input__field {
+  width: 4ch;
+  text-align: center;
+}
+
+@supports (field-sizing: content) {
+  .kv-number-input__field {
+    field-sizing: content;
+    width: auto;
+    min-width: 1ch;
+  }
+}
+
+.kv-number-input__unit {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  white-space: nowrap;
+}
+
+.kv-number-input:has(:disabled) .kv-number-input__unit {
+  color: var(--color-text-fill-disabled);
+}
+
+/* ---------- Select ---------- */
+
+/* 触发器：高 32，13 号字，左图标 16、右箭头 16，元素间距 4 */
+.kv-select {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  height: 32px;
+  margin: 0;
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: var(--kv-select-fill);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-select > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-tertiary);
+}
+
+/* 左图标：选了值以后和文字一样白（Figma Select「已选」），没选时 tertiary */
+.kv-select > .kv-select__lead[data-filled] {
+  color: var(--color-text-fill-primary);
+}
+
+.kv-select__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 没选时的占位文字 */
+.kv-select__text--placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+/* 填充：表单、面板里用。底白 8%，左右 12，宽度拉伸 */
+.kv-select--fill {
+  --kv-select-fill: var(--color-bg-fill-container-light-1);
+  --kv-select-fill-hover: var(--color-bg-fill-container-light-1-hover);
+  --kv-select-fill-open: var(--color-bg-fill-container-light-1);
+  width: 100%;
+  padding: 0 var(--spacing-12);
+}
+
+/* 无底：工具条上用，比如输入框里的模型选择。左右 8，宽度跟着内容走 */
+.kv-select--plain {
+  --kv-select-fill: transparent;
+  --kv-select-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-select-fill-open: var(--color-bg-fill-container-light-2-pressed);
+  display: inline-flex;
+  padding: 0 var(--spacing-8);
+}
+
+/* 悬停、展开。文档摆静态悬停时，is-hover 写在最外层 kv-select__wrap 上 */
+.kv-select:where(:hover, .is-hover):not(:disabled),
+:where(.kv-select__wrap.is-hover) > .kv-select:not(:disabled) {
+  background: var(--kv-select-fill-hover);
+}
+
+.kv-select[aria-expanded="true"] {
+  background: var(--kv-select-fill-open);
+}
+
+/* 禁用：填充底白 4%；无底不加底。文字和箭头 disabled */
+.kv-select:disabled {
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+.kv-select--fill:disabled {
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.kv-select:disabled > .kv-icon,
+.kv-select:disabled .kv-select__text--placeholder {
+  color: var(--color-text-fill-disabled);
+}
+
+/* 最外层的壳：就是 Dropdown 的壳（kv-dropdown），Dropdown 用它量触发器的位置。
+   填充撑满，无底跟着内容走。
+   展开的列表由 Dropdown 挂在 body 上：出现 200ms ease-out、消失 150ms ease-in；
+   填充的列表和触发器一样宽；无底的列表按内容撑宽，但不比触发器窄（Figma 没定，待定）；
+   列表和触发器的间距 Figma 没定，暂用 4 */
+.kv-dropdown.kv-select__wrap {
+  display: flex;
+  width: 100%;
+}
+
+.kv-dropdown.kv-select__wrap--plain {
+  display: inline-flex;
+  width: auto;
+  vertical-align: top;
+}
+
+/* ---------- Textarea ---------- */
+
+/* 默认 320×104，可以拉伸；内边距 12，14/22 号字，右下角字数。宽度在使用时设成填满 */
+.kv-textarea {
+  flex-direction: column;
+  gap: var(--spacing-8);
+  width: 100%;
+  min-height: 104px;
+  padding: 11px;
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-textarea__field {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+}
+
+.kv-textarea__counter {
+  align-self: flex-end;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}
+
+/* 错误：字数也变 danger */
+.kv-textarea:has([aria-invalid="true"]) .kv-textarea__counter {
+  color: var(--color-status-danger);
+}
+
+.kv-textarea:has(:disabled) .kv-textarea__counter {
+  color: var(--color-text-fill-disabled);
+}

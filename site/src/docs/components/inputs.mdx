@@ -1,0 +1,155 @@
+import { Demo, PageHeader } from '@shell';
+import { InputPlayground, NumberInputPlayground, SelectPlayground, TextareaPlayground } from './inputs.demos';
+
+<PageHeader
+  eyebrow="通用组件"
+  title="输入控件"
+  lead="输入框、数字输入框、下拉选择、多行输入框：高度 32（多行除外），圆角 8，底色白 8%。"
+  figma={['输入控件', '169:1439']}
+  status="草稿 0.1.0"
+  code="kivi/inputs"
+/>
+
+## Input
+
+<InputPlayground />
+
+### 表单行：标签 + 输入框 + 提示
+
+<Demo code={`
+() => {
+  const [name, setName] = useState('未命名画布');
+  const n = Array.from(name).length;
+  const bad = n > 50;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 320 }}>
+      <span style={{ color: 'var(--color-text-fill-secondary)', fontSize: 13, lineHeight: '20px' }}>画布名称</span>
+      <Input aria-label="画布名称" value={name} onChange={(e) => setName(e.target.value)} counter={n + '/50'} invalid={bad} />
+      <span style={{ color: bad ? 'var(--color-status-danger)' : 'var(--color-text-fill-tertiary)', fontSize: 12, lineHeight: '20px' }}>
+        {bad ? '名称不能超过 50 个字' : '最多 50 个字'}
+      </span>
+    </div>
+  );
+}
+`} />
+
+## NumberInput
+
+<NumberInputPlayground />
+
+## Select
+
+<SelectPlayground />
+
+## Textarea
+
+<TextareaPlayground />
+
+### 描述：字数实时变化
+
+<Demo code={`
+() => {
+  const [text, setText] = useState('');
+  const n = Array.from(text).length;
+  return (
+    <div style={{ width: 320 }}>
+      <Textarea aria-label="描述" placeholder="请输入描述" value={text} onChange={(e) => setText(e.target.value)} counter={n + '/500'} invalid={n > 500} />
+    </div>
+  );
+}
+`} />
+
+### 提示词输入框（模板）
+
+<Demo code={`
+<div style={{ display: 'flex', flexDirection: 'column', gap: 12, boxSizing: 'border-box', width: 560, maxWidth: '100%', padding: 16, borderRadius: 24, background: 'var(--color-bg-fill-surface)' }}>
+  <textarea
+    className="kv-textarea__field"
+    rows={3}
+    placeholder="输入想法、剧本或上传参考，和 Agent 一起创作"
+    aria-label="提示词"
+    style={{ display: 'block', width: '100%', resize: 'none', fontSize: 14, lineHeight: '22px' }}
+  />
+  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <Tooltip content="上传">
+      <IconButton icon="Upload" label="上传" size={32} variant="secondary" />
+    </Tooltip>
+    <Select
+      variant="plain"
+      placement="top-start"
+      aria-label="模型"
+      defaultValue="a"
+      options={[{ value: 'a', label: '模型 A' }, { value: 'b', label: '模型 B' }]}
+    />
+    <span style={{ flex: 1 }} />
+    <Tooltip content="发送">
+      <IconButton icon="Send" label="发送" size={36} variant="primary" />
+    </Tooltip>
+  </div>
+</div>
+`} />
+
+## 参数
+
+### Input
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `leftIcon` | `IconName` | — | 左图标，16，`--color-text-fill-tertiary`。搜索框用 `Search` |
+| `counter` | `ReactNode` | — | 字数，框内右侧，12 号 tertiary，比如 `"0/50"`。传什么显示什么，超没超限自己算 |
+| `invalid` | `boolean` | `false` | 错误：1px `--color-status-danger` 描边，向里画，框大小不变。等于写 `aria-invalid` |
+| `placeholder` | `string` | — | 占位文字，`--color-text-fill-placeholder` |
+| `disabled` | `boolean` | `false` | 禁用：底白 4%（`--color-bg-fill-container-light-2`），文字、图标、字数 `--color-text-fill-disabled` |
+| `aria-label` | `string` | — | 没有可见文字标签时必须写 |
+| `className` | `string` | — | 加在最外层的框上。高 32，圆角 8（`--border-radius-8`），左右内边距 12，元素间距 8，文字 13 / 行高 20；底白 8%，悬停白 12%，聚焦只出现光标；宽度默认填满，要固定自己设 |
+
+`style` 加在最外层的框上，其余原生 `<input>` 属性（`value`、`defaultValue`、`onChange`……）都给里面的 `<input>`，`ref` 也指向它。
+
+### NumberInput
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `value` | `string` `number` | — | 数值，空是 `""`。传了就是受控，要自己在 `onChange` 里更新 |
+| `defaultValue` | `string` `number` | `""` | 非受控时的初始值 |
+| `onChange` | `(value: string) => void` | — | 输入时触发，参数是只剩数字的新值。自动去掉非数字，**只支持非负整数**：小数、负数、科学计数法都不支持（待定）。失焦被 `min` / `max` 夹住时也触发 |
+| `min` | `number` `string` | — | 最小值。失焦时小于它就改成它；输入过程中不夹，空着也不夹 |
+| `max` | `number` `string` | — | 最大值。失焦时大于它就改成它 |
+| `unit` | `ReactNode` | — | 单位，12 号 tertiary，和数值间距 4，比如 `"秒"` |
+| `disabled` | `boolean` | `false` | 禁用：数值和单位都是 `--color-text-fill-disabled` |
+| `aria-label` | `string` | — | 没有可见标签时必须写 |
+| `className` | `string` | — | 加在最外层的框上。高 32，最小宽 64（跟着内容走），圆角 8，左右内边距 8，数值 13；底色状态同输入框，没有已输入和错误 |
+
+`style` 加在最外层的框上，其余原生 `<input>` 属性都给里面的 `<input>`，`ref` 也指向它。
+
+### Select
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `options` | `SelectOption[]` | — | 选项 `{ value, label, icon?, disabled? }`。`icon` 是这一项的左图标（比如模型 logo），选中后触发器的左图标跟着换；`disabled` 灰色，选不了。列表是 Menu + MenuItem，当前项是 MenuItem 的「选中」状态：白 8% 底，不打勾 |
+| `variant` | `"fill"` `"plain"` | `"fill"` | 填充 / 无底。填充用在表单和面板，宽度拉伸，内边距 12，底白 8%，悬停白 12%；无底用在工具条，宽度跟着内容走，内边距 8，底透明，悬停白 8%，展开白 12%。高 32，圆角 8（`--border-radius-8`） |
+| `value` | `string` `null` | — | 选中的值，没选传 `null`。传了就是受控，要自己在 `onChange` 里更新 |
+| `defaultValue` | `string` `null` | `null` | 非受控时的初始值 |
+| `onChange` | `(value: string) => void` | — | 选了一项时触发，参数是选项的值 |
+| `placeholder` | `string` | — | 没选时显示的占位文字 |
+| `leftIcon` | `IconName` | — | 左图标，16，tertiary。选中的选项带 `icon` 时用选项的 |
+| `disabled` | `boolean` | `false` | 禁用：占位文字和箭头变灰，不能展开 |
+| `open` | `boolean` | — | 展开。传了就是受控；展开时右箭头从 `DownArrowSmall` 换成 `UpArrowSmall` |
+| `defaultOpen` | `boolean` | `false` | 非受控时一开始是不是展开 |
+| `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发 |
+| `placement` | `DropdownPlacement` | `"bottom-start"` | 列表出现的位置，放不下会自己翻到另一边。工具条贴着屏幕底部时写 `"top-start"` |
+| `aria-label` | `string` | — | 触发器上的说明，没有可见标签时必须写 |
+
+`className`、`style`、`ref` 和其余原生 `<span>` 属性加在最外层的壳上，填充的宽度在这里设。列表挂在 body 上，和触发器一样宽（无底的按内容撑宽，但不比触发器窄）。
+
+### Textarea
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `counter` | `ReactNode` | — | 字数，右下角，12 号 tertiary，和正文间距 8，比如 `"0/500"`。传什么显示什么，超没超限自己算 |
+| `invalid` | `boolean` | `false` | 错误：1px `--color-status-danger` 描边，字数也变 danger。等于写 `aria-invalid` |
+| `placeholder` | `string` | — | 占位文字 |
+| `disabled` | `boolean` | `false` | 禁用：底白 4%，字数 `--color-text-fill-disabled` |
+| `aria-label` | `string` | — | 没有可见标签时必须写 |
+| `className` | `string` | — | 加在最外层的框上。默认 320 × 104，右下角可以拖着改高度，宽度默认填满；圆角 8，内边距 12，文字 14 / 行高 22 |
+
+`style` 加在最外层的框上，其余原生 `<textarea>` 属性都给里面的 `<textarea>`，`ref` 也指向它。

@@ -1,0 +1,72 @@
+import { Demo } from '@shell';
+import {
+  GenerateButtonPlayground,
+  PromptBoxLab,
+  PromptBoxPlayground,
+  ReferenceStackPlayground,
+} from './main-site-prompt-box.demos';
+import * as Gen from './generation';
+
+{/* 主站页（main-site.mdx）里嵌的一段：主站创作输入框。参数表在 main-site.mdx 最下面的「参数」里。 */}
+
+## PromptBox
+
+<PromptBoxLab />
+
+<PromptBoxPlayground />
+
+### 首尾帧：两格 + 中间互换
+
+<Demo stage="base" scope={Gen} code={`
+<PromptBox
+  placeholder="描述画面怎么从首帧变到尾帧"
+  references={
+    <ReferenceFramePair
+      size={72}
+      first={{ src: './placeholders/kivi-future-1x1.webp' }}
+      last={{ src: './placeholders/monstera-dots-1x1.webp' }}
+    />
+  }
+  toolbar={
+    <>
+      <TaskSelect defaultValue="video" />
+      <VideoModelControls refMode={<RefModeSelect defaultValue="frames" />} />
+    </>
+  }
+  actions={
+    <>
+      <CountSelect />
+      <GenerateButton cost={60} />
+    </>
+  }
+/>
+`} />
+
+### 样片模式：Seedance 2.5 的开关放在参数后面
+
+<Demo stage="base" scope={Gen} code={`
+<PromptBox
+  placeholder="描述你想生成的视频，@ 引用参考素材"
+  references={<ReferenceAddSlot />}
+  toolbar={
+    <>
+      <TaskSelect defaultValue="video" />
+      <VideoModelControls defaultModel="seedance-2.5" />
+    </>
+  }
+  actions={
+    <>
+      <CountSelect />
+      <GenerateButton cost={30} />
+    </>
+  }
+/>
+`} />
+
+## ReferenceStack
+
+<ReferenceStackPlayground />
+
+## GenerateButton
+
+<GenerateButtonPlayground />

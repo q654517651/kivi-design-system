@@ -20,7 +20,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>原型名</title>
 <style>
-/* 1. 把「变量」最后的 :root 变量块整段贴在这里 */
+/* 1. 把「变量」最后的 :root 变量块整段贴在这里（动效变量也在里面） */
 
 /* 2. 基础样式 */
 * { box-sizing: border-box; margin: 0; }
@@ -55,9 +55,11 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   ```
 - 模型 Logo：写模型名文字。
 - IP 插图：用同尺寸的占位块，写清楚是什么，比如「IP 插图：暂无内容」。
-- 用户作品（图片、视频、节点里的生成结果）：不要用纯黑方块，看起来像没加载出来。用户给了截图或图片链接就直接用；没有的话用柔和的渐变色块代替，几张之间换换颜色，见下面「图片占位」。
+- 用户作品（图片、视频、节点里的生成结果）：不要用纯黑方块，看起来像没加载出来。用户给了截图或图片链接就直接用；没有的话用「占位图」里的图，随便挑，同一屏别重复。拿不到图片文件时，才用下面的渐变色块。
 
 ## 图片占位
+
+拿不到「占位图」里的图片文件时，用柔和的渐变色块代替，几张之间换换颜色。
 
 ```css
 /* 图片占位：低饱和的暗色渐变，换 --a / --b 做出几种 */
@@ -125,7 +127,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 
 /* 开关 */
 .switch { width: 36px; height: 20px; padding: 2px; border-radius: 999px; background: var(--color-bg-fill-container-light-1-pressed); display: inline-flex; }
-.switch::after { content: ""; width: 16px; height: 16px; border-radius: 50%; background: var(--color-text-fill-primary); transition: transform .15s; }
+.switch::after { content: ""; width: 16px; height: 16px; border-radius: 50%; background: var(--color-text-fill-primary); transition: transform var(--motion-duration-150) var(--motion-ease-in-out); }
 .switch.is-on { background: var(--color-brand-solid); }
 .switch.is-on::after { transform: translateX(16px); }
 
@@ -150,7 +152,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 ## 做完检查
 
 - 页面底是 base，没有出现规范外的颜色（图片占位的渐变除外）。
-- 图片位置用了截图或渐变占位，没有纯黑方块。
+- 图片位置用了截图、占位图或渐变占位，没有纯黑方块。
 - 每屏只有一个主要（品牌渐变）按钮。
 - 控件高度只有 28 / 32 / 36，纯图标按钮也一样。
 - 菜单、下拉、Tooltip、Toast 用 popup，弹窗用 surface + 遮罩，都没有投影。

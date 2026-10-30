@@ -1,0 +1,132 @@
+import { PageHeader, Tag } from '@shell';
+import { CopyAllTokens, TokenTable } from './tokens.demos';
+
+<PageHeader
+  eyebrow="基础"
+  title="变量"
+  lead="颜色、间距、圆角、字号、透明度、动效都用变量，不写死数值，不用吸管取色。只有深色一套主题。"
+  figma={['变量', '6:2']}
+  code="kivi/tokens.css"
+/>
+
+Figma「变量」页有 color、scale 两个集合。
+
+CSS 变量名由 Figma 名字的 `/` 换成 `-`、前面加 `--` 得到：`color/text/fill/secondary` → `--color-text-fill-secondary`。画布连线例外，用 Figma 里设的代码名。
+
+表里的「值」是从 `kivi/tokens.css` 读出来的，这一页不写死数值。点变量名复制 `var(--…)`。
+
+<Tag>新</Tag> v2 新增 &nbsp; <Tag kind="draft">占位</Tag> 取值待视觉确定，可以照用
+
+<CopyAllTokens />
+
+## 颜色
+
+### 底色
+
+界面从下往上分层，每层只用对应的颜色。`popup-raised` 已并入 popup，不要再用。
+
+<TokenTable group="bg" />
+
+### 填充与状态
+
+能点的东西从 8% 起：默认 8%、悬停 12%、按下 16%。4% 只用来区分大面积区域。叠加最多两层。
+
+<TokenTable group="fill" />
+
+### 文字与图标
+
+图标和文字用同一套颜色。由强到弱：primary → secondary → tertiary → placeholder → disabled。
+
+<TokenTable group="text" />
+
+### 描边
+
+<TokenTable group="border" />
+
+### 品牌色
+
+<TokenTable group="brand" />
+
+### 功能色
+
+文字和图标用实色，提示条和报错底色用对应的 subtle。取值都是占位。
+
+<TokenTable group="status" />
+
+### 图片和视频上的控件
+
+画面颜色不可控，白色叠加在亮图上会看不清，所以叠在图片、视频上的按钮和标签用黑色半透明底。
+
+<TokenTable group="on-media" />
+
+### 画布连线
+
+这组在 Figma 里单独设了代码名，不按命名规则转换。
+
+<TokenTable group="connector" />
+
+## 尺寸
+
+### 间距
+
+组件内部用 2–12，组件之间用 12–32；面板内边距 16，弹窗内边距 24。
+
+<TokenTable group="spacing" />
+
+### 圆角
+
+<TokenTable group="radius" />
+
+### 描边粗细
+
+<TokenTable group="stroke" />
+
+## 文字
+
+界面 13，阅读 14。字重只常用常规 400 和粗 500；按钮、标题、选中项用 500，600 很少用。字体是 PingFang SC。
+
+### 文字样式
+
+Figma 文字样式按「文字/字号 字重」命名：`文字/13 常规`、`文字/13 粗`……字号 10–16 都有常规、粗、加粗三档。
+
+| 样子 | 字号 / 行高 | 变量 | 用在哪 |
+|---|---|---|---|
+| <span style={{ fontSize: 'var(--font-size-10)', lineHeight: 'var(--font-line-height-16)' }}>角标 99+</span> | 10 / 16 | `--font-size-10` `--font-line-height-16` | 角标、数字徽标、缩放百分比 |
+| <span style={{ fontSize: 'var(--font-size-12)', lineHeight: 'var(--font-line-height-20)' }}>次要信息 1024×1024</span> | 12 / 20 | `--font-size-12` `--font-line-height-20` | 次要信息、标签、Tooltip、小号按钮、单位 |
+| <span style={{ fontSize: 'var(--font-size-13)', lineHeight: 'var(--font-line-height-20)' }}>界面主文字</span> | 13 / 20 | `--font-size-13` `--font-line-height-20` | 工具栏、导航、菜单项、按钮、输入框 |
+| <span style={{ fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>需要阅读的内容</span> | 14 / 22 | `--font-size-14` `--font-line-height-22` | 对话、AI 回复、提示词、说明文字、多行输入、Toast。不要用于按钮和工具栏 |
+| <span style={{ fontSize: 'var(--font-size-16)', lineHeight: 'var(--font-line-height-24)', fontWeight: 'var(--font-weight-medium)' }}>面板标题</span> | 16 / 24 | `--font-size-16` `--font-line-height-24` | 面板标题、分区标题、弹窗标题 |
+| <span style={{ fontSize: 'var(--font-size-20)', lineHeight: 'var(--font-line-height-28)', fontWeight: 'var(--font-weight-medium)' }}>醒目标题</span> | 20 / 28 | `--font-size-20` `--font-line-height-28` | 引导页、空状态的醒目标题 |
+| <span style={{ fontSize: 'var(--font-size-24)', lineHeight: 'var(--font-line-height-32)', fontWeight: 'var(--font-weight-medium)' }}>页面标题</span> | 24 / 32 | `--font-size-24` `--font-line-height-32` | 页面标题 |
+
+### 字号
+
+<TokenTable group="font-size" />
+
+### 行高
+
+<TokenTable group="line-height" />
+
+### 字重和字体
+
+<TokenTable group="weight" />
+
+## 透明度、动效、效果
+
+### 透明度
+
+图层整体透明度，用于禁用的图片、拖拽中的元素。颜色本身的透明度直接用颜色变量。
+
+<TokenTable group="opacity" />
+
+### 动效
+
+怎么选、怎么用，看 [动效](/foundations/motion)。
+
+<TokenTable group="motion" />
+
+### 效果
+
+没有投影样式：所有浮层都不加阴影。玻璃浮层的背景模糊是 32，和底色 glass、描边 border-subtle 一起用。
+
+<TokenTable group="effect" />

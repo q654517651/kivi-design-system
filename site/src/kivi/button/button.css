@@ -1,0 +1,302 @@
+/*
+  KIVI · 按钮
+  Figma「按钮」页：Button（带文字）、IconButton（只有图标）。依赖 tokens.css、base.css。
+
+  写法（React，见 Button.tsx、IconButton.tsx）
+    <Button size="md" variant="secondary" leftIcon="Add">新建</Button>
+    <IconButton icon="More" label="更多" size={32} variant="text" />
+  渲染出来的结构
+    <button class="kv-button kv-button--md kv-button--secondary">
+      <span class="kv-icon" data-icon="Add"><svg/></span><span>新建</span>
+    </button>
+
+  状态
+    禁用    disabled（或 aria-disabled="true"）
+    加载中  aria-busy="true"，左图标换成转圈的 Loading（loading 属性）
+    选中    aria-pressed="true"，只有 IconButton 有
+    is-hover、is-active 只给文档摆静态的悬停、按下用，项目里不用写
+*/
+
+/* ---------- 共用：两种按钮的底色、文字颜色和状态 ---------- */
+
+.kv-button,
+.kv-icon-button {
+  /* 每种类型改这几个值 */
+  --kv-fill: var(--color-bg-fill-container-light-1);
+  --kv-fill-hover: var(--color-bg-fill-container-light-1-hover);
+  --kv-fill-pressed: var(--color-bg-fill-container-light-1-pressed);
+  --kv-pressed-opacity: 1;
+  --kv-content: var(--color-text-fill-primary);
+  --kv-content-opacity: 1;
+  --kv-icon-size: 20px;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--kv-fill);
+  color: var(--kv-content);
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-20);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--motion-duration-100) var(--motion-ease-in-out),
+    color var(--motion-duration-100) var(--motion-ease-in-out),
+    opacity var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 文字和图标整体透明度，「轻」用 */
+.kv-button > *,
+.kv-icon-button > * {
+  opacity: var(--kv-content-opacity);
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-button > .kv-icon,
+.kv-icon-button > .kv-icon {
+  width: var(--kv-icon-size);
+  height: var(--kv-icon-size);
+}
+
+/* 类型 */
+
+.kv-button--primary,
+.kv-icon-button--primary {
+  --kv-fill: linear-gradient(90deg, var(--color-brand-gradient-1), var(--color-brand-gradient-2));
+  --kv-fill-hover:
+    linear-gradient(var(--color-bg-fill-container-light-1-hover) 0 0),
+    linear-gradient(90deg, var(--color-brand-gradient-1), var(--color-brand-gradient-2));
+  --kv-fill-pressed: var(--kv-fill);
+  --kv-pressed-opacity: 0.8;
+  --kv-content: var(--color-text-fill-on-brand);
+}
+
+.kv-button--secondary,
+.kv-icon-button--secondary {
+  --kv-fill: var(--color-bg-fill-container-light-1);
+  --kv-fill-hover: var(--color-bg-fill-container-light-1-hover);
+  --kv-fill-pressed: var(--color-bg-fill-container-light-1-pressed);
+}
+
+.kv-button--text,
+.kv-icon-button--text {
+  --kv-fill: transparent;
+  --kv-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+}
+
+/* 危险只有 Button */
+.kv-button--danger {
+  --kv-fill: var(--color-status-danger);
+  --kv-fill-hover:
+    linear-gradient(var(--color-bg-fill-container-light-1-hover) 0 0),
+    var(--color-status-danger);
+  --kv-fill-pressed: var(--color-status-danger);
+  --kv-pressed-opacity: 0.8;
+}
+
+/* 浮层：盖在图片、视频上 */
+.kv-button--on-media,
+.kv-icon-button--on-media {
+  --kv-fill: var(--color-on-media-fill);
+  --kv-fill-hover: var(--color-on-media-fill-hover);
+  --kv-fill-pressed: var(--color-on-media-fill-hover);
+  --kv-content: var(--color-on-media-text);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+
+/* 浮层无底（只有 IconButton）：平时没有底、不模糊，悬停、按下的底同浮层 */
+.kv-icon-button--on-media-ghost {
+  --kv-fill: transparent;
+  --kv-fill-hover: var(--color-on-media-fill);
+  --kv-fill-pressed: var(--color-on-media-fill-hover);
+  --kv-content: var(--color-on-media-text);
+}
+
+/* 轻（原来叫「弱」，2026-10-29 Figma 改名改样式）：文字和图标 50%，悬停、按下回到 100%。
+   Button 的轻底色和次要一样（白 8%），不然认不出是按钮；IconButton 的轻没有底 */
+.kv-button--light {
+  --kv-fill: var(--color-bg-fill-container-light-1);
+  --kv-fill-hover: var(--color-bg-fill-container-light-1-hover);
+  --kv-fill-pressed: var(--color-bg-fill-container-light-1-pressed);
+  --kv-content-opacity: var(--opacity-50);
+}
+
+.kv-icon-button--light {
+  --kv-fill: transparent;
+  --kv-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  --kv-content-opacity: var(--opacity-50);
+}
+
+/* 状态：悬停、按下 */
+
+:is(.kv-button, .kv-icon-button):where(:hover, .is-hover):not(:disabled, [aria-disabled="true"], [aria-busy="true"]) {
+  background: var(--kv-fill-hover);
+  --kv-content-opacity: 1;
+}
+
+:is(.kv-button, .kv-icon-button):where(:active, .is-active):not(:disabled, [aria-disabled="true"], [aria-busy="true"]) {
+  background: var(--kv-fill-pressed);
+  opacity: var(--kv-pressed-opacity);
+  --kv-content-opacity: 1;
+}
+
+/* 状态：选中（只有 IconButton，主要和轻没有） */
+
+.kv-icon-button[aria-pressed="true"] {
+  --kv-fill: var(--color-brand-subtle);
+  --kv-fill-hover: var(--color-brand-subtle);
+  --kv-fill-pressed: var(--color-brand-subtle);
+  --kv-content: var(--color-brand-solid);
+}
+
+:is(.kv-icon-button--on-media, .kv-icon-button--on-media-ghost)[aria-pressed="true"] {
+  --kv-fill: var(--color-on-media-fill-hover);
+  --kv-fill-hover: var(--color-on-media-fill-hover);
+  --kv-fill-pressed: var(--color-on-media-fill-hover);
+}
+
+/* 状态：禁用。底色白 8%，文字白 20%；文字、浮层、轻保持原来的底 */
+
+:is(.kv-button, .kv-icon-button):is(:disabled, [aria-disabled="true"]) {
+  --kv-fill: var(--color-bg-fill-container-light-1);
+  --kv-content: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+:is(.kv-button--text, .kv-icon-button--text):is(:disabled, [aria-disabled="true"]) {
+  --kv-fill: transparent;
+}
+
+:is(.kv-button--on-media, .kv-icon-button--on-media):is(:disabled, [aria-disabled="true"]) {
+  --kv-fill: var(--color-on-media-fill);
+}
+
+.kv-icon-button--on-media-ghost:is(:disabled, [aria-disabled="true"]) {
+  --kv-fill: transparent;
+}
+
+:is(.kv-button--light, .kv-icon-button--light):is(:disabled, [aria-disabled="true"]) {
+  --kv-content: var(--color-text-fill-primary);
+  --kv-content-opacity: var(--opacity-20);
+}
+
+/* 轻禁用：Button 保留白 8% 底，IconButton 没有底 */
+.kv-icon-button--light:is(:disabled, [aria-disabled="true"]) {
+  --kv-fill: transparent;
+}
+
+/* 状态：加载中。样子同默认，不响应悬停和点击 */
+
+:is(.kv-button, .kv-icon-button)[aria-busy="true"] {
+  pointer-events: none;
+}
+
+/* ---------- Button ---------- */
+
+/* 尺寸：中是默认 */
+.kv-button {
+  gap: var(--spacing-4);
+  height: 32px;
+  min-width: 64px;
+  padding: 0 var(--spacing-12);
+  border-radius: var(--border-radius-8);
+  font-size: var(--font-size-13);
+}
+
+.kv-button--sm {
+  --kv-icon-size: 16px;
+  height: 28px;
+  min-width: 0;
+  padding: 0 var(--spacing-8);
+  border-radius: var(--border-radius-6);
+  font-size: var(--font-size-12);
+}
+
+.kv-button--md {
+  height: 32px;
+  min-width: 64px;
+  padding: 0 var(--spacing-12);
+}
+
+.kv-button--lg {
+  height: 36px;
+  min-width: 80px;
+  padding: 0 var(--spacing-16);
+}
+
+/* 右图标是下拉箭头，固定 16 */
+.kv-button > .kv-icon:last-child:not(:first-child) {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------- IconButton ---------- */
+
+/* 尺寸：32 是默认 */
+.kv-icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-8);
+}
+
+.kv-icon-button--28 {
+  --kv-icon-size: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--border-radius-6);
+}
+
+.kv-icon-button--32 {
+  width: 32px;
+  height: 32px;
+}
+
+.kv-icon-button--36 {
+  width: 36px;
+  height: 36px;
+}
+
+/* ---------- ButtonGroup：按钮条 ---------- */
+
+/* 盖在图片、视频上的一排按钮合成一条：高 32（按钮 28 + 四周 2），按钮间距 4。
+   玻璃底 + 描边 border-subtle（描边画在里面，不占位置），圆角 8 = 按钮圆角 6 + 2 */
+.kv-button-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  padding: var(--spacing-2);
+  border-radius: var(--border-radius-8);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+}
+
+/* 条里的选中（收藏了）换实心图标、图标变绿，不加底；悬停和别的按钮一样 */
+.kv-button-group .kv-icon-button[aria-pressed="true"] {
+  --kv-fill: transparent;
+  --kv-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  --kv-content: var(--color-brand-solid);
+}
+
+.kv-button-group__divider {
+  flex: none;
+  width: var(--border-width-1);
+  height: 16px;
+  background: var(--color-border);
+}

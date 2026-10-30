@@ -1,0 +1,133 @@
+import { Demo, PageHeader } from '@shell';
+import { CheckboxPlayground, SliderPlayground, SwitchPlayground } from './selection.demos';
+
+<PageHeader
+  eyebrow="通用组件"
+  title="选择控件"
+  lead="开关、滑块、勾选框：点一下、拖一下就是「选一个值」，键盘也能用。"
+  figma={['选择控件', '164:627']}
+  status="草稿 0.1.0"
+  code="kivi/selection"
+/>
+
+## Switch
+
+<SwitchPlayground />
+
+## Slider
+
+<SliderPlayground />
+
+### 时长：刻度滑块 + 数字输入框
+
+<Demo code={`
+() => {
+  const [sec, setSec] = useState(12);
+  const [text, setText] = useState('12');
+  const fromSlider = (n) => { setSec(n); setText(String(n)); };
+  const fromInput = (v) => {
+    setText(v);
+    if (v !== '') setSec(Math.min(15, Math.max(1, Number(v))));
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: 320 }}>
+      <Slider aria-label="时长" min={1} max={15} value={sec} onChange={fromSlider} marks={[1, 5, 10, 15].map((v) => ({ value: v, label: String(v) }))} />
+      <NumberInput aria-label="时长（秒）" unit="秒" value={text} onChange={fromInput} onBlur={() => setText(String(sec))} />
+    </div>
+  );
+}
+`} />
+
+## Checkbox
+
+<CheckboxPlayground />
+
+### 列表全选
+
+<Demo code={`
+() => {
+  const [items, setItems] = useState([true, false, true]);
+  const count = items.filter(Boolean).length;
+  const all = count === 0 ? false : count === items.length ? true : 'mixed';
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+      <Checkbox checked={all} onChange={(on) => setItems(items.map(() => on))}>全选</Checkbox>
+      {items.map((on, i) => (
+        <Checkbox key={i} checked={on} onChange={(v) => setItems(items.map((x, j) => (j === i ? v : x)))}>
+          {'图片 ' + (i + 1)}
+        </Checkbox>
+      ))}
+    </div>
+  );
+}
+`} />
+
+### 图片多选
+
+<Demo code={`
+() => {
+  const names = ['ip-kiwi-pile', 'ip-peek', 'kiwi-glass'];
+  const [picked, setPicked] = useState([true, false, true]);
+  return (
+    <div style={{ display: 'flex', gap: 4 }}>
+      {names.map((name, i) => (
+        <div
+          key={name}
+          style={{ position: 'relative', width: 120, height: 120, borderRadius: 8, background: 'url(./placeholders/' + name + '-1x1.webp) center / cover' }}
+        >
+          <Checkbox
+            shape="round"
+            aria-label={'选择图片 ' + (i + 1)}
+            checked={picked[i]}
+            onChange={(v) => setPicked(picked.map((x, j) => (j === i ? v : x)))}
+            style={{ position: 'absolute', top: 8, right: 8 }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+`} />
+
+## 参数
+
+### Switch
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `checked` | `boolean` | — | 开 / 关。传了就是受控，要自己在 `onChange` 里更新。36 × 20，圆角 `--border-radius-round`；开 `--color-brand-solid`，关 `--color-bg-fill-container-light-1-pressed`；把手白色圆形 16，四周留 2 |
+| `defaultChecked` | `boolean` | `false` | 非受控时的初始值 |
+| `onChange` | `(checked: boolean) => void` | — | 点一下或按空格、回车时触发，参数是切换后的值 |
+| `disabled` | `boolean` | `false` | 禁用：整体透明度 30%（`--opacity-30`），开、关都一样。开关没有悬停状态 |
+| `aria-label` | `string` | — | 旁边没有文字时必须写，说明它控制什么 |
+
+其余原生 `<button>` 属性都能传。
+
+### Slider
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `value` | `number` | — | 当前值。传了就是受控，要自己在 `onChange` 里更新。轨道高 20、圆角 4、`--color-bg-fill-container-light-1`；已选 `--color-bg-fill-container-light-1-hover`；把手 8 × 20 白条，`--color-text-fill-primary`；键盘聚焦在轨道外画 1.5 描边 `--color-border-strong`。原来的绿色细滑块不用了 |
+| `defaultValue` | `number` | `min` | 非受控时的初始值 |
+| `onChange` | `(value: number) => void` | — | 拖动、点轨道、按方向键时触发，参数是新的值 |
+| `min` | `number` | `0` | 最小值 |
+| `max` | `number` | `100` | 最大值 |
+| `step` | `number` | `1` | 步长。方向键一次一步，PageUp / PageDown 一次十步，Home / End 到头 |
+| `marks` | `{ value, label? }[]` | — | 刻度：轨道上 1 × 6 的刻度线（白 20%），带 `label` 的在轨道下 4 写数字（22 高，12 号白 50%）；当前值对上的数字底白 8%、字变白 |
+| `disabled` | `boolean` | `false` | 禁用：整体透明度 30%，不能拖 |
+| `aria-label` | `string` | — | 没有文字，必须写 |
+
+宽度拉伸，轨道跟着变长。其余原生 `<div>` 属性都能传。
+
+### Checkbox
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `shape` | `"square"` `"round"` | `"square"` | 方形 / 圆形。方形用在列表和表单，圆形用在图片多选。方框 16，圆角 4（`--border-radius-4`）/ 999 |
+| `checked` | `boolean` `"mixed"` | — | 否 / 是 / 部分。传了就是受控，要自己在 `onChange` 里更新。「部分」只给全选框用。没选：黑 40% 底 + 1px 白 50% 描边；是、部分：`--color-brand-solid` 底，悬停 `--color-brand-hover` |
+| `defaultChecked` | `boolean` `"mixed"` | `false` | 非受控时的初始值 |
+| `onChange` | `(checked: boolean) => void` | — | 点一下或按空格时触发，参数是点完的值；「部分」点完变成 `true` |
+| `disabled` | `boolean` | `false` | 禁用：整体透明度 30%，方框和文字一起 |
+| `children` | `ReactNode` | — | 文字，13 号常规，和方框间距 8。圆形放在图片上时不带文字，要写 `aria-label` |
+
+其余原生 `<button>` 属性都能传。

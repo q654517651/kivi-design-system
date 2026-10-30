@@ -1,0 +1,118 @@
+import { Demo, PageHeader } from '@shell';
+import {
+  EmptyStatePlayground,
+  LoadingPlayground,
+  SkeletonPlayground,
+  ToastPlayground,
+  ToastStage,
+} from './feedback.demos';
+
+<PageHeader
+  eyebrow="通用组件"
+  title="反馈"
+  lead="操作之后告诉用户发生了什么：Toast 轻提示、Loading 加载、Skeleton 骨架屏、EmptyState 空状态。"
+  figma={['反馈', '177:714']}
+  status="待确认 0.1.0"
+  code="kivi/feedback"
+/>
+
+## Toast
+
+<ToastPlayground />
+
+### 点出来试试
+
+<ToastStage />
+
+## Loading
+
+<LoadingPlayground />
+
+## Skeleton
+
+<SkeletonPlayground />
+
+### 一条带头像的卡片
+
+<Demo code={`
+<div style={{ display: 'grid', gridTemplateColumns: '40px 1fr', gap: 'var(--spacing-12)', width: 320, maxWidth: '100%' }}>
+  <Skeleton shape="circle" width={40} height={40} />
+  <div style={{ display: 'grid', gap: 'var(--spacing-8)', alignContent: 'center' }}>
+    <Skeleton shape="text" width="60%" />
+    <Skeleton shape="text" />
+  </div>
+  <Skeleton shape="rect" height={160} style={{ gridColumn: '1 / -1' }} />
+</div>
+`} />
+
+## EmptyState
+
+<EmptyStatePlayground />
+
+## 参数
+
+### Toast
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"info"` `"success"` `"warning"` `"error"` `"loading"` | `"info"` | 信息 / 成功 / 警告 / 错误 / 加载中。状态图标 16：实心圆 + 镂空符号，圆色 `--color-text-fill-secondary` / `--color-status-success` / `--color-status-warning` / `--color-status-danger`；加载中不画圆，用转圈的 `Loading` 图标，1 秒一圈 |
+| `children` | `ReactNode` | — | 提示文字，一行说完，不加标题。14 / 22，primary |
+| `action` | `ReactNode` | — | 操作文字，比如「撤销」「取消」。14 / 22，secondary，和文字间距 8。不传就没有 |
+| `onAction` | `() => void` | — | 点操作文字 |
+
+高 40，内边距上下 8 左右 16（`--spacing-8` · `--spacing-16`），元素间距 8，圆角 12（`--border-radius-12`），底色 `--color-bg-fill-popup`，不加描边和阴影。
+
+其余原生 `<div>` 属性都能传。`Toast` 只管样子，弹出来用下面的 `Toaster` 和 `toast`。
+
+### Toaster 和 toast
+
+整个应用根上放一个 `<Toaster />`，之后在哪里都能调 `toast`，不用 Provider。`Toaster` 在页面顶部居中，距顶 24，同一时间只有一条，新的顶掉旧的。只放一个，多放几个每个里面都会出现同一条。
+
+| 方法 | 说明 |
+|---|---|
+| `toast.show({ type, text, action, onAction, duration })` | 弹出一条，返回它的 id。从上方移入，200ms ease-out |
+| `toast.update(id, options)` | 换成新的内容，参数同 `show`，没写的回到默认（「取消」换成成功时自然没了）。不重播移入动画；这一条已被顶掉或收起则什么也不做，返回 `false` |
+| `toast.hide(id?)` | 收起，淡出 150ms ease-in。不传 `id` 收当前这条；传了但这条已不是它则不动 |
+| `toast.info` `success` `warning` `error` `loading` | 简写：`toast.success('文字', { action, onAction, duration })`。`loading` 不自己消失，做完用 `update` 换成成功或错误 |
+
+| 参数 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | 同 Toast `type` | `"info"` | 类型 |
+| `text` | `ReactNode` | — | 提示文字 |
+| `action` | `ReactNode` | — | 操作文字，点了先调 `onAction`，再收起这一条 |
+| `onAction` | `() => void` | — | 点操作文字 |
+| `duration` | `number` | `3000` | 停留毫秒。`0` 是不自己消失；加载中不管填多少都不自己消失 |
+
+`Toaster` 的 `className`、`ref` 和其余原生 `<div>` 属性落在外层 `.kv-toaster` 上。
+
+### Loading
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `"sm"` `"md"` `"lg"` | `"sm"` | 小：横排，图标 16，字 12 / 20，间距 8。中：竖排，图标 24，字 13 / 20，间距 8。大：竖排，图标 40，字 14 / 22，间距 12 |
+| `children` | `ReactNode` | — | 文字，比如「加载中…」，不传就只有转圈。颜色 `--color-text-fill-secondary`，图标 `--color-text-fill-primary` |
+
+图标是图标库的 `Loading`，1 秒一圈，匀速。按钮里的加载用 Button 的 `loading`，不用它。其余原生 `<div>` 属性都能传。
+
+### Skeleton
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `shape` | `"rect"` `"circle"` `"text"` | `"rect"` | 矩形（图片、卡片，圆角 8 `--border-radius-8`）/ 圆形（头像，`--border-radius-round`）/ 文字行（高 12，圆角 4 `--border-radius-4`） |
+| `width` | `number` `string` | — | 照真实内容，数字按 px，也可以写 `'60%'`。文字行不写就撑满一行 |
+| `height` | `number` `string` | — | 照真实内容。文字行默认 12，不用写 |
+
+底色 `--color-bg-fill-container-light-1`（白 8%）；扫光从左往右，白 12%（`--color-bg-fill-container-light-1-hover`），1.4 秒一轮，匀速；系统开了「减少动态效果」时只留底色。Figma 里的 160×90、32×32、200×12 只是示意，不是默认尺寸。其余原生 `<div>` 属性都能传。
+
+### EmptyState
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `scene` | `"empty"` `"favorite"` `"offline"` `"failed"` | `"empty"` | 暂无内容 / 暂无收藏 / 无网络 / 生成失败。换的是 IP 图，样式一样 |
+| `size` | `"lg"` `"sm"` | `"lg"` | 大（页面、大面板）：插图 160，间距 16，标题 16 / 24 粗 primary，描述 14 / 22 tertiary。小（下拉、侧栏）：插图 96，间距 8，标题 14 / 22 粗 secondary，描述 12 / 20 tertiary。标题和描述间距都是 4 |
+| `title` | `ReactNode` | — | 标题，必填，一句话说清楚现在是什么情况 |
+| `description` | `ReactNode` | — | 说明，写清楚下一步做什么。下拉里不要 |
+| `action` | `ReactNode` | — | 引导操作，放一个中号次要 `Button`，离文字 24 |
+| `image` | `string` | — | 换一张插图的地址；不传就按 `scene` 取 `EMPTY_STATE_IMAGES` |
+
+四张 IP 图在 `assets/empty-state/`（`empty.png` · `no-favorites.png` · `offline.png` · `failed.png`，320×320），项目里放到自己的静态目录后改 `EMPTY_STATE_IMAGES`。插图背后有绿色光晕，脚下有地面阴影。其余原生 `<div>` 属性（除 `title`）都能传。

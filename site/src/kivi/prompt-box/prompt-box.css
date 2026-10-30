@@ -1,0 +1,559 @@
+/*
+  KIVI · 主站输入框
+  Figma「模板 · 主站」页「输入框」分区：PromptBox 整体、ReferenceStack 参考区、GenerateButton 生成按钮。
+  依赖 tokens.css、base.css、button.css，参考卡片用 canvas.css 的 kv-reference-item、tabs-tags-avatar.css 的 kv-asset-thumb。
+  主站 Agent 专用，Figma 里的用词是「模板」，这里做成组件，方便前端直接用。
+
+  写法（React，见 PromptBox.tsx、ReferenceStack.tsx、GenerateButton.tsx）
+    <PromptBox
+      placeholder="描述你想生成的视频，@ 引用参考素材"
+      references={<ReferenceStack items={items} onAdd={add} onRemove={remove} />}
+      toolbar={<>
+        <Select variant="plain" leftIcon="VideoGeneration" options={…} defaultValue="video" />
+        …
+      </>}
+      actions={<>
+        <Select variant="plain" options={…} defaultValue="1" />
+        <GenerateButton cost={99} />
+      </>}
+    />
+  渲染出来的结构
+    <div class="kv-prompt-box">
+      <div class="kv-prompt-box__content">
+        <div class="kv-prompt-box__refs"><div class="kv-reference-stack">…</div></div>
+        <textarea class="kv-prompt-box__input" />
+      </div>
+      <div class="kv-prompt-box__toolbar">
+        <div class="kv-prompt-box__toolbar-start">…</div>
+        <div class="kv-prompt-box__toolbar-end">…</div>
+      </div>
+    </div>
+
+  参考区
+    <div class="kv-reference-stack">                    72 × 72 的占位，提示词让出这块
+      <div class="kv-reference-stack__tray" data-open>  展开时变宽，浮在提示词上面
+        <span class="kv-reference-stack__hit" />
+        <div class="kv-reference-stack__scroller"><div class="kv-reference-stack__track">
+          <button class="kv-reference-stack__trigger">      添加格；收起时 data-compact，缩成右下角的小圆加号
+          <div class="kv-reference-stack__card" data-labeled>…</div>
+        </div></div>
+      </div>
+    </div>
+
+  状态（写在元素上，有就是开，没有就是关）
+    参考区 tray
+      data-open       展开（鼠标移上去、聚焦或固定展开）
+      data-stacked    两个及以上素材、没展开：叠放
+      data-settled    展开动画播完了，超出时才能横向滚动
+      data-full       展开后超出输入框宽度，横向滚动
+      data-at-end     滚动到头了
+    添加格 trigger
+      data-compact    缩成右下角的小圆加号
+    卡片 card
+      data-labeled    底部显示名字
+      data-uploading  上传中
+      data-leaving    被删掉，正在播消失动画
+      data-clickable  传了 onItemClick，鼠标变手型
+      aria-hidden     叠放里看不见的、被删掉的，不响应鼠标
+    PromptBox
+      data-dragover   文件拖到输入框上，样子 Figma 没定，待定
+*/
+
+/* ---------- PromptBox ---------- */
+
+/* 底白 8%，描边 border-subtle，圆角 24，内边距 16，内容区和工具条间距 12 */
+.kv-prompt-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-24);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+/* 内容区：最矮 120。参考区在左，提示词在右，从顶端对齐。
+   间距 24：叠放的卡片转角、右下的小圆加号都会探出 72 外 10 左右，12 贴得太近（2026-10-29 用户定） */
+.kv-prompt-box__content {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-24);
+  min-height: 120px;
+}
+
+.kv-prompt-box__refs {
+  display: flex;
+  flex: none;
+  gap: var(--spacing-12);
+}
+
+/* 提示词：14 / 20，无底无描边，聚焦也不加描边。高度由 JS 随内容撑，最矮 120，超过 maxHeight 就滚 */
+.kv-prompt-box__input {
+  /* 参考区展开时盖住的宽度（含渐隐），由 JS 写。没盖住是 0 */
+  --kv-prompt-cover: 0px;
+  /* 盖住的高度：参考区 72 高，按 20 的行高是 3.6 行，整行盖住取 4 行，不切半行字 */
+  --kv-prompt-cover-height: calc(var(--font-line-height-20) * 4);
+
+  flex: 1 1 0;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 120px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  resize: none;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  /* 用遮罩把左上角被参考区盖住的一块藏起来：整张挖掉一个矩形，右边 40 渐隐。
+     遮罩宽度跟着参考区的宽度走，时长由参考区写进 --kv-prompt-cover-duration，缓动同参考区，两边同步 */
+  -webkit-mask-image:
+    linear-gradient(black 0 0),
+    linear-gradient(90deg, black calc(100% - 40px), transparent);
+  mask-image:
+    linear-gradient(black 0 0),
+    linear-gradient(90deg, black calc(100% - 40px), transparent);
+  -webkit-mask-size: 100% 100%, var(--kv-prompt-cover) var(--kv-prompt-cover-height);
+  mask-size: 100% 100%, var(--kv-prompt-cover) var(--kv-prompt-cover-height);
+  -webkit-mask-position: 0 0, 0 0;
+  mask-position: 0 0, 0 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition:
+    -webkit-mask-size var(--kv-prompt-cover-duration, var(--motion-duration-400)) var(--motion-ease-expand),
+    mask-size var(--kv-prompt-cover-duration, var(--motion-duration-400)) var(--motion-ease-expand);
+}
+
+.kv-prompt-box__input::placeholder {
+  color: var(--color-text-fill-placeholder);
+  opacity: 1;
+}
+
+/* 工具条：高 32。左边任务类型、参考方式、模型、参数，间距 6；右边张数和生成，间距 8；两边撑开 */
+.kv-prompt-box__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-6) var(--spacing-8);
+  min-height: 32px;
+}
+
+.kv-prompt-box__toolbar-start,
+.kv-prompt-box__toolbar-end {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.kv-prompt-box__toolbar-start {
+  gap: var(--spacing-6);
+}
+
+.kv-prompt-box__toolbar-end {
+  gap: var(--spacing-8);
+  margin-left: auto;
+}
+
+/* ---------- 工具条里的竖线和开关 ---------- */
+
+.kv-toolbar-divider {
+  flex: none;
+  width: var(--border-width-1);
+  height: 16px;
+  background: var(--color-border);
+}
+
+/* 13 号字 + Switch，间距 8，左右留 6 */
+.kv-toolbar-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: 0 var(--spacing-6);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ---------- 添加格 ---------- */
+
+/* 72 见方，白 4% 底，圆角 8，中间 AddSmall 20 */
+.kv-reference-add-slot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-2);
+  color: var(--color-text-fill-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kv-reference-add-slot:focus-visible,
+.kv-reference-stack__trigger:focus-visible,
+.kv-reference-stack__remove:focus-visible,
+.kv-reference-stack__tray:focus-visible {
+  outline: var(--border-width-1-5) solid var(--color-border-strong);
+  outline-offset: 2px;
+}
+
+/* 卡片自己裁切（overflow、clip-path），描边画在里面 */
+.kv-reference-stack__card:focus-visible {
+  outline: var(--border-width-1-5) solid var(--color-border-strong);
+  outline-offset: -2px;
+}
+
+/* ---------- 参考区 ---------- */
+
+/* 占位：72 见方，提示词让出这一块。展开的部分在 tray 里，浮在提示词上面 */
+.kv-reference-stack {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  font-family: var(--font-family);
+}
+
+/* 悬停区：收起 72，展开时变宽。z-index 让它盖在提示词上。
+   展开、收起的时长由 JS 写进 --kv-reference-stack-duration（400ms 起，每多一张加 10ms，最多 700ms），缓动 --motion-ease-expand */
+.kv-reference-stack__tray {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  outline: none;
+  transition: width var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+/* 往右、往下多出 10，和上传按钮探出去的一样多 */
+.kv-reference-stack__hit {
+  position: absolute;
+  top: 0;
+  right: -10px;
+  bottom: -10px;
+  left: 0;
+  z-index: -2;
+}
+
+/* 展开层不加底色：被盖住的字由输入框用遮罩藏起来，卡片直接浮在输入框的底上。
+   输入框的底是半透明的，再垫一层颜色会多出一块矩形（参考区演示里垫的就是输入框自己的颜色，看不出来） */
+
+/* 收起时叠放的卡片、上传按钮会露在 72 外面，不裁；展开动画播的时候也不裁，卡片要从叠放飞出来。
+   播完（data-settled）超出了才横向滚动，不换行，滚动条藏起来（有渐隐提示，滚轮也能滚） */
+.kv-reference-stack__scroller {
+  position: relative;
+  width: 100%;
+  height: 72px;
+}
+
+.kv-reference-stack__tray[data-settled] .kv-reference-stack__scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.kv-reference-stack__tray[data-settled] .kv-reference-stack__scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/* 超出输入框宽度时，右边 40 渐隐，提示还能往右滚；滚到头渐隐去掉。同样用遮罩，不盖颜色 */
+.kv-reference-stack__tray[data-settled][data-full]:not([data-at-end]) .kv-reference-stack__scroller {
+  -webkit-mask-image: linear-gradient(90deg, black calc(100% - 40px), transparent);
+  mask-image: linear-gradient(90deg, black calc(100% - 40px), transparent);
+}
+
+.kv-reference-stack__track {
+  position: relative;
+  height: 72px;
+}
+
+/* 添加：一个按钮两个样子，展开收起时直接变形过去。
+   空的、展开时：添加格，72 见方，白 4% 底，圆角 8，中间 AddSmall 20，排在最前。
+   有素材又没展开时（data-compact）：小圆加号，24 见方，popup 底，描边 border，AddSmall 16，挂在 72 的右下角，往右、往下各探出 10。
+   变形和卡片同一个时长（--kv-reference-stack-duration），都是加减速，不用匀速（2026-10-29 用户定）。
+   带一点点弧度：横、竖分开用两种很接近的缓动。展开时横向用 --motion-ease-expand，竖向用比它起步稍慢一点的
+   --kv-trigger-ease-late，路径微微往左下鼓（偏离直线最多 6–8px）；收起时倒过来。大小、圆角、底色、图标大小跟横向同一个节奏 */
+.kv-reference-stack__trigger {
+  --kv-trigger-duration: var(--kv-reference-stack-duration, var(--motion-duration-400));
+  /* 和 --motion-ease-expand 只差起步：0.7 → 0.55，两个方向差一点点，走出一点点弧度 */
+  --kv-trigger-ease-late: cubic-bezier(0, 0.55, 0.22, 1);
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: var(--border-width-1) solid transparent;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-2);
+  color: var(--color-text-fill-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    left var(--kv-trigger-duration) var(--motion-ease-expand),
+    top var(--kv-trigger-duration) var(--kv-trigger-ease-late),
+    width var(--kv-trigger-duration) var(--motion-ease-expand),
+    height var(--kv-trigger-duration) var(--motion-ease-expand),
+    border-radius var(--kv-trigger-duration) var(--motion-ease-expand),
+    border-color var(--kv-trigger-duration) var(--motion-ease-expand),
+    background-color var(--kv-trigger-duration) var(--motion-ease-expand);
+}
+
+.kv-reference-stack__trigger[data-compact] {
+  top: 58px;
+  left: 58px;
+  width: 24px;
+  height: 24px;
+  border-color: var(--color-border);
+  /* 圆：写 50% 不写 999，才能和圆角 8 之间平滑过渡 */
+  border-radius: 50%;
+  background: var(--color-bg-fill-popup);
+  /* 收起：竖向先走、横向后走 */
+  transition:
+    top var(--kv-trigger-duration) var(--motion-ease-expand),
+    left var(--kv-trigger-duration) var(--kv-trigger-ease-late),
+    width var(--kv-trigger-duration) var(--motion-ease-expand),
+    height var(--kv-trigger-duration) var(--motion-ease-expand),
+    border-radius var(--kv-trigger-duration) var(--motion-ease-expand),
+    border-color var(--kv-trigger-duration) var(--motion-ease-expand),
+    background-color var(--kv-trigger-duration) var(--motion-ease-expand);
+}
+
+/* 加号：添加格里 20，小圆里 16，跟着一起缩放 */
+.kv-reference-stack__trigger-icon {
+  width: 20px;
+  height: 20px;
+  transition:
+    width var(--kv-trigger-duration) var(--motion-ease-expand),
+    height var(--kv-trigger-duration) var(--motion-ease-expand);
+}
+
+.kv-reference-stack__trigger[data-compact] > .kv-reference-stack__trigger-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 卡片：一直是 72 见方，位置、转角、缩放由 JS 写在 transform 上，这里只管过渡。
+   叠放时缩到 56（0.78），转角 3° / -12° / 8°；展开后不缩不转，间距 6。
+   移动、缩放、旋转、透明度都用参考区的时长和 --motion-ease-expand */
+.kv-reference-stack__card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  /* 底部名字条带背景模糊，卡片旋转时只靠 overflow 裁不住圆角，再用 clip-path 裁一次 */
+  clip-path: inset(0 round var(--border-radius-8));
+  transform-origin: 50% 50%;
+  transition:
+    transform var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    opacity var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    border-radius var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    clip-path var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+/* 叠放时卡片缩小了，圆角按比例放大，看上去还是 8 */
+.kv-reference-stack__tray[data-stacked] .kv-reference-stack__card {
+  border-radius: calc(var(--border-radius-8) / var(--kv-reference-stack-scale));
+  clip-path: inset(0 round calc(var(--border-radius-8) / var(--kv-reference-stack-scale)));
+}
+
+/* 卡片里的 ReferenceItem 和缩略图铺满卡片，圆角跟着卡片 */
+.kv-reference-stack__card > .kv-reference-item,
+.kv-reference-stack__card .kv-asset-thumb {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.kv-reference-stack__card[data-clickable] {
+  cursor: pointer;
+}
+
+/* 叠放里看不见的、和被删掉的（aria-hidden）：不响应鼠标 */
+.kv-reference-stack__card[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+/* 被删掉：缩小到 80%、淡出，150ms ease-in */
+.kv-reference-stack__card[data-leaving] {
+  transition:
+    transform var(--motion-duration-150) var(--motion-ease-in),
+    opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+/* 底部名字：只有最上面那张、单张、展开时才显示。出现 150ms ease-out，消失 100ms ease-in。
+   叠放时卡片缩小了，名字条的高度、字号按比例放大，看上去还是 16 高、12 号字；和卡片缩放同一个节奏变，过程中大小基本不变 */
+.kv-reference-stack__card .kv-reference-item__weight {
+  opacity: 0;
+  transition:
+    opacity var(--motion-duration-100) var(--motion-ease-in),
+    height var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    font-size var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    line-height var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+.kv-reference-stack__card[data-labeled] .kv-reference-item__weight {
+  opacity: 1;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-out),
+    height var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    font-size var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    line-height var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+.kv-reference-stack__tray[data-stacked] .kv-reference-item__weight {
+  height: calc(16px / var(--kv-reference-stack-scale));
+  font-size: calc(var(--font-size-12) / var(--kv-reference-stack-scale));
+  line-height: calc(14px / var(--kv-reference-stack-scale));
+}
+
+/* 上传中不写名字，Figma 的上传中状态只有暗色和进度环 */
+.kv-reference-stack__card[data-uploading] .kv-reference-item__weight {
+  opacity: 0;
+}
+
+/* 视频、音频的时长：展开后显示在左上角（Figma 的 ReferenceItem 把时长放左下，会和底部名字重叠，位置待确认）。
+   展开时等卡片挪开 150ms 再 150ms ease-out 出现 */
+.kv-reference-stack__duration {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  padding: 0 var(--spacing-6);
+  border-radius: var(--border-radius-6);
+  background: var(--color-bg-fill-container-dark);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+  line-height: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.kv-reference-stack__tray[data-open] .kv-reference-stack__duration {
+  opacity: 1;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out) var(--motion-duration-150);
+}
+
+/* 删除：展开后悬停或聚焦到某一张，右上角出现。样子 Figma 没定，待确认 */
+.kv-reference-stack__remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-round);
+  background: var(--color-bg-fill-container-dark);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  color: var(--color-on-media-text);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.kv-reference-stack__remove > .kv-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.kv-reference-stack__tray[data-open] .kv-reference-stack__card:where(:hover, :focus-within) .kv-reference-stack__remove {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 上传中：盖一层黑 40%，中间进度环 28 和百分比，上传完 JS 去掉 */
+.kv-reference-stack__upload {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: var(--color-bg-fill-container-dark);
+  color: var(--color-on-media-text);
+}
+
+.kv-reference-stack__upload > svg {
+  grid-area: 1 / 1;
+  width: 28px;
+  height: 28px;
+}
+
+.kv-reference-stack__ring,
+.kv-reference-stack__arc {
+  fill: none;
+  stroke-width: 3;
+}
+
+.kv-reference-stack__ring {
+  stroke: var(--color-on-media-text);
+  opacity: var(--opacity-30);
+}
+
+.kv-reference-stack__arc {
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+
+/* 9 号字：Figma 里是 9 / 粗，变量里没有这一档 */
+.kv-reference-stack__upload > span {
+  grid-area: 1 / 1;
+  font-size: 9px;
+  font-weight: var(--font-weight-medium);
+  line-height: 11px;
+  font-variant-numeric: tabular-nums;
+}
+

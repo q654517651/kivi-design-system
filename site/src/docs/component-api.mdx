@@ -1,0 +1,107 @@
+import { PageHeader } from '@shell';
+
+<PageHeader
+  eyebrow="开始"
+  title="组件写法"
+  lead="组件库 src/kivi/ 怎么写。照 HeroUI、Radix 这类成熟组件库的通行做法，新写、改动都按这页来，npm run check 会查。"
+/>
+
+## 文件
+
+- 一个 Figma 页一个文件夹：一个组件一个 `.tsx`，这一页一个 `.css`，`index.ts` 导出组件和类型。
+- 公用逻辑放 `hooks/`，组件里不再各写一份。`hooks/` 不从入口导出。
+- 组件名就是 Figma 组件名。
+
+## 组件
+
+```tsx
+export type FooSize = 'sm' | 'lg';
+
+export interface FooProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
+  /** 尺寸：小 / 大，默认小 */
+  size?: FooSize;
+  /** 当前值。传了就是受控 */
+  value?: string;
+  /** 非受控时的初始值 */
+  defaultValue?: string;
+  /** 值变了，参数是新的值 */
+  onChange?: (value: string) => void;
+}
+
+/** 一句话说它是什么。Figma「某页」Foo */
+export const Foo = forwardRef<HTMLDivElement, FooProps>(function Foo(
+  { size = 'sm', value, defaultValue = '', onChange, className, onKeyDown, ...rest },
+  ref,
+) {
+  const [current, setCurrent] = useControllable(value, defaultValue, onChange);
+  return (
+    <div
+      ref={ref}
+      className={cx('kv-foo', `kv-foo--${size}`, className)}
+      data-filled={current ? '' : undefined}
+      onKeyDown={composeHandlers(onKeyDown, (e) => { /* 组件自己的 */ })}
+      {...rest}
+    />
+  );
+});
+Foo.displayName = 'Foo';
+```
+
+- 用 `forwardRef`，ref 给根元素；输入类给里面的 `<input>`、`<textarea>`。组件自己也要用根元素时，用 `useMergedRef` 合并。
+- 设 `displayName`，和组件名一样。
+- Props 继承根元素的原生属性，和自己的属性重名的用 `Omit` 去掉。
+- `className` 用 `cx` 拼在最后；`style` 合并，不覆盖；其余属性 `...rest` 放在根元素最后。
+- 组件自己要监听的事件（`onKeyDown`、`onPointerEnter` 这类），从 props 里取出来，用 `composeHandlers` 和外面传的合并，不能被 `...rest` 冲掉，也不能吞掉外面的。
+- 属性用英文，和 Figma 属性一一对应，带中文注释，写默认值。
+- 导出组件、`FooProps` 和可选值的类型（`FooSize`、`FooVariant`）。
+
+## 状态
+
+- 外面可能要控制的状态，成套给三个：
+
+  | 状态 | 属性 |
+  |---|---|
+  | 值 | `value` / `defaultValue` / `onChange(value)` |
+  | 勾选、开关 | `checked` / `defaultChecked` / `onChange(checked)` |
+  | 弹出 | `open` / `defaultOpen` / `onOpenChange(open)` |
+  | 展开内容 | `expanded` / `defaultExpanded` / `onExpandedChange(expanded)` |
+  | 其他 | `x` / `defaultX` / `onXChange(x)` |
+
+- 一律用 `useControllable` 实现，不自己写 `useState` 再判断受控。
+- `onChange` 直接给新的值，不给事件对象，所以要 `Omit` 掉原生的 `onChange`。
+- 事件名 `on` 加动作：`onRemove`、`onPreview`；值变了是 `onXxxChange`。
+- 状态写在元素上，CSS 按它选：
+  - 先用原生属性和 `aria-*`：`disabled`、`aria-pressed`、`aria-expanded`、`aria-selected`、`aria-checked`、`aria-current`。
+  - 没有对应的，用 `data-*`：有就是 `data-playing=""`，没有就不写；几种状态之间切换用 `data-state="open"`。
+  - 不用 `is-*` 类名。唯一例外是 `is-hover`、`is-active`、`is-focus`：只给文档摆静态的悬停、按下、聚焦，写在 `:where(:hover, .is-hover)` 里；网站复制代码时会去掉，项目里不写。
+
+## 样式
+
+- 类名：组件 `kv-组件名`，修饰 `kv-组件名--尺寸`，部件 `kv-组件名__部件`。部件类名也是对外的接口，前端改样式靠它。
+- 颜色、间距、圆角、字号、时长、缓动只用 `tokens.css` 的变量。要透明度的用 `color-mix(in srgb, var(--变量) 30%, transparent)`。Figma 没有变量的值直接写数字，同一行写注释「Figma 没变量」。
+- 遮罩（mask）只看透明度，用 `black`、`transparent`。
+- 动效用 tokens 里的缓动，不用匀速；只有循环动画例外。
+- 浮层挂到 `body` 上（`createPortal`），`usePresence` 管出现消失，`useFloating` 定位。
+
+## 可访问性
+
+- 只有图标的按钮必须传 `label`。
+- 能点的用 `<button>`；自己做的控件给 `role` 和键盘：滑块方向键、菜单上下键和 Esc、弹窗 Esc 关闭。
+
+## 公用逻辑 hooks/
+
+| 名字 | 做什么 |
+|---|---|
+| `useControllable` | 受控、非受控二合一 |
+| `usePresence` | 关的时候先播消失动画再卸掉 |
+| `useFloating` | 浮层跟着锚点定位，放不下翻到另一边；滚动、窗口变化、锚点或浮层尺寸变了（ResizeObserver）都重新算。锚点用 `rectOf(元素)` 取，才会盯它的尺寸 |
+| `usePointerDrag` | 拖动条：按下跳到那里、拖着走，横竖都行 |
+| `useHoverIntent` | 离开后等一会儿才算离开，鼠标挪到浮层的路上不断 |
+| `useMergedRef` | 合并组件自己的 ref 和外面传的 ref |
+| `composeHandlers` | 合并组件自己的事件和外面传的事件 |
+| `exclusivePlayback` | 同一时间只播一个视频或音频 |
+| `useScrollLock` | 锁背景滚动：body 不能滚，补滚动条宽度防跳动，多层弹窗最后一个关掉才恢复 |
+
+## 检查
+
+在 `site/` 下跑 `npm run check`：类型检查，再查组件有没有 `forwardRef`、`displayName`、`...rest`，有没有 `is-*` 类名，CSS 里有没有写死的颜色。

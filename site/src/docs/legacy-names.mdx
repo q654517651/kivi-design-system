@@ -1,0 +1,191 @@
+import { PageHeader } from '@shell';
+
+<PageHeader
+  eyebrow="开始"
+  title="旧名对照"
+  lead="旧库里的名字，在新库里对应什么。来自 Figma 各页的「迁移映射」。"
+/>
+
+## 变量
+
+间距、圆角、描边粗细改成数字名（2026-10-29），`round` 不变。前端先在 variable.less 里给旧名留别名，tailwind 的 spacing、borderRadius 加数字键。
+
+| 旧（Figma · 代码） | 新（Figma · 代码） | 说明 |
+|---|---|---|
+| — | `spacing/2` · `--spacing-2` | 新增，按钮条的内边距 |
+| `spacing/none` · `--spacing-none` | `spacing/0` · `--spacing-0` | 改名 |
+| `spacing/xxs` · `--spacing-xxs` | `spacing/4` · `--spacing-4` | 改名 |
+| `spacing/xs` · `--spacing-xs` | `spacing/6` · `--spacing-6` | 改名 |
+| `spacing/sm` · `--spacing-sm` | `spacing/8` · `--spacing-8` | 改名 |
+| `spacing/md` · `--spacing-md` | `spacing/12` · `--spacing-12` | 改名 |
+| `spacing/lg` · `--spacing-lg` | `spacing/16` · `--spacing-16` | 改名 |
+| `spacing/xl` · `--spacing-xl` | `spacing/24` · `--spacing-24` | 改名 |
+| `spacing/xxl` · `--spacing-xxl` | `spacing/32` · `--spacing-32` | 改名 |
+| `border/radius/xxs` · `--border-radius-xxs` | `border/radius/4` · `--border-radius-4` | 改名 |
+| `border/radius/xs` · `--border-radius-xs` | `border/radius/6` · `--border-radius-6` | 改名 |
+| `border/radius/sm` · `--border-radius-sm` | `border/radius/8` · `--border-radius-8` | 改名 |
+| `border/radius/md` · `--border-radius-md` | `border/radius/12` · `--border-radius-12` | 改名 |
+| `border/radius/lg` · `--border-radius-lg` | `border/radius/16` · `--border-radius-16` | 改名 |
+| `border/radius/xl` · `--border-radius-xl` | `border/radius/24` · `--border-radius-24` | 改名，前端代码里还没有这个变量 |
+| `border/width/sm` · `--border-widtgh-sm` | `border/width/1` · `--border-width-1` | 改名，前端代码原来拼错了 |
+| `border/width/md` · `--border-widtgh-md` | `border/width/1-25` · `--border-width-1-25` | 改名，变量名不能带点，1.25 写成 1-25 |
+| `border/width/lg` · `--border-widtgh-lg` | `border/width/1-5` · `--border-width-1-5` | 改名 |
+
+## 占位图
+
+| 旧 | 新 | 类型 · 说明 |
+|---|---|---|
+| 单文件原型里的 `work-img`（`<img>` 铺满格子，`object-fit: cover`） | `PlaceholderImage`（`fill="cover"`） | 改成组件。单文件 HTML 原型不再维护 |
+| 单文件原型里的 `work-blur`（两张同图 + `work-blur__bg`、`work-blur__img`，`::after` 盖 glass） | `PlaceholderImage`（`fill="blur"`） | 改成组件。放大、遮罩、模糊的数值不变：336 / 256、glass、模糊 24 |
+
+## 按钮
+
+| 旧 | 新 | 类型 · 说明 |
+|---|---|---|
+| 类型 = 弱（`variant="weak"`）：无底，文字和图标 50% | 类型 = 轻（`variant="light"`） | 改名 + 改样式（2026-10-29 Figma）。Button 的轻有底，和次要一样白 8%；IconButton 的轻还是无底 |
+
+## 菜单和提示
+
+来自 Figma 本页的「迁移映射」。代码没改，前端按这张表改。
+
+#### 旧组件库（KIVI UI KITS）→ 新组件
+
+| 旧 | 新 | 类型 | 说明 |
+|---|---|---|---|
+| MenuItem | MenuItem | 改尺寸 | 44 → 36，圆角 12 → 8，左右 16 → 12，14 → 13 号字 |
+| MenuItem · TrailingContent=icon-text | 「快捷键」「子菜单箭头」开关 | 合并 | 右边的内容不再用变体区分 |
+| MenuItem · State=悬浮 | 状态=悬停 | 改名 | 悬停底色白 8%；新增「危险」类型 |
+| MenuItemAsset | MenuItem 的「缩略图」开关 | 合并 | 不再单独一个组件 |
+| 菜单容器（毛玻璃） | 菜单模板 | 改值 | 还是玻璃：底色绑 glass，模糊统一 32，描边统一白 8%，圆角 12，条目间距 4 |
+| 数量 / 比例 / 模型选择、快捷添加节点、封面「更多」、画布右键、节点右键、@素材 | 设计稿里用菜单模板拼 | 不再是组件 | 条目写死在组件里，加一项就要改组件或解绑 |
+| 单选菜单的当前项（数量、比例，旧库白 8% 底） | MenuItem 状态=选中 | 新增【新增】 | 白 8% 底，不打勾。「勾选」开关只给需要打勾的多选场景 |
+| MenuItem 缩略图（24 纯色块） | AssetThumb 尺寸=24（选项卡、标签和头像页） | 改样式【调整】 | 缩略图换成 AssetThumb 实例，在 MenuItem 面板上直接切图片 / 音频 |
+
+#### 代码 → 新组件
+
+| 代码 | 新 | 类型 | 说明 |
+|---|---|---|---|
+| CustomMenu 容器 | 菜单模板 | 改值 | 还是玻璃：rgba(24,24,24,.7) 换成 `--color-bg-fill-glass`，模糊 32，描边白 8%，去掉阴影；圆角改成 12（条目 8 + 内边距 4），条目间距 4 |
+| CustomMenu 菜单项 | MenuItem | 改值 | 高 36，圆角 12 → 8，14 → 13 号字；悬停白 8% 不变 |
+| CustomMenu 子菜单 | 菜单模板 | 改样式 | 底色 popup-light-1（#36393d）→ 玻璃，和父菜单一样 |
+| .custom-tooltip（global.less） | Tooltip · 简单 | 改值 | 底色 popup-light-1（#36393d）→ popup；14 → 12 号字 |
+| ChatTooltip | Tooltip · 说明 | 改值 | 底色 popup-light-2 → popup；最宽 240 |
+| AnchoredDropdown、CommonDropdown 等 | 菜单模板 + MenuItem | 合并 | 样式统一到菜单模板；这几个组件的细节还没逐个核对 |
+| 菜单模板分区：菜单 · 模板（复制这个）、示例 · 右键菜单 / 分组和子菜单 / 单选菜单 / 素材菜单 | 「模板 · 通用」页「菜单」分区 | 移动【待确认】 | 改名、去重在整理模板时做 |
+
+## 弹窗
+
+#### 现有弹窗归到哪一档
+
+代码里现在的弹窗，按宽度就近归到 S / M / L / XL。
+
+| 尺寸 | 宽度 | 用在哪 | 代码里现在的弹窗（宽度） |
+|---|---|---|---|
+| S | 400 | 确认、重命名、简单输入 | 400：ConfirmModal · RenameModal · EditFolderNameModal · CompressModal · BalanceInfo · AppDeployVersionCheck · SkillConfirmModal；500：SkillSyncPublicModal |
+| M | 720 | 表单、上传、设置 | 700：PasteModal · 740：VersionUpdateModal · 800：FeedBack |
+| L | 1024 | 列表、市场、详情 | 898：SkillDetailModal · 1024：SkillMarketModal · 1056：Cropper（裁剪） |
+| XL | 1200 | 编辑器 | 1208：SkillEditorModal · 最小 1200：EditMultiImagModal |
+| 全屏【待定】 | 100vw | 素材详情 | 铺满：CardDetailModal；按屏幕宽：AIToolsModal 75vw（大屏 60vw）· PadImageModal 60vw，待定 |
+
+- 代码里还没有尺寸档位：弹窗有 BaseModal、antd Modal、HeroUI Modal 三种写法，宽度都是各写各的。
+- 要按 S / M / L / XL 走，需要前端给弹窗加一个 size 参数，再把上面这些宽度改过去。
+
+## 反馈
+
+旧组件库和代码里的反馈类组件，对应到新组件的哪里。代码没改，前端按这张表改。
+
+| 旧 | 新 | 类型 | 说明 | 状态 |
+|---|---|---|---|---|
+| 旧库 Toast · 成功 / 失败 / 提醒 | Toast · 成功 / 错误 / 警告 | 改样式 | 圆角 8 → 12，图标改成镂空圆 | 草稿 |
+| 旧库 Toast · 处理中（带「取消」） | Toast · 加载中 + 显示操作 | 合并 | 「取消」变成 Toast 的操作文字 | 草稿 |
+| 旧库 Toast · 鼠标悬浮提示 | Tooltip · 说明 | 替换 | 悬停时解释东西的是 Tooltip，不是 Toast | 调整 |
+| 旧库 封装背景提醒 / 封装素材提醒（黄底条） | 暂不收 | 待定 | 页面里常驻的提醒条，用的地方多了再做 Alert | 待确认 |
+| 代码 message（antd，#2b2d31，14 号，约 130 处） | Toast | 改样式 | 底色换弹层色，圆角 12，图标按新库 | 调整 |
+| 代码 Spinner（HeroUI，约 20 处） | Loading | 改样式 | 统一用图标库的 Loading，尺寸 16 / 24 / 40 | 调整 |
+| 代码 CustomSkeleton · LoadingSkeleton · HeroUI Skeleton · 技能市场手写 | Skeleton | 合并 | 底色白 8%，扫光白 12%，1.4 秒一轮 | 调整 |
+| 代码 Empty（noData / noCollection，图 200） | EmptyState · 大 | 改尺寸 | 插图 200 → 160，加标题和说明两行 | 调整 |
+| 旧库 空状态 · 资源空状态 / 没有收藏 / 无网络 / 生成失败 | EmptyState · 暂无内容 / 暂无收藏 / 无网络 / 生成失败 | 改样式 | 同一套 IP 图，加光晕和地面阴影 | 草稿 |
+| 旧库 空状态 · 收藏 / 图片 / 视频 / 人脸（线条图标） | 删除 | 删除 | 统一用 IP 图 | 废弃 |
+| 模板/作品列表骨架、模板/对话骨架；示例/页面、卡片、区域、下拉 | 「模板 · 通用」页「骨架屏」分区；示例改名「示意 / …」留在本页 | 移动 | 示意只演示组件放在什么场景，不复制 | 待确认 |
+
+## 选项卡、标签和头像
+
+代码和旧组件库里的选项卡、标签、角标、头像，对应到新组件的哪里。代码没改，前端按这张表改。这是 Figma「迁移映射」的搬运。
+
+| 旧 | 新 | 类型 | 说明 | 状态 |
+|---|---|---|---|---|
+| 代码 CustomTab（7 处，高 40，圆角 12，14 号） | TabItem · 大 36 / 中 32 | 改尺寸 | 高 40 → 36，圆角 12 → 8；选比例、分辨率这类值的改用分段选择器 | 调整 |
+| 代码 `gen-info__badge` · status-tag · tag-element（浅底小标签） | Tag · 默认 | 合并 | 高 24，底白 8%，12 号，圆角统一 4（组件实际 6，见 Tag 一节） | 调整 |
+| 代码 ModelCard badge · 详情页 main-badge · 视频时长 · 参考图序号 · 文件夹角标（黑 40% 底） | Tag · 覆盖 | 合并 | 底色用 on-media/fill，圆角 6 / 8 统一成 4（组件实际 6，见 Tag 一节） | 调整 |
+| 旧库 小标签（会话流参数：FLUX、1:1、Lora…） | Tag · 默认 + 缩略图 | 替换 | 会话流重构时一起换 | 草稿 |
+| 旧库 AI工具小标签（图标 + 文字，无底） | 删除 | 删除 | 只是排版，用自动布局 + 图标 + 文字 | 废弃 |
+| 代码 Avatar（HeroUI，w-4 / w-8）· CustomAvatar（w-9）· 技能作者头像 20 | Avatar · 16 / 24 / 32 | 改尺寸 | 导航 36 → 32，技能作者 20 → 24 | 调整 |
+| 代码 没有头像图时的灰色圆 | Avatar · 文字 | 替换 | 显示用户名首字 | 调整 |
+| 旧库 头像（KIVI 标志） | 待定 | 待定 | AI 的头像等会话流重构时一起定 | 待确认 |
+| 旧库 封面 · 头像框扩展 / 拆件 | 不收 | 不收 | 会员头像框是运营素材，留在设计稿里 | 稳定 |
+| MentionChip 里的 16 缩略图 · 音乐封面 | AssetThumb 尺寸=16 | 新增 | 原来 3 处各复制一份音频封面，渐变色还不一样，统一成 #89A0BE → #7286AA | 新增 |
+| MenuItem 缩略图（纯色块，放不了图标） | AssetThumb 尺寸=24 | 新增 | 音频条目切「音频」，补回音符 | 新增 |
+| ReferenceItem 的图片底 · 音频封面（56） | AssetThumb 尺寸=56 | 新增 | 序号、时长角标留在 ReferenceItem 里。前端可以把这 3 处的封面抽成一个组件 | 新增 |
+| TabItem（尺寸 · 状态） | TabItem 样式=选项卡，布局=横排（尺寸 · 状态不变） | 加属性 | 新增「样式」「布局」两个属性；原来的 8 个变体样子不变 | 待确认 |
+| SegmentItem（类型=文字 / 图标 · 状态） | TabItem 样式=分段，布局=横排 / 竖排 | 合并 | 选中白 12%、悬停白 4% 不变；图标型 = 布局=竖排；新增 分段 · 大 36 | 待确认 |
+| 模板/选项卡组 ×2、示例/生成参数、示例/卡片作者 / 详情作者 / 无头像；示例/图片卡片、状态 | 「模板 · 通用」页「选项卡」「标签组」「作者信息」分区；图片卡片、状态改名「示意 / …」留在本页 | 移动 | 示意只演示组件放在什么场景，不复制 | 待确认 |
+
+## 画布
+
+| 旧 | 新 | 类型 · 说明 |
+|---|---|---|
+| OutputNode（AspectRatio · Instance · 左侧节点 · 右侧节点 · 鼠标选中） | NodeWrapper（比例 · 左侧连接点 · 右侧连接点 · 选中） | 改名。属性改中文；里面的节点换成新节点；「节点」属性去掉，里面固定放 NodeCard（已暴露） |
+| ConnectorDot（Status） | ConnectorDot（状态） | 改名。只改属性名 |
+| 文字节点 · 图片节点 · 视频节点 · 音频节点（中间一版叫 TextNode 等） | NodeCard（状态）+ NodeMedia（类型） | 合并。旧的 7 个组件 37 个变体已删除；7 种节点的样子放在「模板 · 画布」页「节点」分区 |
+| 素材节点（Property 1）· UploadNode | NodeCard 完成 + 开关「上传中」「文字按钮」 | 合并。上传完成的视频、图片、音频只是内容类型不同；「文字按钮」写成「上传」 |
+| 视频封装节点 · 视频剪辑节点（VideoPackNode / VideoCutNode） | NodeCard 待生成 + 开关「按钮」 | 合并。按钮从 32 高描边改成 Button 小 · 次要（28 高，白 8% 底），点击态 = 悬停。还要不要见「待定」 |
+| 状态 = 引导态 / 待生成 / 生成中 / 完成 / 失败 | NodeCard 状态 = 引导 / 待生成 / 生成中 / 完成 / 失败 | 改名。去掉「态」字 |
+| 完成态的内容（图片、视频、音频、文字各画一份） | NodeMedia 类型 = 图片 / 视频 / 音频 / 文字 | 合并。在 NodeCard 完成态的属性面板里切类型 |
+| 状态 = 鼠标悬浮 / 展开效果 | NodeCard 完成 + 开关「图标按钮」「文字按钮」 | 合并。不再单独做变体，悬停就是把右上按钮打开 |
+| 状态 = 堆叠 | 模板里的「堆叠」：3 张 NodeCard 斜着叠 | 改成模板。多张卡的组合，不是单卡状态 |
+| 引导项（散框，14 号次要色） | MenuItem（13 号主色） | 改样式。字小一号、颜色变亮，代码要跟着统一 |
+| 角上按钮：ToolbarItem 填充款手动改成黑 40% | Button 中 / IconButton 32，类型 = 浮层 | 改样式。倒计时、上传中、上传、设为封面、下载都用它（中间一版叫 ToolbarItem 样式 = 玻璃） |
+| 右上一排浮层按钮（IconButton 32、Button 中 · 浮层，间距 8）· 左上收藏 | ButtonGroup 按钮条（IconButton 28 · 文字、Button 小 · 文字，条高 32） | 合并（2026-10-29）。收藏挪进右上条的最左边，收藏了的不悬停只留一个星。代码：NodeCard 的 `leftButton` 删掉，换成 `collect` + `collected`；主站 ResultTile 右上、左下也合成按钮条 |
+| ToolbarItem 玻璃款悬停（和默认一样） | 浮层悬停改成黑 60%（`--color-on-media-fill-hover`） | 改样式。代码里悬停是 rgba(16,19,24,0.9)，没有对应变量，需要和前端对齐 |
+| 视频时长「5s」（散框，22 高） | Tag 类型 = 覆盖（24 高） | 改样式 |
+| 音频播放键（散框，圆形白 12%） | IconButton 32 · 次要（圆角 8，白 8%） | 改样式。代码里是圆形，需要和前端对齐 |
+| 音频波形（散层，最多 90 多层） | AudioWave | 新增。宽度跟随容器 |
+| 视频播放条 PlayBar（画布页，静态：播放、时间、音量、2 高进度） | VideoPlayer 小号（通用组件 · 播放器） | 合并（2026-10-29）。节点、主站生成结果、预览共用一个播放器；NodeMedia 视频的 `duration` `playbar`、ResultTile 的 `duration` `playBar` 删掉，`src` 改传视频文件 |
+| 节点底色 #181818（没绑变量） | `--color-bg-fill-surface`（#191A1B） | 改样式。差 1 个色值，代码可以直接用 surface |
+| （无） | Connector · ConnectorRemove | 新增。照代码 line-style 做的连线 4 种状态和删除按钮 |
+| ToolbarItem（State · Style · Content）、工具栏（Property 1）、NodeToolbar（类型）、CanvasToolbar | 「模板 · 画布」页「节点工具栏」分区；按钮用 Button 中 · 文字、IconButton 32 · 文字 | 改成模板，按钮合并。前端要跟着改：字号 14 → 13，字重常规 → 中等 |
+| 画布工具栏 · 拉伸手柄 | CanvasToolbar · CropHandles | 改名。拉伸手柄在代码里是裁剪框，保留 #4AFF70 |
+| 模型调用（没发布过）· 节点面板分区的生成面板 ×7、参考图区块 ×5、模型选择栏 ×4 | 节点生成面板模板（7 种） | 改成模板，移到「模板 · 画布」页「生成面板」分区。面板底色 #191B1D → surface；内容随模型和参数变，所以不做组件 |
+| 参考图区块 · 文本区块 · 模型选择区块 ×2 · 基础画布 | 参考图区块 · 模型选择栏（模板）；PanelPrompt → PromptInput、MentionChip（组件） | 改成模板。PanelPrompt 改名 PromptInput，不只节点面板用，首页对话输入框也用它；PanelModelBarCreate 没人用，已删 |
+| 参考图区块里的每一格（散框，25 个） | ReferenceItem | 新增。AssetThumb + 右上角标 + 左下时长 + 底部权重，都用开关 |
+| 模型选择栏里的下拉（散框，14 个） | Select · 无底（输入控件页） | 改样式。高统一成 32，字号 14 → 13 |
+| 快捷操作（12 个菜单和参数面板） | 「模板 · 通用」页「菜单」分区、「模板 · 画布」页「参数面板」分区 | 改成模板，移动。快捷菜单分区已删 |
+| MenuItem · MenuItemAsset（44 高 · 圆角 12 · 14 号字） | MenuItem（菜单和提示页，36 高 · 圆角 8 · 13 号字） | 改样式。按竞品统一成 36；@素材的缩略图用 AssetThumb；单选菜单的当前项用「选中」（白 8% 底，不打勾）；前端 CustomMenu 改成 36 高、13 号字、图标 16 |
+| Heavy 字重（参考图区块 · 菜单） | 常规 400 | 改样式。苹方没有 Heavy，代码里是 400 |
+| Inter 字体（模型选择栏的英文） | `--font-family`（苹方） | 改样式。和代码一致 |
+| 资产图 | 暂不迁 | 待定。是「我的资产」的卡片，不是画布节点 |
+| 图标 AudioGeneration · History · Guide | 待补 | 待定。新图标库里没有，暂时保留矢量 |
+
+## Agent
+
+旧稿（KIVI 3.5 · Agent 页、3.13 · 聊天画布同步）里的画面元素，对应到这页的组件或模板。
+
+| 旧 | 新 | 类型 | 说明 |
+|---|---|---|---|
+| 3.5「消息气泡」（用户） | UserMessage | 新增 | 素材行用 ReferenceItem |
+| 3.5「Agent 思考中」（头像 + 文字） | ProcessRow · 打开「显示头像」 | 新增 | 只在 Agent 内部思考的空档出现 |
+| 3.13「创建节点 / 调用了多个工具 / 正在更新…」 | ProcessRow · 工具 | 新增 | 连续调用折叠，只显示最新一条 |
+| 3.13「询问中 / 已询问」 | ProcessRow · 询问 | 新增 | 展开后看问题和回答 |
+| 3.13「图片生成中 / 已生成 × 5 / 待确认后生成 × 5」 | ProcessRow · 生成 + NodeCard / MediaStack | 新增 | 节点状态和画布一致 |
+| 3.13「询问」卡片（分页、编号选项） | QuestionPanel + QuestionOption | 新增 | 3.5 的分段式追问卡片不再用 |
+| 3.13「生成授权」「飞书授权」「异常失败」 | ActionCard · 生成确认 / 授权 / 出错 | 新增 | — |
+| 顶部「会话标题 ▾ + 新建 + 收起」 | 模板「侧栏 Agent」里的顶栏 | 改成模板 | 没有状态、只出现一次，不做组件 |
+| 3.5「节点创建（6）」标签列表 | ProcessRow · 子项 | 替换 | 3.13 稿已改成过程行 |
+
+## 主站输入框
+
+| 旧写法 | 新写法 |
+|---|---|
+| 「模板 · 主站」里的输入框，复制模板改 | `PromptBox`；参考区 `ReferenceStack`；「生成 · 消耗 99」是 `GenerateButton` |
+| 工具条上的「参考素材 · 添加」「参考 · 图片1」 | `ReferenceAddSlot`、`ReferenceStack` 的卡片（`ReferenceItem` 72） |
+| Select 无底（已选） | `Select variant="plain"` |

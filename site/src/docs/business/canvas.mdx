@@ -1,0 +1,268 @@
+import { PageHeader } from '@shell';
+import { PreviewHost } from '../components/video-player.demos';
+import { CanvasPlayground, ConnectorPlayground, NodePlayground, NodeStackPlayground, PanelPlayground, PartsDemo, ToolbarPlayground } from './canvas.demos';
+
+<PageHeader
+  eyebrow="业务组件"
+  title="画布"
+  lead="无限画布：节点、连线、节点工具栏、生成面板。下面的小画布能直接点。"
+  figma={['画布', '192:627']}
+  status="待确认 0.1.0"
+  code="kivi/canvas"
+/>
+
+<PreviewHost />
+
+## 画布
+
+<CanvasPlayground />
+
+## 节点
+
+<NodePlayground />
+
+## 多图节点
+
+<NodeStackPlayground />
+
+## 节点工具栏
+
+<ToolbarPlayground />
+
+## 生成面板
+
+<PanelPlayground />
+
+## 连线
+
+<ConnectorPlayground />
+
+## 其他零件
+
+<PartsDemo />
+
+## 参数
+
+### NodeWrapper
+
+节点外框，画布上每个节点都包一层，里面固定放一个 NodeCard。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `ratio` | `"1:1"` `"3:4"` `"16:9"` `"4:3"` `"9:16"` | `"1:1"` | 短边 256：1:1 256×256 / 3:4 256×341 / 16:9 455×256 / 4:3 341×256 / 9:16 256×455。音频用 4:3 |
+| `name` | `ReactNode` | — | 节点名，在节点上方：14 号、500、`--color-text-fill-secondary`，离节点 11，超出省略 |
+| `leftDot` | `"default"` `"connected"` `"highlight"` | — | 左连接点的状态，传了才显示 |
+| `rightDot` | `"default"` `"connected"` `"highlight"` | — | 右连接点的状态，传了才显示 |
+| `selected` | `boolean` | `false` | 选中：外面一圈 2px 白 40% 描边，圆角 16；悬停时也有，CSS 管 |
+| `children` | `ReactNode` | — | 一个 NodeCard |
+
+### NodeCard
+
+节点本体，所有节点类型共用，大小跟着外面的 NodeWrapper。圆角 16，底 `--color-bg-fill-surface`，1px `--color-border`。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `state` | `"guide"` `"pending"` `"generating"` `"done"` `"failed"` | `"guide"` | 引导 / 待生成 / 生成中 / 完成 / 失败 |
+| `type` | `"image"` `"video"` `"audio"` `"text"` | `"image"` | 内容类型。引导项、待生成图标、生成中动效跟着它走；音频完成态单独放是 341 宽 |
+| `icon` | `IconName` | 按类型 | 待生成：中间 64 的图标，`--color-text-fill-tertiary`。默认 文字 `Text` / 图片 `ImageGeneration` / 视频 `VideoGeneration` / 音频 `Audio` |
+| `button` | `ReactNode` | — | 待生成：图标下的按钮，Button 小 · 次要 |
+| `cover` | `string` | — | 生成中：原素材地址，重新生成时放旧图。传了是「有原素材」的样子：原素材 + 遮罩 + 背景模糊，上面叠点阵动效；不传（第一次生成）没有遮罩，只有点阵动效 |
+| `countdown` | `ReactNode` | — | 生成中：左上倒计时，Tag 覆盖，离边 8。写「59s 生成中」，算不出写「生成中」 |
+| `uploading` | `boolean` | `false` | 完成：左上转圈，素材正在上传。32 的浮层底，`Loading` 20，1 秒一圈，不能点 |
+| `collect` | `boolean` | `false` | 完成：右上按钮条最左边放收藏（`Collect`，收藏了换 `CollectSolid`，图标绿色 `--color-brand-solid`）。生成的图片、视频节点开，素材节点不开 |
+| `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 完成：收藏了没有。开了 `hoverActions` 时，收藏了的不悬停右上只留一个绿星，悬停换成整条 |
+| `iconButton` | `ReactNode` | — | 完成：右上按钮条里的图标按钮，依次是全屏、下载。按钮条里默认 IconButton 28 · 文字，不用写尺寸和类型 |
+| `textButton` | `ReactNode` | — | 完成：按钮条最右边的文字按钮，和前面隔一条分割线，比如素材节点的「上传」、多图节点的「4 ⌄」。默认 Button 小 · 文字 |
+| `hoverActions` | `boolean` | `false` | 完成：右上按钮条只在悬停时出现，150ms。画布上的真实节点都开 |
+| `message` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败：文案，14 号、行高 22、白 50% |
+| `illustration` | `string` | `"./empty-state/failed.png"` | 失败：插画，120，离文案 16 |
+| `onGuideSelect` | `(option: string) => void` | — | 引导：点了某个起步方式 |
+| `children` | `ReactNode` | — | 引导：换掉默认的 3 个起步方式（MenuItem，176 宽，间距 4）；完成：放 NodeMedia |
+
+生成中分两种。第一次生成（没有原素材）：没有遮罩，只有点阵动效 `GeneratingDots`。重新生成（有原素材，传 `cover`）：原素材 + 遮罩 `--color-bg-fill-container-dark`（黑 40%）+ 背景模糊 24（CSS `blur(12px)`），上面叠 `GeneratingDots` 和倒计时。
+
+### NodeStack
+
+多图节点：一个节点生成了几张图，主图在前，其余叠在后面。放进 NodeWrapper，里面每张一个 NodeCard。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `expanded` | `boolean` | `false` | 收起：后面每张往上 8、缩 5%，依次歪 -4° / 4° / -2°（再往后 ±2° 交替），阴影 0 2 10 黑 20%，点不到。展开：铺成格子，间距 8，依次放右、上、右上，再往右每列两张；不歪不缩，阴影 0 10 30 黑 50%。动效弹簧 `--motion-ease-spring`，冲过头约 4%，一起动；时长 400ms 起，每多一张加 10ms，最多 700ms |
+| `children` | `ReactNode` | — | 每张一个 NodeCard，第一张是主图。主图右上的按钮条是收藏、全屏、下载 | NodeStackToggle；候选图是收藏、全屏、下载 | 「设为主图」，点候选图也是设为主图，设完收起 |
+
+展开时选中节点；取消选中、开始生成都会收起。
+
+### NodeStackToggle
+
+主图右上的张数按钮，放在节点的按钮条里，Button 小 · 文字。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `count` | `number` | — | 一共几张，必填 |
+| `expanded` | `boolean` | `false` | 展开时右边的 `DownArrowSmall` 转到朝上，和卡片同一条弹簧 |
+
+### NodeMedia
+
+完成态的内容，放进 NodeCard。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"video"` `"audio"` `"text"` | `"image"` | 图片：画面铺满，居中裁切。视频：就是播放器 VideoPlayer 小号（见「播放器」页），时长、悬停播放、控制条、进度都在里面。音频：内边距 8，顶上空 32，波形垫一块白 8%、圆角 6 的底，底下一行左边时间、右边播放键。文字：内边距 16，14 号、行高 22、`--color-text-fill-primary`，超出裁掉 |
+| `src` | `string` | — | 图片是图片地址，视频是视频文件，音频是音频文件（mp4 也行，播它的声音）。音频传了就真能播：点播放键或拖波形，时间和波形跟着走；同一时间只播一个，新开一个会暂停别的 |
+| `poster` | `string` | — | 视频封面，没播时显示；不传是首帧 |
+| `onPreview` | `(currentTime) => void` | — | 视频右下「预览」，打开大号预览接着放；不传就没有这个按钮 |
+| `time` | `string` | `"00:08 / 00:08"` | 音频没传 `src` 时的静态时间，14 号白字，在左下。传了 `src` 以真实播放为准（当前 / 总长） |
+| `progress` | `number` | `49` | 音频没传 `src` 时的静态进度，0–100。传了 `src` 以真实播放为准 |
+| `bars` | `number[]` | 72 条 | 音频：波形每条竖条的高度，见 AudioWave |
+| `playing` | `boolean` | — | 音频：播放中。传了就是受控。播放键图标 `Play` / `Pause`，label 跟着变「播放」「暂停」 |
+| `defaultPlaying` | `boolean` | `false` | 音频：非受控时一开始是否在播；浏览器拦了自动播放就回到暂停 |
+| `onPlayingChange` | `(playing: boolean) => void` | — | 音频：播放、暂停变了，参数是新的状态 |
+| `onPlay` | `() => void` | — | 音频：开始播放 |
+| `onPause` | `() => void` | — | 音频：暂停 |
+| `onEnded` | `() => void` | — | 音频：播完 |
+| `children` | `ReactNode` | — | 文字：正文 |
+
+音频下面一行高 32：左边时间，右边播放键（32 的圆，底白 12%，图标 16）。
+
+- 波形是滑块：点击、拖动跳转，左右键快进快退 5 秒，Home / End 回到头 / 尾。
+- 加载中：时间位置写「加载中…」，波形变淡。加载失败：时间位置写「加载失败」（`--color-status-danger`），波形变淡，播放键禁用。
+
+### Connector
+
+节点之间的连线，三次贝塞尔：水平出去、水平进来，控制点在水平中点。圆头，粗细不随拉伸变。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `state` | `"default"` `"active"` `"drawing"` `"flowing"` | `"default"` | 默认 `--g-workflow-line-color-default` 1.5。激活 `--g-workflow-line-color-active` 2，悬停、选中节点的关联线用。拖拽中 `--g-workflow-line-color-drawing` 1.5，虚线 6 / 6。执行中 `--g-workflow-line-color-flowing` 1.5 + 流光，2 秒一轮。换色 100ms ease-in-out |
+| `width` | `number` | `240` | 宽，按两个连接点的水平距离拉伸 |
+| `height` | `number` | `48` | 高，按两个连接点的垂直距离拉伸 |
+| `direction` | `"up"` `"down"` `"flat"` | `"up"` | up 起点在下、终点在上；down 起点在上、终点在下；flat 同高，是直线（高给 2） |
+| `remove` | `boolean` `"hover"` | — | 删除按钮：`true` 一直显示；`"hover"` 悬停线时出现；不传没有。默认在中点，鼠标移动时跟到线上离鼠标最近的点，150ms ease-out |
+| `onRemove` | `() => void` | — | 点了删除按钮 |
+
+### ConnectorDot
+
+节点左右两边的连接点。16 的圆，2px 描边画在里面，底 #0A0A0A；在节点外 8，垂直居中。其余原生 `<span>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `state` | `"default"` `"connected"` `"highlight"` | `"default"` | 默认：描边白 20%。已连接：中间多一个 6 的实心点，白 20%。高亮：描边和点都是白 50%（`--color-border-strong`） |
+
+### ConnectorRemove
+
+连线上的删除按钮，默认在中点。24 的圆，底 `--color-bg-fill-container-light-1`，1px `--color-border`，背景模糊 6，图标 `Cutting` 16。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `visible` | `boolean` | `true` | 出现：悬停或选中连线时 `true`，其余时候 `false`（淡出，读屏也读不到）。出现、消失 150ms |
+| `label` | `string` | `"删除连线"` | 说明，读屏用 |
+
+### NodeToolbar
+
+节点工具栏的外框，选中节点后出现在节点上方；里面用 Button 中 · 文字、IconButton 32 · 文字自己放，竖线用 `NodeToolbarDivider`（1 × 20，`--color-border`）。两个都没有自己的属性，其余原生属性都能传。
+
+- 只选中一个、且有结果的节点才出（生成中、上传中不出；文字节点双击编辑才出；音频节点没有）。
+- 水平居中，底边离节点 40；画布缩放到 50% 以上时不跟着缩放。
+- 高 44，内边距 6，按钮间距 8，圆角 12，玻璃：`--color-bg-fill-glass` + `--effect-glass-blur` 32 + 1px `--color-border-subtle`。
+
+### NodePanel
+
+生成面板的外框，选中生成节点后出现在节点下方；竖排三块：`NodePanelRefs`（参考图）、`PromptInput`（提示词）、`NodePanelBar`（模型选择栏）。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `expand` | `boolean` | `false` | 右上角的全屏按钮：`IconButton` 32 · 轻（`FullScreen`，白 50%，悬停 100%），离边 12 |
+| `onExpand` | `() => void` | — | 点全屏按钮 |
+
+- 只选中一个生成节点（文字、图片、视频、音频）才出，生成中也出（生成按钮不能点）；素材节点没有，文字节点编辑时收起。
+- 水平居中，离节点底 12；画布缩放到 50% 以上时不跟着缩放。
+- 宽 620（默认面板 686、创作页 800），内边距 16，块间距 16，圆角 12，底 `--color-bg-fill-surface`。
+
+`NodePanelRefs`：一排 ReferenceItem，间距 4，没有自己的属性。
+
+`NodePanelBar`：高 32。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `left` | `ReactNode` | — | 左边：模型、质量、比例等 Select · 无底，间距 6 |
+| `right` | `ReactNode` | — | 右边：张数 Select + GenerateButton 中（32），间距 8 |
+
+### ParamPicker
+
+参数选择：长得和无底的 Select 一样，点开是参数面板。画布生成面板和主站输入框共用。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `summary` | `ReactNode` | — | 触发器上的参数摘要，比如「720P · 16:9 · 8s」 |
+| `children` | `ReactNode` | — | 面板里一块块 `ParamField` |
+| `placement` | `DropdownPlacement` | `"bottom-start"` | 面板位置，放不下自己翻到另一边 |
+| `open` | `boolean` | — | 面板展开。传了就是受控 |
+| `defaultOpen` | `boolean` | `false` | 非受控时一开始是否展开 |
+| `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发，参数是新的状态 |
+
+面板 `ParamPanel`：玻璃浮层，圆角 16、内边距 12、块间距 12。`ParamField`（`label` + 控件）：标题 14 号 secondary，和控件间距 4。`ParamValue`（`value`、`unit`）：滑块右边的数值框 56 × 46，圆角 6，底白 8%。
+
+### ReferenceItem
+
+参考图里的一格：缩略图加几个角标。1px `--color-border` 盖在缩略图上，圆角 8。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `56` `72` | `56` | 56 用在节点面板的参考图区；72 用在主站输入框参考区（展开时）和生成记录参考区的悬停浮层 |
+| `type` | `"image"` `"audio"` | `"image"` | 缩略图类型 |
+| `src` | `string` | — | 缩略图地址，图片用 |
+| `badge` | `ReactNode` | — | 右上角标 20 × 20，只有左下圆角 4，黑 40% + 模糊 16：序号，或「首帧」「尾帧」 |
+| `duration` | `ReactNode` | — | 左下的视频时长，高 16，比如 `"12s"` |
+| `weight` | `ReactNode` | — | 底部通栏：Lora 权重，或「图片1」这类名字 |
+
+### ReferenceFramePair
+
+首尾帧：两格参考图，右上角标「首帧」「尾帧」，中间 28 的互换按钮（Switch，图标 20），间距 4。点互换，两张图各自滑到对方的位置（200ms ease-in-out）再对调。画布视频面板参考方式选「首尾帧」时、主站输入框首尾帧模式都用它。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `56` `72` | `56` | 画布生成面板 56，主站输入框 72 |
+| `first` | `{ src }` | — | 首帧。外面换图（`src` 变了）就跟着变，之前的互换作废 |
+| `last` | `{ src }` | — | 尾帧，同上 |
+| `onSwap` | `(first, last) => void` | — | 互换后触发，参数是换过来的首帧、尾帧；不传组件也能自己换。外面收到后把 `first` / `last` 换成这两个也行，不会换两次 |
+
+### PromptInput
+
+提示词输入。无底、无内边距，14 号；空的时候高 68，占位文字 `--color-text-fill-placeholder`；最高 120，超出滚动。表单里的多行输入用 Textarea。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `placeholder` | `string` | — | 没输入时的占位文字 |
+| `children` | `ReactNode` | — | 开头的内容：文字，中间可以插 MentionChip。只在第一次渲染时用，之后由用户编辑 |
+
+### MentionChip
+
+提示词里的 @素材。高 17，圆角 4，底 `--color-bg-fill-container-light-1`，1px `--color-border-subtle`；左 2 右 4；缩略图 16 + 名字 14 号 `--color-text-fill-secondary`，间距 4。整体不可编辑。其余原生 `<span>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"music"` | `"image"` | 图片 / 音乐 |
+| `src` | `string` | — | 缩略图地址，图片用。音乐的缩略图是音符 |
+| `children` | `ReactNode` | — | 名字，和参考图区里的名字对应，比如「图片1」「音乐1」 |
+
+### AudioWave
+
+音频波形和播放头，宽度随容器，高 80。竖条 2 宽、圆头、最高 69，播过的 `--color-text-fill-primary`，没播的白 30%；播放头是 2 宽的线 + 顶上 6 的点，`--color-brand-solid`。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `progress` | `number` | `49` | 播放位置，0–100。播放头在这里，左边的竖条是播放过的 |
+| `bars` | `number[]` | 72 条 | 每条竖条的高度（px，最高 69） |
+| `onProgressChange` | `(progress: number) => void` | — | 点击、拖动、按键改了位置，参数是新的位置（0–100）。传了就是滑块（`role="slider"`，`aria-valuenow`），不传只是展示 |
+| `step` | `number` | `5` | 方向键一次走多少（0–100 里的份数）；Home / End 回到头 / 尾 |
+| `disabled` | `boolean` | `false` | 禁用：不能拖、不能按键 |
+| `valueText` | `string` | — | 读屏读的当前位置，比如「00:03 / 00:08」；不传读百分比 |
+| `label` | `string` | `"播放进度"` | 读屏读的名字 |
+
+### CropHandles
+
+裁剪框，选中图片点「裁剪」后盖在图片上。描边 2px #4AFF70；四角 12 的白圆点，四边中间 120 × 6 的白圆头条。没有自己的属性，大小用 `style` 或外层定位给。
+
+### CanvasToolbar
+
+画布底部工具栏：添加、历史、上传，里面放 IconButton 32 · 文字。高 56，胶囊；内边距 12 / 16；间距 16；底 `--color-bg-fill-surface`，1px `--color-border-subtle`，背景模糊 12；图标 24。没有自己的属性，第一个「添加」给 `className="kv-canvas-toolbar__add"`（白底黑图标）。

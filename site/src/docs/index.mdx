@@ -1,0 +1,41 @@
+import { PageHeader } from '@shell';
+
+<PageHeader
+  eyebrow="KIVI UI KIT V2 · 草稿 0.1"
+  title="KIVI 设计规范"
+  lead="KIVI 产品界面（AI 无限画布 Web 端）的 React 组件库。设计、产品、研发、AI 看的是同一份：能直接点着试，代码能直接复制、能改。以 Figma 为准，Figma 里没定的不写。"
+/>
+
+## 怎么用
+
+- **前端**：React 18。从 `kivi` 引组件，比如 `import { Button } from '@kivi'`。引一次入口就带上变量和基础样式，每个组件自己带 CSS。
+- **设计**：每个组件的属性面板和 Figma 右侧属性一一对应，可以拿来对照效果。
+- **AI**：skill 直接读源码：规范在 `src/docs/` 的 `.mdx`，组件在 `src/kivi/` 的 `.tsx` 和 `.css`。不另外维护一份 md。
+
+## 文件
+
+| 位置 | 是什么 | 前端要不要用 |
+|---|---|---|
+| `src/kivi/tokens.css` | 所有变量。数值只写在这里 | 要 |
+| `src/kivi/base.css`、`Icon.tsx`、`icons.ts` | 图标和加载转圈。图标从 Figma 导出 | 要 |
+| `src/kivi/按页名/` | 每个 Figma 页一个文件夹：组件 `.tsx` + 这一页的 `.css` | 要 |
+| `src/docs/` | 规范页面：用途、结构、属性、样子、用法 + 演示 | 不用，看就行 |
+| `src/shell/` | 这个网站自己的外壳：目录、演示、属性面板 | 不用 |
+
+## 和 Figma 同步
+
+- 目录按 Figma 的页分。Figma 改了哪一页，就改对应的页面和 `src/kivi/` 里那一页的文件夹。
+- 改变量：只改 `tokens.css`，页面上的值是从它读出来的。
+- 改组件：改组件的 `.tsx`、`.css`，再改页面上的说明。
+- 改名要有对照：Figma 各页的「迁移映射」，网站里对应「旧名对照」。
+
+## 本地打开
+
+在 `kivi-design-system/site/` 下：
+
+```bash
+npm install
+npm run dev
+```
+
+打开 `http://localhost:4173/`。内网别的电脑用这台电脑的内网地址加 `:4173`。

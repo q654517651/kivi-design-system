@@ -1,0 +1,40 @@
+/*
+  KIVI · 基础
+  图标和加载转圈。依赖 tokens.css。
+  图标用 <Icon name="Add" />（Icon.tsx），SVG 数据在 icons.ts，从 Figma「图标」页导出，名字和 Figma 一样。
+*/
+
+/* 图标：<Icon /> 渲染成 <span class="kv-icon">，颜色跟文字走。
+   尺寸照 Figma Icon 组件：16 是默认，另有 20 / 24 / 40 / 64。放进组件里时由组件定尺寸。 */
+.kv-icon {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: inherit;
+}
+
+.kv-icon--20 { width: 20px; height: 20px; }
+.kv-icon--24 { width: 24px; height: 24px; }
+.kv-icon--40 { width: 40px; height: 40px; }
+.kv-icon--64 { width: 64px; height: 64px; }
+
+/* 品牌 Logo 是 54×24，按高度缩放 */
+.kv-icon[data-icon="Logo"] { width: auto; aspect-ratio: 54 / 24; }
+
+.kv-icon > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 加载：Loading 图标 1 秒一圈，匀速 */
+.kv-icon--spin {
+  animation: kv-spin 1s linear infinite;
+}
+
+@keyframes kv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,331 @@
+/*
+  VideoPlayer 视频播放器（Figma「播放器」页，10-29）
+
+  结构
+    <div class="kv-video-player kv-video-player--sm">
+      <video class="kv-video-player__video">
+      <span class="kv-tag kv-tag--on-media kv-video-player__duration">00:15</span>   小号，不悬停时
+      <span class="kv-video-player__spinner">缓冲转圈</span>                          缓冲时
+      <div class="kv-video-player__status">失败态</div>                               加载失败时
+      <div class="kv-video-player__controls">
+        <div class="kv-video-player__progress" role="slider">进度</div>
+        <div class="kv-video-player__bar">播放 · 时间 · 音量 · 全屏</div>
+      </div>
+    </div>
+    音量条弹出层 kv-video-player__volume-popup 挂在 body 上（全屏时挂在全屏的元素上）。
+  状态
+    data-controls 控制条出来了，data-playing 在播，data-dragging 在拖进度，
+    data-buffering 缓冲中（居中转圈），data-failed 加载失败（盖住画面，EmptyState 小，没有控制条）。
+    键盘聚焦到播放器里的按钮（:focus-visible）也显示控制条。
+
+  尺寸
+    小 sm：放卡片里。不悬停左下是时长；悬停出底部渐变 64 和一行控制：按钮 28（图标 16），时间 12。
+    大 lg：放预览。渐变 96，一行控制：按钮 32（图标 20），时间 14。
+           暂停时控制条常开；播放中鼠标 2 秒不动就藏起来，光标也藏。
+  进度
+    都在控制行下面，2 高，指上去、拖动时变 4。
+    小：贴着底边整宽，没有拖拽点，热区 8。
+    大：浮在控制行下面，左右留 16、离底 8，带 10 的拖拽点，热区 12。
+
+  按钮
+    IconButton 浮层无底（on-media-ghost），平时没有底，图标直接压在渐变上；悬停出浮层底（黑 60%），圆角跟 IconButton（28 是 6，32 是 8）。
+    播放、暂停用实心图标，音量、全屏用描边。
+  时间
+    00:03 / 00:15，总时长 50%；超过一小时 1:02:03。
+  音量
+    点按钮静音 / 取消静音。悬停按钮在上方弹出竖条，上面写数值 0–100；默认静音（悬停自动播放不能出声）。
+*/
+
+.kv-video-player {
+  --kv-shade: 64px;
+
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--color-bg-fill-base);
+  color: var(--color-on-media-text);
+  font-family: var(--font-family);
+  outline: none;
+}
+
+.kv-video-player--lg {
+  --kv-shade: 96px;
+}
+
+.kv-video-player__video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kv-video-player--fit .kv-video-player__video {
+  object-fit: contain;
+}
+
+/* 底部渐变：控制条出来时一起出 */
+.kv-video-player::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  height: var(--kv-shade);
+  background: linear-gradient(transparent, var(--color-on-media-fill-hover));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+/* ---------- 控制条 ---------- */
+
+.kv-video-player__controls {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  /* 藏起来不用 visibility：键盘 Tab 要能聚焦进来，聚焦了就显示（:has(:focus-visible)）；藏着时不挡鼠标 */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+.kv-video-player:is([data-controls], :has(:focus-visible))::after {
+  opacity: 1;
+  transition: opacity var(--motion-duration-200) var(--motion-ease-out);
+}
+
+.kv-video-player:is([data-controls], :has(:focus-visible)) > .kv-video-player__controls {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-duration-200) var(--motion-ease-out);
+}
+
+/* 大号播放中、控制条藏起来时，光标也藏 */
+.kv-video-player--lg[data-playing]:not([data-controls]) {
+  cursor: none;
+}
+
+.kv-video-player__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: 0 var(--spacing-8) var(--spacing-8);
+}
+
+.kv-video-player--lg .kv-video-player__bar {
+  gap: var(--spacing-8);
+  padding: 0 var(--spacing-16);
+}
+
+.kv-video-player__spacer {
+  flex: 1;
+}
+
+.kv-video-player__time {
+  padding-left: var(--spacing-4);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kv-video-player--lg .kv-video-player__time {
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-20);
+}
+
+.kv-video-player__total {
+  opacity: var(--opacity-50);
+}
+
+/* ---------- 缓冲、失败 ---------- */
+
+/* 缓冲：画面正中转圈（Loading 1 秒一圈），不挡点击 */
+.kv-video-player__spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  color: var(--color-on-media-text);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* 加载失败：盖住整个画面，底色同播放器；EmptyState 小居中，文字用 EmptyState 自己的颜色 */
+.kv-video-player__status {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-fill-surface);
+}
+
+/* ---------- 进度：2 高，指上去、拖动时变 4。小号贴底边，大号浮在控制行下面 ---------- */
+
+.kv-video-player__progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--spacing-8);
+  cursor: pointer;
+  touch-action: none;
+  outline: none;
+}
+
+.kv-video-player--lg .kv-video-player__progress {
+  position: relative;
+  order: 1;
+  height: var(--spacing-12);
+  margin: 0 var(--spacing-16) var(--spacing-8);
+}
+
+.kv-video-player__track {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-on-media-text) 30%, transparent);
+  transition: height var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-video-player__played {
+  display: block;
+  width: var(--value, 0%);
+  height: 100%;
+  background: var(--color-on-media-text);
+}
+
+:is(.kv-video-player__progress:hover, .kv-video-player__progress:focus-visible) > .kv-video-player__track,
+.kv-video-player[data-dragging] .kv-video-player__track {
+  height: 4px;
+}
+
+.kv-video-player--lg .kv-video-player__track {
+  top: 50%;
+  bottom: auto;
+  border-radius: var(--border-radius-round);
+  transform: translateY(-50%);
+}
+
+/* 拖拽点：只有大号有 */
+.kv-video-player__thumb {
+  display: none;
+}
+
+.kv-video-player--lg .kv-video-player__thumb {
+  position: absolute;
+  top: 50%;
+  left: var(--value, 0%);
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--border-radius-round);
+  background: var(--color-on-media-text);
+  transform: translate(-50%, -50%);
+}
+
+/* ---------- 时长：小号不悬停时左下 ---------- */
+
+.kv-video-player__duration {
+  position: absolute;
+  bottom: var(--spacing-8);
+  left: var(--spacing-8);
+  z-index: 2;
+  font-variant-numeric: tabular-nums;
+  transition: opacity var(--motion-duration-200) var(--motion-ease-out);
+}
+
+.kv-video-player:is([data-controls], :has(:focus-visible)) > .kv-video-player__duration {
+  opacity: 0;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+/* ---------- 音量弹出层 ---------- */
+
+/* 按钮正上方 4，水平居中，从下往上长出来；位置由 useFloating 算。比预览弹窗高一层 */
+.kv-video-player__volume-popup {
+  --kv-popup-z: 1010;
+}
+
+.kv-video-player__volume-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  width: 40px;
+  padding: var(--spacing-8) 0 var(--spacing-12);
+  border-radius: var(--border-radius-12);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.kv-video-player__volume-value {
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 竖条：热区 24 宽、88 高，轨道 4 宽，拖拽点 12 */
+.kv-video-player__volume-rail {
+  position: relative;
+  width: 24px;
+  height: 88px;
+  margin-bottom: var(--spacing-6);
+  cursor: pointer;
+  touch-action: none;
+  outline: none;
+}
+
+.kv-video-player__volume-track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  overflow: hidden;
+  border-radius: var(--border-radius-round);
+  background: color-mix(in srgb, var(--color-text-fill-primary) 20%, transparent);
+  transform: translateX(-50%);
+}
+
+.kv-video-player__volume-fill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--value, 0%);
+  background: var(--color-text-fill-primary);
+}
+
+.kv-video-player__volume-thumb {
+  position: absolute;
+  bottom: var(--value, 0%);
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--border-radius-round);
+  background: var(--color-text-fill-primary);
+  transform: translate(-50%, 50%);
+}

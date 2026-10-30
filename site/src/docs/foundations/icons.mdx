@@ -1,0 +1,229 @@
+import { Demo, PageHeader, Tag } from '@shell';
+import { AliasTable, IconColors, IconSearch, IconTable } from './icons.demos';
+
+<PageHeader
+  eyebrow="基础"
+  title="图标"
+  lead="一套 24×24 的线性图标，全部转轮廓。设计、产品、研发用的是同一套图标、同一个名字。要用图标，先在下面的「图标表」里按意思找。"
+  figma={['图标', '44:2']}
+  status="草稿 0.1.0"
+  code="kivi/icons.ts"
+/>
+
+<IconSearch />
+
+共 13 组 159 个图标，另有品牌 Logo 1 个。
+
+## 规格
+
+| 项 | 规格 |
+|---|---|
+| 框和图形 | 组件框 24×24，图形缩到 22，居中，四边各留 1。名字带 Small 的图标，图形缩到 18。 |
+| 线宽 | 1.5 |
+| 形态 | 发布用的是转轮廓、合并后的版本。Figma 里另外留一份能改线宽的描边版，在「_源文件 · 图标描边」页。 |
+| 名字 | 英文大驼峰，按意思起，比如 `Close`、`OneClickSameModel`。Figma 组件名、字体类名 `icon-kivi-名字`、代码里 Icon 的 `name`、`kivi/icons.ts` 里的键用同一个名字，区分大小写。 |
+| 背景和内边距 | 不加。要底色和点击区域，就放进 IconButton。 |
+
+### 尺寸
+
+| 尺寸 | 用在哪 |
+|---|---|
+| 16（默认） | 按钮、菜单、输入框里 |
+| 20 | 工具栏、面板标题、弹窗关闭 |
+| 24 | 大入口、竖向工具栏 |
+| 40 / 64 | 空状态、大入口插图位 |
+
+- 尺寸由外层容器决定，图标按比例缩放。不为每个尺寸单独画图。
+- 40 和 64 是整体放大，线条会跟着变粗（40 约 2.5px，64 约 4px），和旧版 iconfont 放大的效果一样。
+
+<Demo code={`
+<>
+  <Icon name="Close" size={16} />
+  <Icon name="DownArrowSmall" size={16} />
+  <Icon name="Search" size={20} />
+  <Icon name="Download" size={24} />
+  <Icon name="Configuration" size={40} />
+  <Icon name="More" size={64} />
+</>
+`} />
+
+### 颜色
+
+图标是单色的，颜色跟着文字走，用文字颜色变量，不写死颜色。
+
+| 颜色 | 变量 |
+|---|---|
+| primary | `--color-text-fill-primary` |
+| secondary | `--color-text-fill-secondary` |
+| tertiary | `--color-text-fill-tertiary` |
+| disabled | `--color-text-fill-disabled` |
+| on-brand | `--color-text-fill-on-brand` |
+| brand/solid | `--color-brand-solid` |
+| danger | `--color-status-danger` |
+
+<IconColors />
+
+```tsx
+<Icon name="Add" style={{ color: 'var(--color-text-fill-secondary)' }} />
+```
+
+- 设计稿里改颜色，就改 Icon 里 shape 图层的填充。先改色再换图标，颜色保留。
+- 唯一带两种颜色的是品牌 Logo（星星是品牌绿），见图标表最后一组。
+
+### 一个图标只有一个意思
+
+不要拿意思相近的图标顶替。专用规则：
+
+- **Agent**（大号星星）只给 Agent 用；其他 AI 功能用「素材 + 小星星」类的图标。
+- **FirstLastFrame**（胶片）只给首尾帧用；「视频」用 Video。
+- 文本节点用 **Text**；字号设置用 **FontSize**。
+- 思考过程用 **Lightbulb**；工具调用用 **Tool**。
+
+### 设计稿里怎么放：Icon 组件
+
+设计稿里统一用 Icon 组件放图标，尺寸和图标都在右侧属性面板里选。
+
+| 属性 | 选项 | 代码 |
+|---|---|---|
+| 尺寸 | 16（默认）/ 20 / 24 / 40 / 64 | `size={16}` / `{20}` / `{24}` / `{40}` / `{64}` |
+| 图标 | 图标库里的任意图标。首选列表是全部已转轮廓的图标（159 个，品牌 Logo 不在里面） | `name="Close"` |
+
+- 默认是空图标，显示虚线方块占位（`_Placeholder`，不发布）。换成真正的图标后虚线方块就没了。
+- 需要底色、内边距或点击区域时，用按钮组件把 Icon 包起来，不要做进图标里。
+
+## 画法
+
+新画的图标，不管是设计师画进 Figma，还是原型里临时画，都照下面这几条，和库里的图标放在一起才不突兀。
+
+### Lucide 的规格
+
+- 在 24×24 的网格上画，四边至少留 1。
+- 线端是圆头，转折是圆角；只描边，不填充。
+- 矩形圆角：边长 8 以上用 2，小于 8 用 1。
+- 分开的两个部分之间至少留 2。
+
+### KIVI 的调整
+
+- 画好后等比缩到 22，再把线宽改回 1.5。
+
+### 从库里已有图标提炼的写法
+
+- **内容类**（文本、视频、图片）：一个圆角方框，里面放一个认得出的符号，比如 T、播放三角、山形。参考 Text、Video、ImageToText。
+- **AI、生成类**：在主体的一角加一个小四角星，星和主体之间断开留缝。参考 ImageGeneration、VideoGeneration、AIEnhancement。大号四角星只给 Agent。
+- **关闭、隐藏类**：在原图标上加一条斜线，斜线两边留缝。参考 DisableSnap、HideConnections。
+- **多份、批量**：两层叠放，后面一层只露出一部分。参考 ImageToImage、OneClickSameModel。
+
+## 怎么加新图标（设计）
+
+图标表里没有合适的，按下面的步骤加。不要拿意思相近的旧图标顶替。
+
+1. **去 Lucide 找**：
+   - 静态图标：[lucide.dev/icons](https://lucide.dev/icons/)
+   - 动态图标：[lucide-animated.com](https://lucide-animated.com/)
+2. **下载**：按 24px、线宽 1.5 下载 SVG。
+3. **缩放**：等比缩到 22，居中放进 24×24 的框，四边各留 1。缩完把线宽改回 1.5，不要跟着缩成 1.375。
+4. **放进 Figma（KIVI UI KIT V2）**：
+   - 描边版放进「_源文件 · 图标描边」页，留着以后改。
+   - 转轮廓、合并后做成组件，放进「图标」页对应的分组，按上面的规则起名。
+   - 组件描述照下面的格式写。
+   - 把它加进 Icon 组件里「图标」属性的首选值，之后在 Icon 实例里才选得到。
+   - 在图标页的展示格里写名字和备注，备注的颜色见下面。
+5. **标「待确认」**：新加进 Figma 的图标，不管是谁加的，都先标「待确认」：描述里加一行「状态：待确认（用在哪）」，备注用橙色。设计师确认后才转为正式图标。
+6. **补到本页的图标表里**：写名字、意思、备注（在 `icons.demos.tsx` 的 `ICON_INFO` 里）。之后重新导出 `kivi/icons.ts`。
+
+```text
+关键词：发送 提交 上箭头
+来源：lucide/arrow-up · 缩到 22/24 · 线宽 1.5，已转轮廓
+```
+
+### Lucide 里找不到
+
+必须由设计师亲自画，按上面的「画法」来，描述里加一行「标记：自绘」。AI 不能代替设计师画图标放进 Figma。
+
+### 图标页上的备注颜色
+
+| 颜色 | 意思 |
+|---|---|
+| 白色「自绘」 | 图标库里没有对应的，按旧图标重画的。原线稿留在源文件页的隐藏图层里。 |
+| 绿色 | 改过名，或合并了重复的图标，显示旧名。 |
+| 橙色 | 待确认。 |
+| 红色 | 旧图标，还没处理。 |
+| 灰色 | Lucide 原名。 |
+
+## 研发：怎么取图标
+
+### 网站和组件库里
+
+用 `Icon` 组件，名字用下面图标表里的名字，区分大小写。`name` 的类型是 `IconName`，写错名字 tsc 会报错。
+
+```tsx
+import { Icon } from '@kivi';
+
+<Icon name="Close" />
+<Icon name="Search" size={20} />
+<Icon name="Loading" spin />
+```
+
+| 属性 | 选项 | 代码 |
+|---|---|---|
+| 图标 | 图标表里的任意名字 | `name="Close"` |
+| 尺寸 | 16（默认）/ 20 / 24 / 40 / 64。放进按钮这类组件里时由组件定，不用传 | `size={20}` |
+| 转圈 | 只给 Loading 用，1 秒一圈，匀速 | `spin` |
+
+- 图标颜色跟文字走（`currentColor`），见上面的「颜色」。
+- 图标的图形数据在 `kivi/icons.ts`，从 Figma「图标」页全量导出，不要手改；Figma 改了图标就重新导出。
+
+### 线上产品里
+
+线上现在用的还是阿里 iconfont，之后换成 KIVI 自己打包的字体。
+
+| | 现在 | 之后 |
+|---|---|---|
+| 来源 | 阿里 iconfont（旧项目） | KIVI 自己打包的字体：GitLab 图标仓库，前端当依赖装 |
+| 类名 | `iconfont icon-kivi-名字` | 不变 |
+| 仓库地址 | — | <Tag kind="draft">待定</Tag> |
+
+```tsx
+<i className="iconfont icon-kivi-Close" />
+```
+
+- 名字用下面图标表里的名字，区分大小写。
+- 字体只能单色。Logo 有两种颜色，字体里怎么放，<Tag kind="draft">待定</Tag>。
+- 旧名（`Mdoel`、`Snap1` 等）在字体里留别名，见「旧名对照」。
+
+### 图标表里没有的
+
+- 不要自己去网上找，也不要用意思相近的顶替。在交付里写「缺图标：××（用在哪）」，交给设计按上面的步骤加。
+- 原型里可以自己画（也可以让 AI 画）一个 SVG，照「画法」，`viewBox="0 0 24 24"`、`stroke-width="1.5"`、`stroke="currentColor"`、`fill="none"`。在原型备注里写「临时图标：××」。
+- 临时图标只能留在原型里。要进 Figma 和代码，得交给设计师按上面的步骤做。
+
+## 图标表
+
+按 Figma 的分组排。点名字复制名字。备注里的「自绘」是图标库里没有、按旧图标重画的；<Tag kind="draft">待确认</Tag> 是 Figma 里标了待确认的。
+
+<IconTable />
+
+## 旧名对照
+
+改名和合并的对照表。旧名是代码和 iconfont 里现在用的名字，新名是图标库里的组件名。来自 Figma「图标」页的迁移映射，共 11 条。
+
+<AliasTable>
+
+| 旧名 | 新名 | 类型 | 说明 · 代码影响 | 状态 |
+|---|---|---|---|---|
+| `upload` | `Upload` | 改名 | 统一首字母大写。代码 8 处：ai-chat 技能弹窗 3 处、media-node-renderer、create-tab-content 2 处、node-list、left-toolbar | <Tag kind="off">草稿</Tag> |
+| `text` | `Text` | 改名 | 统一首字母大写，图形改成带框的 T。代码 2 处：left-toolbar、文本节点空状态（custom-component）。另外 node-list 的「文本生成」误用了 FontSize，也要改成 Text | <Tag kind="draft">待确认</Tag> |
+| `TextBlod` | `TextBold` | 改名 | 拼写错误。代码 1 处：文本节点工具栏 topbar-content | <Tag kind="off">草稿</Tag> |
+| `DivdingLine` | `DividingLine` | 改名 | 拼写错误。代码 1 处：文本节点工具栏 topbar-content | <Tag kind="draft">待确认</Tag> |
+| `Light` | `Lightbulb` | 改名 | 容易和「亮色模式」混淆。代码 1 处：AI 对话 ReasonContent | <Tag kind="draft">待确认</Tag> |
+| `icon` | `Tool` | 改名 | 名字没有含义，按图形（扳手）改名。代码 2 处：SkillSelectorPopover、SkillMentionPopup | <Tag kind="off">草稿</Tag> |
+| `calendar` | `Calendar` | 改名 | 统一首字母大写。代码 1 处：TimeRangeFilter / DateField | <Tag kind="off">草稿</Tag> |
+| `Cutting1` | `Cutting` | 合并 | 和 Cutting 重复。代码 1 处：添加节点面板 node-list | <Tag kind="off">草稿</Tag> |
+| `Snap1` | `Snap` | 合并 | 和 Snap 重复。代码 1 处：画布底部工具栏 bottom-toolbar（吸附开关） | <Tag kind="off">草稿</Tag> |
+| `ShowConnections-1` | `ShowConnections` | 合并 | 和 ShowConnections 重复。代码 1 处：画布底部工具栏 bottom-toolbar | <Tag kind="off">草稿</Tag> |
+| `VolumeFull` `VolumeHalf` `VolumeOff` | 不变 | 改图形 | 名字不变，实心改成描边（lucide/volume-2、volume-1、volume-x）。代码不用改，Iconfont 换上新图形就行。播放、暂停还是实心 | <Tag kind="off">草稿</Tag> |
+
+</AliasTable>
+
+- **状态**：草稿 = 图标库里已经改好，代码还没改；待确认 = 新图标的图形还要再看一下；稳定 = 前端改完、iconfont 也换好了。目前没有稳定的。
+- **上线顺序**：先在 iconfont 里上传新名字的图标，旧名字的先别删；等前端把代码里的旧名都换完并发版，再删 iconfont 里的旧名。这样中间任何时候都不会出现图标显示不出来。

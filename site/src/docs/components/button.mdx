@@ -1,0 +1,63 @@
+import { PageHeader } from '@shell';
+import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground } from './button.demos';
+
+<PageHeader
+  eyebrow="通用组件"
+  title="按钮"
+  lead="Button 带文字，IconButton 只有图标，ButtonGroup 把盖在图上的一排按钮合成一条。"
+  figma={['按钮', '135:605']}
+  status="草稿 0.1.0"
+  code="kivi/button"
+/>
+
+## Button
+
+<ButtonPlayground />
+
+## IconButton
+
+<IconButtonPlayground />
+
+## ButtonGroup
+
+<ButtonGroupPlayground />
+
+## 参数
+
+### Button
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `"sm"` `"md"` `"lg"` | `"md"` | 高 28 / 32 / 36，圆角 6 / 8 / 8，文字 12 / 13 / 13。放进 ButtonGroup 默认小 |
+| `variant` | `"primary"` `"secondary"` `"text"` `"danger"` `"on-media"` `"light"` | `"secondary"` | 主要 / 次要 / 文字 / 危险 / 浮层 / 轻。轻：底白 8%（同次要），文字和图标 50%，悬停、按下回到 100%，禁用 20%；没有大号和加载中 |
+| `leftIcon` | `IconName` | — | 左图标，小号 16，中、大 20 |
+| `rightIcon` | `IconName` | — | 右图标，只放下拉箭头 `DownArrowSmall` |
+| `loading` | `boolean` | `false` | 加载中：左图标换成转圈，鼠标和键盘都不再触发 `onClick`，外观不变灰。GenerateButton 一样 |
+| `disabled` | `boolean` | `false` | 禁用 |
+| `children` | `ReactNode` | — | 文字 |
+
+### IconButton
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `icon` | `IconName` | — | 图标，必填 |
+| `label` | `string` | — | 说明，必填，读屏和 Tooltip 用 |
+| `size` | `28` `32` `36` | `32` | 图标 16 / 20 / 20。轻没有 36。放进 ButtonGroup 默认 28 |
+| `variant` | `"primary"` `"secondary"` `"text"` `"on-media"` `"on-media-ghost"` `"light"` | `"text"` | 主要 / 次要 / 文字 / 浮层 / 浮层无底 / 轻。浮层无底：平时没有底、不模糊，悬停黑 40%、按下黑 60%，盖在图上的控制条（播放器）用。轻：没有底，图标 50%，悬停出白 8% 底、图标回到 100% |
+| `selected` | `boolean` | `false` | 选中：有开关的工具用，比如加粗。主要和轻没有 |
+| `disabled` | `boolean` | `false` | 禁用 |
+
+其余原生 `<button>` 属性都能传。
+
+### ButtonGroup
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | IconButton、Button、ButtonGroupDivider。里面的按钮不写 `size`、`variant` 时，IconButton 是 28 · 文字，Button 是小 · 文字 |
+| `aria-label` | `string` | — | 读屏用，说明这一排是什么，比如「节点操作」 |
+
+高 32（按钮 28 + 四周 2，`--spacing-2`），按钮间距 4。底 `--color-bg-fill-glass` + 模糊 32，描边 `--color-border-subtle` 1（画在里面），圆角 8。选中的按钮（收藏了）换实心图标，图标变绿（`--color-brand-solid`），不加底。其余原生 `<div>` 属性都能传。
+
+### ButtonGroupDivider
+
+竖线 1 × 16，`--color-border`，两边各 4。只放在不同类的按钮之间，比如图标按钮和文字按钮之间。其余原生 `<span>` 属性都能传。
