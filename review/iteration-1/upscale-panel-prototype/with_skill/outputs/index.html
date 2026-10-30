@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>画布 · 高清放大面板</title>
+<!--
+  KIVI 原型：画布里选中图片节点 → 节点下方弹出「高清放大」面板。
+  规范：KIVI UI KIT V2（2026-10-27）。
+  占位 / 临时做法（以后统一替换）：
+  - 画布节点、连接点、节点工具栏沿用旧库样式：节点底 #181818、圆角 16、选中描边白 40%、工具栏文字 14、连接点底 #0A0A0A。
+  - Toast 成功图标用 status/success，取值是占位。
+  - 「高清放大」面板是规范里没有的新面板：按「参数面板模板」+ 玻璃浮层拼，宽 320 是临时取值。
+  - 图片用 container-dark 占位块代替（规范：用户作品用占位块）。
+-->
+<style>
+/* 1. 变量表（KIVI UI KIT V2） */
+:root {
+  /* 底色 */
+  --color-bg-fill-base: #0F1012;
+  --color-bg-fill-surface: #191A1B;
+  --color-bg-fill-popup: #2C2D2E;
+  --color-bg-fill-glass: rgba(24, 24, 24, 0.7);
+  --color-bg-fill-mask: rgba(0, 0, 0, 0.6);
+  /* 填充与状态 */
+  --color-bg-fill-container-light-1: rgba(255, 255, 255, 0.08);
+  --color-bg-fill-container-light-1-hover: rgba(255, 255, 255, 0.12);
+  --color-bg-fill-container-light-1-pressed: rgba(255, 255, 255, 0.16);
+  --color-bg-fill-container-light-2: rgba(255, 255, 255, 0.04);
+  --color-bg-fill-container-light-2-hover: rgba(255, 255, 255, 0.08);
+  --color-bg-fill-container-light-2-pressed: rgba(255, 255, 255, 0.12);
+  --color-bg-fill-container-dark: rgba(0, 0, 0, 0.4);
+  --color-bg-fill-container-dark-hover: rgba(0, 0, 0, 0.3);
+  /* 文字与图标 */
+  --color-text-fill-primary: #FFFFFF;
+  --color-text-fill-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-fill-tertiary: rgba(255, 255, 255, 0.4);
+  --color-text-fill-placeholder: rgba(255, 255, 255, 0.3);
+  --color-text-fill-disabled: rgba(255, 255, 255, 0.2);
+  --color-text-fill-on-brand: #000000;
+  /* 描边 */
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.5);
+  --color-border-focus: #2BFF75;
+  /* 品牌色 */
+  --color-brand-solid: #2BFF75;
+  --color-brand-hover: #5CFF95;
+  --color-brand-pressed: #1FD962;
+  --color-brand-subtle: rgba(43, 255, 117, 0.12);
+  --color-brand-gradient-1: #CEFF5D;
+  --color-brand-gradient-2: #2BFF75;
+  /* 功能色（占位） */
+  --color-status-danger: #FF4D4F;
+  --color-status-danger-subtle: rgba(255, 77, 79, 0.12);
+  --color-status-warning: #FFA940;
+  --color-status-warning-subtle: rgba(255, 169, 64, 0.12);
+  --color-status-success: #2BFF75;
+  --color-status-success-subtle: rgba(43, 255, 117, 0.12);
+  /* 图片和视频上的控件 */
+  --color-on-media-fill: rgba(0, 0, 0, 0.4);
+  --color-on-media-fill-hover: rgba(0, 0, 0, 0.6);
+  --color-on-media-text: #FFFFFF;
+  /* 画布连线 */
+  --g-workflow-line-color-default: #424242;
+  --g-workflow-line-color-drawing: rgba(255, 255, 255, 0.35);
+  --g-workflow-line-color-active: rgba(255, 255, 255, 0.55);
+  --g-workflow-line-color-flowing: rgba(255, 255, 255, 0.9);
+  --g-workflow-line-color-error: rgba(255, 255, 255, 0.6);
+  /* 间距 */
+  --spacing-none: 0px;
+  --spacing-xxs: 4px;
+  --spacing-xs: 6px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  /* 圆角 */
+  --border-radius-xxs: 4px;
+  --border-radius-xs: 6px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  --border-radius-round: 999px;
+  /* 描边粗细 */
+  --border-width-sm: 1px;
+  --border-width-md: 1.25px;
+  --border-width-lg: 1.5px;
+  /* 字号、行高、字重、字体 */
+  --font-size-10: 10px;
+  --font-size-12: 12px;
+  --font-size-13: 13px;
+  --font-size-14: 14px;
+  --font-size-16: 16px;
+  --font-size-20: 20px;
+  --font-size-24: 24px;
+  --font-line-height-16: 16px;
+  --font-line-height-20: 20px;
+  --font-line-height-22: 22px;
+  --font-line-height-24: 24px;
+  --font-line-height-28: 28px;
+  --font-line-height-32: 32px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-family: "PingFang SC";
+  /* 透明度 */
+  --opacity-50: 0.5;
+  --opacity-30: 0.3;
+  --opacity-20: 0.2;
+
+  /* 画布旧样式（占位）：从旧组件库原样迁来，和线上画布保持一致，以后统一 */
+  --canvas-node-bg: #181818;                         /* 节点底，以后统一成 surface */
+  --canvas-node-ring: rgba(255, 255, 255, 0.4);      /* 节点悬停 / 选中外圈 2px */
+  --canvas-dot-bg: #0A0A0A;                          /* 连接点底 */
+  --canvas-dot-stroke: rgba(255, 255, 255, 0.2);     /* 连接点默认描边、已连接实心点 */
+  --canvas-dot-stroke-strong: rgba(255, 255, 255, 0.5); /* 连接点高亮 */
+}
+
+/* 2. 基础样式 */
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--color-bg-fill-base); color: var(--color-text-fill-primary);
+  font-family: var(--font-family), -apple-system, BlinkMacSystemFont, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-size: var(--font-size-13); line-height: var(--font-line-height-20); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
+.icon { width: 16px; height: 16px; stroke-width: 1.5; flex: none; }
+.icon-20 { width: 20px; height: 20px; }
+.icon-24 { width: 24px; height: 24px; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+[hidden] { display: none !important; }
+
+#app { position: fixed; inset: 0; user-select: none; -webkit-user-select: none; }
+
+/* 3. 组件 */
+
+/* 按钮 · 中 32 */
+.btn { height: 32px; min-width: 64px; padding: 0 var(--spacing-md); border-radius: var(--border-radius-sm);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-xxs);
+  font-size: var(--font-size-13); line-height: var(--font-line-height-20); font-weight: var(--font-weight-medium); white-space: nowrap; }
+.btn--primary { color: var(--color-text-fill-on-brand); background: linear-gradient(90deg, var(--color-brand-gradient-1), var(--color-brand-gradient-2)); }
+.btn--primary:hover { background: linear-gradient(var(--color-bg-fill-container-light-1-hover) 0 0), linear-gradient(90deg, var(--color-brand-gradient-1), var(--color-brand-gradient-2)); }
+.btn--primary:active { opacity: .8; }
+.btn:disabled { background: var(--color-bg-fill-container-light-1); color: var(--color-text-fill-disabled); cursor: not-allowed; }
+.btn .btn-spinner { display: none; }
+.btn.is-loading { pointer-events: none; }
+.btn.is-loading .btn-spinner { display: inline-flex; }
+
+/* 纯图标按钮：28 · 圆角 6；36 · 图标 20；40 · 图标 24 */
+.icon-btn { width: 32px; height: 32px; border-radius: var(--border-radius-sm); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.icon-btn:hover { background: var(--color-bg-fill-container-light-2-hover); }
+.icon-btn:active { background: var(--color-bg-fill-container-light-2-pressed); }
+.icon-btn.is-selected { background: var(--color-brand-subtle); color: var(--color-brand-solid); }
+.icon-btn--28 { width: 28px; height: 28px; border-radius: var(--border-radius-xs); }
+.icon-btn--36 { width: 36px; height: 36px; }
+.icon-btn--40 { width: 40px; height: 40px; }
+
+/* 玻璃浮层：节点工具栏、参数面板 */
+.glass { background: var(--color-bg-fill-glass); border: 1px solid var(--color-border); border-radius: var(--border-radius-md);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+
+/* 画布上常驻的浮条：surface + border-subtle */
+.float-bar { position: absolute; z-index: 10; display: flex; align-items: center;
+  background: var(--color-bg-fill-surface); border: 1px solid var(--color-border-subtle); }
+
+/* 分段选择器 */
+.segmented { display: flex; padding: var(--spacing-xxs); border-radius: var(--border-radius-md); background: var(--color-bg-fill-container-light-1); }
+.segment { flex: 1; height: 32px; padding: 0 var(--spacing-md); border-radius: var(--border-radius-sm); color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13); font-weight: var(--font-weight-regular); }
+.segment:not(.is-selected):hover { background: var(--color-bg-fill-container-light-2); }
+.segment.is-selected { background: var(--color-bg-fill-container-light-1-hover); color: var(--color-text-fill-primary); }
+
+/* 开关 */
+.switch { width: 36px; height: 20px; padding: 2px; border-radius: var(--border-radius-round); background: var(--color-bg-fill-container-light-1-pressed); display: inline-flex; flex: none; transition: background .15s; }
+.switch::after { content: ""; width: 16px; height: 16px; border-radius: 50%; background: var(--color-text-fill-primary); transition: transform .15s; }
+.switch.is-on { background: var(--color-brand-solid); }
+.switch.is-on::after { transform: translateX(16px); }
+
+/* 标签 · on-media */
+.tag { height: 24px; padding: 0 6px; border-radius: var(--border-radius-xxs); display: inline-flex; align-items: center; gap: var(--spacing-xxs);
+  font-size: var(--font-size-12); line-height: var(--font-line-height-20); background: var(--color-bg-fill-container-light-1); color: var(--color-text-fill-secondary); }
+.tag--on-media { background: var(--color-on-media-fill); color: var(--color-on-media-text); }
+
+/* Tooltip（简单）：popup 实色，下方 8px，延迟 500ms */
+.tooltip { position: fixed; z-index: 100; height: 32px; padding: 6px var(--spacing-md); border-radius: var(--border-radius-sm);
+  background: var(--color-bg-fill-popup); color: var(--color-text-fill-primary);
+  font-size: var(--font-size-12); line-height: var(--font-line-height-20); white-space: nowrap; pointer-events: none; }
+
+/* Toast */
+.toast { position: fixed; z-index: 100; top: 24px; left: 50%; transform: translateX(-50%); height: 40px; padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-md); background: var(--color-bg-fill-popup); display: flex; align-items: center; gap: var(--spacing-sm);
+  font-size: var(--font-size-14); line-height: var(--font-line-height-22); white-space: nowrap; }
+.toast-icon { width: 16px; height: 16px; border-radius: 50%; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  color: var(--color-bg-fill-popup); font-size: var(--font-size-10); line-height: var(--font-line-height-16); font-weight: var(--font-weight-semibold); }
+.toast-icon .icon { width: 12px; height: 12px; }
+.toast-icon--success { background: var(--color-status-success); } /* 占位色 */
+.toast-icon--info { background: var(--color-text-fill-secondary); }
+
+/* ---------- 画布 ---------- */
+.canvas { position: absolute; inset: 0; overflow: hidden; background: var(--color-bg-fill-base); touch-action: none; }
+.canvas.is-panning { cursor: grabbing; }
+.world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.edges { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+
+/* 连线 Connector */
+.edge { fill: none; stroke: var(--g-workflow-line-color-default); stroke-width: 1.5; }
+.edge.is-active { stroke: var(--g-workflow-line-color-active); stroke-width: 2; }
+.edge.is-flowing { stroke: var(--g-workflow-line-color-flowing); stroke-width: 1.5; }
+.edge-glow { fill: none; stroke: var(--g-workflow-line-color-flowing); stroke-width: 4; stroke-linecap: round;
+  stroke-dasharray: 14 86; animation: flow 2s linear infinite; }
+@keyframes flow { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+
+/* 节点外框 NodeWrapper + 节点（画布旧样式） */
+.node-wrap { position: absolute; }
+.node-name { position: absolute; left: 0; bottom: calc(100% + var(--spacing-sm)); max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  font-size: var(--font-size-14); line-height: var(--font-line-height-22); font-weight: var(--font-weight-medium);
+  color: var(--color-text-fill-secondary); white-space: nowrap; }
+.node { position: relative; width: 100%; height: 100%; border-radius: var(--border-radius-lg); overflow: hidden; cursor: pointer;
+  background: var(--canvas-node-bg); border: 1px solid var(--color-border); }
+.node-wrap:hover .node, .node-wrap.is-selected .node { outline: 2px solid var(--canvas-node-ring); outline-offset: 0; }
+.node-media { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: var(--color-bg-fill-container-dark); color: var(--color-text-fill-tertiary); font-size: var(--font-size-12); }
+.node-media .tag { position: absolute; top: var(--spacing-sm); left: var(--spacing-sm); }
+.node-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--spacing-sm); color: var(--color-text-fill-secondary); font-size: var(--font-size-13); }
+
+/* 连接点 ConnectorDot */
+.dot { position: absolute; top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: var(--border-radius-round);
+  background: var(--canvas-dot-bg); border: 2px solid var(--canvas-dot-stroke); display: none; align-items: center; justify-content: center; }
+.dot--left { left: -8px; }
+.dot--right { right: -8px; }
+.node-wrap:hover .dot, .node-wrap.is-selected .dot, .dot.is-connected { display: flex; }
+.dot.is-connected::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--canvas-dot-stroke); }
+.node-wrap.is-selected .dot.is-connected { border-color: var(--canvas-dot-stroke-strong); }
+.node-wrap.is-selected .dot.is-connected::after { background: var(--canvas-dot-stroke-strong); }
+
+/* 画布左上：首页 + 分隔线 + 画布名 */
+.bar-title { left: 24px; top: 14px; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) var(--spacing-sm); border-radius: var(--border-radius-md); }
+.bar-title .home { display: inline-flex; color: var(--color-text-fill-secondary); }
+.bar-title .home:hover { color: var(--color-text-fill-primary); }
+.bar-divider { width: 1px; height: 16px; background: var(--color-border-subtle); flex: none; }
+
+/* 画布右上：教程、语言（高 44，内边距 4 8；减掉 1px 描边） */
+.bar-help { right: 24px; top: 14px; height: 44px; gap: var(--spacing-lg); padding: calc(var(--spacing-xxs) - 1px) var(--spacing-sm); border-radius: var(--border-radius-md); }
+
+/* 画布左侧工具栏 CanvasToolbar：宽 56，胶囊，图标 24，图标间距 16 */
+.canvas-toolbar { left: 24px; top: 50%; transform: translateY(-50%); width: 56px; flex-direction: column; padding: var(--spacing-sm) 0;
+  border-radius: var(--border-radius-round); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+/* 画布左下：缩放条 */
+.bar-zoom { left: 24px; bottom: 24px; height: 36px; padding: 0 var(--spacing-xs); gap: var(--spacing-xxs); border-radius: var(--border-radius-sm); }
+.zoom-value { width: 36px; text-align: center; font-size: var(--font-size-10); line-height: var(--font-line-height-16); color: var(--color-text-fill-secondary); }
+
+/* 节点工具栏 NodeToolbar：高 44，内边距 6（减掉 1px 描边），按钮间距 8 */
+.node-toolbar { position: absolute; z-index: 20; height: 44px; padding: calc(var(--spacing-xs) - 1px); gap: var(--spacing-sm); display: flex; align-items: center; }
+.tool-item { height: 32px; padding: var(--spacing-xs) var(--spacing-md); border-radius: var(--border-radius-sm); display: inline-flex; align-items: center; gap: var(--spacing-sm);
+  font-size: var(--font-size-14); line-height: var(--font-line-height-20); color: var(--color-text-fill-primary); white-space: nowrap; } /* 文字 14：画布旧样式 */
+.tool-item .icon { color: var(--color-text-fill-tertiary); }
+.tool-item:hover { background: var(--color-bg-fill-container-light-1); }
+.tool-item:active { background: var(--color-bg-fill-container-light-1-hover); }
+.tool-item--icon { width: 32px; padding: 0; justify-content: center; }
+.toolbar-divider { width: 1px; height: 16px; background: var(--color-border-subtle); flex: none; }
+
+/* 「高清放大」面板：参数面板模板 + 玻璃。规范里没有这个面板，宽 320 是临时取值 */
+.upscale-panel { position: absolute; z-index: 20; width: 320px; padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-lg); }
+.panel-head { display: flex; align-items: center; gap: var(--spacing-sm);
+  font-size: var(--font-size-16); line-height: var(--font-line-height-24); font-weight: var(--font-weight-medium); }
+.panel-head .icon { color: var(--color-text-fill-secondary); }
+.field { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.field-label { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm);
+  font-size: var(--font-size-13); line-height: var(--font-line-height-20); color: var(--color-text-fill-secondary); }
+.field-aux { font-size: var(--font-size-12); color: var(--color-text-fill-tertiary); }
+.field--inline { flex-direction: row; align-items: center; justify-content: space-between; }
+.panel-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.cost { font-size: var(--font-size-12); line-height: var(--font-line-height-20); color: var(--color-text-fill-tertiary); }
+
+/* 原型提示（不是产品界面） */
+.proto-hint { position: absolute; z-index: 5; left: 50%; bottom: 24px; transform: translateX(-50%); pointer-events: none;
+  font-size: var(--font-size-12); line-height: var(--font-line-height-20); color: var(--color-text-fill-tertiary); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 画布（画布布局：没有顶栏，画布铺满整屏） -->
+  <div class="canvas" id="canvas">
+    <div class="world" id="world">
+      <svg class="edges" aria-hidden="true">
+        <defs>
+          <filter id="edgeGlow" filterUnits="userSpaceOnUse" x="-5000" y="-5000" width="10000" height="10000">
+            <feGaussianBlur stdDeviation="2"/>
+          </filter>
+        </defs>
+        <g id="edgeLayer"></g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 左上：首页 + 分隔线 + 画布名 -->
+  <div class="float-bar bar-title">
+    <button class="home" data-todo data-tip="返回首页" aria-label="返回首页"><i data-lucide="house" class="icon icon-20"></i></button>
+    <span class="bar-divider"></span>
+    <span>未命名画布</span>
+  </div>
+
+  <!-- 右上：教程、语言 -->
+  <div class="float-bar bar-help">
+    <button class="icon-btn icon-btn--36" data-todo data-tip="教程" aria-label="教程"><i data-lucide="book-open" class="icon icon-20"></i></button>
+    <button class="icon-btn icon-btn--36" data-todo data-tip="语言" aria-label="语言"><i data-lucide="earth" class="icon icon-20"></i></button>
+  </div>
+
+  <!-- 左侧：画布工具栏（「历史」缺图标 History，这里先省略） -->
+  <div class="float-bar canvas-toolbar">
+    <button class="icon-btn icon-btn--40" data-todo data-tip="添加文字" data-tip-pos="right" aria-label="添加文字"><i data-lucide="text" class="icon icon-24"></i></button>
+    <button class="icon-btn icon-btn--40" data-todo data-tip="添加图片" data-tip-pos="right" aria-label="添加图片"><i data-lucide="image-plus" class="icon icon-24"></i></button>
+    <button class="icon-btn icon-btn--40" data-todo data-tip="添加视频" data-tip-pos="right" aria-label="添加视频"><i data-lucide="clapperboard" class="icon icon-24"></i></button>
+    <button class="icon-btn icon-btn--40" data-todo data-tip="工作流模板" data-tip-pos="right" aria-label="工作流模板"><i data-lucide="layout-panel-left" class="icon icon-24"></i></button>
+    <button class="icon-btn icon-btn--40" data-todo data-tip="剪辑" data-tip-pos="right" aria-label="剪辑"><i data-lucide="video" class="icon icon-24"></i></button>
+    <button class="icon-btn icon-btn--40" data-todo data-tip="上传" data-tip-pos="right" aria-label="上传"><i data-lucide="upload" class="icon icon-24"></i></button>
+  </div>
+
+  <!-- 左下：缩放条 -->
+  <div class="float-bar bar-zoom">
+    <button class="icon-btn icon-btn--28" id="zoomOut" data-tip="缩小" aria-label="缩小"><i data-lucide="zoom-out" class="icon icon-20"></i></button>
+    <span class="zoom-value" id="zoomValue">100%</span>
+    <button class="icon-btn icon-btn--28" id="zoomIn" data-tip="放大" aria-label="放大"><i data-lucide="zoom-in" class="icon icon-20"></i></button>
+    <button class="icon-btn icon-btn--28" id="zoomFit" data-tip="适应画布" aria-label="适应画布"><i data-lucide="square-dot" class="icon icon-20"></i></button>
+  </div>
+
+  <!-- 节点工具栏：选中图片节点时出现在节点上方（条目为示意，以现有画布为准） -->
+  <div class="node-toolbar glass" id="nodeToolbar" hidden>
+    <button class="tool-item" data-todo><i data-lucide="crop" class="icon icon-20"></i>裁剪</button>
+    <button class="tool-item" data-todo><i data-lucide="scan" class="icon icon-20"></i>扩图</button>
+    <button class="tool-item" id="hdItem"><i data-lucide="hd" class="icon icon-20"></i>高清</button>
+    <button class="tool-item" data-todo><i data-lucide="image-minus" class="icon icon-20"></i>抠图</button>
+    <span class="toolbar-divider"></span>
+    <button class="tool-item tool-item--icon" data-todo data-tip="下载" aria-label="下载"><i data-lucide="download" class="icon icon-20"></i></button>
+  </div>
+
+  <!-- 「高清放大」面板：选中图片节点时出现在节点下方 -->
+  <div class="upscale-panel glass" id="upscalePanel" hidden role="dialog" aria-label="高清放大">
+    <div class="panel-head"><i data-lucide="hd" class="icon icon-20"></i>高清放大</div>
+
+    <div class="field">
+      <div class="field-label"><span>放大倍数</span><span class="field-aux" id="outputSize">输出 2048 × 2048</span></div>
+      <div class="segmented" role="radiogroup" aria-label="放大倍数">
+        <button class="segment is-selected" role="radio" aria-checked="true" data-scale="2">2x</button>
+        <button class="segment" role="radio" aria-checked="false" data-scale="4">4x</button>
+      </div>
+    </div>
+
+    <div class="field field--inline">
+      <span class="field-label" id="faceLabel">保留面部细节</span>
+      <button class="switch" id="faceSwitch" role="switch" aria-checked="false" aria-labelledby="faceLabel"></button>
+    </div>
+
+    <div class="panel-foot">
+      <span class="cost">预计消耗 20 积分</span>
+      <button class="btn btn--primary" id="startBtn">
+        <span class="btn-spinner"><i data-lucide="loader-circle" class="icon spin"></i></span>开始放大
+      </button>
+    </div>
+  </div>
+
+  <div class="proto-hint">原型提示：点击图片节点选中 · 点空白处取消选中 · 拖动空白处平移，⌘ + 滚轮缩放</div>
+
+  <div class="tooltip" id="tooltip" hidden></div>
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="https://unpkg.com/lucide@1.54.0/dist/umd/lucide.min.js"></script>
+<script>
+const ICON_ATTRS = { 'stroke-width': 1.5 };
+const renderIcons = (root) => { if (window.lucide) lucide.createIcons({ attrs: ICON_ATTRS, ...(root ? { root } : {}) }); };
+renderIcons();
+
+const $ = (s) => document.querySelector(s);
+const canvas = $('#canvas'), world = $('#world'), edgeLayer = $('#edgeLayer');
+const toolbar = $('#nodeToolbar'), panel = $('#upscalePanel'), startBtn = $('#startBtn');
+const tooltip = $('#tooltip'), toastEl = $('#toast');
+
+const state = {
+  zoom: 1, panX: 0, panY: 0,
+  selectedId: 'n1', panelOpen: true,
+  scale: 2, keepFace: false, busy: false,
+  nodes: [{ id: 'n1', name: '图片 1', x: -340, y: -210, w: 256, h: 256, px: 1024, py: 1024, status: 'done' }],
+  edges: [],
+};
+let seq = 1;
+const nodeEls = new Map();
+const getNode = (id) => state.nodes.find((n) => n.id === id);
+
+/* ---------- 节点 ---------- */
+function createNodeEl(n) {
+  const wrap = document.createElement('div');
+  wrap.className = 'node-wrap';
+  wrap.style.cssText = `left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px`;
+  wrap.innerHTML = '<div class="node-name"></div><div class="node"></div><span class="dot dot--left"></span><span class="dot dot--right"></span>';
+  wrap.addEventListener('pointerdown', (e) => { e.stopPropagation(); select(n.id); });
+  world.appendChild(wrap);
+  nodeEls.set(n.id, wrap);
+}
+function updateNodeEl(n) {
+  const wrap = nodeEls.get(n.id);
+  wrap.querySelector('.node-name').textContent = n.name;
+  const body = wrap.querySelector('.node');
+  if (body.dataset.status !== n.status) {
+    body.dataset.status = n.status;
+    body.innerHTML = n.status === 'done'
+      ? `<div class="node-media"><span class="tag tag--on-media">${n.px} × ${n.py}</span><span>图片占位（用户作品）</span></div>`
+      : '<div class="node-loading"><i data-lucide="loader-circle" class="icon icon-24 spin"></i><span>高清放大中…</span></div>';
+    renderIcons(body);
+  }
+  wrap.classList.toggle('is-selected', state.selectedId === n.id);
+  wrap.querySelector('.dot--left').classList.toggle('is-connected', state.edges.some((e) => e.to === n.id));
+  wrap.querySelector('.dot--right').classList.toggle('is-connected', state.edges.some((e) => e.from === n.id));
+}
+
+/* ---------- 连线 ---------- */
+function renderEdges() {
+  edgeLayer.innerHTML = state.edges.map((e) => {
+    const a = getNode(e.from), b = getNode(e.to);
+    const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
+    const dx = Math.max(40, (x2 - x1) / 2);
+    const d = `M${x1} ${y1} C${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+    const flowing = b.status === 'generating';
+    const active = !flowing && (state.selectedId === e.from || state.selectedId === e.to);
+    return `<path class="edge${flowing ? ' is-flowing' : ''}${active ? ' is-active' : ''}" d="${d}"/>`
+      + (flowing ? `<path class="edge-glow" pathLength="100" filter="url(#edgeGlow)" d="${d}"/>` : '');
+  }).join('');
+}
+
+/* ---------- 浮层位置：跟着选中节点走 ---------- */
+function updateOverlays() {
+  const n = state.selectedId && getNode(state.selectedId);
+  const show = !!n && n.status === 'done';
+  toolbar.hidden = !show;
+  panel.hidden = !(show && state.panelOpen);
+  if (!show) return;
+  const wrap = nodeEls.get(n.id);
+  const r = wrap.querySelector('.node').getBoundingClientRect();
+  const nameR = wrap.querySelector('.node-name').getBoundingClientRect();
+  const cx = r.left + r.width / 2;
+  toolbar.style.left = Math.round(cx - toolbar.offsetWidth / 2) + 'px';
+  toolbar.style.top = Math.round(nameR.top - 12 - toolbar.offsetHeight) + 'px';
+  if (!panel.hidden) {
+    panel.style.left = Math.round(cx - panel.offsetWidth / 2) + 'px';
+    panel.style.top = Math.round(r.bottom + 12) + 'px';
+  }
+}
+
+/* ---------- 面板内容 ---------- */
+function updatePanel() {
+  panel.querySelectorAll('.segment').forEach((b) => {
+    const on = Number(b.dataset.scale) === state.scale;
+    b.classList.toggle('is-selected', on);
+    b.setAttribute('aria-checked', on);
+  });
+  const sw = $('#faceSwitch');
+  sw.classList.toggle('is-on', state.keepFace);
+  sw.setAttribute('aria-checked', state.keepFace);
+  const n = state.selectedId && getNode(state.selectedId);
+  if (n) $('#outputSize').textContent = `输出 ${n.px * state.scale} × ${n.py * state.scale}`;
+}
+
+function refresh() {
+  state.nodes.forEach(updateNodeEl);
+  renderEdges();
+  updatePanel();
+  updateOverlays();
+}
+function select(id) { state.selectedId = id; state.panelOpen = true; refresh(); }
+function deselect() { if (state.selectedId) { state.selectedId = null; refresh(); } }
+
+/* ---------- 视图：平移、缩放 ---------- */
+function applyView() {
+  world.style.transform = `translate(${canvas.clientWidth / 2 + state.panX}px, ${canvas.clientHeight / 2 + state.panY}px) scale(${state.zoom})`;
+  $('#zoomValue').textContent = Math.round(state.zoom * 100) + '%';
+  updateOverlays();
+}
+function zoomAt(cx, cy, f) {
+  const z = Math.min(2, Math.max(0.25, state.zoom * f));
+  const ox = canvas.clientWidth / 2 + state.panX, oy = canvas.clientHeight / 2 + state.panY;
+  const wx = (cx - ox) / state.zoom, wy = (cy - oy) / state.zoom;
+  state.zoom = z;
+  state.panX = cx - canvas.clientWidth / 2 - wx * z;
+  state.panY = cy - canvas.clientHeight / 2 - wy * z;
+  applyView();
+}
+function fitContent() {
+  const ns = state.nodes;
+  const minX = Math.min(...ns.map((n) => n.x)) - 40, maxX = Math.max(...ns.map((n) => n.x + n.w)) + 40;
+  const minY = Math.min(...ns.map((n) => n.y)) - 90, maxY = Math.max(...ns.map((n) => n.y + n.h)) + 260;
+  const z = Math.min(1, Math.max(0.25, Math.min((canvas.clientWidth - 200) / (maxX - minX), (canvas.clientHeight - 120) / (maxY - minY))));
+  state.zoom = z;
+  state.panX = -((minX + maxX) / 2) * z;
+  state.panY = -((minY + maxY) / 2) * z;
+  applyView();
+}
+
+let drag = null;
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;
+  drag = { x: e.clientX, y: e.clientY, px: state.panX, py: state.panY, moved: false };
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) < 3) return;
+  drag.moved = true;
+  canvas.classList.add('is-panning');
+  state.panX = drag.px + dx; state.panY = drag.py + dy;
+  applyView();
+});
+canvas.addEventListener('pointerup', () => {
+  if (drag && !drag.moved) deselect();
+  drag = null;
+  canvas.classList.remove('is-panning');
+});
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (e.ctrlKey || e.metaKey) zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.01));
+  else { state.panX -= e.deltaX; state.panY -= e.deltaY; applyView(); }
+}, { passive: false });
+$('#zoomIn').addEventListener('click', () => zoomAt(canvas.clientWidth / 2, canvas.clientHeight / 2, 1.2));
+$('#zoomOut').addEventListener('click', () => zoomAt(canvas.clientWidth / 2, canvas.clientHeight / 2, 1 / 1.2));
+$('#zoomFit').addEventListener('click', fitContent);
+window.addEventListener('resize', applyView);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') deselect(); });
+
+/* ---------- 面板交互 ---------- */
+panel.querySelectorAll('.segment').forEach((b) => b.addEventListener('click', () => { state.scale = Number(b.dataset.scale); updatePanel(); }));
+$('#faceSwitch').addEventListener('click', () => { state.keepFace = !state.keepFace; updatePanel(); });
+$('#hdItem').addEventListener('click', () => { state.panelOpen = !state.panelOpen; updateOverlays(); });
+
+startBtn.addEventListener('click', () => {
+  const src = state.selectedId && getNode(state.selectedId);
+  if (state.busy || !src) return;
+  state.busy = true;
+  startBtn.classList.add('is-loading');
+  setTimeout(() => {
+    const scale = state.scale;
+    const siblings = state.edges.filter((e) => e.from === src.id).length;
+    const nn = {
+      id: 'n' + (++seq), name: `高清放大 ${scale}x`,
+      x: src.x + src.w + 200, y: src.y + siblings * (src.h + 72), w: src.w, h: src.h,
+      px: src.px * scale, py: src.py * scale, status: 'generating',
+    };
+    state.nodes.push(nn);
+    state.edges.push({ from: src.id, to: nn.id });
+    createNodeEl(nn);
+    state.busy = false;
+    startBtn.classList.remove('is-loading');
+    state.selectedId = null;
+    refresh();
+    setTimeout(() => {
+      nn.status = 'done';
+      refresh();
+      toast('success', `高清放大完成，输出 ${nn.px} × ${nn.py}`);
+    }, 3000);
+  }, 800);
+});
+
+/* ---------- 原型未接入的入口 ---------- */
+document.querySelectorAll('[data-todo]').forEach((el) => el.addEventListener('click', () => toast('info', '原型只做了高清放大，这个入口没有接入')));
+
+/* ---------- Toast：顶部居中，3 秒消失，同时只留一条 ---------- */
+let toastTimer;
+function toast(type, text) {
+  const glyph = type === 'success' ? '<i data-lucide="check" class="icon" stroke-width="3"></i>' : 'i';
+  toastEl.innerHTML = `<span class="toast-icon toast-icon--${type}">${glyph}</span><span></span>`;
+  toastEl.lastElementChild.textContent = text;
+  renderIcons(toastEl);
+  toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, 3000);
+}
+
+/* ---------- Tooltip：悬停 500ms 后出现在下方 8px（竖向工具栏在右侧） ---------- */
+let tipTimer, tipTarget = null;
+function hideTip() { clearTimeout(tipTimer); tipTarget = null; tooltip.hidden = true; }
+function showTip(t) {
+  tooltip.textContent = t.dataset.tip;
+  tooltip.hidden = false;
+  const r = t.getBoundingClientRect();
+  let left, top;
+  if (t.dataset.tipPos === 'right') { left = r.right + 8; top = r.top + r.height / 2 - tooltip.offsetHeight / 2; }
+  else { left = r.left + r.width / 2 - tooltip.offsetWidth / 2; top = r.bottom + 8; }
+  left = Math.max(8, Math.min(left, window.innerWidth - tooltip.offsetWidth - 8));
+  tooltip.style.left = Math.round(left) + 'px';
+  tooltip.style.top = Math.round(top) + 'px';
+}
+document.addEventListener('mouseover', (e) => {
+  const t = e.target.closest('[data-tip]');
+  if (t === tipTarget) return;
+  hideTip();
+  if (!t) return;
+  tipTarget = t;
+  tipTimer = setTimeout(() => showTip(t), 500);
+});
+document.addEventListener('pointerdown', hideTip, true);
+
+/* ---------- 初始：图片节点已选中，面板打开 ---------- */
+state.nodes.forEach(createNodeEl);
+applyView();
+refresh();
+</script>
+</body>
+</html>

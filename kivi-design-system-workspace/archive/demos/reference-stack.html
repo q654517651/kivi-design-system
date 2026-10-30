@@ -1,0 +1,289 @@
+<title>KIVI 参考区交互</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* 布局：一列。上面是可操作的主站输入框，下面是操作按钮和交互说明表。KIVI 产品是深色，页面只做深色。 */
+:root{
+  --bg:#0f1012;            /* base */
+  --surface:#191a1b;       /* surface */
+  --input:#222325;         /* 白 8% 叠在 base 上 */
+  --stroke:rgba(255,255,255,.08);
+  --popup:#2b2d31;         /* 浮层 */
+  --slot:rgba(255,255,255,.04);
+  --text:#ffffff;
+  --text2:rgba(255,255,255,.6);
+  --text3:rgba(255,255,255,.4);
+  --ph:rgba(255,255,255,.3);
+  --dark:rgba(0,0,0,.4);
+  --brand-a:#d6ff5c; --brand-b:#3cf07c; --on-brand:#0f1012;
+  --sans:"PingFang SC","Noto Sans SC",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* 动效：时长按移动距离分档，缓动按怎么动选（屏幕内移动 ease-in-out，出现 ease-out，消失 ease-in） */
+  --k:1;
+  --d-xs:calc(100ms*var(--k)); --d-sm:calc(150ms*var(--k)); --d-md:calc(200ms*var(--k)); --d-lg:calc(300ms*var(--k));
+  --ease-in-out:cubic-bezier(.4,0,.2,1); --ease-out:cubic-bezier(0,0,.2,1); --ease-in:cubic-bezier(.4,0,1,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6}
+.wrap{max-width:1120px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:40px}
+header{display:flex;flex-direction:column;gap:8px;max-width:68ch}
+h1{font-size:24px;font-weight:500;margin:0;text-wrap:balance}
+header p{margin:0;color:var(--text2)}
+h2{font-size:16px;font-weight:500;margin:0 0 12px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--text3)}
+
+/* ---------- 输入框 ---------- */
+.input{background:var(--input);border:1px solid var(--stroke);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;max-width:1040px;width:100%}
+.content{position:relative;height:120px;display:flex;gap:12px}
+.refs-space{flex:none;width:72px;height:72px}
+.prompt{flex:1;min-width:0;background:transparent;border:0;resize:none;color:var(--text);font:inherit;font-size:14px;line-height:22px;outline:none;padding:0;height:100%}
+.prompt::placeholder{color:var(--ph)}
+
+/* 参考区：收起时 72×72；展开时变宽，浮在提示词上 */
+.strip{position:absolute;left:0;top:0;height:72px;width:72px;z-index:3;outline:none;
+  transition:width var(--d-lg) var(--ease-in-out)}
+/* 盖住文字的底：和输入框同色，比卡片高一点，正好盖满 4 行字；右边 40 渐隐 */
+.strip::before,.strip::after{content:"";position:absolute;top:-2px;height:90px;pointer-events:none;z-index:-1;opacity:0;
+  transition:opacity var(--d-sm) var(--ease-in) var(--d-sm)}
+.strip::before{left:0;right:0;background:var(--input)}
+.strip::after{left:100%;width:40px;background:linear-gradient(90deg,var(--input),rgba(34,35,37,0))}
+.strip.open::before,.strip.open::after{opacity:1;transition:opacity var(--d-sm) var(--ease-out)}
+.strip.full::after{left:auto;right:0;z-index:30}
+.strip.full.at-end::after{opacity:0}
+.strip:focus-visible{box-shadow:0 0 0 2px rgba(255,255,255,.5)}
+.scroller{position:relative;width:100%;height:72px;overflow:visible}
+.strip.open .scroller{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.track{position:relative;height:72px}
+
+.slot,.card{position:absolute;left:0;top:0;width:72px;height:72px;border-radius:8px;
+  transition:transform var(--d-lg) var(--ease-in-out),opacity var(--d-md) var(--ease-out)}
+.slot{background:var(--slot);border:0;color:var(--text);display:grid;place-items:center;cursor:pointer}
+.slot svg{width:20px;height:20px}
+.card{overflow:hidden;border:1px solid rgba(255,255,255,.12);transform-origin:50% 50%;background:#333}
+.card .thumb{position:absolute;inset:0}
+.card .label{position:absolute;left:0;right:0;bottom:0;height:18px;display:grid;place-items:center;font-size:11px;color:#fff;background:var(--dark);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity var(--d-xs) var(--ease-in)}
+.card.show-label .label{opacity:1;transition:opacity var(--d-sm) var(--ease-out)}
+.card .dur{position:absolute;left:4px;top:4px;padding:0 4px;border-radius:4px;font-size:10px;line-height:16px;background:var(--dark);color:#fff;opacity:0;transition:opacity var(--d-xs) var(--ease-in)}
+.strip.open .card .dur{opacity:1;transition:opacity var(--d-sm) var(--ease-out) var(--d-sm)}
+.card .del{position:absolute;right:4px;top:4px;width:18px;height:18px;border-radius:9px;border:0;padding:0;background:var(--dark);color:#fff;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity var(--d-xs) var(--ease-in)}
+.card .del svg{width:10px;height:10px}
+.strip.open .card:hover .del,.strip.open .card:focus-within .del{opacity:1;transition:opacity var(--d-sm) var(--ease-out)}
+.card .up{position:absolute;inset:0;background:var(--dark);display:grid;place-items:center}
+.card .up svg{width:28px;height:28px}
+.card .up span{position:absolute;font-size:9px;font-weight:500;font-variant-numeric:tabular-nums}
+
+.plus{position:absolute;left:44px;top:48px;width:24px;height:24px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:var(--popup);color:var(--text);display:grid;place-items:center;padding:0;cursor:pointer;z-index:20;transition:opacity var(--d-sm) var(--ease-out) var(--d-sm),transform var(--d-sm) var(--ease-out) var(--d-sm)}
+.plus svg{width:14px;height:14px}
+.plus[aria-hidden="true"]{opacity:0;transform:scale(.6);pointer-events:none;transition:opacity var(--d-xs) var(--ease-in),transform var(--d-xs) var(--ease-in)}
+
+/* 工具条 */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.bar .l,.bar .r{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sel{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 8px;border-radius:8px;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;cursor:default}
+.sel svg{width:16px;height:16px;opacity:.9}
+.sel .chev{width:12px;height:12px;opacity:.5}
+.gen{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;border:0;color:var(--on-brand);font:inherit;font-size:13px;font-weight:500;background:linear-gradient(90deg,var(--brand-a),var(--brand-b))}
+.gen i{width:14px;height:14px;border-radius:7px;background:var(--on-brand);display:grid;place-items:center}
+.gen i::after{content:"";width:4px;height:4px;border-radius:2px;background:var(--brand-a)}
+
+/* 演示控制 */
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{height:32px;padding:0 12px;border-radius:8px;border:0;background:rgba(255,255,255,.08);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.btn:hover{background:rgba(255,255,255,.12)}
+.btn:focus-visible,.sel:focus-visible,.slot:focus-visible,.plus:focus-visible,.del:focus-visible{outline:2px solid rgba(255,255,255,.6);outline-offset:2px}
+.toggle{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:13px;margin-left:4px}
+.status{font-family:var(--mono);font-size:12px;color:var(--text3);margin-left:auto}
+
+/* 交互说明 */
+.table-wrap{overflow-x:auto;border-top:1px solid var(--stroke)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:13px}
+th,td{text-align:left;vertical-align:top;padding:12px 16px 12px 0;border-bottom:1px solid var(--stroke)}
+th{font-weight:400;color:var(--text3);font-size:12px}
+td:first-child{font-weight:500;white-space:nowrap}
+td.num{color:var(--text2);font-variant-numeric:tabular-nums}
+td.tbd{color:#ffb35c}
+.note{color:var(--text3);font-size:12px;margin:12px 0 0}
+
+@media (prefers-reduced-motion:reduce){:root{--k:0}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">主站 · 04 输入框 · 参考区</span>
+    <h1>参考区交互</h1>
+    <p>多个参考素材时叠放，鼠标移到参考区向右展开，浮在提示词上面，不把文字往下推。下面的输入框可以直接操作：加素材、悬停、模拟上传、删除。</p>
+  </header>
+
+  <section aria-label="输入框演示">
+    <div class="input">
+      <div class="content">
+        <div class="refs-space" aria-hidden="true"></div>
+        <textarea class="prompt" id="prompt" aria-label="提示词" placeholder="描述你想生成的视频，@ 引用参考素材">明亮的商业广告风格，饼干是主角。草莓口味参考 @图片1，开场用 @视频1 的构图，音乐在重拍处切入；饼干排成整齐的阵列，镜头参考 @视频2 的运动方式，高潮时饼干掰开进入慢动作，夹心爆开、碎屑飞散，配乐用 @音频1。</textarea>
+        <div class="strip" id="strip" tabindex="0" aria-label="参考素材">
+          <div class="scroller" id="scroller"><div class="track" id="track">
+            <button class="slot" id="slot" type="button" aria-label="添加参考素材">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 5v10M5 10h10"/></svg>
+            </button>
+          </div></div>
+          <button class="plus" id="plus" type="button" aria-label="继续添加">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 3v8M3 7h8"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="bar">
+        <div class="l">
+          <span class="sel"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M7 6.5v3l2.5-1.5z" fill="currentColor"/></svg>视频生成<svg class="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 4.5l3 3 3-3"/></svg></span>
+          <span class="sel"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="8" r="2"/><ellipse cx="8" cy="8" rx="6" ry="2.6"/><ellipse cx="8" cy="8" rx="6" ry="2.6" transform="rotate(60 8 8)"/><ellipse cx="8" cy="8" rx="6" ry="2.6" transform="rotate(120 8 8)"/></svg>全能参考<svg class="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 4.5l3 3 3-3"/></svg></span>
+          <span class="sel"><svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="6" width="2" height="6"/><rect x="5.5" y="4" width="2" height="8"/><rect x="9" y="7" width="2" height="5"/><rect x="12.5" y="3" width="2" height="9"/></svg>Seedance 2.5<svg class="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 4.5l3 3 3-3"/></svg></span>
+          <span class="sel">720P · 16:9 · 8s<svg class="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 4.5l3 3 3-3"/></svg></span>
+        </div>
+        <div class="r">
+          <span class="sel">x1<svg class="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 4.5l3 3 3-3"/></svg></span>
+          <span class="gen"><i></i>99</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="演示操作">
+    <h2>演示操作</h2>
+    <div class="controls">
+      <button class="btn" type="button" data-add="image">加图片</button>
+      <button class="btn" type="button" data-add="video">加视频</button>
+      <button class="btn" type="button" data-add="audio">加音频</button>
+      <button class="btn" type="button" id="upload">模拟上传</button>
+      <button class="btn" type="button" id="pop">删掉最后一个</button>
+      <button class="btn" type="button" id="clear">清空</button>
+      <label class="toggle"><input type="checkbox" id="pin"> 固定展开</label>
+      <label class="toggle"><input type="checkbox" id="slow"> 慢放 5 倍</label>
+      <span class="status" id="status"></span>
+    </div>
+  </section>
+
+  <section aria-label="交互说明">
+    <h2>交互说明</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>状态 / 动作</th><th>什么时候</th><th>数值</th><th>表现</th></tr></thead>
+        <tbody>
+          <tr><td>空</td><td>没有参考素材</td><td class="num">72，圆角 8</td><td>只有添加格，点一下上传，也可以把文件拖进输入框</td></tr>
+          <tr><td>一个</td><td>只有 1 个素材</td><td class="num">卡片 72；+ 24 圆</td><td>卡片正放不叠；右下角挂圆形 +，继续添加</td></tr>
+          <tr><td>收起（叠放）</td><td>2 个及以上，鼠标不在参考区</td><td class="num">卡片 48；转角 −4° / 6° / 12°；+ 24 圆</td><td>三张转完都收在 72×72 里，右边和文字留 12：最上面是最后加的那张，靠左下；后面两张往右上错开露出来，其余藏起来；底部写最上面那张的名字</td></tr>
+          <tr><td>悬停展开</td><td>鼠标移到参考区，或用键盘聚焦</td><td class="num">卡片 72，间距 6；展开、收起 300ms ease-in-out；离开 150ms 后收起</td><td>向右排成一排：添加格在最前，后面按添加顺序排；浮在提示词上，不把文字往下推</td></tr>
+          <tr><td>盖住文字</td><td>展开时</td><td class="num">底色同输入框；右边留 12，再接 40 渐隐；出现 150ms ease-out，收起时等卡片收完再 150ms ease-in 消失</td><td>被盖住的那几行字整行藏起来，不切半行；右边的字慢慢透出来，不和卡片贴着</td></tr>
+          <tr><td>名字</td><td>展开时</td><td class="num">按类型分别编号</td><td>每张底部写「图片1 / 视频1 / 音频1」，和提示词里 @ 引用一致；视频、音频左上角标时长</td></tr>
+          <tr><td>超出</td><td>展开后超过输入框宽度</td><td class="num">—</td><td>横向滚动，不换行；渐隐挪到参考区里面右边，提示还能往右滚，滚到头渐隐消失</td></tr>
+          <tr><td>上传中</td><td>素材还在上传</td><td class="num">黑 40% + 进度环 28</td><td>卡片盖一层暗色，中间进度环和百分比；上传完自动去掉</td></tr>
+          <tr><td>删除 / 预览</td><td>展开后悬停某一张</td><td class="tbd">待确认</td><td>右上角出删除（演示里已经做了）；点卡片看大图</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">时长和缓动按 UI 规范「动效」：屏幕内移动 ease-in-out，出现 ease-out，消失 ease-in；时长按移动距离分 100 / 150 / 200 / 300 / 400ms 五档。在手机上没有悬停：点一下参考区展开，再点一下收起。演示里的缩略图是色块，不是真实素材。</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  const strip=document.getElementById('strip'),track=document.getElementById('track'),scroller=document.getElementById('scroller');
+  const slot=document.getElementById('slot'),plus=document.getElementById('plus'),statusEl=document.getElementById('status');
+  const content=strip.parentElement;
+  const NAMES={image:'图片',video:'视频',audio:'音频'};
+  const S=48/72, STEP=78;
+  const STACK=[[-4,6,-4],[4,-2,6],[7.5,-7.5,12]]; // 最上面、第二张、第三张：中心相对 72 格子中心的 x, y, 角度。转完以后都不超出 72×72
+  const PAD=12; // 展开后最后一张右边留白，再接 40 渐隐
+  const state={items:[],hover:false,pinned:false};
+  const seq={image:0,video:0,audio:0};
+  const els=new Map();
+  let leaveTimer=null;
+
+  const hues=[150,190,28,330,260,95,210,12];
+  function thumbBg(it){
+    if(it.type==='audio')return 'linear-gradient(160deg,#93a7cc,#6b80ad)';
+    const h=it.hue;
+    return `radial-gradient(circle at 28% 30%,hsl(${h} 85% 72% / .95),transparent 55%),radial-gradient(circle at 75% 80%,hsl(${(h+40)%360} 70% 45%),transparent 60%),linear-gradient(135deg,hsl(${h} 55% 32%),hsl(${(h+60)%360} 50% 22%))`;
+  }
+  const NOTE='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:50%;top:44%;transform:translate(-50%,-50%)"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
+  const X='<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5"/></svg>';
+
+  function makeCard(it){
+    const c=document.createElement('div');c.className='card';c.dataset.id=it.id;
+    c.innerHTML=`<div class="thumb" style="background:${thumbBg(it)}">${it.type==='audio'?NOTE:''}</div>`+
+      (it.dur?`<span class="dur">${it.dur}</span>`:'')+
+      `<span class="label">${it.name}</span><button class="del" type="button" aria-label="删除 ${it.name}">${X}</button>`;
+    c.querySelector('.del').addEventListener('click',e=>{e.stopPropagation();remove(it.id);});
+    track.appendChild(c);els.set(it.id,c);
+    // 新卡片从最上面的位置出现
+    c.style.opacity='0';c.style.transform=`translate(${STACK[0][0]}px,${STACK[0][1]}px) rotate(${STACK[0][2]}deg) scale(${S*0.8})`;
+    requestAnimationFrame(()=>requestAnimationFrame(layout));
+    return c;
+  }
+  function setUpload(it){
+    const c=els.get(it.id);if(!c)return;let up=c.querySelector('.up');
+    if(it.progress==null){if(up)up.remove();return;}
+    if(!up){up=document.createElement('div');up.className='up';up.innerHTML='<svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="3"/><circle class="arc" cx="14" cy="14" r="12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" transform="rotate(-90 14 14)" stroke-dasharray="75.4" stroke-dashoffset="75.4"/></svg><span></span>';c.insertBefore(up,c.querySelector('.label'));}
+    up.querySelector('.arc').setAttribute('stroke-dashoffset',String(75.4*(1-it.progress/100)));
+    up.querySelector('span').textContent=Math.round(it.progress)+'%';
+  }
+  function add(type,upload){
+    seq[type]++;
+    const it={id:String(Date.now())+Math.random().toString(16).slice(2),type,name:NAMES[type]+seq[type],hue:hues[(state.items.length*3+seq[type])%hues.length],dur:type==='video'?['5s','8s','12s'][seq[type]%3]:type==='audio'?'0:'+String(8+seq[type]*7).padStart(2,'0'):null,progress:upload?0:null};
+    state.items.push(it);makeCard(it);setUpload(it);
+    if(upload){const t0=performance.now(),total=2400;const tick=now=>{it.progress=Math.min(100,(now-t0)/total*100);setUpload(it);if(it.progress<100&&els.has(it.id))requestAnimationFrame(tick);else{it.progress=null;setUpload(it);}};requestAnimationFrame(tick);}
+    layout();
+  }
+  function remove(id){
+    const i=state.items.findIndex(x=>x.id===id);if(i<0)return;state.items.splice(i,1);
+    const c=els.get(id);els.delete(id);if(c){c.style.transition='transform var(--d-sm) var(--ease-in),opacity var(--d-sm) var(--ease-in)';c.style.opacity='0';c.style.transform+=' scale(.8)';setTimeout(()=>c.remove(),parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--k'))*150+20);}
+    layout();
+  }
+  function expanded(){return state.items.length>0&&(state.hover||state.pinned);}
+  function layout(){
+    const n=state.items.length,open=expanded();
+    strip.classList.toggle('open',open);
+    const full=STEP*(n+1)-6+PAD;
+    const over=full+40>content.clientWidth;
+    track.style.width=(open?full:72)+'px';
+    strip.style.width=open?(over?content.clientWidth:full)+'px':'72px';
+    strip.classList.toggle('full',open&&over);
+    if(!open)scroller.scrollLeft=0;
+    onScroll();
+    // 添加格
+    if(n===0||open){slot.style.opacity='1';slot.style.transform='none';slot.tabIndex=0;slot.style.pointerEvents='auto';}
+    else{slot.style.opacity='0';slot.style.transform='scale(.7)';slot.tabIndex=-1;slot.style.pointerEvents='none';}
+    plus.setAttribute('aria-hidden',String(!(n>0&&!open)));plus.tabIndex=(n>0&&!open)?0:-1;
+    state.items.forEach((it,i)=>{
+      const c=els.get(it.id);if(!c)return;let tx,ty,r,s,op,z,label;
+      if(open){tx=STEP*(i+1);ty=0;r=0;s=1;op=1;z=i+1;label=true;}
+      else if(n===1){tx=0;ty=0;r=0;s=1;op=1;z=5;label=true;}
+      else{const k=n-1-i;const p=STACK[Math.min(k,2)];tx=p[0];ty=p[1];r=p[2];s=S;op=k<=2?1:0;z=10-k;label=k===0;}
+      c.style.transform=`translate(${tx}px,${ty}px) rotate(${r}deg) scale(${s})`;
+      c.style.opacity=String(op);c.style.zIndex=String(z);c.classList.toggle('show-label',label);
+      c.querySelector('.del').tabIndex=open?0:-1;
+    });
+    statusEl.textContent=(n===0?'空':open?'展开':n===1?'一个':'收起（叠放）')+' · '+n+' 个素材';
+  }
+  function onScroll(){strip.classList.toggle('at-end',scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-1);}
+  scroller.addEventListener('scroll',onScroll,{passive:true});
+  // 悬停 / 聚焦 展开，离开 150ms 后收起
+  const enter=()=>{clearTimeout(leaveTimer);if(!state.hover){state.hover=true;layout();}};
+  const leave=()=>{clearTimeout(leaveTimer);leaveTimer=setTimeout(()=>{state.hover=false;layout();},150);};
+  strip.addEventListener('mouseenter',enter);strip.addEventListener('mouseleave',leave);
+  strip.addEventListener('focusin',enter);strip.addEventListener('focusout',e=>{if(!strip.contains(e.relatedTarget))leave();});
+  strip.addEventListener('touchstart',e=>{if(e.target.closest('button'))return;state.hover=!state.hover;layout();},{passive:true});
+  slot.addEventListener('click',()=>add('image'));
+  plus.addEventListener('click',e=>{e.stopPropagation();add('image');});
+  document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(b.dataset.add)));
+  document.getElementById('upload').addEventListener('click',()=>add('image',true));
+  document.getElementById('pop').addEventListener('click',()=>{const l=state.items[state.items.length-1];if(l)remove(l.id);});
+  document.getElementById('clear').addEventListener('click',()=>{[...state.items].forEach(x=>remove(x.id));seq.image=seq.video=seq.audio=0;});
+  document.getElementById('pin').addEventListener('change',e=>{state.pinned=e.target.checked;layout();});
+  document.getElementById('slow').addEventListener('change',e=>{document.documentElement.style.setProperty('--k',e.target.checked?'5':'1');});
+  window.addEventListener('resize',layout);
+  // 开场：和截图一样，6 个素材叠放
+  ['image','video','video','video','audio','video'].forEach(t=>add(t));
+  layout();
+})();
+</script>

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>变量 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+</head>
+<body data-root="../" data-page="tokens">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">基础</p>
+    <h1>变量</h1>
+    <p class="doc-lead">颜色、间距、圆角、字号、透明度、动效都用变量，不写死数值，不用吸管取色。只有深色一套主题。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=6-2" target="_blank" rel="noopener">「变量」页</a>，color、scale 两个集合</dd></div>
+      <div><dt>代码</dt><dd><code>kivi/tokens.css</code></dd></div>
+    </dl>
+  </header>
+
+  <p style="margin-top:24px">CSS 变量名由 Figma 名字的 <code>/</code> 换成 <code>-</code>、前面加 <code>--</code> 得到：<code>color/text/fill/secondary</code> → <code>--color-text-fill-secondary</code>。画布连线例外，用 Figma 里设的代码名。</p>
+  <p>表里的「值」是从 <code>kivi/tokens.css</code> 读出来的，这一页不写死数值。点变量名复制 <code>var(--…)</code>。</p>
+  <p><span class="tag">新</span> v2 新增 &nbsp; <span class="tag tag--draft">占位</span> 取值待视觉确定，可以照用</p>
+  <div data-copy-tokens></div>
+
+  <!-- ==================== 颜色 ==================== -->
+
+  <h2 id="color">颜色</h2>
+
+  <h3>底色</h3>
+  <p>界面从下往上分层，每层只用对应的颜色。<code>popup-raised</code> 已并入 popup，不要再用。</p>
+  <div class="table-wrap">
+    <table data-kind="color" data-group="底色">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th><th></th></tr></thead>
+      <tbody>
+        <tr data-token="--color-bg-fill-base"><td>color/bg/fill/base</td><td>全局底色：外框、画布、各页面的底。不要用于面板卡片（用叠加）、弹窗（surface）、浮层（popup）</td><td></td></tr>
+        <tr data-token="--color-bg-fill-surface"><td>color/bg/fill/surface</td><td>必须不透明的地方：盖在画布上的节点卡片、浮动面板、模态弹窗。不要用于页面里普通的面板和卡片（用 container-light-2）</td><td><span class="tag">新</span></td></tr>
+        <tr data-token="--color-bg-fill-popup"><td>color/bg/fill/popup</td><td>提示类浮层：Tooltip、Toast、菜单。不要用于模态弹窗（用 surface + mask）</td><td></td></tr>
+        <tr data-token="--color-bg-fill-mask"><td>color/bg/fill/mask</td><td>模态弹窗下面的遮罩，每一级弹窗一层，不模糊</td><td><span class="tag">新</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>填充与状态</h3>
+  <p>能点的东西从 8% 起：默认 8%、悬停 12%、按下 16%。4% 只用来区分大面积区域。叠加最多两层。</p>
+  <div class="table-wrap">
+    <table data-kind="color" data-group="填充与状态">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th><th></th></tr></thead>
+      <tbody>
+        <tr data-token="--color-bg-fill-container-light-1"><td>container-light-1</td><td>按钮、输入框、标签、可点击卡片的默认底色</td><td></td></tr>
+        <tr data-token="--color-bg-fill-container-light-1-hover"><td>container-light-1-hover</td><td>light-1 的悬停态</td><td></td></tr>
+        <tr data-token="--color-bg-fill-container-light-1-pressed"><td>container-light-1-pressed</td><td>light-1 的按下态、选中态</td><td><span class="tag">新</span></td></tr>
+        <tr data-token="--color-bg-fill-container-light-2"><td>container-light-2</td><td>页面里的面板、卡片、侧栏、分组底、列表项。不要单独用来表示「可以点」</td><td></td></tr>
+        <tr data-token="--color-bg-fill-container-light-2-hover"><td>container-light-2-hover</td><td>light-2 的悬停态；文字按钮、菜单项的悬停</td><td></td></tr>
+        <tr data-token="--color-bg-fill-container-light-2-pressed"><td>container-light-2-pressed</td><td>light-2 的按下态、选中态</td><td><span class="tag">新</span></td></tr>
+        <tr data-token="--color-bg-fill-container-dark"><td>container-dark</td><td>凹下去的区域：上传框、图片和视频的垫底</td><td></td></tr>
+        <tr data-token="--color-bg-fill-container-dark-hover"><td>container-dark-hover</td><td>container-dark 的悬停态</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>文字与图标</h3>
+  <p>图标和文字用同一套颜色。由强到弱：primary → secondary → tertiary → placeholder → disabled。</p>
+  <div class="table-wrap">
+    <table data-kind="color" data-group="文字与图标">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th><th></th></tr></thead>
+      <tbody>
+        <tr data-token="--color-text-fill-primary"><td>color/text/fill/primary</td><td>标题、正文、主要图标</td><td></td></tr>
+        <tr data-token="--color-text-fill-secondary"><td>color/text/fill/secondary</td><td>次要说明、表单标签、未选中的 Tab、次要图标</td><td></td></tr>
+        <tr data-token="--color-text-fill-tertiary"><td>color/text/fill/tertiary</td><td>时间、数量、辅助提示、菜单分组标题、单位</td><td><span class="tag">新</span></td></tr>
+        <tr data-token="--color-text-fill-placeholder"><td>color/text/fill/placeholder</td><td>只给输入框里的占位文字，对比度不够，不能放要读的信息</td><td></td></tr>
+        <tr data-token="--color-text-fill-disabled"><td>color/text/fill/disabled</td><td>禁用的文字和图标</td><td></td></tr>
+        <tr data-token="--color-text-fill-on-brand"><td>color/text/fill/on-brand</td><td>品牌色、品牌渐变上的文字和图标</td><td><span class="tag">新</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>描边</h3>
+  <div class="table-wrap">
+    <table data-kind="color" data-group="描边">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th><th></th></tr></thead>
+      <tbody>
+        <tr data-token="--color-border"><td>color/border</td><td>卡片的默认描边</td><td></td></tr>
+        <tr data-token="--color-border-subtle"><td>color/border-subtle</td><td>列表分割线、菜单分割线、区块之间的细线</td><td><span class="tag">新</span></td></tr>
+        <tr data-token="--color-border-strong"><td>color/border-strong</td><td>需要强调的描边，如勾选框未选中的边框</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-border-focus"><td>color/border-focus</td><td>节点选中、拖拽目标高亮（输入框聚焦不加描边）</td><td><span class="tag">新</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>品牌色</h3>
+  <div class="table-wrap">
+    <table data-kind="color" data-group="品牌色">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th><th></th></tr></thead>
+      <tbody>
+        <tr data-token="--color-brand-solid"><td>color/brand/solid</td><td>选中指示、开关打开、进度、勾选框选中。不要用于大面积背景、正文</td><td></td></tr>
+        <tr data-token="--color-brand-hover"><td>color/brand/hover</td><td>品牌色控件的悬停态</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-brand-pressed"><td>color/brand/pressed</td><td>品牌色控件的按下态</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-brand-subtle"><td>color/brand/subtle</td><td>选中态的浅底：选中的模型、选中的卡片、选中的图标按钮</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-brand-gradient-1"><td>color/brand/gradient-1</td><td>品牌渐变起点（左）</td><td></td></tr>
+        <tr data-token="--color-brand-gradient-2"><td>color/brand/gradient-2</td><td>品牌渐变终点（右）。主要按钮：<code>linear-gradient(90deg, gradient-1, gradient-2)</code></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>功能色</h3>
+  <p>文字和图标用实色，提示条和报错底色用对应的 subtle。取值都是占位。</p>
+  <div class="table-wrap">
+    <table data-kind="color" data-group="功能色（占位）">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th><th></th></tr></thead>
+      <tbody>
+        <tr data-token="--color-status-danger"><td>color/status/danger</td><td>报错文字和图标、危险按钮、删除菜单项</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-status-danger-subtle"><td>color/status/danger-subtle</td><td>错误提示条、报错节点浅底、危险菜单项悬停</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-status-warning"><td>color/status/warning</td><td>警告：余额不足、即将过期</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-status-warning-subtle"><td>color/status/warning-subtle</td><td>警告提示条浅底</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-status-success"><td>color/status/success</td><td>成功提示的图标和文字</td><td><span class="tag tag--draft">占位</span></td></tr>
+        <tr data-token="--color-status-success-subtle"><td>color/status/success-subtle</td><td>成功提示条浅底</td><td><span class="tag tag--draft">占位</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>图片和视频上的控件</h3>
+  <p>画面颜色不可控，白色叠加在亮图上会看不清，所以叠在图片、视频上的按钮和标签用黑色半透明底。</p>
+  <div class="table-wrap">
+    <table data-kind="color" data-group="图片和视频上的控件">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th><th></th></tr></thead>
+      <tbody>
+        <tr data-token="--color-on-media-fill"><td>color/on-media/fill</td><td>叠在图片、视频上的按钮、标签、勾选框底色。不要用于普通面板上的按钮</td><td><span class="tag">新</span></td></tr>
+        <tr data-token="--color-on-media-fill-hover"><td>color/on-media/fill-hover</td><td>on-media/fill 的悬停态</td><td><span class="tag">新</span></td></tr>
+        <tr data-token="--color-on-media-text"><td>color/on-media/text</td><td>叠在图片、视频上的文字和图标</td><td><span class="tag">新</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>画布连线</h3>
+  <p>这组在 Figma 里单独设了代码名，不按命名规则转换。</p>
+  <div class="table-wrap">
+    <table data-kind="color" data-group="画布连线">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr data-token="--g-workflow-line-color-default"><td>connector-default</td><td>连线默认，1.5px</td></tr>
+        <tr data-token="--g-workflow-line-color-drawing"><td>connector-drawing</td><td>拖拽创建中，1.5px 虚线 6/6</td></tr>
+        <tr data-token="--g-workflow-line-color-active"><td>connector-active</td><td>选中或悬停，2px</td></tr>
+        <tr data-token="--g-workflow-line-color-flowing"><td>connector-flowing</td><td>执行中，1.5px + 流光</td></tr>
+        <tr data-token="--g-workflow-line-color-error"><td>connector-error</td><td>执行出错</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 尺寸 ==================== -->
+
+  <h2 id="size">尺寸</h2>
+
+  <h3>间距</h3>
+  <p>组件内部用 4–12，组件之间用 12–32；面板内边距 16，弹窗内边距 24。</p>
+  <div class="table-wrap">
+    <table data-kind="space" data-group="间距">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr data-token="--spacing-none"><td>spacing/none</td><td>去掉间距</td></tr>
+        <tr data-token="--spacing-xxs"><td>spacing/xxs</td><td>图标和文字之间、紧凑标签内边距、条目之间</td></tr>
+        <tr data-token="--spacing-xs"><td>spacing/xs</td><td>小按钮里图标和文字、紧凑列表项之间</td></tr>
+        <tr data-token="--spacing-sm"><td>spacing/sm</td><td>最常用的组件内间距：按钮内边距、表单项之间、标签和控件之间</td></tr>
+        <tr data-token="--spacing-md"><td>spacing/md</td><td>卡片内边距、一组相关元素之间、输入框左右内边距</td></tr>
+        <tr data-token="--spacing-lg"><td>spacing/lg</td><td>面板内边距、区块之间</td></tr>
+        <tr data-token="--spacing-xl"><td>spacing/xl</td><td>弹窗内边距、大区块之间、页面左右边距</td></tr>
+        <tr data-token="--spacing-xxl"><td>spacing/xxl</td><td>页面级分区之间</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>圆角</h3>
+  <div class="table-wrap">
+    <table data-kind="radius" data-group="圆角">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th><th></th></tr></thead>
+      <tbody>
+        <tr data-token="--border-radius-xxs"><td>border/radius/xxs</td><td>标签、徽标、方形勾选框</td><td></td></tr>
+        <tr data-token="--border-radius-xs"><td>border/radius/xs</td><td>小按钮（28）、chip、输入框里的小控件</td><td></td></tr>
+        <tr data-token="--border-radius-sm"><td>border/radius/sm</td><td>按钮、输入框、菜单项、Tooltip，最常用</td><td></td></tr>
+        <tr data-token="--border-radius-md"><td>border/radius/md</td><td>卡片、画布节点、菜单容器、Toast</td><td></td></tr>
+        <tr data-token="--border-radius-lg"><td>border/radius/lg</td><td>弹窗、大面板</td><td></td></tr>
+        <tr data-token="--border-radius-xl"><td>border/radius/xl</td><td>大容器：首页提示词输入框、大卡片、Banner。弹窗和面板仍用 16</td><td><span class="tag">新</span></td></tr>
+        <tr data-token="--border-radius-round"><td>border/radius/round</td><td>开关、头像、圆形图标按钮、胶囊</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>描边粗细</h3>
+  <div class="table-wrap">
+    <table data-kind="stroke" data-group="描边粗细">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr data-token="--border-width-sm"><td>border/width/sm</td><td>默认描边</td></tr>
+        <tr data-token="--border-width-md"><td>border/width/md</td><td>需要稍微加强的描边</td></tr>
+        <tr data-token="--border-width-lg"><td>border/width/lg</td><td>线性图标线宽、选中和聚焦描边</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 文字 ==================== -->
+
+  <h2 id="text">文字</h2>
+  <p>界面 13，阅读 14。字重只常用常规 400 和粗 500；按钮、标题、选中项用 500，600 很少用。字体是 PingFang SC。</p>
+
+  <h3>文字样式</h3>
+  <p>Figma 文字样式按「文字/字号 字重」命名：<code>文字/13 常规</code>、<code>文字/13 粗</code>……字号 10–16 都有常规、粗、加粗三档。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>样子</th><th>字号 / 行高</th><th>变量</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr><td style="font-size:var(--font-size-10);line-height:var(--font-line-height-16)">角标 99+</td><td>10 / 16</td><td><code>--font-size-10</code> <code>--font-line-height-16</code></td><td>角标、数字徽标、缩放百分比</td></tr>
+        <tr><td style="font-size:var(--font-size-12);line-height:var(--font-line-height-20)">次要信息 1024×1024</td><td>12 / 20</td><td><code>--font-size-12</code> <code>--font-line-height-20</code></td><td>次要信息、标签、Tooltip、小号按钮、单位</td></tr>
+        <tr><td style="font-size:var(--font-size-13);line-height:var(--font-line-height-20)">界面主文字</td><td>13 / 20</td><td><code>--font-size-13</code> <code>--font-line-height-20</code></td><td>工具栏、导航、菜单项、按钮、输入框</td></tr>
+        <tr><td style="font-size:var(--font-size-14);line-height:var(--font-line-height-22)">需要阅读的内容</td><td>14 / 22</td><td><code>--font-size-14</code> <code>--font-line-height-22</code></td><td>对话、AI 回复、提示词、说明文字、多行输入、Toast。不要用于按钮和工具栏</td></tr>
+        <tr><td style="font-size:var(--font-size-16);line-height:var(--font-line-height-24);font-weight:var(--font-weight-medium)">面板标题</td><td>16 / 24</td><td><code>--font-size-16</code> <code>--font-line-height-24</code></td><td>面板标题、分区标题、弹窗标题</td></tr>
+        <tr><td style="font-size:var(--font-size-20);line-height:var(--font-line-height-28);font-weight:var(--font-weight-medium)">醒目标题</td><td>20 / 28</td><td><code>--font-size-20</code> <code>--font-line-height-28</code></td><td>引导页、空状态的醒目标题</td></tr>
+        <tr><td style="font-size:var(--font-size-24);line-height:var(--font-line-height-32);font-weight:var(--font-weight-medium)">页面标题</td><td>24 / 32</td><td><code>--font-size-24</code> <code>--font-line-height-32</code></td><td>页面标题</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>字号</h3>
+  <div class="table-wrap">
+    <table data-kind="font-size" data-group="字号">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>文字样式</th></tr></thead>
+      <tbody>
+        <tr data-token="--font-size-10"><td>font/size/10</td><td>caption</td></tr>
+        <tr data-token="--font-size-12"><td>font/size/12</td><td>body-sm</td></tr>
+        <tr data-token="--font-size-13"><td>font/size/13</td><td>body</td></tr>
+        <tr data-token="--font-size-14"><td>font/size/14</td><td>body-lg</td></tr>
+        <tr data-token="--font-size-16"><td>font/size/16</td><td>title-sm</td></tr>
+        <tr data-token="--font-size-20"><td>font/size/20</td><td>title</td></tr>
+        <tr data-token="--font-size-24"><td>font/size/24</td><td>display</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>行高</h3>
+  <div class="table-wrap">
+    <table data-kind="line-height" data-group="行高">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>配哪个字号</th></tr></thead>
+      <tbody>
+        <tr data-token="--font-line-height-16"><td>font/line-height/16</td><td>10</td></tr>
+        <tr data-token="--font-line-height-20"><td>font/line-height/20</td><td>12、13</td></tr>
+        <tr data-token="--font-line-height-22"><td>font/line-height/22</td><td>14</td></tr>
+        <tr data-token="--font-line-height-24"><td>font/line-height/24</td><td>16</td></tr>
+        <tr data-token="--font-line-height-28"><td>font/line-height/28</td><td>20</td></tr>
+        <tr data-token="--font-line-height-32"><td>font/line-height/32</td><td>24</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>字重和字体</h3>
+  <div class="table-wrap">
+    <table data-kind="weight" data-group="字重、字体">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr data-token="--font-weight-regular"><td>font/weight/regular</td><td>正文、列表、菜单项、说明</td></tr>
+        <tr data-token="--font-weight-medium"><td>font/weight/medium</td><td>按钮文字、标题、选中项、需要强调的文字</td></tr>
+        <tr data-token="--font-weight-semibold"><td>font/weight/semibold</td><td>很少用，只给特别需要强调的地方</td></tr>
+        <tr data-token="--font-family"><td>font/family</td><td>产品界面字体</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 透明度、动效、效果 ==================== -->
+
+  <h2 id="other">透明度、动效、效果</h2>
+
+  <h3>透明度</h3>
+  <p>图层整体透明度，用于禁用的图片、拖拽中的元素。颜色本身的透明度直接用颜色变量。</p>
+  <div class="table-wrap">
+    <table data-kind="opacity" data-group="透明度">
+      <thead><tr><th>预览</th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr data-token="--opacity-50"><td>opacity/50</td><td>「弱」按钮的文字和图标</td></tr>
+        <tr data-token="--opacity-30"><td>opacity/30</td><td>开关、滑块、勾选框的禁用态</td></tr>
+        <tr data-token="--opacity-20"><td>opacity/20</td><td>「弱」按钮禁用时的文字和图标</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>动效</h3>
+  <p>怎么选、怎么用，看 <a href="motion.html">动效</a>。</p>
+  <div class="table-wrap">
+    <table data-kind="motion" data-group="动效">
+      <thead><tr><th></th><th>变量</th><th>CSS 变量</th><th>值</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr data-token="--motion-duration-100"><td>motion/duration/100</td><td>只换颜色</td></tr>
+        <tr data-token="--motion-duration-150"><td>motion/duration/150</td><td>小东西出现、消失</td></tr>
+        <tr data-token="--motion-duration-200"><td>motion/duration/200</td><td>移动 100px 以内；菜单、Toast 出现</td></tr>
+        <tr data-token="--motion-duration-300"><td>motion/duration/300</td><td>移动 100–400px；面板展开、弹窗出现</td></tr>
+        <tr data-token="--motion-duration-400"><td>motion/duration/400</td><td>移动更远或整屏；最长</td></tr>
+        <tr data-token="--motion-ease-in-out"><td>motion/ease/in-out</td><td>屏幕内移动、展开收起</td></tr>
+        <tr data-token="--motion-ease-out"><td>motion/ease/out</td><td>进入、出现</td></tr>
+        <tr data-token="--motion-ease-in"><td>motion/ease/in</td><td>退出、消失</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>效果</h3>
+  <p>没有投影样式：所有浮层都不加阴影。</p>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+</body>
+</html>

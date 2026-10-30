@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>审查逐条对比</title>
+<style>
+  :root { --bg: #0d0e10; --card: #17181b; --line: #2a2b2f; --text: #f2f2f2; --sub: #9a9ba0; --accent: #b6f36a; }
+  body { margin: 0; padding: 24px 16px 64px; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, "PingFang SC", sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 24px; }
+  section { max-width: 960px; margin: 0 auto 48px; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  h2 small { color: var(--sub); font-weight: 400; margin-left: 8px; }
+  .pair { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  figcaption { color: var(--sub); font-size: 12px; margin-bottom: 8px; }
+  figure img { display: block; max-width: 100%; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--sub); font-weight: 400; }
+  td b { color: var(--accent); font-weight: 500; }
+  .pair + .pair { margin-top: 16px; }
+  .sub { color: var(--sub); font-size: 12px; margin: 20px 0 8px; }
+  figure img { height: auto; cursor: zoom-in; }
+  figure.stack img + img { margin-top: 8px; }
+  .note { color: var(--sub); font-size: 12px; margin: 12px 0 0; }
+</style>
+</head>
+<body>
+<h1>外部审查逐条对比</h1>
+
+<section id="a01">
+  <h2>1 · 视频参数面板（A01 + A02）<small>两张图同一比例</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma V2「视频参数调整」210:1514 · 333 × 323</figcaption><img src="a01-figma.png" width="333" alt="Figma 视频参数面板"></figure>
+    <figure><figcaption>网站 主站输入框点「720P · 16:9 · 8s」· 368 × 346</figcaption><img src="a01-site.png" width="400" alt="网站视频参数面板"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>比例选项</td><td>6 个竖卡片，每个自己带底（平时白 4%，选中白 8%），卡片之间有缝</td><td>一条整体底槽，里面 6 格，选中格白 12%</td></tr>
+    <tr><td>②</td><td>小标题颜色</td><td>白 100%</td><td>白 60%（偏灰）</td></tr>
+    <tr><td>③</td><td>时长数值框</td><td>「12　S」数字和单位一起居中</td><td>数字靠左、S 靠右</td></tr>
+    <tr><td>④</td><td>滑块到数值框</td><td>15</td><td>12</td></tr>
+    <tr><td>⑤</td><td>滑块当前刻度数字（A08）</td><td>刻度下只写 0、15、30，当前值 15 加小底框标出来；刻度数字白 100%（图里滑块在 15、数值框写 12，示意没对上）</td><td>刻度下写 0、10、20、30，白 50%；当前值不在刻度下标，只在右边数值框</td></tr>
+    <tr><td>⑥</td><td>分辨率、生成音频</td><td>两个独立按钮，各自带底</td><td>一条底槽，里面两格</td></tr>
+  </table>
+</section>
+
+<!-- SECTIONS-2+ -->
+<section id="a03">
+  <h2>2 · 音频参数面板（A03）<small>两张图同一比例</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma V2「音频参数调整」· 333 × 170</figcaption><img src="a03-figma.png" width="333" alt="Figma 音频参数面板"></figure>
+    <figure><figcaption>网站 主站输入框，切到音频生成，点「1.0x · 音调 0」· 333 × 176</figcaption><img src="a03-site.png" width="365" alt="网站音频参数面板"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>第二项的名字</td><td>「语速」。这一项范围是 -12 到 12，像音调，名字很可能是复制第一项时没改</td><td>「音调」</td></tr>
+    <tr><td>②</td><td>第二项数值框</td><td>「1.0」（范围 -12 到 12，写 1.0 对不上）</td><td>「0」</td></tr>
+    <tr><td>③</td><td>语速的刻度</td><td>3 条刻度线，数字 0.5x、1.0x、2.0x</td><td>7 条刻度线（每 0.25 一条），数字 0.5x、1.0x、1.5x、2.0x</td></tr>
+    <tr><td>④</td><td>语速数值框的单位</td><td>只写「1.0」</td><td>「1.0」后面带单位「x」</td></tr>
+    <tr><td>⑤</td><td>面板高度</td><td>170</td><td>176（实测）</td></tr>
+  </table>
+</section>
+
+<section id="a04">
+  <h2>3 · 视频参考方式的位置（A04）<small>主站、画布各一对</small></h2>
+  <p class="sub">主站输入框底栏（视频生成）</p>
+  <div class="pair">
+    <figure><figcaption>Figma V2 主站输入框工具条 · 541 × 32</figcaption><img src="a04-main-figma.png" width="541" alt="Figma 主站工具条"></figure>
+    <figure><figcaption>网站 主站输入框工具条 · 539 × 32</figcaption><img src="a04-main-site.png" width="571" alt="网站主站工具条"></figure>
+  </div>
+  <p class="sub">画布生成面板（视频 · 首尾帧）</p>
+  <div class="pair">
+    <figure><figcaption>Figma V2「节点生成面板 · 视频-首尾帧」· 620 × 265</figcaption><img src="a04-canvas-figma.png" width="620" alt="Figma 画布生成面板"></figure>
+    <figure><figcaption>网站 画布页「生成面板」切到视频，参考方式选首尾帧 · 574 × 220</figcaption><img src="a04-canvas-site.png" width="606" alt="网站画布生成面板"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>主站：从左到右的顺序</td><td>任务 → 参考方式 → 模型 → 参数（视频生成、全能参考、Seedance 2.0 Fast、720P · 16:9 · 8s）</td><td>任务 → 模型 → 参考方式 → 参数（视频生成、Seedance 2.0 Fast、全能参考、720P · 16:9 · 8s）</td></tr>
+    <tr><td>②</td><td>画布：参考方式放在哪</td><td>顶部一排选项卡：全能参考、首尾帧、视频编辑、视频延长（高 29），在参考图上面</td><td>底栏里的下拉，排在模型后面；选项和顺序一样</td></tr>
+    <tr><td>③</td><td>画布：底栏里有什么</td><td>模型、参数两个下拉；右边 x1 和生成</td><td>模型、参考方式、参数三个下拉；右边 x1 和生成</td></tr>
+    <tr><td>④</td><td>画布：参数下拉的摘要</td><td>「智能 · 8s · 2K ·」加一个音量图标</td><td>「720P · 16:9 · 8s」，和主站写法一致</td></tr>
+  </table>
+</section>
+
+<section id="a05">
+  <h2>4 · 生成记录参考浮层（A05）<small>两张图同一比例</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma V2「参考预览浮层」· 396 × 162（框本身 396 × 242，导出图只露出前 8 个）</figcaption><img src="a05-figma.png" width="396" alt="Figma 参考预览浮层"></figure>
+    <figure><figcaption>网站 主站生成记录，悬停参考区 · 396 × 162（这里放 6 个素材）</figcaption><img src="a05-site.png" width="428" alt="网站参考预览浮层"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>一行放几个</td><td>图里画的是 4 个（9 个素材排成 4 + 4 + 1，每行右边空出一格）</td><td>5 个（5 列，每列 72）</td></tr>
+    <tr><td>②</td><td>框宽</td><td>396，刚好是 5 个格子的宽度（6 + 5 × 72 + 4 × 6 + 6）；图里的第 5 列是空的</td><td>396，一行 5 个正好排满</td></tr>
+    <tr><td>③</td><td>格子、内边距、间距、圆角</td><td>72、6、6、8</td><td>72、6、6、8（一样）</td></tr>
+  </table>
+</section>
+
+<section id="a09">
+  <h2>5 · 字体（A09）<small>只列出查到的</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma V2「按钮条」节点 · 生成，文字按钮「4」用 Noto Sans SC · 480 × 248</figcaption><img src="a09-figma.png" width="480" alt="Figma ButtonGroup"></figure>
+    <figure><figcaption>网站 按钮页「按钮条」，文字按钮「4」用苹方 · 148 × 32</figcaption><img src="a09-site.png" width="180" alt="网站 ButtonGroup"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>按钮条里的文字按钮「4」</td><td>Noto Sans SC Medium，12</td><td>PingFang SC，粗细 500，12（实测）</td></tr>
+    <tr><td>②</td><td>滑块刻度数字（音频参数面板里的 0.5x、1.0x、2.0x）</td><td>Noto Sans SC Regular，12</td><td>PingFang SC，12（实测）</td></tr>
+    <tr><td>③</td><td>播放器音量浮层的数字「50」</td><td>Noto Sans SC Regular，12</td><td>PingFang SC，12</td></tr>
+    <tr><td>④</td><td>别的文字</td><td>用变量 font-family（苹方）</td><td>PingFang SC</td></tr>
+  </table>
+  <p class="note">图里文字肉眼看不出差别，字体名是从 Figma 读出来的。网站统一用 tokens 里的 font-family（PingFang SC）。</p>
+</section>
+
+<section id="a10">
+  <h2>6 · 播放器音量浮层（A10）<small>两张图都放大 2 倍</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma V2「音量弹出层」· 40 × 140（放大 2 倍）</figcaption><img src="a10-figma.png" width="80" alt="Figma 音量浮层"></figure>
+    <figure><figcaption>网站 播放器取消静音后悬停音量按钮 · 40 × 138（放大 2 倍）</figcaption><img src="a10-site.png" width="144" alt="网站音量浮层"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>未选中的轨道</td><td>白 100%（和已选部分同色，靠把手区分位置）</td><td>白 20%；已选部分白 100%</td></tr>
+    <tr><td>②</td><td>浮层高度</td><td>140</td><td>138（实测）。内容高度相加是 138：上 8、数字 16、间距 8、竖条 94、下 12；Figma 外框多 2，网站描边不占位</td></tr>
+    <tr><td>③</td><td>宽、圆角、竖条</td><td>40、12、竖条 94（轨道 88 + 底下留 6）</td><td>40、12、竖条 88 + 底下留 6（实测，一样）</td></tr>
+  </table>
+</section>
+
+<section id="a11">
+  <h2>7 · FileCard 文字区宽度（A11）<small>两张图同一比例</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma V2 FileCard · 文档，默认 · 360 × 64</figcaption><img src="a11-figma.png" width="360" alt="Figma FileCard"></figure>
+    <figure><figcaption>网站 Agent 页 FileCard，宽设成 360 · 360 × 64</figcaption><img src="a11-site.png" width="392" alt="网站 FileCard"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>文字区宽度（360 宽的卡）</td><td>284 = 360 − 左右内边距 24 − 图标块 40 − 间距 12</td><td>272（实测）。默认状态右边的按钮都隐藏，但装按钮的空容器还在，多占一个 12 的间距</td></tr>
+    <tr><td>②</td><td>卡高、图标块、内边距、间距</td><td>64、40、12、12</td><td>64、40、12、12（一样）</td></tr>
+  </table>
+</section>
+
+<section id="b02">
+  <h2>8 · Select 展开：静态演示和真组件（B02）<small>两张都是网站图</small></h2>
+  <div class="pair">
+    <figure><figcaption>网站 输入控件页属性面板：无底 + 展开 + 选项图标（静态演示）· 95 × 36 + 列表 124</figcaption><img src="b02-static.png" width="127" alt="静态展开演示"></figure>
+    <figure><figcaption>网站 同一页，点开真组件（无底，选项图标）· 120 × 36 + 列表 124</figcaption><img src="b02-real.png" width="153" alt="真组件展开"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>触发器左边的图标</td><td>白 40%（rgba 255 255 255 0.4）</td><td>白 100%</td></tr>
+    <tr><td>②</td><td>触发器文字、列表里的选项图标和文字</td><td>白 100%</td><td>白 100%（一样）</td></tr>
+    <tr><td>③</td><td>列表宽度</td><td>95，和触发器一样宽</td><td>120，真组件最小宽 120</td></tr>
+  </table>
+</section>
+
+<section id="b03">
+  <h2>9 · MenuItem 禁用（B03）<small>Figma 只画了图标 + 文字</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma V2 菜单项 · 普通禁用、危险禁用 · 240 × 156（裁出禁用那一列）</figcaption><img src="b03-figma.png" width="240" alt="Figma 菜单项禁用"></figure>
+    <figure class="stack"><figcaption>网站 菜单和提示页，禁用 + 右边勾选 / 子菜单箭头 / 快捷键 · 各 200 × 44</figcaption><img src="b03-site-check.png" width="232" alt="网站菜单项禁用"><img src="b03-site-submenu.png" width="232" alt="网站菜单项禁用"><img src="b03-site-shortcut.png" width="232" alt="网站菜单项禁用"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>文字、左图标</td><td>白 20%</td><td>白 20%（一样）</td></tr>
+    <tr><td>②</td><td>危险类型禁用</td><td>红色变成灰（整体白 20%）</td><td>白 20%（实测，一样）</td></tr>
+    <tr><td>③</td><td>快捷键</td><td>Figma 里有这个图层，禁用时白 20%</td><td>白 20%（一样）</td></tr>
+    <tr><td>④</td><td>子菜单箭头</td><td>白 20%</td><td>白 40%</td></tr>
+    <tr><td>⑤</td><td>勾选</td><td>白 20%</td><td>绿色，不变灰</td></tr>
+    <tr><td>⑥</td><td>选中 + 禁用同时出现</td><td>Figma 没画</td><td>勾选 + 禁用就是上面「勾选」那张</td></tr>
+  </table>
+</section>
+
+<section id="b04">
+  <h2>10 · 属性面板缺的状态（B04）<small>网站图按一半宽度显示</small></h2>
+  <p class="sub">播放器</p>
+  <div class="pair">
+    <figure><figcaption>Figma V2 播放器页总览：小 8 个、大 9 个（共 17 个变体）</figcaption><img src="b04-figma.png" width="926" alt="Figma 播放器变体总览"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>网站 播放器页属性面板：尺寸、比例、状态（默认 / 加载失败）</figcaption><img src="b04-site-player.png" width="942" alt="网站播放器属性面板"></figure>
+  </div>
+  <p class="sub">Slider</p>
+  <div class="pair">
+    <figure><figcaption>Figma V2 Slider：默认、聚焦、禁用各一行，每行 5 个进度</figcaption><img src="b04-figma-slider.png" width="926" alt="Figma Slider 变体"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>网站 选择控件页 Slider 属性面板：进度、刻度、状态（默认 / 禁用）</figcaption><img src="b04-site-slider.png" width="942" alt="网站 Slider 属性面板"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>播放器：面板切不出的状态</td><td>悬停（控制条出来）、缓冲（中间转圈）、静音、半音量、音量弹出、进度悬停、全屏中（只有大号）。小、大号各画了其中的 8 个、9 个</td><td>「状态」只有默认、加载失败；其余只能用鼠标悬停去看，或者一直看不到（缓冲、全屏中）</td></tr>
+    <tr><td>②</td><td>播放器：面板多出来的</td><td>没有 9:16</td><td>「比例」16:9 / 9:16</td></tr>
+    <tr><td>③</td><td>Slider：面板切不出的状态</td><td>聚焦（轨道外 2 画 1.5 描边，键盘聚焦才有）</td><td>「状态」只有默认、禁用</td></tr>
+    <tr><td>④</td><td>Slider：刻度开关</td><td>「刻度」「刻度数字」两个开关</td><td>只有一个「刻度」开关，刻度线和数字一起开关</td></tr>
+  </table>
+</section>
+
+<section id="b05">
+  <h2>11 · 播放器文档写「Figma 还没有」（B05）<small>两张图不同比例</small></h2>
+  <div class="pair">
+    <figure><figcaption>网站 播放器页页头 · 912 × 145（按一半宽度显示）</figcaption><img src="b05-site.png" width="944" alt="网站播放器页头"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Figma V2 播放器页总览（同上一节，缩小）</figcaption><img src="b04-figma.png" width="460" alt="Figma 播放器页总览"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>页头「状态」</td><td>播放器页已经建好：17 个变体、迁移映射、提示</td><td>标签写「样稿 · Figma 还没有」</td></tr>
+    <tr><td>②</td><td>别的地方</td><td>—</td><td>播放器组件的样式文件顶上的注释也写「样稿，Figma 还没有，10-29」</td></tr>
+  </table>
+</section>
+
+<section id="c01">
+  <h2>12 · 首尾帧外面换图不更新（C01）<small>这条是 bug，不涉及 Figma</small></h2>
+  <div class="pair">
+    <figure><figcaption>网站 主站输入框里的首尾帧 · 180 × 72（按一半宽度显示）</figcaption><img src="c01-site.png" width="212" alt="网站首尾帧"></figure>
+  </div>
+  <table>
+    <tr><th>#</th><th>哪里</th><th>Figma</th><th>网站</th></tr>
+    <tr><td>①</td><td>现象</td><td>—</td><td>外面传进来的首帧、尾帧换了，格子里还是旧图</td></tr>
+    <tr><td>②</td><td>原因</td><td>—</td><td>ReferenceFramePair 只在第一次渲染时用 useState 把 first、last 抄进内部状态，之后没有跟着属性更新；点互换后的对调也只改内部状态</td></tr>
+    <tr><td>③</td><td>现在为什么看不出来</td><td>—</td><td>画布生成面板和主站输入框演示里传的是写死的两张图；换成上传、换图、从节点选图就会错</td></tr>
+  </table>
+  <p class="note">在页面里没法改 props，所以没做动图，原因对着源码确认。</p>
+</section>
+<!-- /SECTIONS-2+ -->
+
+<script id="zoom">document.querySelectorAll("figure img").forEach(function(i){i.addEventListener("click",function(){window.open(i.src)})})</script>
+</body>
+</html>

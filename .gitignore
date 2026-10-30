@@ -1,2 +1,4 @@
 .DS_Store
 *.skill
+node_modules/
+dist/

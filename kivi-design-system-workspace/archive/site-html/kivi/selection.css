@@ -1,0 +1,234 @@
+/*
+  KIVI · 选择控件
+  Figma「选择控件」页：Switch（开关）、Slider（滑块）、Checkbox（勾选框）。依赖 tokens.css、base.css。
+  分段选择器不在这一页，用 TabItem 样式=分段，在 tabs-tags-avatar.css。
+
+  写法
+    <button class="kv-switch" role="switch" aria-checked="true" aria-label="生成音频"></button>
+
+    <div class="kv-slider" role="slider" tabindex="0" aria-label="时长"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="--kv-value: 0.5">
+      <span class="kv-slider-fill"></span><span class="kv-slider-thumb"></span>
+    </div>
+
+    <button class="kv-checkbox kv-checkbox--square" role="checkbox" aria-checked="false">
+      <span class="kv-checkbox-box"></span><span>选项</span>
+    </button>
+
+  状态
+    开关、勾选框  aria-checked="true | false"，勾选框多一个 "mixed"（部分）
+    滑块          进度写在 --kv-value（0 到 1），同时更新 aria-valuenow
+    禁用          button 用 disabled，滑块用 aria-disabled="true"
+    悬停          开关没有悬停；滑块、勾选框由鼠标触发
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+    组件本身不带 JS：点击切换、拖动要自己接
+*/
+
+/* ---------- Switch ---------- */
+
+/* 36×20 的胶囊，白色把手 16，四周留 2。关：白 16%；开：品牌绿 */
+.kv-switch {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-round);
+  background: var(--color-bg-fill-container-light-1-pressed);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--border-radius-round);
+  background: var(--color-text-fill-primary);
+  transition: transform var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-switch[aria-checked="true"] {
+  background: var(--color-brand-solid);
+}
+
+.kv-switch[aria-checked="true"]::after {
+  transform: translateX(16px);
+}
+
+/* 禁用：整体 30% */
+.kv-switch:is(:disabled, [aria-disabled="true"]) {
+  opacity: var(--opacity-30);
+  cursor: not-allowed;
+}
+
+/* ---------- Slider ---------- */
+
+/* 宽度拉伸，整体高 16。进度写在 --kv-value（0 到 1） */
+.kv-slider {
+  --kv-value: 0;
+  --kv-thumb: 14px;
+  --kv-fill: var(--color-brand-solid);
+
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 16px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 轨道：高 4，白 16% */
+.kv-slider::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 0;
+  left: 0;
+  height: 4px;
+  border-radius: var(--border-radius-round);
+  background: var(--color-bg-fill-container-light-1-pressed);
+}
+
+/* 已选部分：高 4，品牌绿 */
+.kv-slider-fill {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: calc(var(--kv-value) * 100%);
+  height: 4px;
+  border-radius: var(--border-radius-round);
+  background: var(--kv-fill);
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 把手：白色圆形，14；悬停变 16。起点贴着轨道左端，终点贴着右端 */
+.kv-slider-thumb {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--kv-value) * (100% - 14px));
+  width: var(--kv-thumb);
+  height: var(--kv-thumb);
+  margin-left: calc(var(--kv-value) * (14px - var(--kv-thumb)));
+  border-radius: var(--border-radius-round);
+  background: var(--color-text-fill-primary);
+  transform: translateY(-50%);
+  transition:
+    width var(--motion-duration-100) var(--motion-ease-in-out),
+    height var(--motion-duration-100) var(--motion-ease-in-out),
+    margin-left var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 状态：悬停。把手 16，已选部分换品牌悬停色 */
+.kv-slider:where(:hover, .is-hover):not([aria-disabled="true"]) {
+  --kv-thumb: 16px;
+  --kv-fill: var(--color-brand-hover);
+}
+
+/* 状态：禁用。整体 30% */
+.kv-slider[aria-disabled="true"] {
+  opacity: var(--opacity-30);
+  cursor: not-allowed;
+}
+
+/* ---------- Checkbox ---------- */
+
+/* 勾选框 = 16 的方框 + 可选的文字，整行都能点。方形圆角 4，圆形 999 */
+.kv-checkbox {
+  --kv-box-fill: var(--color-on-media-fill);
+  --kv-box-stroke: var(--color-border-strong);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 方框：没选时黑 40% 底 + 1px 白 50% 描边，放在图片上也看得清 */
+.kv-checkbox-box {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: var(--border-width-sm) solid var(--kv-box-stroke);
+  border-radius: var(--border-radius-xxs);
+  background: var(--kv-box-fill);
+  transition:
+    background-color var(--motion-duration-100) var(--motion-ease-in-out),
+    border-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-checkbox--square .kv-checkbox-box {
+  border-radius: var(--border-radius-xxs);
+}
+
+.kv-checkbox--round .kv-checkbox-box {
+  border-radius: var(--border-radius-round);
+}
+
+/* 对勾和横线：黑色（on-brand），线宽 1.5，圆头。用遮罩画，颜色跟变量走 */
+.kv-checkbox-box::after {
+  content: "";
+  display: none;
+  position: absolute;
+  inset: -1px;
+  background: var(--color-text-fill-on-brand);
+  -webkit-mask: var(--kv-glyph) center / 16px 16px no-repeat;
+  mask: var(--kv-glyph) center / 16px 16px no-repeat;
+}
+
+/* 状态：悬停（没选）。描边变白 100% */
+.kv-checkbox:where(:hover, .is-hover):not(:disabled, [aria-disabled="true"]) {
+  --kv-box-stroke: var(--color-text-fill-primary);
+}
+
+/* 状态：选中、部分。底品牌绿，没有描边 */
+.kv-checkbox:is([aria-checked="true"], [aria-checked="mixed"]) {
+  --kv-box-fill: var(--color-brand-solid);
+  --kv-box-stroke: transparent;
+}
+
+.kv-checkbox:is([aria-checked="true"], [aria-checked="mixed"]) .kv-checkbox-box::after {
+  display: block;
+}
+
+.kv-checkbox[aria-checked="true"] {
+  --kv-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 8.2L6.9 10.5L11.5 5.8'/%3E%3C/svg%3E");
+}
+
+.kv-checkbox[aria-checked="mixed"] {
+  --kv-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8H11'/%3E%3C/svg%3E");
+}
+
+.kv-checkbox:is([aria-checked="true"], [aria-checked="mixed"]):where(:hover, .is-hover):not(:disabled, [aria-disabled="true"]) {
+  --kv-box-fill: var(--color-brand-hover);
+}
+
+/* 状态：禁用。整体 30%，文字一起 */
+.kv-checkbox:is(:disabled, [aria-disabled="true"]) {
+  opacity: var(--opacity-30);
+  cursor: not-allowed;
+}

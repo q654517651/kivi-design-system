@@ -11,7 +11,7 @@
 - 颜色：底色、填充与状态、文字与图标、描边、品牌色、功能色、图片视频上的控件、画布连线
 - 尺寸：间距、圆角、描边粗细
 - 文字：字号、行高、字重、字体、文字样式
-- 透明度、效果
+- 透明度、动效、效果
 - 可复制的 CSS 变量块
 
 ## 底色
@@ -171,6 +171,21 @@ Figma 文字样式按「文字/字号 字重」命名：`文字/13 常规`、`�
 | opacity/30 | --opacity-30 | 0.3（开关、滑块、勾选框的禁用态） |
 | opacity/20 | --opacity-20 | 0.2 |
 
+## 动效
+
+过渡和动画的时长、缓动。Figma 原型动画绑不到这些变量，放在 scale 集合里是为了和其他变量一起导出。怎么选见「动效」。
+
+| 变量 | CSS 变量 | 值 | 状态 |
+|---|---|---|---|
+| motion/duration/100 | --motion-duration-100 | 100ms：只换颜色 | 新 |
+| motion/duration/150 | --motion-duration-150 | 150ms：小东西出现、消失 | 新 |
+| motion/duration/200 | --motion-duration-200 | 200ms：移动 100px 以内；菜单、Toast 出现 | 新 |
+| motion/duration/300 | --motion-duration-300 | 300ms：移动 100–400px；面板展开、弹窗出现 | 新 |
+| motion/duration/400 | --motion-duration-400 | 400ms：移动更远或整屏；最长 | 新 |
+| motion/ease/in-out | --motion-ease-in-out | cubic-bezier(0.4, 0, 0.2, 1)：屏幕内移动、展开收起 | 新 |
+| motion/ease/out | --motion-ease-out | cubic-bezier(0, 0, 0.2, 1)：进入、出现 | 新 |
+| motion/ease/in | --motion-ease-in | cubic-bezier(0.4, 0, 1, 1)：退出、消失 | 新 |
+
 ## 效果
 
 没有投影样式：所有浮层都不加阴影。
@@ -274,5 +289,14 @@ Figma 文字样式按「文字/字号 字重」命名：`文字/13 常规`、`�
   --opacity-50: 0.5;
   --opacity-30: 0.3;
   --opacity-20: 0.2;
+  /* 动效：Figma 里时长是数字，代码里带上 ms */
+  --motion-duration-100: 100ms;
+  --motion-duration-150: 150ms;
+  --motion-duration-200: 200ms;
+  --motion-duration-300: 300ms;
+  --motion-duration-400: 400ms;
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
 }
 ```

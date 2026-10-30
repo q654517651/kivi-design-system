@@ -1,0 +1,574 @@
+/*
+  KIVI · Agent
+  Figma「Agent」页：ProcessRow、UserMessage、MediaStack、QuestionPanel（_QuestionOption）、ActionCard、SendButton、FileCard。
+  依赖 tokens.css、base.css、button.css（按钮用 kv-button、kv-icon-button）。
+  别的页的组件：头像、角标 Tag 用 tabs-tags-avatar.css 的 kv-avatar、kv-tag；
+  用户消息里的素材用 canvas.css 的 kv-reference-item（里面是 kv-asset-thumb）。
+  助手正文、顶栏、建议操作、消息操作、展开列表都在模板里拼，不是组件（展开列表只给了一个 kv-process-list 方便复制）。
+
+  写法
+    <button class="kv-process-row" aria-expanded="false">
+      <i class="kv-icon" data-icon="UseCanvas"></i>
+      <span class="kv-process-row__action">创建节点</span>
+      <span class="kv-process-row__object">活动标题</span>
+      <i class="kv-icon kv-process-row__arrow" data-icon="DownArrowSmall"></i>
+    </button>
+
+  状态
+    ProcessRow    进行中 aria-busy="true"；失败 aria-invalid="true"；完成不用写；展开 aria-expanded="true"
+    _QuestionOption 选中 aria-checked="true"（单选 role="radio"，多选 role="checkbox"）
+    SendButton    禁用 disabled；生成中 aria-busy="true"，里面换成 kv-send-button__stop
+    FileCard      生成中 aria-busy="true"
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+*/
+
+/* ---------- ProcessRow：过程行 ---------- */
+
+.kv-process-row {
+  /* 完成：图标和动作文字 secondary，对象文字 tertiary */
+  --kv-row-icon: var(--color-text-fill-secondary);
+  --kv-row-action: var(--color-text-fill-secondary);
+  --kv-row-object: var(--color-text-fill-tertiary);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  text-align: left;
+  white-space: nowrap;
+}
+
+button.kv-process-row {
+  cursor: pointer;
+}
+
+/* 子项：展开列表里的一行，样式和一级一样，没有头像和箭头，不能点 */
+.kv-process-row--sub {
+  cursor: default;
+}
+
+.kv-process-row > .kv-icon {
+  color: var(--kv-row-icon);
+}
+
+.kv-process-row__action {
+  color: var(--kv-row-action);
+}
+
+.kv-process-row__object {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--kv-row-object);
+  text-overflow: ellipsis;
+}
+
+/* 箭头：固定 16，tertiary。展开朝上；Figma 是 DownArrowSmall / UpArrowSmall 两个图标，代码用旋转 180° 代替 */
+.kv-process-row > .kv-process-row__arrow {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-tertiary);
+  transition: transform var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-process-row[aria-expanded="true"] > .kv-process-row__arrow {
+  transform: rotate(180deg);
+}
+
+/* 进行中：图标 primary，动作文字扫光，对象 secondary */
+.kv-process-row[aria-busy="true"] {
+  --kv-row-icon: var(--color-text-fill-primary);
+  --kv-row-object: var(--color-text-fill-secondary);
+}
+
+.kv-process-row[aria-busy="true"] .kv-process-row__action {
+  background:
+    linear-gradient(
+      90deg,
+      var(--color-text-fill-primary) 0%,
+      var(--color-text-fill-placeholder) 25%,
+      var(--color-text-fill-primary) 50%,
+      var(--color-text-fill-placeholder) 75%,
+      var(--color-text-fill-primary) 100%
+    )
+    0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  /* 扫光时长 Figma 没定，暂用和骨架屏一样的 1.4s 匀速 */
+  animation: kv-process-sweep 1.4s linear infinite;
+}
+
+@keyframes kv-process-sweep {
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-process-row[aria-busy="true"] .kv-process-row__action {
+    animation: none;
+  }
+}
+
+/* 失败：图标和动作文字红色，对象 tertiary */
+.kv-process-row[aria-invalid="true"] {
+  --kv-row-icon: var(--color-status-danger);
+  --kv-row-action: var(--color-status-danger);
+}
+
+/* 展开后的列表（用法，不是 Figma 组件）：行距 6，最大高 160，右侧细滚动条，
+   超出时加 --fade，底部渐隐盖住最后一行；渐隐终点是底色，放在别的底色上改 --kv-fade-bg */
+.kv-process-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  max-height: 160px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-fill-disabled) transparent;
+}
+
+.kv-process-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.kv-process-list::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background: var(--color-text-fill-disabled);
+}
+
+.kv-process-list--fade::after {
+  content: "";
+  position: sticky;
+  bottom: 0;
+  flex: none;
+  align-self: stretch;
+  height: 24px;
+  margin-top: -24px;
+  background: linear-gradient(transparent, var(--kv-fade-bg, var(--color-bg-fill-base)));
+  pointer-events: none;
+}
+
+/* ---------- UserMessage：用户消息 ---------- */
+
+.kv-user-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+/* 素材：气泡上方一排 ReferenceItem 56 */
+.kv-user-message__assets {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* 气泡：宽度跟文字走，最宽 340，超出换行 */
+.kv-user-message__bubble {
+  box-sizing: border-box;
+  max-width: 340px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- MediaStack：生成结果叠放 ---------- */
+
+.kv-media-stack {
+  position: relative;
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  width: 182px;
+  height: 182px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.kv-media-stack__layer,
+.kv-media-stack__cover {
+  position: absolute;
+  box-sizing: border-box;
+  width: 174px;
+  height: 174px;
+  overflow: hidden;
+  border-radius: var(--border-radius-lg);
+}
+
+/* 后两层只是示意叠放 */
+.kv-media-stack__layer {
+  border: var(--border-width-sm) solid var(--color-border);
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.kv-media-stack__layer--3 {
+  top: 8px;
+  left: 8px;
+}
+
+.kv-media-stack__layer--2 {
+  top: 4px;
+  left: 4px;
+}
+
+.kv-media-stack__cover {
+  top: 0;
+  left: 0;
+}
+
+.kv-media-stack__cover > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 右下角数量：Tag 覆盖，离边 8 */
+.kv-media-stack__count {
+  position: absolute;
+  right: var(--spacing-sm);
+  bottom: var(--spacing-sm);
+}
+
+/* ---------- QuestionPanel：追问面板 ---------- */
+
+.kv-question-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-lg);
+  border: var(--border-width-sm) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-bg-fill-surface);
+  color: var(--color-text-fill-primary);
+}
+
+.kv-question-panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 28px;
+}
+
+.kv-question-panel__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-question-panel__pager {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+.kv-question-panel__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.kv-question-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+/* ---------- _QuestionOption：选项（不发布，只在 QuestionPanel 里用） ---------- */
+
+.kv-question-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--spacing-sm);
+  border: 0;
+  border-radius: var(--border-radius-sm);
+  background: transparent;
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-100) var(--motion-ease-in-out),
+    color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 编号框 20，圆角 6 */
+.kv-question-option__index {
+  display: grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: var(--border-radius-xs);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+  transition: border-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-question-option__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 悬停：底色 container-light-2-hover，文字变 primary */
+.kv-question-option:where(:hover, .is-hover):not([aria-checked="true"], .kv-question-option--other) {
+  background: var(--color-bg-fill-container-light-2-hover);
+  color: var(--color-text-fill-primary);
+}
+
+/* 选中：底色 container-light-1，文字 primary，编号框描边 border-strong */
+.kv-question-option[aria-checked="true"] {
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+}
+
+.kv-question-option[aria-checked="true"] .kv-question-option__index {
+  border-color: var(--color-border-strong);
+  color: var(--color-text-fill-primary);
+}
+
+/* 其他：可直接输入，占位文字 placeholder */
+.kv-question-option--other {
+  cursor: text;
+}
+
+.kv-question-option__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font: inherit;
+}
+
+.kv-question-option__input::placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+/* ---------- ActionCard：确认卡片 ---------- */
+
+.kv-action-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-lg);
+  border: var(--border-width-sm) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-bg-fill-surface);
+}
+
+.kv-action-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.kv-action-card__title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-action-card__desc {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+/* 说明里可点的那段：同色，加下划线 */
+.kv-action-card__link {
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.kv-action-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+/* 出错：只有一行说明，描边、不填底 */
+.kv-action-card--error {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-color: var(--color-border);
+  background: none;
+}
+
+.kv-action-card--error .kv-action-card__desc {
+  color: var(--color-text-fill-secondary);
+}
+
+/* ---------- SendButton：发送按钮 ---------- */
+
+.kv-send-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-round);
+  background: linear-gradient(90deg, var(--color-brand-gradient-1), var(--color-brand-gradient-2));
+  color: var(--color-text-fill-on-brand);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kv-send-button:disabled {
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+/* 生成中：换成停止方块 12×12，圆角 4，点了停止生成 */
+.kv-send-button__stop {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--border-radius-xxs);
+  background: currentColor;
+}
+
+/* ---------- FileCard：文件卡 ---------- */
+
+.kv-file-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 64px;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  background: var(--color-bg-fill-container-light-1);
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-file-card:where(:hover, :focus-within, .is-hover) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+/* 左边图标块 40，圆角 8 */
+.kv-file-card__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius-sm);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+}
+
+.kv-file-card__info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 文件名 14 中等，一行省略；信息 12 tertiary */
+.kv-file-card__name {
+  overflow: hidden;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-file-card__meta {
+  overflow: hidden;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右边操作：IconButton 28 弱。默认不显示，悬停才出；音频的播放常显（不加 --reveal） */
+.kv-file-card__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+.kv-file-card__action--reveal {
+  display: none;
+}
+
+.kv-file-card:where(:hover, :focus-within, .is-hover) .kv-file-card__action--reveal {
+  display: inline-flex;
+  animation: kv-file-card-in var(--motion-duration-150) var(--motion-ease-out);
+}
+
+@keyframes kv-file-card-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 生成中：右边换成 Loading 小（16，转圈） */
+.kv-file-card__loading {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-primary);
+}
+
+.kv-file-card[aria-busy="true"] .kv-file-card__actions {
+  display: none;
+}

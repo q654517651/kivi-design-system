@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>画布 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../kivi/menus-tooltip.css">
+  <link rel="stylesheet" href="../kivi/tabs-tags-avatar.css">
+  <link rel="stylesheet" href="../kivi/canvas.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用 */
+
+    /* 工具栏这类定宽的东西，窄屏上可以左右滚 */
+    .shell-demo-preview { overflow-x: auto; justify-content: safe center; }
+
+    /* 状态一览：每个格子下面一行说明 */
+    .cv-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--spacing-xl); width: 100%; }
+    .cv-cell { display: grid; justify-items: start; gap: var(--spacing-sm); }
+    .cv-cap { color: var(--color-text-fill-tertiary); font-size: var(--font-size-12); line-height: var(--font-line-height-20); }
+    .cv-stack { display: grid; gap: var(--spacing-xl); width: 100%; }
+    .cv-on-panel { box-sizing: border-box; padding: var(--spacing-lg); border-radius: var(--border-radius-md); background: var(--color-bg-fill-surface); }
+
+    /* 属性面板的舞台：留出节点名和连接点的位置 */
+    #pg-node-wrapper .shell-pg-stage { overflow-x: auto; padding: 56px 48px 40px; }
+    #pg-connector .shell-pg-stage { padding: 56px 24px; }
+
+
+    /* 小画布示例 */
+    .cv-board-scroll { width: 100%; overflow-x: auto; }
+    .cv-board { position: relative; width: 1000px; height: 640px; margin: 0 auto; }
+    .cv-board > * { position: absolute; }
+    .cv-board .kv-connector { z-index: 0; }
+
+    /* 悬停 / 点击才出现的东西，演示用 */
+    .cv-hover-demo { display: inline-block; }
+  </style>
+</head>
+<body data-root="../" data-page="canvas">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">业务组件</p>
+    <h1>画布</h1>
+    <p class="doc-lead">无限画布里的组件：节点本体 NodeCard、节点外框和连接点、连线、裁剪框、生成面板里的参考图和提示词。整条工具栏、生成面板是模板，拼法写在本页后半。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=192-627" target="_blank" rel="noopener">「画布」页</a> · <a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=367-2877" target="_blank" rel="noopener">「模板 · 画布」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">待确认 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/canvas.css</code></dd></div>
+    </dl>
+  </header>
+
+  <p style="margin-top:24px">从节点往外写：节点本体 → 节点外框 → 连线 → 裁剪 → 生成面板里的小组件 → 模板。节点里的按钮、标签、菜单项都用现成的通用组件，这一页不再重画：</p>
+  <ul>
+    <li>引导项：MenuItem（<code>kv-menu-item</code>）。</li>
+    <li>倒计时、视频时长：Tag「覆盖」（<code>kv-tag kv-tag--on-media</code>）。</li>
+    <li>打开封装 / 剪辑：Button 小 · 次要。设为封面、右上和左上的按钮：Button 中 · 浮层、IconButton 32 · 浮层。音频播放键：IconButton 32 · 次要。</li>
+    <li>缩略图：AssetThumb（<code>kv-asset-thumb</code>）。待生成的 64 图标：Icon。</li>
+  </ul>
+  <p>这一页的组件在节点里怎么拼，见最后的「小画布示例」。</p>
+
+  <!-- ==================== NodeCard ==================== -->
+
+  <h2 id="node-card">NodeCard</h2>
+  <p>在右边面板选状态、开关，和 Figma 右侧属性面板一样。下面的代码跟着变。</p>
+  <div id="pg-node-card"></div>
+
+  <h3>用途</h3>
+  <p>节点本体，所有节点类型共用。文字、图片、视频、音频、素材上传、视频封装、视频剪辑七种节点，都是 NodeCard 的 5 个状态加几个开关拼出来的；完成态里的内容用 NodeMedia 切换。</p>
+
+  <h3>结构</h3>
+  <p>一个圆角方块，里面的东西按状态不同：</p>
+  <ul>
+    <li><strong>引导</strong>：中间一列 3 个起步方式（MenuItem）。</li>
+    <li><strong>待生成</strong>：中间一个 64 的类型图标；视频封装、视频剪辑下面多一个小按钮。</li>
+    <li><strong>生成中</strong>：底图（可选）+ 遮罩 + 进度 + 扫光，左上倒计时。</li>
+    <li><strong>完成</strong>：整个铺满 NodeMedia；左上「上传中」，右上「文字按钮」「图标按钮」按需打开。</li>
+    <li><strong>失败</strong>：插画 + 一行文案。</li>
+  </ul>
+  <p>大小跟着外面的 NodeWrapper 走，随便拉。单独放时默认 256 × 256，音频是 341 × 256。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>状态</td><td>引导 / 待生成 / 生成中 / 完成 / 失败</td><td><code>kv-node-card--guide</code> / <code>--pending</code> / <code>--generating</code> / <code>--done</code> / <code>--failed</code>；生成中同时写 <code>aria-busy="true"</code></td></tr>
+        <tr><td>按钮</td><td>开 / 关，默认关。只在待生成用</td><td>放不放 Button 小 · 次要</td></tr>
+        <tr><td>底图</td><td>开 / 关，默认关。只在生成中用</td><td>放不放 <code>kv-node-card__cover</code></td></tr>
+        <tr><td>倒计时</td><td>开 / 关，默认开。只在生成中用</td><td>放不放 <code>kv-node-card__tag</code></td></tr>
+        <tr><td>上传中</td><td>开 / 关，默认关。只在完成用，左上</td><td><code>kv-node-card__upload</code>（IconButton 32 · 浮层）</td></tr>
+        <tr><td>文字按钮</td><td>开 / 关，默认关。只在完成用，右上</td><td>Button 中 · 浮层，放进 <code>kv-node-card__actions</code></td></tr>
+        <tr><td>图标按钮</td><td>开 / 关，默认关。只在完成用，右上</td><td>IconButton 32 · 浮层，放进 <code>kv-node-card__actions</code></td></tr>
+        <tr><td>失败文案</td><td>文字，默认「生成失败，消耗猕猴桃已退回」</td><td><code>kv-node-card__message</code> 里的字</td></tr>
+        <tr><td>内容类型</td><td>完成态里 NodeMedia 的类型，见 NodeMedia</td><td><code>kv-node-media--image</code> 等</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Figma 里这些开关和内容类型也在 NodeWrapper 的属性面板里直接切（NodeCard 已暴露）。</p>
+
+  <h3>样子</h3>
+  <h4>规格</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>外形</td><td>圆角 16 · <code>--border-radius-lg</code>；底色 <code>--color-bg-fill-surface</code>；1px 描边 <code>--color-border</code>，描边在内容下面（图片盖住它，遮罩盖不住）；内容裁切</td></tr>
+        <tr><td>引导</td><td>内边距 24，一列 3 个 MenuItem（176 宽、36 高、13 号字），间距 4，整列居中</td></tr>
+        <tr><td>待生成</td><td>图标 64，颜色 <code>--color-text-fill-tertiary</code>；图标和按钮间距 6，整体居中；按钮是 Button 小 · 次要</td></tr>
+        <tr><td>遮罩</td><td><code>--color-bg-fill-container-dark</code>（黑 40%）+ 背景模糊 24，铺满</td></tr>
+        <tr><td>进度</td><td>从左边起，宽度 = 进度；白 60% → 0 的横向渐变，越靠近前沿越亮。Figma 示例画了 65%</td></tr>
+        <tr><td>扫光</td><td>和进度同宽；白 0 → 30% → 0 的横向亮带</td></tr>
+        <tr><td>倒计时</td><td>Tag 覆盖（24 高），左上，离边 8（<code>--spacing-sm</code>）；文字「59s 生成中」</td></tr>
+        <tr><td>完成</td><td>NodeMedia 铺满；左上、右上的按钮离边 8；右上两个按钮靠右排，间距 8</td></tr>
+        <tr><td>失败</td><td>内边距 24，插画 120，插画和文案间距 16，居中；文案 14 号、常规、行高 22，白 50%（<code>--opacity-50</code>）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>五个状态</h4>
+  <div data-demo="nocode" id="matrix-node-card"></div>
+
+  <h4>完成态上的按钮</h4>
+  <p>Figma「模板 · 画布」里的「悬停」是把右上的图标按钮打开；「展开」是把文字按钮和图标按钮都打开。什么时候悬停、什么时候展开，Figma 没写 <span class="tag tag--draft">待定</span></p>
+  <div data-demo="nocode" id="matrix-node-card-actions"></div>
+
+  <h4>生成中</h4>
+  <ul>
+    <li><strong>倒计时</strong>：前端按最近 1 小时同类任务的耗时估算，显示「59s 生成中」；算不出时只写「生成中」。</li>
+    <li><strong>进度</strong>：宽度跟着进度走，用 <code>--progress</code> 设。进度变化的过渡：<span class="tag tag--draft">待定</span></li>
+    <li><strong>扫光</strong>：在进度范围里从左往右扫，循环动画按动效规则匀速（linear）。一轮多久：<span class="tag tag--draft">待定</span>，下面的演示先用 1.4 秒，和骨架屏的扫光一样，只是示意。</li>
+    <li><strong>底图</strong>：开了底图，遮罩的模糊盖在底图上（重新生成时看得到旧图）。</li>
+  </ul>
+  <div data-demo="nocode">
+    <div class="cv-cell">
+      <div class="kv-node-card kv-node-card--generating" aria-busy="true" style="--progress:65%">
+        <div class="kv-node-card__mask"></div>
+        <div class="kv-node-card__progress"></div>
+        <div class="kv-node-card__sweep"></div>
+        <span class="kv-tag kv-tag--on-media kv-node-card__tag">59s 生成中</span>
+      </div>
+      <span class="cv-cap">算得出耗时</span>
+    </div>
+    <div class="cv-cell">
+      <div class="kv-node-card kv-node-card--generating" aria-busy="true" style="--progress:30%">
+        <img class="kv-node-card__cover" src="../../assets/placeholders/kiwi-light-1x1.webp" alt="">
+        <div class="kv-node-card__mask"></div>
+        <div class="kv-node-card__progress"></div>
+        <div class="kv-node-card__sweep"></div>
+        <span class="kv-tag kv-tag--on-media kv-node-card__tag">生成中</span>
+      </div>
+      <span class="cv-cap">带底图，算不出耗时</span>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <h4>七种节点怎么拼</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>节点</th><th>引导项</th><th>待生成</th><th>完成</th></tr></thead>
+      <tbody>
+        <tr><td>文字</td><td>自己编写内容 / 图片反推提示词 / 视频反推脚本</td><td>图标 <code>Text</code></td><td>NodeMedia 文字</td></tr>
+        <tr><td>图片</td><td>同文字</td><td>图标 <code>ImageGeneration</code></td><td>NodeMedia 图片</td></tr>
+        <tr><td>视频</td><td>同文字</td><td>图标 <code>VideoGeneration</code></td><td>NodeMedia 视频</td></tr>
+        <tr><td>音频（4:3，341 × 256）</td><td>图片参考生成音频 / 音频参考生成音频 / 生成对话</td><td>图标 <code>Audio</code></td><td>NodeMedia 音频</td></tr>
+        <tr><td>素材（上传）</td><td>没有</td><td>没有</td><td>上传中：NodeMedia 图片 + 左上「上传中」。上传完成：图片 / 视频 / 音频，右上「文字按钮」写「上传」</td></tr>
+        <tr><td>视频封装</td><td>没有</td><td>图标 <code>Pack</code> + 按钮「打开视频封装」</td><td>NodeMedia 视频</td></tr>
+        <tr><td>视频剪辑</td><td>没有</td><td>图标 <code>Cutting</code> + 按钮「打开视频剪辑」</td><td>NodeMedia 视频</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>上面每个状态的样子，在「模板 · 画布」页「节点」分区。多张卡斜着叠的「堆叠」是模板，不是 NodeCard 的状态。</p>
+
+  <h4>视频封装：待生成 + 按钮，点击态就是悬停</h4>
+  <div data-demo>
+    <div class="kv-node-card kv-node-card--pending">
+      <i class="kv-icon kv-node-card__icon" data-icon="Pack"></i>
+      <button class="kv-button kv-button--sm kv-button--secondary" type="button"><span>打开视频封装</span></button>
+    </div>
+  </div>
+
+  <h4>素材上传：完成 + 右上「上传」</h4>
+  <div data-demo>
+    <div class="kv-node-card kv-node-card--done">
+      <div class="kv-node-media kv-node-media--image">
+        <img class="kv-node-media__picture" src="../../assets/placeholders/kiwi-light-1x1.webp" alt="">
+      </div>
+      <div class="kv-node-card__actions">
+        <button class="kv-button kv-button--md kv-button--on-media" type="button">
+          <i class="kv-icon" data-icon="Upload"></i><span>上传</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <h4>上传中：完成 + 左上图标按钮</h4>
+  <p>左上图标按钮的图标：Figma 示例放的是 <code>Add</code>，上传中该显示什么 <span class="tag tag--draft">待确认</span></p>
+  <div data-demo>
+    <div class="kv-node-card kv-node-card--done">
+      <div class="kv-node-media kv-node-media--image">
+        <img class="kv-node-media__picture" src="../../assets/placeholders/kiwi-light-1x1.webp" alt="">
+      </div>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--on-media kv-node-card__upload" type="button" aria-label="上传中">
+        <i class="kv-icon" data-icon="Add"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== NodeMedia ==================== -->
+
+  <h2 id="node-media">NodeMedia</h2>
+  <div id="pg-node-media"></div>
+
+  <h3>用途</h3>
+  <p>节点完成态里的内容，放在 NodeCard 里用，在属性面板切「类型」：图片、视频、音频、文字。尺寸跟着 NodeCard。</p>
+
+  <h3>结构</h3>
+  <ul>
+    <li><strong>图片</strong>：一张图，铺满。</li>
+    <li><strong>视频</strong>：一张画面铺满；左下时长（Tag 覆盖）；悬停时底部打开播放条（PlayBar），同时时长收起。</li>
+    <li><strong>音频</strong>：上面是波形（AudioWave），下面一行播放键（IconButton 32 · 次要）+ 时间。</li>
+    <li><strong>文字</strong>：正文，超出的裁掉。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>类型</td><td>图片 / 视频 / 音频 / 文字</td><td><code>kv-node-media--image</code> / <code>--video</code> / <code>--audio</code> / <code>--text</code></td></tr>
+        <tr><td>时长</td><td>开 / 关，默认开。视频用，左下</td><td>放不放 <code>kv-node-media__duration</code>（Tag 覆盖）</td></tr>
+        <tr><td>播放条</td><td>开 / 关，默认关。视频用，悬停时打开</td><td>放 <code>kv-play-bar kv-node-media__playbar</code>；悬停由 CSS 管，文档里摆静态的用 <code>is-hover</code></td></tr>
+        <tr><td>时间</td><td>文字，默认「0:08 / 0:08」。音频用</td><td><code>kv-node-media__time</code> 里的字</td></tr>
+        <tr><td>正文</td><td>文字。文字类型用</td><td>里面的字</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>画面的图片用占位图；正式的画面由作品填充。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>类型</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>图片、视频</td><td>画面铺满，居中裁切（cover）。时长：Tag 覆盖，左下，离边 8</td></tr>
+        <tr><td>视频播放条</td><td>悬停时打开，贴底，铺满宽度，见 PlayBar；出现、消失过渡 Figma 没写，先用 150ms 小东西的规则 <span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td>音频</td><td>内边距 16，竖排。波形占满上面的空间（256 的卡上是 224 × 180）；下面一行高 44，上边留 12，播放键 32 和时间间距 12，时间 12 号、行高 16、<code>--color-text-fill-secondary</code></td></tr>
+        <tr><td>文字</td><td>内边距 16，14 号、常规、行高 22，<code>--color-text-fill-primary</code>，超出裁掉</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo="nocode" id="matrix-node-media"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>完成态的节点内容都用 NodeMedia，不要自己在 NodeCard 里另放图片。</li>
+    <li>视频悬停时播放条打开、时长收起；移开后换回。</li>
+    <li>音频节点放进 4:3（341 × 256）的 NodeWrapper。</li>
+  </ul>
+
+  <h4>视频：时长，悬停出播放条</h4>
+  <div data-demo>
+    <div class="kv-node-card kv-node-card--done">
+      <div class="kv-node-media kv-node-media--video">
+        <img class="kv-node-media__picture" src="../../assets/placeholders/kivi-future-1x1.webp" alt="">
+        <span class="kv-tag kv-tag--on-media kv-node-media__duration">5s</span>
+        <div class="kv-play-bar kv-node-media__playbar" style="--progress:40%">
+          <div class="kv-play-bar__controls">
+            <span class="kv-play-bar__left">
+              <i class="kv-icon" data-icon="Play"></i>
+              <span class="kv-play-bar__time">0:03 / 0:06</span>
+            </span>
+            <i class="kv-icon" data-icon="VolumeFull"></i>
+          </div>
+          <div class="kv-play-bar__track"><span class="kv-play-bar__played"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PlayBar ==================== -->
+
+  <h2 id="play-bar">PlayBar</h2>
+
+  <h3>用途</h3>
+  <p>视频悬停时，贴在画面底部的播放条：播放、时间、音量、进度。</p>
+
+  <h3>结构</h3>
+  <p>竖排，间距 4。上面一行：左边播放图标 + 时间，右边音量图标；下面一条进度。宽度跟着容器。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>时间</td><td>文字，默认「0:03 / 0:06」</td><td><code>kv-play-bar__time</code> 里的字</td></tr>
+        <tr><td>进度</td><td>已播放的比例</td><td><code>--progress</code>，如 <code>style="--progress:40%"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Figma 里只有「时间」一个属性；进度条画了 40%。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>整体</td><td>内边距 8；底是竖向渐变，上面透明、下面黑 60%；高 38</td></tr>
+        <tr><td>图标</td><td>Play、VolumeFull，16，颜色 <code>--color-on-media-text</code></td></tr>
+        <tr><td>时间</td><td>12 号、行高 16，<code>--color-on-media-text</code></td></tr>
+        <tr><td>进度条</td><td>高 2，圆头；底是白 50%（<code>--opacity-50</code>），已播放是 <code>--color-on-media-text</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>播放、音量图标的悬停、按下：Figma 没定。拖动进度：Figma 没定。<span class="tag tag--draft">待定</span></p>
+  <div data-demo="nocode">
+    <div style="width:256px;background:#000">
+      <div class="kv-play-bar" style="--progress:40%">
+        <div class="kv-play-bar__controls">
+          <span class="kv-play-bar__left">
+            <i class="kv-icon" data-icon="Play"></i>
+            <span class="kv-play-bar__time">0:03 / 0:06</span>
+          </span>
+          <i class="kv-icon" data-icon="VolumeFull"></i>
+        </div>
+        <div class="kv-play-bar__track"><span class="kv-play-bar__played"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <p>只用在视频节点的完成态，放进 NodeMedia 的 <code>kv-node-media__playbar</code>。盖在画面上，所以文字和图标用浮层的白色。</p>
+
+  <!-- ==================== AudioWave ==================== -->
+
+  <h2 id="audio-wave">AudioWave</h2>
+
+  <h3>用途</h3>
+  <p>音频波形，带播放头。音频节点的完成态、上传的音频共用。</p>
+
+  <h3>结构</h3>
+  <p>一排竖条 + 一个播放头。竖条在容器里左右均匀铺开；播放头是一条竖线，顶上一个点。宽度随容器拉伸，高度默认 80。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>播放位置</td><td>0–100%</td><td><code>--progress</code>，如 <code>style="--progress:49%"</code>；播放过的竖条不加 <code>is-rest</code>，没播的加</td></tr>
+        <tr><td>竖条高度</td><td>每条自己的高度</td><td><code>&lt;i style="--h:27px"&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Figma 里 AudioWave 没有属性；示例里 72 条竖条是画好的。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>竖条</td><td>2 宽、圆头，最高 69，最矮 1（一个点）；播放过的 <code>--color-text-fill-primary</code>，没播的白 30%（<code>--opacity-30</code>）</td></tr>
+        <tr><td>播放头</td><td>线 2 宽，顶上点 6，颜色 <code>--color-brand-solid</code>；上下贯穿整个容器</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo="nocode">
+    <div style="width:284px" id="demo-wave"></div>
+  </div>
+  <script type="text/plain" data-code="html">
+    <div class="kv-audio-wave" style="--progress:49%">
+      <div class="kv-audio-wave__bars">
+        <i style="--h:1px"></i>
+        <i style="--h:27px"></i>
+        <i style="--h:39px"></i>
+        <!-- … 播放过的竖条 -->
+        <i class="is-rest" style="--h:9px"></i>
+        <i class="is-rest" style="--h:51px"></i>
+        <!-- … 没播的竖条加 is-rest -->
+      </div>
+      <span class="kv-audio-wave__head"></span>
+    </div>
+  </script>
+
+  <h3>用法</h3>
+  <p>放进音频 NodeMedia 的 <code>kv-node-media__wave</code>，高度撑满上面的空间。播放过程中，播放头往右走，竖条按位置换色。</p>
+
+  <!-- ==================== ConnectorDot ==================== -->
+
+  <h2 id="connector-dot">ConnectorDot</h2>
+
+  <h3>用途</h3>
+  <p>节点左右两边的连接点，连线从这里出、从这里进。</p>
+
+  <h3>结构</h3>
+  <p>一个直径 16 的圆，2px 描边（画在里面），底色深黑；已连接、高亮时中间多一个 6 的实心点。放在 NodeWrapper 里用。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>状态</td><td>默认 / 已连接 / 高亮</td><td>不加修饰是默认；<code>kv-connector-dot--connected</code> / <code>--highlight</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>状态</th><th>描边（2px）</th><th>中间</th></tr></thead>
+      <tbody>
+        <tr><td>默认</td><td>白 20%</td><td>没有</td></tr>
+        <tr><td>已连接</td><td>白 20%</td><td>6 的实心点，白 20%</td></tr>
+        <tr><td>高亮</td><td>白 50%（<code>--color-border-strong</code>）</td><td>6 的实心点，白 50%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>底色 #0A0A0A，白 20% 在 Figma 里没有变量，直接写数字。</p>
+  <div data-demo="nocode" class="cv-row" style="gap:var(--spacing-xxl);justify-content:center">
+    <div class="cv-cell" style="justify-items:center"><span class="kv-connector-dot"></span><span class="cv-cap">默认</span></div>
+    <div class="cv-cell" style="justify-items:center"><span class="kv-connector-dot kv-connector-dot--connected"></span><span class="cv-cap">已连接</span></div>
+    <div class="cv-cell" style="justify-items:center"><span class="kv-connector-dot kv-connector-dot--highlight"></span><span class="cv-cap">高亮</span></div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>默认</strong>：还没连线。</li>
+    <li><strong>已连接</strong>：这个点上已经有线。</li>
+    <li><strong>高亮</strong>：描边变亮，比已连接更突出。什么时候高亮 Figma 没写 <span class="tag tag--draft">待定</span></li>
+    <li>点的位置由 NodeWrapper 管，不要自己摆。</li>
+  </ul>
+
+  <!-- ==================== NodeWrapper ==================== -->
+
+  <h2 id="node-wrapper">NodeWrapper</h2>
+  <div id="pg-node-wrapper"></div>
+
+  <h3>用途</h3>
+  <p>节点外框：节点名、左右连接点、选中描边、比例。里面固定放 NodeCard，每个画布上的节点都包一层。</p>
+
+  <h3>结构</h3>
+  <ul>
+    <li>节点名在节点上方，左对齐。</li>
+    <li>NodeCard 铺满外框。</li>
+    <li>左右各一个 ConnectorDot，在节点外面，垂直居中。</li>
+    <li>选中时在节点外面盖一圈描边。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>比例</td><td>1:1 / 3:4 / 16:9 / 4:3 / 9:16，默认 1:1</td><td><code>kv-node-wrapper--1-1</code> / <code>--3-4</code> / <code>--16-9</code> / <code>--4-3</code> / <code>--9-16</code></td></tr>
+        <tr><td>左侧连接点、右侧连接点</td><td>开 / 关，默认都开</td><td>放不放 <code>kv-node-wrapper__dot--left</code> / <code>--right</code></td></tr>
+        <tr><td>选中</td><td>开 / 关，默认关</td><td><code>aria-selected="true"</code></td></tr>
+        <tr><td>NodeCard 的状态、开关、内容类型</td><td>见 NodeCard、NodeMedia</td><td>里面的 NodeCard</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>比例</th><th>尺寸</th><th>类名</th></tr></thead>
+      <tbody>
+        <tr><td>1:1</td><td>256 × 256</td><td><code>kv-node-wrapper--1-1</code></td></tr>
+        <tr><td>3:4</td><td>256 × 341</td><td><code>kv-node-wrapper--3-4</code></td></tr>
+        <tr><td>16:9</td><td>455 × 256</td><td><code>kv-node-wrapper--16-9</code></td></tr>
+        <tr><td>4:3</td><td>341 × 256</td><td><code>kv-node-wrapper--4-3</code></td></tr>
+        <tr><td>9:16</td><td>256 × 455</td><td><code>kv-node-wrapper--9-16</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><strong>节点名</strong>：14 号、粗（500）、<code>--color-text-fill-secondary</code>；下边离节点 11；宽度同节点，超出省略。</li>
+    <li><strong>连接点</strong>：16，在节点外面 8，垂直居中。</li>
+    <li><strong>选中描边</strong>：2px、白 40%、圆角 16（<code>--border-radius-lg</code>），盖在节点上。Figma 里这个框的图层叫「鼠标悬浮边框」，悬停时也用它。</li>
+    <li>短边固定 256，长边按比例。</li>
+  </ul>
+  <div data-demo="nocode" id="matrix-node-wrapper"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>画布上的每个节点都包一层 NodeWrapper，比例按节点里的内容选。</li>
+    <li>音频节点用 4:3（341 × 256）。</li>
+    <li>选中的节点上方出现节点工具栏，下方出现生成面板，见后面的模板。</li>
+  </ul>
+
+  <h4>选中的图片节点</h4>
+  <div data-demo>
+    <div class="kv-node-wrapper kv-node-wrapper--1-1" aria-selected="true" style="margin:32px 24px 8px">
+      <span class="kv-node-wrapper__name">图片节点</span>
+      <div class="kv-node-card kv-node-card--done">
+        <div class="kv-node-media kv-node-media--image">
+          <img class="kv-node-media__picture" src="../../assets/placeholders/kiwi-light-1x1.webp" alt="">
+        </div>
+      </div>
+      <span class="kv-connector-dot kv-connector-dot--connected kv-node-wrapper__dot kv-node-wrapper__dot--left"></span>
+      <span class="kv-connector-dot kv-node-wrapper__dot kv-node-wrapper__dot--right"></span>
+    </div>
+  </div>
+
+  <!-- ==================== Connector ==================== -->
+
+  <h2 id="connector">Connector</h2>
+  <div id="pg-connector"></div>
+
+  <h3>用途</h3>
+  <p>节点之间的连线，4 种状态。</p>
+
+  <h3>结构</h3>
+  <ul>
+    <li>一条三次贝塞尔曲线，从起点水平出去，到终点水平进来，两个控制点都在水平方向的中点：<code>M 0 48 C 120 48 120 0 240 0</code>（示例宽 240、高 48，实际按两个连接点的距离拉伸）。</li>
+    <li>圆头线端。粗细不随拉伸变（用 <code>vector-effect: non-scaling-stroke</code>）。</li>
+    <li>悬停或选中时，中点出现删除按钮 ConnectorRemove。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>状态</td><td>默认 / 激活 / 拖拽中 / 执行中</td><td>不加修饰是默认；<code>kv-connector--active</code> / <code>--drawing</code> / <code>--flowing</code></td></tr>
+        <tr><td>删除按钮</td><td>开 / 关，默认关</td><td>放 <code>kv-connector-remove kv-connector__remove</code>；不出现时写 <code>aria-hidden="true"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>状态</th><th>颜色变量</th><th>粗细</th><th>线型</th><th>什么时候</th></tr></thead>
+      <tbody>
+        <tr><td>默认</td><td><code>--g-workflow-line-color-default</code>（#424242）</td><td>1.5</td><td>实线</td><td>平时</td></tr>
+        <tr><td>激活</td><td><code>--g-workflow-line-color-active</code>（白 55%）</td><td>2</td><td>实线</td><td>悬停、点击、选中节点的关联线</td></tr>
+        <tr><td>拖拽中</td><td><code>--g-workflow-line-color-drawing</code>（白 35%）</td><td>1.5</td><td>虚线 6 / 6</td><td>画线的过程中</td></tr>
+        <tr><td>执行中</td><td><code>--g-workflow-line-color-flowing</code>（白 90%）</td><td>1.5</td><td>实线 + 流光</td><td>工作流执行时；具体哪几条线流光 Figma 没写 <span class="tag tag--draft">待确认</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><strong>流光</strong>：2 秒一轮，循环，匀速。光的形状、长短、亮度 Figma 没定 <span class="tag tag--draft">待定</span>；下面的演示是示意，一小段亮光顺着线跑。</li>
+    <li><strong>出错</strong>：变量里有 <code>--g-workflow-line-color-error</code>（白 60%），但 Figma 的 Connector 没有「出错」状态，样子和什么时候用 <span class="tag tag--draft">待定</span></li>
+    <li>悬停变成激活，颜色和粗细 100ms ease-in-out（换颜色）。</li>
+  </ul>
+  <div data-demo="nocode" id="matrix-connector"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>选中一个节点时，和它相连的线都变成激活。</li>
+    <li>从连接点拖出新线，拖的过程中是拖拽中；放开连上后变回默认。</li>
+    <li>工作流执行时，线是执行中。</li>
+    <li>悬停连线，中点出现删除按钮；点它删掉这条线。</li>
+  </ul>
+  <p>鼠标移到下面这条线上试试：</p>
+  <div data-demo="nocode">
+    <div class="kv-connector" id="demo-connector" style="width:240px;height:48px">
+      <svg viewBox="0 0 240 48" preserveAspectRatio="none"><path d="M0 48C120 48 120 0 240 0"/></svg>
+      <button class="kv-connector-remove kv-connector__remove" type="button" aria-label="删除连线" aria-hidden="true" tabindex="-1">
+        <i class="kv-icon" data-icon="Cutting"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== ConnectorRemove ==================== -->
+
+  <h2 id="connector-remove">ConnectorRemove</h2>
+
+  <h3>用途</h3>
+  <p>连线中点的删除按钮：悬停或选中连线时出现，点一下删掉这条线。</p>
+
+  <h3>结构</h3>
+  <p>一个 24 的圆，中间一个 Cutting 图标（16）。只有图标，要写 <code>aria-label</code>。</p>
+
+  <h3>属性</h3>
+  <p>Figma 里没有属性。出现和消失靠 <code>aria-hidden</code> 切：不出现时写 <code>aria-hidden="true"</code>。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>外形</td><td>24 × 24 圆；底色 <code>--color-bg-fill-container-light-1</code>（白 8%）；1px 描边 <code>--color-border</code>；背景模糊 6</td></tr>
+        <tr><td>图标</td><td>Cutting，16，<code>--color-text-fill-primary</code></td></tr>
+        <tr><td>出现、消失</td><td>150ms，出现 ease-out，消失 ease-in（动效规则里「删除按钮」那一档）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>悬停、按下：Figma 没定 <span class="tag tag--draft">待定</span></p>
+  <div data-demo>
+    <button class="kv-connector-remove" type="button" aria-label="删除连线">
+      <i class="kv-icon" data-icon="Cutting"></i>
+    </button>
+  </div>
+
+  <h3>用法</h3>
+  <p>放在 Connector 里，居中在线的中点（<code>kv-connector__remove</code> 负责定位）。连线不被悬停、选中时不出现。</p>
+
+  <!-- ==================== CropHandles ==================== -->
+
+  <h2 id="crop-handles">CropHandles</h2>
+
+  <h3>用途</h3>
+  <p>裁剪框：选中图片后点「裁剪」，盖在图片上的拉伸手柄。</p>
+
+  <h3>结构</h3>
+  <p>一个描边框 + 8 个手柄：四个角是圆点，四条边中间是圆头短条。没有属性。大小跟着裁剪区域；示例是 250 × 250。</p>
+
+  <h3>属性</h3>
+  <p>Figma 里没有属性，也没有状态。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>描边</td><td>2px，#4AFF70（照代码，没有变量，直接写数字）</td></tr>
+        <tr><td>角手柄</td><td>12 的圆，白色，圆心在描边的角上</td></tr>
+        <tr><td>边手柄</td><td>120 × 6 的圆头条，白色，在每条边的中间</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo="nocode" style="padding:56px">
+    <div class="kv-crop-handles">
+      <i class="is-nw"></i><i class="is-n"></i><i class="is-ne"></i>
+      <i class="is-w"></i><i class="is-e"></i>
+      <i class="is-sw"></i><i class="is-s"></i><i class="is-se"></i>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>盖在要裁剪的图片上，大小就是裁剪区域。</li>
+    <li>裁剪时节点上方的工具栏按钮是盖在图片上的，用「浮层」类型（Button 中 · 浮层、IconButton 32 · 浮层）；平时的节点工具栏用「文字」类型。</li>
+  </ul>
+  <div data-demo>
+    <div style="position:relative;width:256px;height:256px;margin:12px">
+      <img src="../../assets/placeholders/kiwi-light-1x1.webp" alt="" style="display:block;width:100%;height:100%;object-fit:cover;border-radius:var(--border-radius-lg)">
+      <div class="kv-crop-handles" style="position:absolute;inset:24px;width:auto;height:auto">
+        <i class="is-nw"></i><i class="is-n"></i><i class="is-ne"></i>
+        <i class="is-w"></i><i class="is-e"></i>
+        <i class="is-sw"></i><i class="is-s"></i><i class="is-se"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MentionChip ==================== -->
+
+  <h2 id="mention-chip">MentionChip</h2>
+  <p>提示词里的 @素材 标签：素材缩略图 + 名字。放在 PromptInput 里用。</p>
+
+  <h3>用途</h3>
+  <p>在提示词里引用一个参考素材，名字和参考图区里的编号对应，比如「图片1」「音乐1」。</p>
+
+  <h3>结构</h3>
+  <p>缩略图（AssetThumb 16）+ 名字，水平排列，间距 4。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>类型</td><td>图片 / 音乐，默认图片</td><td>图片：缩略图用 <code>kv-asset-thumb--image</code>；音乐：加 <code>kv-mention-chip--music</code>，缩略图用 <code>kv-asset-thumb--audio</code></td></tr>
+        <tr><td>名字</td><td>文字，如「图片」「图片1」「音乐1」</td><td>标签里的字</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>外形</td><td>高 17，圆角 4（<code>--border-radius-xxs</code>）；底色 <code>--color-bg-fill-container-light-1</code>；1px 描边 <code>--color-border-subtle</code>（画在里面）</td></tr>
+        <tr><td>内边距</td><td>左 2、右 4；缩略图和名字间距 4</td></tr>
+        <tr><td>缩略图</td><td>AssetThumb 16（图片或音频）</td></tr>
+        <tr><td>名字</td><td>14 号、常规，<code>--color-text-fill-secondary</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo>
+    <span class="kv-mention-chip">
+      <span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--image"><img src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></span>图片1
+    </span>
+    <span class="kv-mention-chip kv-mention-chip--music">
+      <span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--audio"><i class="kv-icon" data-icon="Music"></i></span>音乐1
+    </span>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>在提示词里输入 @ 选素材后，插入一个 MentionChip；名字用素材在参考图区里的名字。</li>
+    <li>MentionChip 是一个整体，放进可编辑的文字区时写 <code>contenteditable="false"</code>。</li>
+  </ul>
+
+  <!-- ==================== PromptInput ==================== -->
+
+  <h2 id="prompt-input">PromptInput</h2>
+
+  <h3>用途</h3>
+  <p>提示词输入：无底、无内边距，14 号字，可以插 @素材（MentionChip）。用在节点生成面板和首页对话输入框。表单里的多行输入用 Textarea，不用它。</p>
+
+  <h3>结构</h3>
+  <p>一块可编辑的文字区，宽度铺满；没有底色、边框、内边距，外面的容器（面板、输入框）负责这些。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>状态</td><td>未输入 / 输入内容 / 输入内容 · 最大高度 / @ 指代</td><td>未输入：里面是空的（<code>:empty</code>），占位文字写在 <code>data-placeholder</code>；其余看内容</td></tr>
+        <tr><td>文本输入</td><td>开 / 关，默认关</td><td>Figma 里用来切换示例文字</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>状态</th><th>规格（Figma 示例高度）</th></tr></thead>
+      <tbody>
+        <tr><td>未输入</td><td>高 68；占位文字「描述任何你想要生成的内容」，<code>--color-text-fill-placeholder</code></td></tr>
+        <tr><td>输入内容</td><td>高度跟内容走（示例 3 行 51）；文字 <code>--color-text-fill-primary</code></td></tr>
+        <tr><td>输入内容 · 最大高度</td><td>最高 120，超出滚动</td></tr>
+        <tr><td>@ 指代</td><td>文字里插入 MentionChip（示例高 80）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>字：14 号、常规；行高 Figma 是自动，14 号字约 17。</li>
+  </ul>
+  <div data-demo="nocode" id="matrix-prompt-input"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>放在生成面板里，上面是参考图区，下面是模型选择栏。</li>
+    <li>输入 @ 弹出素材菜单，选中后在光标处插入 MentionChip。</li>
+  </ul>
+  <h4>提示词里引用素材</h4>
+  <div data-demo>
+    <div class="cv-on-panel" style="width:100%">
+      <div class="kv-prompt-input" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="描述任何你想要生成的内容">参考 <span class="kv-mention-chip" contenteditable="false"><span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--image"><img src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></span>图片1</span> 里的元素，配上 <span class="kv-mention-chip kv-mention-chip--music" contenteditable="false"><span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--audio"><i class="kv-icon" data-icon="Music"></i></span>音乐1</span> 的节奏。</div>
+    </div>
+  </div>
+
+  <!-- ==================== ReferenceItem ==================== -->
+
+  <h2 id="reference-item">ReferenceItem</h2>
+  <div id="pg-reference-item"></div>
+
+  <h3>用途</h3>
+  <p>参考图里的一格：AssetThumb（可切图片 / 音频）加几个角标。用在画布节点面板的参考图区、主站输入框的参考区、生成记录的参考区悬停浮层。</p>
+
+  <h3>结构</h3>
+  <ul>
+    <li>底下是 AssetThumb，铺满。</li>
+    <li>右上角标：序号，或「首帧」「尾帧」。</li>
+    <li>左下：视频时长。</li>
+    <li>底部通栏：Lora 权重，也可以写「图片1」这类名字，和提示词里的 @ 引用对应。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>尺寸</td><td>56 / 72，默认 56</td><td><code>kv-reference-item</code>（56）/ <code>kv-reference-item--72</code>，缩略图用同尺寸的 <code>kv-asset-thumb--56</code> / <code>--72</code></td></tr>
+        <tr><td>角标</td><td>开 / 关，默认开</td><td>放不放 <code>kv-reference-item__badge</code></td></tr>
+        <tr><td>角标文字</td><td>文字，默认「1」</td><td>角标里的字</td></tr>
+        <tr><td>时长</td><td>开 / 关，默认关</td><td>放不放 <code>kv-reference-item__duration</code></td></tr>
+        <tr><td>时长文字</td><td>文字，默认「12s」</td><td>时长里的字</td></tr>
+        <tr><td>权重</td><td>开 / 关，默认关</td><td>放不放 <code>kv-reference-item__weight</code></td></tr>
+        <tr><td>权重文字</td><td>文字，默认「0.8」</td><td>权重里的字</td></tr>
+        <tr><td>缩略图</td><td>图片 / 音频（AssetThumb 已暴露）</td><td><code>kv-asset-thumb--image</code> / <code>--audio</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>56</th><th>72</th></tr></thead>
+      <tbody>
+        <tr><td>外形</td><td>56 × 56，圆角 8</td><td>72 × 72，圆角 8</td></tr>
+        <tr><td>描边</td><td colspan="2">1px <code>--color-border</code>，画在里面，盖在缩略图上</td></tr>
+        <tr><td>右上角标</td><td colspan="2">20 × 20，只有左下角是圆的（4）；底 <code>--color-bg-fill-container-dark</code>（黑 40%）+ 背景模糊 16；12 号字，<code>--color-on-media-text</code></td></tr>
+        <tr><td>左下时长</td><td colspan="2">高 16，圆角 6（<code>--border-radius-xs</code>），内边距左右 6，离左、下 2；底黑 40% + 背景模糊 24；12 号字</td></tr>
+        <tr><td>底部权重</td><td colspan="2">通栏，高 16，内边距左右 8，文字居中；底黑 40% + 背景模糊 24；12 号字</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>56 用在画布节点面板的参考图区；72 用在主站输入框参考区（展开时）和生成记录参考区的悬停浮层。</li>
+  </ul>
+  <div data-demo="nocode" id="matrix-reference-item"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>一排参考图之间间距 4。</li>
+    <li>多张参考图用序号角标（1、2、3…）；首尾帧视频用「首帧」「尾帧」，中间用箭头连。</li>
+    <li>用了 Lora，底部写权重。</li>
+  </ul>
+  <h4>参考图区：4 张图</h4>
+  <div data-demo>
+    <div class="kv-node-panel__refs">
+      <div class="kv-reference-item"><span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></span><span class="kv-reference-item__badge">1</span></div>
+      <div class="kv-reference-item"><span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="../../assets/placeholders/kiwi-light-1x1.webp" alt=""></span><span class="kv-reference-item__badge">2</span></div>
+      <div class="kv-reference-item"><span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="../../assets/placeholders/ip-gouache-1x1.webp" alt=""></span><span class="kv-reference-item__badge">3</span></div>
+      <div class="kv-reference-item"><span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="../../assets/placeholders/monstera-dots-1x1.webp" alt=""></span><span class="kv-reference-item__badge">4</span></div>
+    </div>
+  </div>
+
+  <!-- ==================== 模板 ==================== -->
+
+  <h2 id="node-toolbar">节点工具栏（模板）</h2>
+
+  <h3>用途</h3>
+  <p>选中节点后，出现在节点上方的工具条。「模板 · 画布」页「节点工具栏」分区。它是模板：由 Button、IconButton 拼成，复制整条改内容，不发布成组件。</p>
+
+  <h3>结构</h3>
+  <p>一个容器，里面从左到右：带文字的按钮、竖线、纯图标按钮。按节点类型有 4 条：图片、文字、视频、打组。</p>
+
+  <h3>属性</h3>
+  <p>没有属性。每条里放哪些按钮，见下面「样子」。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>容器</td><td>高 44；内边距 6（<code>--spacing-xs</code>）；按钮间距 8；圆角 12（<code>--border-radius-md</code>）；底 #181818 70%（没有变量，直接写）；1px 描边 <code>--color-border</code>；背景模糊 32</td></tr>
+        <tr><td>带文字的按钮</td><td>Button 中 · 文字（32 高，13 号字，左图标 20）</td></tr>
+        <tr><td>纯图标按钮</td><td>IconButton 32 · 文字</td></tr>
+        <tr><td>竖线</td><td>1 宽、20 高，<code>--color-border</code>；用来分组</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>类型</th><th>带文字的按钮（图标名）</th><th>竖线后的图标按钮</th></tr></thead>
+      <tbody>
+        <tr><td>图片</td><td>抠图 <code>Rmbg</code> · 裁剪 <code>Crop</code> · 扩图 <code>Expand</code> · 高清 <code>HD</code> · 重绘 <code>SmartEditing</code> · 元素去除 <code>RemoveEle</code></td><td><code>ImageToText</code> · <code>Download</code> · <code>FullScreen</code></td></tr>
+        <tr><td>文字</td><td>没有带文字的按钮；前面是 <code>H1</code> <code>H2</code> <code>H3</code> <code>FontSize</code>，竖线后 <code>TextBold</code> <code>TextItalic</code> <code>UnOrderedList</code> <code>OrderedList</code> <code>DividingLine</code>，再一条竖线</td><td><code>Copy</code> · <code>FullScreen</code></td></tr>
+        <tr><td>视频</td><td>循环 <code>VideoLoop</code> · 高清 <code>HD</code> · 拼接 <code>Connecting</code> · 抠图 <code>Rmbg</code> · 剪辑 <code>Cutting</code> · 封装 <code>Pack</code></td><td><code>ImageToText</code> · <code>Download</code> · <code>FullScreen</code></td></tr>
+        <tr><td>打组</td><td>整组执行 <code>PlayLine</code> · 创建工作流 <code>Template</code> · 解组 <code>UnGroup</code></td><td>没有</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>纯图标按钮 Figma 里没写名字，演示里的 <code>aria-label</code> 是暂拟的。图标按钮都要配 Tooltip。</p>
+
+  <h3>用法</h3>
+  <ul>
+    <li>选中节点后出现在节点上方。</li>
+    <li>有开关状态的工具用 IconButton 的选中状态，比如文字工具栏的加粗。</li>
+    <li>按钮的悬停、按下都跟 Button 一样，不单独写。</li>
+  </ul>
+
+  <h4>图片</h4>
+  <div data-demo>
+    <div class="kv-node-toolbar">
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Rmbg"></i><span>抠图</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Crop"></i><span>裁剪</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Expand"></i><span>扩图</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="HD"></i><span>高清</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="SmartEditing"></i><span>重绘</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="RemoveEle"></i><span>元素去除</span></button>
+      <i class="kv-node-toolbar__divider"></i>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="反推提示词"><i class="kv-icon" data-icon="ImageToText"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="下载"><i class="kv-icon" data-icon="Download"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="全屏"><i class="kv-icon" data-icon="FullScreen"></i></button>
+    </div>
+  </div>
+
+  <h4>文字：加粗是选中</h4>
+  <div data-demo>
+    <div class="kv-node-toolbar">
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="一级标题"><i class="kv-icon" data-icon="H1"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="二级标题"><i class="kv-icon" data-icon="H2"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="三级标题"><i class="kv-icon" data-icon="H3"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="正文"><i class="kv-icon" data-icon="FontSize"></i></button>
+      <i class="kv-node-toolbar__divider"></i>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="加粗" aria-pressed="true"><i class="kv-icon" data-icon="TextBold"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="斜体"><i class="kv-icon" data-icon="TextItalic"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="无序列表"><i class="kv-icon" data-icon="UnOrderedList"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="有序列表"><i class="kv-icon" data-icon="OrderedList"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="分隔线"><i class="kv-icon" data-icon="DividingLine"></i></button>
+      <i class="kv-node-toolbar__divider"></i>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="复制"><i class="kv-icon" data-icon="Copy"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="全屏"><i class="kv-icon" data-icon="FullScreen"></i></button>
+    </div>
+  </div>
+
+  <h4>视频</h4>
+  <div data-demo>
+    <div class="kv-node-toolbar">
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="VideoLoop"></i><span>循环</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="HD"></i><span>高清</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Connecting"></i><span>拼接</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Rmbg"></i><span>抠图</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Cutting"></i><span>剪辑</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Pack"></i><span>封装</span></button>
+      <i class="kv-node-toolbar__divider"></i>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="反推提示词"><i class="kv-icon" data-icon="ImageToText"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="下载"><i class="kv-icon" data-icon="Download"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="全屏"><i class="kv-icon" data-icon="FullScreen"></i></button>
+    </div>
+  </div>
+
+  <h4>打组</h4>
+  <div data-demo>
+    <div class="kv-node-toolbar">
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="PlayLine"></i><span>整组执行</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Template"></i><span>创建工作流</span></button>
+      <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="UnGroup"></i><span>解组</span></button>
+    </div>
+  </div>
+
+  <!-- ==================== 画布工具栏 ==================== -->
+
+  <h2 id="canvas-toolbar">画布工具栏（模板）</h2>
+
+  <h3>用途</h3>
+  <p>画布底部的工具栏，三个图标：添加、历史、上传。「模板 · 画布」页「画布底部工具栏」。也是模板，由 IconButton 拼成。</p>
+
+  <h3>结构</h3>
+  <p>一个横排的圆角胶囊，里面是图标按钮，间距 16。</p>
+
+  <h3>属性</h3>
+  <p>没有属性。Figma 里画了 3 个显示的按钮：添加、历史、上传。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>容器</td><td>高 56；内边距上下 12、左右 16（Figma 示例宽 160）；按钮间距 16；圆角胶囊 999（<code>--border-radius-round</code>）；底 <code>--color-bg-fill-surface</code>；1px 描边 <code>--color-border-subtle</code>；背景模糊 12</td></tr>
+        <tr><td>添加</td><td>IconButton 32 · 文字，图标 <code>Add</code>（20）；Figma 里手动改成白底（<code>--color-text-fill-primary</code>）、深色图标（<code>--color-bg-fill-base</code>），IconButton 没有这个类型</td></tr>
+        <tr><td>历史、上传</td><td>32 的方块，图标 24：<code>History</code>、<code>Upload</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><code>History</code> 图标新图标库里还没有，Figma 里暂时保留矢量 <span class="tag tag--draft">待补</span></li>
+    <li>Figma 里还藏着 4 个 24 的图标 <code>Text</code>、<code>ImageGeneration</code>、<code>Video</code>、<code>Template</code>，没写用途，推测是「添加」展开后的文字、图片、视频、工作流模板 <span class="tag tag--draft">待确认</span></li>
+    <li>「添加」的悬停、按下，和历史、上传的悬停：Figma 没定 <span class="tag tag--draft">待定</span></li>
+  </ul>
+  <div data-demo>
+    <div class="kv-canvas-toolbar">
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text kv-canvas-toolbar__add" type="button" aria-label="添加"><i class="kv-icon" data-icon="Add"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="历史"><i class="kv-icon" data-icon="History"></i></button>
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="上传"><i class="kv-icon" data-icon="Upload"></i></button>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <p>放在画布底部。</p>
+
+  <!-- ==================== 生成面板 ==================== -->
+
+  <h2 id="node-panel">生成面板（模板）</h2>
+
+  <h3>用途</h3>
+  <p>选中节点后，出现在节点下方的生成面板：写提示词、放参考图、选模型和参数。「模板 · 画布」页「生成面板」分区有 7 种面板、5 种参考图区块、4 种模型选择栏。整块面板、参考图区块、模型选择栏都是模板，复制一份改内容。</p>
+
+  <h3>结构</h3>
+  <p>竖排三块，间距 16：</p>
+  <ul>
+    <li><strong>参考图区块</strong>：一排 ReferenceItem（56），间距 4。有的面板最前面有「添加 Lora」的占位格。</li>
+    <li><strong>提示词区</strong>：PromptInput。里面可以插 MentionChip。</li>
+    <li><strong>模型选择栏</strong>：高 36，左边模型、质量、比例等下拉（Select · 无底），右边数量下拉和生成按钮。</li>
+  </ul>
+  <p>右上角有一个 24 的全屏图标。</p>
+
+  <h3>属性</h3>
+  <p>没有属性。7 种面板：图片、文字支持 Lora、图片使用 Lora、全能参考、视频首尾帧、默认、创作页。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>面板</td><td>宽 620（默认面板 686、创作页 800）；内边距 16；块间距 16；圆角 12（<code>--border-radius-md</code>）；底 <code>--color-bg-fill-surface</code></td></tr>
+        <tr><td>参考图区块</td><td>ReferenceItem 56，间距 4</td></tr>
+        <tr><td>模型选择栏</td><td>高 36；左边下拉间距 6，下拉 32 高、13 号字；右边间距 8，数量下拉后面是生成按钮（36 高、内边距左右 16、圆角 8、品牌渐变）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>下拉用 Select · 无底（输入控件页）。下面演示用文字按钮代替。</li>
+    <li>参数摘要（带音量图标）和生成按钮暂时保留原样，没迁成通用组件。<span class="tag tag--draft">待确认</span></li>
+    <li>点比例、时长这类参数弹出的参数面板，在「模板 · 画布」页「参数面板」分区。</li>
+  </ul>
+  <div data-demo>
+    <div class="kv-node-panel">
+      <div class="kv-node-panel__refs">
+        <div class="kv-reference-item"><span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></span><span class="kv-reference-item__badge">1</span></div>
+        <div class="kv-reference-item"><span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="../../assets/placeholders/kiwi-light-1x1.webp" alt=""></span><span class="kv-reference-item__badge">2</span></div>
+      </div>
+      <div class="kv-prompt-input" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="描述任何你想要生成的内容"></div>
+      <div class="kv-node-panel__bar">
+        <div class="kv-node-panel__bar-left">
+          <button class="kv-button kv-button--md kv-button--text" type="button"><span>Banana 2</span><i class="kv-icon" data-icon="DownArrowSmall"></i></button>
+          <button class="kv-button kv-button--md kv-button--text" type="button"><span>1K</span><i class="kv-icon" data-icon="DownArrowSmall"></i></button>
+          <button class="kv-button kv-button--md kv-button--text" type="button"><span>1:1</span><i class="kv-icon" data-icon="DownArrowSmall"></i></button>
+        </div>
+        <div class="kv-node-panel__bar-right">
+          <button class="kv-button kv-button--md kv-button--text" type="button"><span>x1</span><i class="kv-icon" data-icon="DownArrowSmall"></i></button>
+          <button class="kv-button kv-button--lg kv-button--primary" type="button" aria-label="生成，消耗 1 个猕猴桃"><span>1</span></button>
+        </div>
+      </div>
+      <i class="kv-icon kv-node-panel__expand" data-icon="FullScreen"></i>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>选中节点时出现在节点下方，宽度由面板种类定，不跟节点宽度走。</li>
+    <li>参考图区块太多时，右边用渐变遮罩表示超长。首尾帧中间用箭头连接。这两种在「模板 · 画布」页的参考图区块里。</li>
+  </ul>
+
+  <!-- ==================== 小画布示例 ==================== -->
+
+  <h2 id="canvas-example">小画布示例</h2>
+  <p>把上面的组件拼在一起的样子，只是演示（太宽时左右滚动）：左边文字节点连到中间选中的图片节点，图片节点连到右边正在生成的视频节点。选中的节点上方是节点工具栏，下方是生成面板，左下是画布工具栏。节点间距、位置不是规范，只是摆给你看。</p>
+  <div data-demo="nocode">
+    <div class="cv-board-scroll">
+      <div class="cv-board">
+        <!-- 文字节点：完成 -->
+        <div class="kv-node-wrapper kv-node-wrapper--1-1" style="left:24px;top:96px">
+          <span class="kv-node-wrapper__name">文字节点</span>
+          <div class="kv-node-card kv-node-card--done">
+            <div class="kv-node-media kv-node-media--text">生成一首约 1 分钟的中速流行颂歌（约 105 BPM），带有强劲节拍和 80 年代合成器音色。歌手声线应为清晰而高亢。歌曲在主歌阶段应立即开始旋律铺垫，专注且具感染力。</div>
+          </div>
+          <span class="kv-connector-dot kv-connector-dot--connected kv-node-wrapper__dot kv-node-wrapper__dot--right"></span>
+        </div>
+
+        <!-- 文字 → 图片：激活（选中节点的关联线） -->
+        <div class="kv-connector kv-connector--active" style="left:296px;top:223px;width:48px;height:2px">
+          <svg viewBox="0 0 48 2" preserveAspectRatio="none"><path d="M0 1H48"/></svg>
+        </div>
+
+        <!-- 图片节点：选中，上方节点工具栏 -->
+        <div class="kv-node-wrapper kv-node-wrapper--1-1" aria-selected="true" style="left:360px;top:96px">
+          <span class="kv-node-wrapper__name">图片节点</span>
+          <div class="kv-node-card kv-node-card--done">
+            <div class="kv-node-media kv-node-media--image">
+              <img class="kv-node-media__picture" src="../../assets/placeholders/kiwi-light-1x1.webp" alt="">
+            </div>
+          </div>
+          <span class="kv-connector-dot kv-connector-dot--connected kv-node-wrapper__dot kv-node-wrapper__dot--left"></span>
+          <span class="kv-connector-dot kv-connector-dot--connected kv-node-wrapper__dot kv-node-wrapper__dot--right"></span>
+        </div>
+
+        <div class="kv-node-toolbar" style="left:278px;top:8px">
+          <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Rmbg"></i><span>抠图</span></button>
+          <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Crop"></i><span>裁剪</span></button>
+          <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="Expand"></i><span>扩图</span></button>
+          <button class="kv-button kv-button--md kv-button--text" type="button"><i class="kv-icon" data-icon="HD"></i><span>高清</span></button>
+          <i class="kv-node-toolbar__divider"></i>
+          <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="下载"><i class="kv-icon" data-icon="Download"></i></button>
+          <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="全屏"><i class="kv-icon" data-icon="FullScreen"></i></button>
+        </div>
+
+        <!-- 图片 → 视频：执行中 -->
+        <div class="kv-connector kv-connector--flowing" style="left:632px;top:224px;width:48px;height:40px">
+          <svg viewBox="0 0 48 40" preserveAspectRatio="none"><path d="M0 0C24 0 24 40 48 40"/><path class="kv-connector__flow" d="M0 0C24 0 24 40 48 40"/></svg>
+        </div>
+
+        <!-- 视频节点：生成中 -->
+        <div class="kv-node-wrapper kv-node-wrapper--1-1" style="left:696px;top:136px">
+          <span class="kv-node-wrapper__name">视频节点</span>
+          <div class="kv-node-card kv-node-card--generating" aria-busy="true" style="--progress:65%">
+            <div class="kv-node-card__mask"></div>
+            <div class="kv-node-card__progress"></div>
+            <div class="kv-node-card__sweep"></div>
+            <span class="kv-tag kv-tag--on-media kv-node-card__tag">59s 生成中</span>
+          </div>
+          <span class="kv-connector-dot kv-connector-dot--connected kv-node-wrapper__dot kv-node-wrapper__dot--left"></span>
+          <span class="kv-connector-dot kv-node-wrapper__dot kv-node-wrapper__dot--right"></span>
+        </div>
+
+        <!-- 生成面板：图片节点下方 -->
+        <div class="kv-node-panel" style="left:178px;top:376px">
+          <div class="kv-node-panel__refs">
+            <div class="kv-reference-item"><span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></span><span class="kv-reference-item__badge">1</span></div>
+          </div>
+          <div class="kv-prompt-input" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="描述任何你想要生成的内容" style="min-height:0;height:48px"></div>
+          <div class="kv-node-panel__bar">
+            <div class="kv-node-panel__bar-left">
+              <button class="kv-button kv-button--md kv-button--text" type="button"><span>Banana 2</span><i class="kv-icon" data-icon="DownArrowSmall"></i></button>
+              <button class="kv-button kv-button--md kv-button--text" type="button"><span>1:1</span><i class="kv-icon" data-icon="DownArrowSmall"></i></button>
+            </div>
+            <div class="kv-node-panel__bar-right">
+              <button class="kv-button kv-button--lg kv-button--primary" type="button" aria-label="生成，消耗 1 个猕猴桃"><span>1</span></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 画布工具栏 -->
+        <div class="kv-canvas-toolbar" style="left:24px;top:584px">
+          <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text kv-canvas-toolbar__add" type="button" aria-label="添加"><i class="kv-icon" data-icon="Add"></i></button>
+          <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="历史"><i class="kv-icon" data-icon="History"></i></button>
+          <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="上传"><i class="kv-icon" data-icon="Upload"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 旧名对照 ==================== -->
+
+  <h2 id="legacy-names">旧名对照</h2>
+  <p>来自 Figma「画布」页的「迁移映射」。旧库里的名字，在新库里对应什么。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>旧</th><th>新</th><th>类型 · 说明</th></tr></thead>
+      <tbody>
+        <tr><td>OutputNode（AspectRatio · Instance · 左侧节点 · 右侧节点 · 鼠标选中）</td><td>NodeWrapper（比例 · 左侧连接点 · 右侧连接点 · 选中）</td><td>改名。属性改中文；里面的节点换成新节点；「节点」属性去掉，里面固定放 NodeCard（已暴露）</td></tr>
+        <tr><td>ConnectorDot（Status）</td><td>ConnectorDot（状态）</td><td>改名。只改属性名</td></tr>
+        <tr><td>文字节点 · 图片节点 · 视频节点 · 音频节点（中间一版叫 TextNode 等）</td><td>NodeCard（状态）+ NodeMedia（类型）</td><td>合并。旧的 7 个组件 37 个变体已删除；7 种节点的样子放在「模板 · 画布」页「节点」分区</td></tr>
+        <tr><td>素材节点（Property 1）· UploadNode</td><td>NodeCard 完成 + 开关「上传中」「文字按钮」</td><td>合并。上传完成的视频、图片、音频只是内容类型不同；「文字按钮」写成「上传」</td></tr>
+        <tr><td>视频封装节点 · 视频剪辑节点（VideoPackNode / VideoCutNode）</td><td>NodeCard 待生成 + 开关「按钮」</td><td>合并。按钮从 32 高描边改成 Button 小 · 次要（28 高，白 8% 底），点击态 = 悬停</td></tr>
+        <tr><td>状态 = 引导态 / 待生成 / 生成中 / 完成 / 失败</td><td>NodeCard 状态 = 引导 / 待生成 / 生成中 / 完成 / 失败</td><td>改名。去掉「态」字</td></tr>
+        <tr><td>完成态的内容（图片、视频、音频、文字各画一份）</td><td>NodeMedia 类型 = 图片 / 视频 / 音频 / 文字</td><td>合并。在 NodeCard 完成态的属性面板里切类型</td></tr>
+        <tr><td>状态 = 鼠标悬浮 / 展开效果</td><td>NodeCard 完成 + 开关「图标按钮」「文字按钮」</td><td>合并。不再单独做变体，悬停就是把右上按钮打开</td></tr>
+        <tr><td>状态 = 堆叠</td><td>模板里的「堆叠」：3 张 NodeCard 斜着叠</td><td>改成模板。多张卡的组合，不是单卡状态</td></tr>
+        <tr><td>引导项（散框，14 号次要色）</td><td>MenuItem（13 号主色）</td><td>改样式。字小一号、颜色变亮，代码要跟着统一</td></tr>
+        <tr><td>角上按钮：ToolbarItem 填充款手动改成黑 40%</td><td>Button 中 / IconButton 32，类型 = 浮层</td><td>改样式。倒计时、上传中、上传、设为封面、下载都用它（中间一版叫 ToolbarItem 样式 = 玻璃）</td></tr>
+        <tr><td>ToolbarItem 玻璃款悬停（和默认一样）</td><td>浮层悬停改成黑 60%（<code>--color-on-media-fill-hover</code>）</td><td>改样式。代码里悬停是 rgba(16,19,24,0.9)，没有对应变量，需要和前端对齐</td></tr>
+        <tr><td>视频时长「5s」（散框，22 高）</td><td>Tag 类型 = 覆盖（24 高）</td><td>改样式</td></tr>
+        <tr><td>音频播放键（散框，圆形白 12%）</td><td>IconButton 32 · 次要（圆角 8，白 8%）</td><td>改样式。代码里是圆形，需要和前端对齐</td></tr>
+        <tr><td>音频波形、视频播放条（散层，最多 90 多层）</td><td>AudioWave、PlayBar</td><td>新增。宽度跟随容器</td></tr>
+        <tr><td>节点底色 #181818（没绑变量）</td><td><code>--color-bg-fill-surface</code>（#191A1B）</td><td>改样式。差 1 个色值，代码可以直接用 surface</td></tr>
+        <tr><td>（无）</td><td>Connector · ConnectorRemove</td><td>新增。照代码 line-style 做的连线 4 种状态和删除按钮</td></tr>
+        <tr><td>ToolbarItem（State · Style · Content）、工具栏（Property 1）、NodeToolbar（类型）、CanvasToolbar</td><td>「模板 · 画布」页「节点工具栏」分区；按钮用 Button 中 · 文字、IconButton 32 · 文字</td><td>改成模板，按钮合并。前端要跟着改：字号 14 → 13，字重常规 → 中等。迁移表里写「图标加文字时图标 20 → 16」，但按钮页 Button 中的左图标是 20，两处不一致 <span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td>画布工具栏 · 拉伸手柄</td><td>CanvasToolbar · CropHandles</td><td>改名。拉伸手柄在代码里是裁剪框，保留 #4AFF70</td></tr>
+        <tr><td>模型调用（没发布过）· 节点面板分区的生成面板 ×7、参考图区块 ×5、模型选择栏 ×4</td><td>节点生成面板模板（7 种）</td><td>改成模板，移到「模板 · 画布」页「生成面板」分区。面板底色 #191B1D → surface；内容随模型和参数变，所以不做组件</td></tr>
+        <tr><td>参考图区块 · 文本区块 · 模型选择区块 ×2 · 基础画布</td><td>参考图区块 · 模型选择栏（模板）；PanelPrompt → PromptInput、MentionChip（组件）</td><td>改成模板。PanelPrompt 改名 PromptInput，不只节点面板用，首页对话输入框也用它；PanelModelBarCreate 没人用，已删</td></tr>
+        <tr><td>参考图区块里的每一格（散框，25 个）</td><td>ReferenceItem</td><td>新增。AssetThumb + 右上角标 + 左下时长 + 底部权重，都用开关</td></tr>
+        <tr><td>模型选择栏里的下拉（散框，14 个）</td><td>Select · 无底（输入控件页）</td><td>改样式。36 高不变，字号 14 → 13。参数摘要（带音量图标）和生成按钮暂时保留原样</td></tr>
+        <tr><td>快捷操作（12 个菜单和参数面板）</td><td>「模板 · 通用」页「菜单」分区、「模板 · 画布」页「参数面板」分区</td><td>改成模板，移动。快捷菜单分区已删；和菜单页原来的示例有重复，整理模板时合并</td></tr>
+        <tr><td>MenuItem · MenuItemAsset（44 高 · 圆角 12 · 14 号字）</td><td>MenuItem（菜单和提示页，36 高 · 圆角 8 · 13 号字）</td><td>改样式。按竞品统一成 36；@素材的缩略图用 AssetThumb；单选菜单的当前项用「选中」（白 8% 底，不打勾）；前端 CustomMenu 改成 36 高、13 号字、图标 16</td></tr>
+        <tr><td>Heavy 字重（参考图区块 · 菜单）</td><td>常规 400</td><td>改样式。苹方没有 Heavy，代码里是 400</td></tr>
+        <tr><td>Inter 字体（模型选择栏的英文）</td><td><code>--font-family</code>（苹方）</td><td>改样式。和代码一致</td></tr>
+        <tr><td>资产图</td><td>暂不迁</td><td>待定。是「我的资产」的卡片，不是画布节点</td></tr>
+        <tr><td>图标 AudioGeneration · History · Guide</td><td>待补</td><td>待定。新图标库里没有，暂时保留矢量</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 这一页的属性面板、状态一览和演示交互
+  (function () {
+    var IMG = '../../assets/placeholders/';
+    // 72 条竖条的高度，取自 Figma 的 AudioWave；前 31 条是播放过的
+    var WAVE = [1,27,39,27,11,1,19,39,39,59,59,39,19,1,1,1,1,1,1,1,69,51,35,35,17,1,35,35,51,51,35,9,9,1,51,35,1,35,1,35,51,35,35,35,23,9,1,9,23,35,23,9,1,1,1,35,9,9,1,51,35,1,35,1,35,51,35,35,35,23,9,1];
+    var LONG_TEXT = '生成一首约 1 分钟的中速流行颂歌（约 105 BPM），带有强劲节拍和 80 年代合成器音色。歌手声线应为清晰而高亢。歌曲在主歌（0:05-0:25）阶段应立即开始旋律铺垫，专注且具感染力。音乐必须在副歌（0:25-0:45）处达到高潮，高音区甜蜜爆发，展现全部音效密度，并在 0:45 后以混响渐出。生成一首约 1 分钟的中速流行颂歌（约 105 BPM），带有强劲节拍和 80 年代合成器音色。';
+
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+    function indent(html, n) {
+      var pad = new Array(n + 1).join(' ');
+      return html.split('\n').map(function (l) { return pad + l; }).join('\n');
+    }
+
+    // ---------- 零件 ----------
+
+    function wave() {
+      var bars = WAVE.map(function (h, i) {
+        return '<i' + (i > 30 ? ' class="is-rest"' : '') + ' style="--h:' + h + 'px"></i>';
+      }).join('\n    ');
+      return '<div class="kv-audio-wave" style="--progress:49%">\n  <div class="kv-audio-wave__bars">\n    ' + bars + '\n  </div>\n  <span class="kv-audio-wave__head"></span>\n</div>';
+    }
+
+    function playbar(extra) {
+      return '<div class="kv-play-bar' + (extra ? ' ' + extra : '') + '" style="--progress:40%">\n' +
+        '  <div class="kv-play-bar__controls">\n' +
+        '    <span class="kv-play-bar__left">\n' +
+        '      <i class="kv-icon" data-icon="Play"></i>\n' +
+        '      <span class="kv-play-bar__time">0:03 / 0:06</span>\n' +
+        '    </span>\n' +
+        '    <i class="kv-icon" data-icon="VolumeFull"></i>\n' +
+        '  </div>\n' +
+        '  <div class="kv-play-bar__track"><span class="kv-play-bar__played"></span></div>\n' +
+        '</div>';
+    }
+
+    // NodeMedia：s = { type, duration, playbar, time, text }
+    function media(s) {
+      var t = s.type;
+      var cls = 'kv-node-media kv-node-media--' + t + (t === 'video' && s.playbar ? ' is-hover' : '');
+      var inner = '';
+      if (t === 'image') {
+        inner = '\n  <img class="kv-node-media__picture" src="' + IMG + 'kiwi-light-1x1.webp" alt="">';
+      } else if (t === 'video') {
+        inner = '\n  <img class="kv-node-media__picture" src="' + IMG + 'kivi-future-1x1.webp" alt="">';
+        if (s.duration) inner += '\n  <span class="kv-tag kv-tag--on-media kv-node-media__duration">5s</span>';
+        if (s.playbar) inner += '\n' + indent(playbar('kv-node-media__playbar'), 2);
+      } else if (t === 'audio') {
+        inner = '\n  <div class="kv-node-media__wave">\n' + indent(wave(), 4) + '\n  </div>' +
+          '\n  <div class="kv-node-media__controls">' +
+          '\n    <button class="kv-icon-button kv-icon-button--32 kv-icon-button--secondary" type="button" aria-label="播放"><i class="kv-icon" data-icon="Play"></i></button>' +
+          '\n    <span class="kv-node-media__time">' + esc(s.time) + '</span>' +
+          '\n  </div>';
+        return '<div class="' + cls + '">' + inner + '\n</div>';
+      } else {
+        return '<div class="' + cls + '">' + esc(s.text) + '</div>';
+      }
+      return '<div class="' + cls + '">' + inner + '\n</div>';
+    }
+
+    // NodeCard：s = { state, content, button, cover, countdown, uploading, textBtn, iconBtn, message }
+    function nodeCard(s) {
+      var st = s.state;
+      var cls = 'kv-node-card kv-node-card--' + st;
+      var attr = '';
+      var inner = '';
+      if (st === 'guide') {
+        inner = '\n  <div class="kv-node-card__options">';
+        ['自己编写内容', '图片反推提示词', '视频反推脚本'].forEach(function (t) {
+          inner += '\n    <button class="kv-menu-item" type="button"><span>' + t + '</span></button>';
+        });
+        inner += '\n  </div>';
+      } else if (st === 'pending') {
+        inner = '\n  <i class="kv-icon kv-node-card__icon" data-icon="Text"></i>';
+        if (s.button) inner += '\n  <button class="kv-button kv-button--sm kv-button--secondary" type="button"><span>打开视频封装</span></button>';
+      } else if (st === 'generating') {
+        attr = ' aria-busy="true" style="--progress:65%"';
+        if (s.cover) inner += '\n  <img class="kv-node-card__cover" src="' + IMG + 'kiwi-light-1x1.webp" alt="">';
+        inner += '\n  <div class="kv-node-card__mask"></div>\n  <div class="kv-node-card__progress"></div>\n  <div class="kv-node-card__sweep"></div>';
+        if (s.countdown) inner += '\n  <span class="kv-tag kv-tag--on-media kv-node-card__tag">59s 生成中</span>';
+      } else if (st === 'done') {
+        if (s.content === 'audio') attr = ' style="width:341px"';
+        inner = '\n' + indent(media({ type: s.content, duration: true, playbar: false, time: '0:08 / 0:08', text: LONG_TEXT }), 2);
+        if (s.uploading) inner += '\n  <button class="kv-icon-button kv-icon-button--32 kv-icon-button--on-media kv-node-card__upload" type="button" aria-label="上传中"><i class="kv-icon" data-icon="Add"></i></button>';
+        if (s.textBtn || s.iconBtn) {
+          inner += '\n  <div class="kv-node-card__actions">';
+          if (s.textBtn) inner += '\n    <button class="kv-button kv-button--md kv-button--on-media" type="button"><span>设为封面</span></button>';
+          if (s.iconBtn) inner += '\n    <button class="kv-icon-button kv-icon-button--32 kv-icon-button--on-media" type="button" aria-label="添加"><i class="kv-icon" data-icon="Add"></i></button>';
+          inner += '\n  </div>';
+        }
+      } else if (st === 'failed') {
+        inner = '\n  <img class="kv-node-card__illustration" src="../../assets/empty-state/failed.png" alt="">\n  <p class="kv-node-card__message">' + esc(s.message) + '</p>';
+      }
+      return '<div class="' + cls + '"' + attr + '>' + inner + '\n</div>';
+    }
+
+    // NodeWrapper：s = { ratio, state, left, right, selected }
+    function wrapper(s) {
+      var card = nodeCard({ state: s.state, content: 'image', button: false, cover: false, countdown: true, uploading: false, textBtn: false, iconBtn: false, message: '生成失败，消耗猕猴桃已退回' })
+        .replace(/ style="width:341px"/, '');
+      var html = '<div class="kv-node-wrapper kv-node-wrapper--' + s.ratio + '"' + (s.selected ? ' aria-selected="true"' : '') + '>\n' +
+        '  <span class="kv-node-wrapper__name">节点名称</span>\n' + indent(card, 2);
+      if (s.left) html += '\n  <span class="kv-connector-dot kv-node-wrapper__dot kv-node-wrapper__dot--left"></span>';
+      if (s.right) html += '\n  <span class="kv-connector-dot kv-node-wrapper__dot kv-node-wrapper__dot--right"></span>';
+      return html + '\n</div>';
+    }
+
+    // Connector：s = { state, remove }
+    var PATH = 'M0 48C120 48 120 0 240 0';
+    function connector(s) {
+      var cls = 'kv-connector' + (s.state === 'default' ? '' : ' kv-connector--' + s.state);
+      var html = '<div class="' + cls + '" style="width:240px;height:48px">\n  <svg viewBox="0 0 240 48" preserveAspectRatio="none">\n    <path d="' + PATH + '"/>';
+      if (s.state === 'flowing') html += '\n    <path class="kv-connector__flow" d="' + PATH + '"/>';
+      html += '\n  </svg>';
+      if (s.remove) html += '\n  <button class="kv-connector-remove kv-connector__remove" type="button" aria-label="删除连线"><i class="kv-icon" data-icon="Cutting"></i></button>';
+      return html + '\n</div>';
+    }
+
+    // ReferenceItem：s = { size, badge, badgeText, duration, durationText, weight, weightText }
+    function ref(s) {
+      var html = '<div class="kv-reference-item' + (s.size === '72' ? ' kv-reference-item--72' : '') + '">\n' +
+        '  <span class="kv-asset-thumb kv-asset-thumb--' + s.size + ' kv-asset-thumb--image"><img src="' + IMG + 'kivi-future-1x1.webp" alt=""></span>';
+      if (s.badge) html += '\n  <span class="kv-reference-item__badge">' + esc(s.badgeText) + '</span>';
+      if (s.duration) html += '\n  <span class="kv-reference-item__duration">' + esc(s.durationText) + '</span>';
+      if (s.weight) html += '\n  <span class="kv-reference-item__weight">' + esc(s.weightText) + '</span>';
+      return html + '\n</div>';
+    }
+
+    // ---------- 属性面板 ----------
+
+    var CARD_STATES = [['guide', '引导'], ['pending', '待生成'], ['generating', '生成中'], ['done', '完成'], ['failed', '失败']];
+    var CONTENTS = [['image', '图片'], ['video', '视频'], ['audio', '音频'], ['text', '文字']];
+
+    KiviShell.playground(document.getElementById('pg-node-card'), {
+      controls: [
+        { key: 'state', label: '状态', type: 'segment', value: 'guide', options: CARD_STATES },
+        { key: 'content', label: '内容类型（完成）', type: 'segment', value: 'image', options: CONTENTS },
+        { key: 'button', label: '按钮（待生成）', type: 'toggle', value: false },
+        { key: 'cover', label: '底图（生成中）', type: 'toggle', value: false },
+        { key: 'countdown', label: '倒计时（生成中）', type: 'toggle', value: true },
+        { key: 'uploading', label: '上传中（完成）', type: 'toggle', value: false },
+        { key: 'textBtn', label: '文字按钮（完成）', type: 'toggle', value: false },
+        { key: 'iconBtn', label: '图标按钮（完成）', type: 'toggle', value: false },
+        { key: 'message', label: '失败文案', type: 'text', value: '生成失败，消耗猕猴桃已退回' }
+      ],
+      rules: function (s) {
+        var r = {};
+        if (s.state !== 'done') r.content = CONTENTS.map(function (o) { return o[0]; });
+        if (s.state !== 'pending') r.button = true;
+        if (s.state !== 'generating') { r.cover = true; r.countdown = true; }
+        if (s.state !== 'done') { r.uploading = true; r.textBtn = true; r.iconBtn = true; }
+        return r;
+      },
+      render: nodeCard
+    });
+
+    KiviShell.playground(document.getElementById('pg-node-media'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: CONTENTS },
+        { key: 'duration', label: '时长（视频）', type: 'toggle', value: true },
+        { key: 'playbar', label: '播放条（视频）', type: 'toggle', value: false },
+        { key: 'time', label: '时间（音频）', type: 'text', value: '0:08 / 0:08' }
+      ],
+      rules: function (s) {
+        var r = {};
+        if (s.type !== 'video') { r.duration = true; r.playbar = true; }
+        return r;
+      },
+      render: function (s) {
+        // NodeMedia 单独看时放在 NodeCard 完成态里
+        var m = media({ type: s.type, duration: s.duration, playbar: s.playbar, time: s.time, text: LONG_TEXT });
+        return '<div class="kv-node-card kv-node-card--done"' + (s.type === 'audio' ? ' style="width:341px"' : '') + '>\n' + indent(m, 2) + '\n</div>';
+      }
+    });
+
+    KiviShell.playground(document.getElementById('pg-node-wrapper'), {
+      controls: [
+        { key: 'ratio', label: '比例', type: 'segment', value: '1-1', options: [['1-1', '1:1'], ['3-4', '3:4'], ['16-9', '16:9'], ['4-3', '4:3'], ['9-16', '9:16']] },
+        { key: 'state', label: '节点状态', type: 'segment', value: 'guide', options: CARD_STATES },
+        { key: 'left', label: '左侧连接点', type: 'toggle', value: true },
+        { key: 'right', label: '右侧连接点', type: 'toggle', value: true },
+        { key: 'selected', label: '选中', type: 'toggle', value: false }
+      ],
+      render: wrapper
+    });
+
+    KiviShell.playground(document.getElementById('pg-connector'), {
+      controls: [
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['active', '激活'], ['drawing', '拖拽中'], ['flowing', '执行中']] },
+        { key: 'remove', label: '删除按钮', type: 'toggle', value: false }
+      ],
+      render: connector
+    });
+
+    KiviShell.playground(document.getElementById('pg-reference-item'), {
+      controls: [
+        { key: 'size', label: '尺寸', type: 'segment', value: '56', options: [['56', '56'], ['72', '72']] },
+        { key: 'badge', label: '角标', type: 'toggle', value: true },
+        { key: 'badgeText', label: '角标文字', type: 'text', value: '1' },
+        { key: 'duration', label: '时长', type: 'toggle', value: false },
+        { key: 'durationText', label: '时长文字', type: 'text', value: '12s' },
+        { key: 'weight', label: '权重', type: 'toggle', value: false },
+        { key: 'weightText', label: '权重文字', type: 'text', value: '0.8' }
+      ],
+      render: ref
+    });
+
+    // ---------- 状态一览 ----------
+
+    function cells(host, items, cellStyle) {
+      host.innerHTML = '<div class="cv-row">' + items.map(function (it) {
+        return '<div class="cv-cell"' + (cellStyle ? ' style="' + cellStyle + '"' : '') + '>' + it[1] + '<span class="cv-cap">' + it[0] + '</span></div>';
+      }).join('') + '</div>';
+      KiviIcons.render(host);
+    }
+
+    var base = { content: 'image', button: false, cover: false, countdown: true, uploading: false, textBtn: false, iconBtn: false, message: '生成失败，消耗猕猴桃已退回' };
+    function card(over) { var o = {}; for (var k in base) o[k] = base[k]; for (var k2 in over) o[k2] = over[k2]; return nodeCard(o); }
+
+    cells(document.getElementById('matrix-node-card'), [
+      ['引导', card({ state: 'guide' })],
+      ['待生成', card({ state: 'pending' })],
+      ['生成中', card({ state: 'generating' })],
+      ['完成', card({ state: 'done' })],
+      ['失败', card({ state: 'failed' })]
+    ]);
+
+    cells(document.getElementById('matrix-node-card-actions'), [
+      ['完成', card({ state: 'done' })],
+      ['完成 + 上传中', card({ state: 'done', uploading: true })],
+      ['悬停：图标按钮', card({ state: 'done', iconBtn: true })],
+      ['展开：文字按钮 + 图标按钮', card({ state: 'done', textBtn: true, iconBtn: true })]
+    ]);
+
+    function mediaCard(type, opt) {
+      var m = media({ type: type, duration: true, playbar: !!(opt && opt.playbar), time: '0:08 / 0:08', text: LONG_TEXT });
+      return '<div class="kv-node-card kv-node-card--done"' + (type === 'audio' ? ' style="width:341px"' : '') + '>' + m + '</div>';
+    }
+    cells(document.getElementById('matrix-node-media'), [
+      ['图片', mediaCard('image')],
+      ['视频（时长）', mediaCard('video')],
+      ['视频（悬停，播放条）', mediaCard('video', { playbar: true })],
+      ['音频（341 × 256）', mediaCard('audio')],
+      ['文字', mediaCard('text')]
+    ]);
+
+    // 波形单独看
+    document.getElementById('demo-wave').innerHTML = wave();
+
+    // 节点外框：五种比例
+    cells(document.getElementById('matrix-node-wrapper'), [
+      ['1:1 · 256 × 256', wrapper({ ratio: '1-1', state: 'guide', left: true, right: true, selected: false })],
+      ['3:4 · 256 × 341', wrapper({ ratio: '3-4', state: 'guide', left: true, right: true, selected: false })],
+      ['16:9 · 455 × 256', wrapper({ ratio: '16-9', state: 'guide', left: true, right: true, selected: false })],
+      ['4:3 · 341 × 256', wrapper({ ratio: '4-3', state: 'guide', left: true, right: true, selected: false })],
+      ['9:16 · 256 × 455（选中）', wrapper({ ratio: '9-16', state: 'guide', left: true, right: true, selected: true })]
+    ], 'padding:28px 24px 0');
+
+    // 连线：四种状态，右上有删除按钮的一条对比
+    cells(document.getElementById('matrix-connector'), [
+      ['默认', connector({ state: 'default', remove: false })],
+      ['激活', connector({ state: 'active', remove: false })],
+      ['拖拽中', connector({ state: 'drawing', remove: false })],
+      ['执行中（流光为示意）', connector({ state: 'flowing', remove: false })],
+      ['激活 + 删除按钮', connector({ state: 'active', remove: true })]
+    ], 'padding:0 24px');
+
+    // PromptInput：四种状态，放在面板底色上
+    var promptStates = [
+      ['未输入', '<div class="kv-prompt-input" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="描述任何你想要生成的内容"></div>'],
+      ['输入内容', '<div class="kv-prompt-input" contenteditable="true" role="textbox" aria-multiline="true">A male interviewer is conducting a street interview with a young woman on a busy sidewalk in what appears to be a Japanese city. The interviewer, wearing a grey jacket over</div>'],
+      ['输入内容 · 最大高度（最高 120，超出滚动）', '<div class="kv-prompt-input" contenteditable="true" role="textbox" aria-multiline="true">' + new Array(5).join('A male interviewer is conducting a street interview with a young woman on a busy sidewalk in what appears to be a Japanese city. The interviewer, wearing a grey jacket over') + '</div>'],
+      ['@ 指代', '<div class="kv-prompt-input" contenteditable="true" role="textbox" aria-multiline="true">参考 <span class="kv-mention-chip" contenteditable="false"><span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--image"><img src="' + IMG + 'kivi-future-1x1.webp" alt=""></span>图片</span> 里的元素和 <span class="kv-mention-chip" contenteditable="false"><span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--image"><img src="' + IMG + 'kiwi-light-1x1.webp" alt=""></span>图片4</span> <span class="kv-mention-chip kv-mention-chip--music" contenteditable="false"><span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--audio"><i class="kv-icon" data-icon="Music"></i></span>音乐1</span></div>']
+    ];
+    var promptHost = document.getElementById('matrix-prompt-input');
+    promptHost.innerHTML = '<div class="cv-stack">' + promptStates.map(function (p) {
+      return '<div class="cv-cell" style="width:100%"><div class="cv-on-panel" style="width:100%">' + p[1] + '</div><span class="cv-cap">' + p[0] + '</span></div>';
+    }).join('') + '</div>';
+    KiviIcons.render(promptHost);
+
+    // 参考图：56 和 72，角标、时长、权重
+    var rb = { badge: true, badgeText: '1', duration: false, durationText: '12s', weight: false, weightText: '0.8' };
+    function refCell(size, over) { var o = { size: size }; for (var k in rb) o[k] = rb[k]; for (var k2 in over) o[k2] = over[k2]; return ref(o); }
+    cells(document.getElementById('matrix-reference-item'), [
+      ['56 · 角标', refCell('56', {})],
+      ['56 · 首帧', refCell('56', { badgeText: '首帧' })],
+      ['56 · 时长', refCell('56', { duration: true })],
+      ['56 · 权重', refCell('56', { weight: true })],
+      ['56 · 都开', refCell('56', { duration: true, weight: true })],
+      ['72 · 角标', refCell('72', {})],
+      ['72 · 都开', refCell('72', { duration: true, weight: true })]
+    ]);
+
+    // 演示用：鼠标移到连线上，出现删除按钮
+    var demoConn = document.getElementById('demo-connector');
+    var demoRemove = demoConn.querySelector('.kv-connector-remove');
+    demoConn.addEventListener('mouseenter', function () { demoRemove.setAttribute('aria-hidden', 'false'); });
+    demoConn.addEventListener('mouseleave', function () { demoRemove.setAttribute('aria-hidden', 'true'); });
+  })();
+</script>
+</body>
+</html>

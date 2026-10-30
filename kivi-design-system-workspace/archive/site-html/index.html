@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KIVI 设计规范</title>
+  <link rel="stylesheet" href="kivi/tokens.css">
+  <link rel="stylesheet" href="kivi/base.css">
+  <link rel="stylesheet" href="kivi/button.css">
+  <link rel="stylesheet" href="shell/shell.css">
+</head>
+<body data-root="" data-page="home">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">KIVI UI KIT V2 · 草稿 0.1</p>
+    <h1>KIVI 设计规范</h1>
+    <p class="doc-lead">KIVI 产品界面（AI 无限画布 Web 端）的组件库。设计、产品、研发、AI 看的是同一份：能直接点着试，代码能直接复制。以 Figma 为准，Figma 里没定的不写。</p>
+  </header>
+
+  <h2 id="pages">页面</h2>
+  <h3>基础</h3>
+  <div class="shell-cards">
+    <a class="shell-card" href="foundations/tokens.html"><b>变量</b><span>颜色、间距、圆角、字号、透明度</span></a>
+    <a class="shell-card" href="foundations/motion.html"><b>动效</b><span>缓动、时长和常见场景，都能点着看</span></a>
+    <a class="shell-card" href="foundations/icons.html"><b>图标</b><span>160 个，从 Figma 导出，能搜，点名字复制</span></a>
+    <div class="shell-card is-todo"><b>占位图</b><span>待迁移</span></div>
+  </div>
+  <h3>通用组件</h3>
+  <div class="shell-cards">
+    <a class="shell-card" href="components/button.html"><b>按钮</b><span>Button、IconButton</span></a>
+    <a class="shell-card" href="components/menus-tooltip.html"><b>菜单和提示</b><span>Tooltip、菜单、侧栏</span></a>
+    <a class="shell-card" href="components/selection.html"><b>选择控件</b><span>开关、滑块、勾选框</span></a>
+    <a class="shell-card" href="components/inputs.html"><b>输入控件</b><span>输入框、数字框、下拉、多行输入</span></a>
+    <a class="shell-card" href="components/dialog.html"><b>弹窗</b><span>四种宽度、二级弹窗</span></a>
+    <a class="shell-card" href="components/feedback.html"><b>反馈</b><span>Toast、加载、骨架屏、空状态</span></a>
+    <a class="shell-card" href="components/tabs-tags-avatar.html"><b>选项卡、标签和头像</b><span>选项卡和分段、标签、头像、素材缩略图</span></a>
+  </div>
+  <h3>业务组件</h3>
+  <div class="shell-cards">
+    <a class="shell-card" href="business/canvas.html"><b>画布</b><span>节点、连线、裁剪、节点面板，带小画布示例</span></a>
+    <a class="shell-card" href="business/agent.html"><b>Agent</b><span>过程行、消息、追问、操作卡、发送按钮</span></a>
+    <a class="shell-card" href="business/main-site.html"><b>主站</b><span>提示词条、结果卡片</span></a>
+  </div>
+
+  <h2 id="use">怎么用</h2>
+  <ul>
+    <li><strong>前端</strong>：引入 <code>kivi/tokens.css</code> 和要用的组件样式，照页面上的代码写结构。代码是纯 HTML + CSS，不依赖框架，React、Vue 或以后换别的都能照着写。</li>
+    <li><strong>设计</strong>：每个组件的属性面板和 Figma 右侧属性一一对应，可以拿来对照效果。</li>
+    <li><strong>AI</strong>：skill 直接读这些页面和 <code>kivi/</code> 里的文件，不另外维护一份 md。</li>
+  </ul>
+
+  <h2 id="files">文件</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>位置</th><th>是什么</th><th>前端要不要抄</th></tr></thead>
+      <tbody>
+        <tr><td><code>kivi/tokens.css</code></td><td>所有变量。数值只写在这里</td><td>要</td></tr>
+        <tr><td><code>kivi/base.css</code></td><td>图标的占位元素、加载转圈</td><td>要</td></tr>
+        <tr><td><code>kivi/button.css</code> 等</td><td>组件样式，每个 Figma 页一个文件</td><td>要</td></tr>
+        <tr><td><code>kivi/icons.js</code></td><td>图标 SVG，从 Figma 导出</td><td>看图标方案定</td></tr>
+        <tr><td><code>foundations/</code> <code>components/</code></td><td>规范页面：用途、结构、属性、样子、用法 + 演示</td><td>不用，看就行</td></tr>
+        <tr><td><code>shell/</code></td><td>这个网站自己的外壳：目录、复制、属性面板</td><td>不用</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="sync">和 Figma 同步</h2>
+  <ul>
+    <li>目录按 Figma 的页分。Figma 改了哪一页，就改对应的页面和 <code>kivi/</code> 里的文件。</li>
+    <li>改变量：只改 <code>kivi/tokens.css</code>，页面上的值是从它读出来的。</li>
+    <li>改组件：改 <code>kivi/</code> 里的样式，再改页面上的说明。</li>
+    <li>改名要有对照：Figma 各页的「迁移映射」。</li>
+  </ul>
+
+</main>
+
+<script src="kivi/icons.js"></script>
+<script src="shell/shell.js"></script>
+</body>
+</html>

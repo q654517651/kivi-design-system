@@ -1,0 +1,491 @@
+/*
+  KIVI · 菜单和提示
+  Figma「菜单和提示」页：Tooltip（简单、说明）、MenuItem、MenuLabel、MenuDivider、
+  菜单模板（容器，代码里叫 Menu）、侧栏的 SidebarItem、SidebarLabel、SidebarMore。
+  另外有两个代码层面的组件：Dropdown（把菜单弹出来）。依赖 tokens.css、base.css。
+  侧栏的「更多」「新建」用 button 页的 IconButton，缩略图用 tabs-tags-avatar 页的 AssetThumb。
+
+  写法（React，见各个 .tsx）
+    菜单：整个菜单是模板，条目随便增删
+      <Menu width={200}>
+        <MenuLabel>分组标题</MenuLabel>
+        <MenuItem icon="Copy" shortcut="⌘C">复制</MenuItem>
+        <MenuDivider />
+        <MenuItem icon="Delete" variant="danger">删除</MenuItem>
+      </Menu>
+    弹出菜单：
+      <Dropdown trigger={<Button rightIcon="DownArrowSmall">更多操作</Button>}>
+        <Menu width={200}>…</Menu>
+      </Dropdown>
+    Tooltip：包住触发元素
+      <Tooltip content="下载"><IconButton icon="Download" label="下载" /></Tooltip>
+      <Tooltip variant="desc" title="标题" content="说明"><IconButton … /></Tooltip>
+    侧栏：
+      <SidebarItem variant="nav" icon="Create">新建</SidebarItem>
+      <SidebarItem variant="list" thumb="icon" selected more>对话标题</SidebarItem>
+      <SidebarLabel>对话</SidebarLabel>   <SidebarMore />
+
+  渲染出来的结构
+    菜单
+      <div class="kv-menu" role="menu" style="width: 200px">
+        <div class="kv-menu-label">分组标题</div>
+        <button class="kv-menu-item" role="menuitem" type="button">
+          <span class="kv-icon" data-icon="Copy"><svg/></span><span>复制</span>
+          <span class="kv-menu-item__shortcut">⌘C</span>
+        </button>
+        <div class="kv-menu-divider" role="separator"></div>
+        <button class="kv-menu-item kv-menu-item--danger" role="menuitem" type="button">…</button>
+      </div>
+    Tooltip（静态的气泡）
+      <div class="kv-tooltip" role="tooltip">下载</div>
+      说明：<div class="kv-tooltip kv-tooltip--desc"><b class="kv-tooltip__title">标题</b><span class="kv-tooltip__text">说明</span></div>
+
+  MenuItem
+    右边的东西三选一：<span class="kv-menu-item__shortcut">、kv-menu-item__arrow、kv-menu-item__check
+    左边二选一：图标（16）、AssetThumb 24
+    危险    kv-menu-item--danger
+    禁用    disabled（或 aria-disabled="true"）
+    选中    aria-selected="true"，白 8% 底，不打勾（单选菜单，外层 role="listbox"，每项 role="option"）
+    勾选    role="menuitemradio" 或 "menuitemcheckbox"，加 aria-checked="true"，并放 kv-menu-item__check
+    悬停    鼠标触发；键盘 Tab 到的焦点暂用悬停的底色（Figma 没定焦点样式）
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+
+  菜单弹出和关闭（Dropdown）
+    弹出层 kv-popup 挂在 body 上，position: fixed，跟着触发器定位，不会被外层的 overflow 裁掉。
+    出现 200ms ease-out：淡入 + 从锚点那一边 96% 放大、移 4；消失 150ms ease-in 倒着播。
+    点菜单项、点外面、按 Esc 关闭，Dropdown 自带。
+    位置：默认在触发器下方 4px，左对齐。Figma 没定，待定。
+    层级 z-index 默认 1000，用 --kv-popup-z 改。Figma 没定，待定。
+
+  Tooltip 弹出
+    悬停 500ms 后 150ms ease-out 淡入，移开 100ms ease-in 淡出。目标下方 8px，水平居中（Figma 没定水平方向，暂时居中）。
+    键盘 Tab 到目标（:focus-visible）也会出现，Esc、点击会关掉。包住触发元素的外壳是 kv-tooltip__anchor。
+    弹出的气泡 kv-tooltip--floating 也挂在 body 上，position: fixed。不弹出的 kv-tooltip 就是静态的，文档摆样子用。
+
+  侧栏
+    SidebarItem   kv-sidebar-item，类型 kv-sidebar-item--nav（默认，导航）/ --list（列表）
+                  选中 aria-current="page"；带「更多」时外层用 div，不要把按钮放进 button 或 a
+                  「更多」kv-sidebar-item__more，悬停、选中时才显示
+    SidebarLabel  kv-sidebar-label，标题按钮 kv-sidebar-label__title（aria-expanded），新建 kv-sidebar-label__new
+    SidebarMore   kv-sidebar-more
+*/
+
+/* ---------- Tooltip ---------- */
+
+/* 简单：一行，高 32，可以带快捷键 */
+.kv-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  height: 32px;
+  margin: 0;
+  padding: var(--spacing-6) var(--spacing-12);
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-popup);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.kv-tooltip__shortcut {
+  color: var(--color-text-fill-tertiary);
+}
+
+/* 说明：标题 + 一段说明，最宽 240 */
+.kv-tooltip--desc {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-4);
+  width: max-content;
+  max-width: 240px;
+  height: auto;
+  padding: var(--spacing-12);
+  white-space: normal;
+}
+
+.kv-tooltip__title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+}
+
+.kv-tooltip--desc .kv-tooltip__text {
+  color: var(--color-text-fill-secondary);
+}
+
+/* 包住触发元素的壳，只负责收悬停和焦点 */
+.kv-tooltip__anchor {
+  display: inline-flex;
+}
+
+/* 弹出：挂在 body 上，位置由脚本算（目标下方 8px，水平居中）。淡入 150ms ease-out，淡出 100ms ease-in */
+.kv-tooltip--floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--kv-popup-z, 1000);
+  pointer-events: none;
+  animation: kv-tooltip-in var(--motion-duration-150) var(--motion-ease-out) both;
+}
+
+.kv-tooltip--floating[data-state="closed"] {
+  animation: kv-tooltip-out var(--motion-duration-100) var(--motion-ease-in) both;
+}
+
+@keyframes kv-tooltip-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes kv-tooltip-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ---------- 菜单模板（容器） ---------- */
+
+/* 玻璃浮层：底 glass（#181818 70%），背景模糊 32，描边 border-subtle（8%），圆角 12，内边距 4，条目间距 4。
+   圆角 12 = 条目圆角 8 + 内边距 4，里外的圆角才同心（2026-10-29 从 16 改，用户定）。
+   下拉、右键、双击画布的快捷添加、子菜单、Select 的列表都是它。
+   宽 120–240（Figma 里最窄 120、最宽 220），文字太长单行省略；最高 324 = 8 项，多了在里面滚动，
+   屏幕剩的地方不够时再缩到剩下的高度（--kv-popup-room，定位时写）。2026-10-29 用户定 */
+.kv-menu {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: max-content;
+  margin: 0;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-12);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  min-width: max(120px, var(--kv-menu-min, 0px));
+  max-width: 240px;
+  max-height: min(324px, var(--kv-popup-room, 324px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* 条目在滚动的列表里不被压扁 */
+.kv-menu > * {
+  flex: none;
+}
+
+/* 弹出层：Dropdown 把菜单放在这里，挂在 body 上，位置由脚本算。出现 200ms ease-out，消失 150ms ease-in。
+   淡入淡出做在里面的菜单上，不做在弹出层上：外层半透明时，里面的毛玻璃看不到后面的画面，播完才突然糊上 */
+.kv-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--kv-popup-z, 1000);
+  outline: none;
+}
+
+/* 展开：从锚点那一边长出来，淡入 + 96% 放大到 100% + 往外移 4。原点、方向由定位时写的变量给 */
+.kv-popup > * {
+  transform-origin: var(--kv-popup-origin, 0 0);
+  animation: kv-popup-in var(--motion-duration-200) var(--motion-ease-out) both;
+}
+
+.kv-popup[data-state="closed"] {
+  pointer-events: none;
+}
+
+.kv-popup[data-state="closed"] > * {
+  animation: kv-popup-out var(--motion-duration-150) var(--motion-ease-in) both;
+}
+
+/* 和触发器一样宽（填充的下拉选择展开的列表），不受 240 的限制 */
+.kv-popup--match > .kv-menu {
+  width: 100%;
+  max-width: none;
+}
+
+@keyframes kv-popup-in {
+  from { opacity: 0; transform: translateY(var(--kv-popup-shift, -4px)) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes kv-popup-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(var(--kv-popup-shift, -4px)) scale(0.96); }
+}
+
+/* 触发器的壳：Dropdown 用它量触发器的位置 */
+.kv-dropdown {
+  display: inline-flex;
+}
+
+/* ---------- MenuItem ---------- */
+
+.kv-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--spacing-12);
+  border: 0;
+  border-radius: var(--border-radius-8);
+  outline: none;
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--motion-duration-100) var(--motion-ease-in-out),
+    color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 左图标 16。缩略图 24 用 AssetThumb */
+.kv-menu-item > .kv-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 文字撑满，太长省略 */
+.kv-menu-item > span:not([class]) {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右边三选一：快捷键、子菜单箭头、勾选 */
+.kv-menu-item__shortcut {
+  flex: none;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.kv-menu-item__arrow {
+  flex: none;
+  color: var(--color-text-fill-tertiary);
+}
+
+.kv-menu-item__check {
+  flex: none;
+  color: var(--color-brand-solid);
+}
+
+/* 危险：删除这类操作，放在菜单最后 */
+.kv-menu-item--danger {
+  color: var(--color-status-danger);
+}
+
+/* 状态：悬停。键盘焦点暂用同一个底色 */
+.kv-menu-item:where(:hover, :focus-visible, .is-hover):not(:disabled, [aria-disabled="true"]) {
+  background: var(--color-bg-fill-container-light-2-hover);
+}
+
+.kv-menu-item--danger:where(:hover, :focus-visible, .is-hover):not(:disabled, [aria-disabled="true"]) {
+  background: var(--color-status-danger-subtle);
+}
+
+/* 状态：选中。白 8% 底，不打勾；只有普通类型 */
+.kv-menu-item[aria-selected="true"] {
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 状态：禁用 */
+.kv-menu-item:is(:disabled, [aria-disabled="true"]) {
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+.kv-menu-item:is(:disabled, [aria-disabled="true"]) .kv-menu-item__shortcut {
+  color: var(--color-text-fill-disabled);
+}
+
+/* ---------- MenuLabel ---------- */
+
+.kv-menu-label {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 var(--spacing-12);
+  color: var(--color-text-fill-tertiary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ---------- MenuDivider ---------- */
+
+/* 线 1px，上下各留 4，左右各缩进 8，一共高 9 */
+.kv-menu-divider {
+  height: var(--border-width-1);
+  margin: var(--spacing-4) var(--spacing-8);
+  background: var(--color-border-subtle);
+}
+
+/* ---------- SidebarItem ---------- */
+
+/* 导航：左图标 20，左右 12。列表：左边缩略图 24，左 12 右 8，文字默认 secondary */
+.kv-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--spacing-12);
+  border: 0;
+  border-radius: var(--border-radius-8);
+  outline: none;
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--motion-duration-100) var(--motion-ease-in-out),
+    color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-sidebar-item > .kv-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.kv-sidebar-item > span:not([class]) {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-sidebar-item--list {
+  padding-right: var(--spacing-8);
+  color: var(--color-text-fill-secondary);
+}
+
+/* 状态：悬停白 8%，选中白 12%；列表的文字悬停、选中变 primary */
+.kv-sidebar-item:where(:hover, :focus-visible, .is-hover, :has([aria-expanded="true"])) {
+  background: var(--color-bg-fill-container-light-2-hover);
+}
+
+.kv-sidebar-item[aria-current="page"] {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-sidebar-item--list:where(:hover, :focus-visible, .is-hover, :has([aria-expanded="true"]), [aria-current="page"]) {
+  color: var(--color-text-fill-primary);
+}
+
+/* 右边的「更多」：IconButton 28 轻，悬停和选中时才显示 */
+.kv-sidebar-item > .kv-sidebar-item__more {
+  display: none;
+  flex: none;
+}
+
+.kv-sidebar-item:where(:hover, :focus-within, .is-hover, [aria-current="page"]) > .kv-sidebar-item__more,
+.kv-sidebar-item:has([aria-expanded="true"]) > .kv-sidebar-item__more {
+  display: inline-flex;
+}
+
+/* ---------- SidebarLabel ---------- */
+
+/* 分组标题：标题 12 tertiary + 展开箭头，右边新建按钮。高 28，左 12 右 4 */
+.kv-sidebar-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 var(--spacing-4) 0 var(--spacing-12);
+}
+
+.kv-sidebar-label__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-fill-tertiary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-16);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.kv-sidebar-label__title > .kv-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 新建按钮在 Figma 里整体透明度 30%（待确认） */
+.kv-sidebar-label__new {
+  opacity: var(--opacity-30);
+}
+
+/* ---------- SidebarMore ---------- */
+
+/* 分组底部的「更多」：12 tertiary，高 36，左 12 */
+.kv-sidebar-more {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--spacing-12);
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-fill-tertiary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-16);
+  text-align: left;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}

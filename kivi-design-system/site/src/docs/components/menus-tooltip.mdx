@@ -1,0 +1,284 @@
+import { Demo, PageHeader } from '@shell';
+import {
+  DropdownPlayground,
+  MenuPlayground,
+  SidebarItemPlayground,
+  SidebarLabelPlayground,
+  SidebarMorePlayground,
+  TooltipPlayground,
+} from './menus-tooltip.demos';
+
+<PageHeader
+  eyebrow="通用组件"
+  title="菜单和提示"
+  lead="Tooltip 是悬停说明，Menu 是点开或右键后选操作的菜单，最后是主站侧栏的三个零件。"
+  figma={['菜单和提示', '146:607']}
+  status="草稿 0.1.0"
+  code="kivi/menus-tooltip"
+/>
+
+## Tooltip
+
+<TooltipPlayground />
+
+### 图标按钮配 Tooltip
+
+<Demo code={`
+<>
+  <Tooltip content="下载">
+    <IconButton icon="Download" label="下载" />
+  </Tooltip>
+  <Tooltip content="复制" shortcut="⌘C">
+    <IconButton icon="Copy" label="复制" />
+  </Tooltip>
+  <Tooltip variant="desc" title="参数设置" content="调整比例、分辨率和生成数量。">
+    <IconButton icon="Configuration" label="参数设置" variant="secondary" />
+  </Tooltip>
+</>
+`} />
+
+## Menu
+
+<MenuPlayground />
+
+### 单选：当前项用选中
+
+<Demo code={`
+() => {
+  const [count, setCount] = useState('x4');
+  return (
+    <Menu role="listbox" width={120}>
+      {['x4', 'x2', 'x1'].map((v) => (
+        <MenuItem key={v} selected={count === v} onClick={() => setCount(v)}>{v}</MenuItem>
+      ))}
+    </Menu>
+  );
+}
+`} />
+
+### 多选：勾选
+
+<Demo code={`
+() => {
+  const [on, setOn] = useState(['图片', '视频']);
+  const toggle = (v) => setOn(on.includes(v) ? on.filter((x) => x !== v) : [...on, v]);
+  return (
+    <Menu width={160}>
+      {['图片', '视频', '音频', '文字'].map((v) => (
+        <MenuItem key={v} checked={on.includes(v)} onClick={() => toggle(v)}>{v}</MenuItem>
+      ))}
+    </Menu>
+  );
+}
+`} />
+
+## Dropdown
+
+<DropdownPlayground />
+
+### 右键菜单
+
+<Demo code={`
+() => {
+  const [open, setOpen] = useState(false);
+  const [point, setPoint] = useState({ x: 0, y: 0 });
+  return (
+    <div
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setPoint({ x: e.clientX, y: e.clientY });
+        setOpen(true);
+      }}
+      style={{ display: 'grid', placeItems: 'center', width: '100%', height: 220, color: 'var(--color-text-fill-tertiary)', fontSize: 'var(--font-size-13)' }}
+    >
+      在这里点右键
+      <Dropdown open={open} onOpenChange={setOpen} anchorPoint={point}>
+        <Menu width={220}>
+          <MenuItem>上传</MenuItem>
+          <MenuItem shortcut="⌘Z">撤销</MenuItem>
+          <MenuItem shortcut="⌘V" disabled>粘贴</MenuItem>
+        </Menu>
+      </Dropdown>
+    </div>
+  );
+}
+`} />
+
+## SidebarItem
+
+<SidebarItemPlayground />
+
+### 导航和列表
+
+<Demo stage="base" code={`
+() => {
+  const [current, setCurrent] = useState('poster');
+  const menu = (
+    <Menu width={160}>
+      <MenuItem icon="Pin">置顶</MenuItem>
+      <MenuItem icon="Share">分享</MenuItem>
+      <MenuDivider />
+      <MenuItem icon="Delete" variant="danger">删除</MenuItem>
+    </Menu>
+  );
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)', width: 216 }}>
+      <SidebarItem icon="Create">新建</SidebarItem>
+      <SidebarItem variant="list" selected={current === 'poster'} onClick={() => setCurrent('poster')} more moreMenu={menu}>
+        生成一张猕猴桃海报
+      </SidebarItem>
+      <SidebarItem
+        variant="list"
+        thumb="image"
+        thumbSrc="./placeholders/ip-kiwi-pile-1x1.webp"
+        selected={current === 'summer'}
+        onClick={() => setCurrent('summer')}
+        more
+        moreMenu={menu}
+      >
+        夏日饮品系列
+      </SidebarItem>
+    </div>
+  );
+}
+`} />
+
+## SidebarLabel
+
+<SidebarLabelPlayground />
+
+### 点标题展开收起
+
+<Demo stage="base" code={`
+() => {
+  const [chat, setChat] = useState(true);
+  const [canvas, setCanvas] = useState(false);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)', width: 216 }}>
+      <SidebarLabel expanded={chat} onExpandedChange={setChat} newLabel="新建对话">对话</SidebarLabel>
+      {chat && <SidebarItem variant="list">生成一张猕猴桃海报</SidebarItem>}
+      <SidebarLabel expanded={canvas} onExpandedChange={setCanvas} newLabel="新建画布">画布</SidebarLabel>
+      {canvas && <SidebarItem variant="list" thumbIcon="Canvas">夏日饮品系列</SidebarItem>}
+    </div>
+  );
+}
+`} />
+
+## SidebarMore
+
+<SidebarMorePlayground />
+
+## 参数
+
+### Tooltip
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `content` | `ReactNode` | — | 提示的文字。简单是那一行，说明是标题下面的说明，12 常规，行高 20 |
+| `variant` | `"simple"` `"desc"` | `"simple"` | 简单 / 说明。不写时有 `title` 就是说明。简单：高 32，上下 6、左右 12；说明：最宽 240，内边距 12。圆角 8，底 `--color-bg-fill-popup`，不加阴影 |
+| `title` | `ReactNode` | — | 标题，只有说明有。13 粗，和说明间距 4 |
+| `shortcut` | `string` | — | 快捷键，比如 ⌘Z，只有简单有。12，tertiary，和文字间距 8 |
+| `children` | `ReactElement` | — | 触发元素，比如 IconButton。不写就只渲染气泡本身（上面面板里就是） |
+| `open` | `boolean` | — | 显示（受控）。不传就悬停、聚焦自己出现 |
+| `defaultOpen` | `boolean` | `false` | 默认是否显示 |
+| `onOpenChange` | `(open: boolean) => void` | — | 显示状态变化 |
+| `delay` | `number` | `500` | 悬停多久后出现，毫秒。出现 150ms ease-out，消失 100ms ease-in；出现在目标下方 8 |
+
+其余原生 HTML 属性都能传。
+
+### Menu
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `width` | `number` `string` | — | 宽 120–240，最高 8 项（324），多了滚动。数字按 px，不写就跟着内容 |
+| `role` | `"menu"` `"listbox"` | `"menu"` | 菜单 / 单选列表。单选列表的每项传 `selected` |
+
+玻璃浮层：`--color-bg-fill-glass`，模糊 `--effect-glass-blur`（32），描边 `--color-border-subtle`，圆角 12，内边距 4，条目间距 4，不加阴影。其余原生 `<div>` 属性都能传。
+
+### MenuItem
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 文字，13 常规，行高 20。高 36，圆角 8，左右内边距 12，元素间距 8 |
+| `variant` | `"default"` `"danger"` | `"default"` | 普通 / 危险。危险没有选中，放菜单最后，用 `MenuDivider` 隔开 |
+| `icon` | `IconName` | — | 左图标，16。和 `thumb` 二选一 |
+| `thumb` | `ReactNode` | — | 缩略图：`<AssetThumb size={24} />`，可以是图片或音频。和 `icon` 二选一 |
+| `shortcut` | `string` | — | 快捷键文字，比如 ⌘C，12，tertiary。和 `submenu`、`checked` 三选一 |
+| `submenu` | `boolean` | `false` | 子菜单箭头 `RightArrowSmall`，16，tertiary；同时加 `aria-haspopup="menu"` |
+| `selected` | `boolean` | — | 选中：白 8% 底，不打勾，单选标当前项。自动是 `role="option"`，外层 Menu 要写 `role="listbox"`；非当前项传 `false` |
+| `checked` | `boolean` | — | 勾选：右边 `CheckSmall`，16，`--color-brand-solid`，只给多选。自动是 `role="menuitemradio"`；非当前项传 `false` |
+| `disabled` | `boolean` | `false` | 禁用，文字、图标、快捷键 disabled，不响应悬停和点击 |
+
+其余原生 `<button>` 属性都能传。
+
+### MenuLabel
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 分组标题，不能点。高 28，左右内边距 12，12 常规，tertiary |
+
+其余原生 `<div>` 属性都能传。
+
+### MenuDivider
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| — | — | — | 没有属性。线 1px，`--color-border-subtle`，上下留白 4，左右缩进 8 |
+
+### Dropdown
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `trigger` | `ReactElement` | — | 触发器，点它开关菜单，比如 Button、IconButton。自动加 `aria-haspopup`、`aria-expanded`、`aria-controls`。右键菜单不写，用 `anchorPoint` |
+| `children` | `ReactNode` | — | 弹出的内容，一般是一个 Menu。挂在 body 上；出现 200ms ease-out，消失 150ms ease-in |
+| `open` | `boolean` | — | 展开（受控） |
+| `defaultOpen` | `boolean` | `false` | 默认是否展开 |
+| `onOpenChange` | `(open: boolean) => void` | — | 点外面、按 Esc、点菜单项关闭时都以 `false` 调用 |
+| `placement` | `"bottom-start"` `"bottom"` `"bottom-end"` `"top-start"` `"top"` `"top-end"` | `"bottom-start"` | 方向和对齐。放不下翻到另一边，左右不超出屏幕 |
+| `offset` | `number` | `4` | 离触发器的距离 |
+| `matchTriggerWidth` | `boolean` | `false` | 菜单和触发器一样宽，下拉选择的列表用 |
+| `anchorPoint` | `{ x: number; y: number }` | — | 右键菜单：出现在这个屏幕坐标（`clientX`、`clientY`），自己控制 `open` |
+| `closeOnSelect` | `boolean` | `true` | 点菜单项后关闭。多选菜单要保持展开时关掉 |
+| `haspopup` | `"menu"` `"listbox"` | `"menu"` | 触发器的 `aria-haspopup`，下拉选择用 `"listbox"` |
+
+其余原生 `<span>` 属性都能传。
+
+### SidebarItem
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 文字，13 常规，行高 20 |
+| `variant` | `"nav"` `"list"` | `"nav"` | 导航（新建这类固定入口）/ 列表（对话、画布的历史）。高 36，圆角 8，元素间距 6，左右内边距 12（列表右 8） |
+| `icon` | `IconName` | — | 导航的左图标，20 |
+| `thumb` | `"icon"` `"image"` | `"icon"` | 列表左边的缩略图（AssetThumb 24）：没封面用图标，有封面用图片。不要放裸图标 |
+| `thumbSrc` | `string` | — | 图片地址，`thumb="image"` 时用 |
+| `thumbIcon` | `IconName` | `"Message"` | 缩略图的图标，`thumb="icon"` 时用。对话 `Message`，画布 `Canvas` |
+| `selected` | `boolean` | `false` | 选中：底白 12%，自动加 `aria-current="page"`。同一时间只有一项 |
+| `more` | `boolean` | `false` | 右边的「更多」：IconButton 28 轻，悬停和选中时才显示 |
+| `moreLabel` | `string` | `"更多"` | 「更多」的说明，读屏用 |
+| `onMoreClick` | `(e) => void` | — | 点「更多」 |
+| `moreMenu` | `ReactNode` | — | 点「更多」弹出的菜单，一般是 Menu，由 Dropdown 管开关 |
+
+外层是 `<div>`（里面还有按钮），其余原生 `<div>` 属性都能传。
+
+### SidebarLabel
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 分组名，比如「对话」。高 28，12 常规，tertiary |
+| `expanded` | `boolean` | — | 展开（受控）。展开箭头朝下 `DownArrowSmall`，收起朝右 `RightArrowSmall`，下面的列表由使用方跟着显示或隐藏 |
+| `defaultExpanded` | `boolean` | `true` | 默认是否展开（非受控） |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 点标题展开或收起 |
+| `showNew` | `boolean` | `true` | 右边的新建按钮：IconButton 28 轻，`NewChat` 图标，整体透明度 30%（`--opacity-30`） |
+| `newLabel` | `string` | `"新建"` | 新建按钮的说明，读屏用 |
+| `onNew` | `() => void` | — | 点新建 |
+
+其余原生 `<div>` 属性都能传。
+
+### SidebarMore
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | `"更多"` | 文字，12 常规，tertiary。高 36，左内边距 12 |
+
+其余原生 `<button>` 属性都能传。

@@ -1,0 +1,106 @@
+import { Demo, PageHeader } from '@shell';
+import { DialogPlayground } from './dialog.demos';
+
+<PageHeader
+  eyebrow="通用组件"
+  title="弹窗"
+  lead="模态弹窗，确认、重命名、表单、列表、编辑器都用它，4 个尺寸只是宽度不同。"
+  figma={['弹窗', '92:595']}
+  status="草稿 0.1.0"
+  code="kivi/dialog"
+/>
+
+## Dialog
+
+<DialogPlayground />
+
+### 打开和关闭
+
+<Demo code={`
+() => {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>放弃修改</Button>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title="放弃这次修改？"
+        description="离开后，没保存的修改会丢失。"
+        footer={
+          <>
+            <Button size="lg" onClick={() => setOpen(false)}>取消</Button>
+            <Button size="lg" variant="primary" onClick={() => setOpen(false)}>确定</Button>
+          </>
+        }
+      />
+    </>
+  );
+}
+`} />
+
+### 二级弹窗
+
+<Demo code={`
+() => {
+  const [edit, setEdit] = useState(false);
+  const [del, setDel] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setEdit(true)}>编辑作品</Button>
+      <Dialog
+        open={edit}
+        onOpenChange={setEdit}
+        size="m"
+        closeOnMaskClick={false}
+        title="编辑作品"
+        description="改完点保存；也可以在这里删除。"
+        footer={
+          <>
+            <Button size="lg" onClick={() => setDel(true)}>删除作品</Button>
+            <Button size="lg" variant="primary" onClick={() => setEdit(false)}>保存</Button>
+          </>
+        }
+      >
+        <div style={{ height: 120, color: 'var(--color-text-fill-tertiary)' }}>表单放这里</div>
+      </Dialog>
+      <Dialog
+        open={del}
+        onOpenChange={setDel}
+        title="删除这个作品？"
+        description="删除后不能恢复。"
+        footer={
+          <>
+            <Button size="lg" onClick={() => setDel(false)}>取消</Button>
+            <Button size="lg" variant="danger" onClick={() => { setDel(false); setEdit(false); }}>删除</Button>
+          </>
+        }
+      />
+    </>
+  );
+}
+`} />
+
+## 参数
+
+### Dialog
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `open` | `boolean` | — | 打开。传了就是受控，在 `onOpenChange` 里改；不想自己管用 `defaultOpen` |
+| `defaultOpen` | `boolean` | `false` | 非受控时一开始是否打开 |
+| `onOpenChange` | `(open: boolean) => void` | — | 按 Esc、点遮罩、点关闭按钮时传 `false`；底栏按钮自己调 `setOpen(false)` |
+| `size` | `"s"` `"m"` `"l"` `"xl"` `"full"` | `"s"` | 宽 400 / 720 / 1024 / 1200 / 100vw，结构、间距一样。全屏待定，只定了宽度 |
+| `title` | `ReactNode` | — | 标题，16 / 24 粗。不传就没有标题栏，关闭按钮也跟着没有 |
+| `showClose` | `boolean` | `true` | 标题栏里的关闭按钮，IconButton 32 · 文字类型 |
+| `description` | `ReactNode` | — | 描述，14 / 22 secondary，和标题栏间距 8 |
+| `children` | `ReactNode` | — | 内容区，放什么都行 |
+| `footer` | `ReactNode` | — | 底栏，靠右，间距 8。放大号 Button：取消次要、确认主要，删除确认用 `danger`；只有一个按钮时去掉取消 |
+| `closeOnMaskClick` | `boolean` | `true` | 点遮罩关闭。有表单或没保存内容的写 `false` |
+| `closeOnEsc` | `boolean` | `true` | 按 Esc 关闭。二级弹窗开着时先关最上面的 |
+
+内边距 24（`--spacing-24`），区块间距 16（`--spacing-16`），圆角 16（`--border-radius-16`），底色 `--color-bg-fill-surface`，不加描边和阴影。遮罩 `--color-bg-fill-mask`（黑 60%），不模糊。打开期间 `body` 不能滚动（`overflow: hidden`，滚动条那一条宽度用 `padding-right` 补上，页面不跳），关闭、退出动画放完后恢复；多层弹窗最后一个关掉才恢复。打开 300ms 淡入、从 96% 放大，关闭 200ms 淡出。
+
+`className`、`ref` 和其余原生 `<div>` 属性（`style`、`data-*`、`aria-*`）落在弹窗本体上。
+
+`DialogPanel`：只有盒子，没有遮罩和开关，属性同上，没有 `open` 这几个。文档里摆静态示意用，项目里用 `Dialog`。

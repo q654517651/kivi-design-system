@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图标 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用 */
+
+    /* 顶部搜索：滚动时一直在，输入后自动跳到图标表 */
+    .ic-find { position: sticky; top: var(--shell-top); z-index: 4; display: flex; align-items: center; gap: var(--spacing-md); margin-top: var(--spacing-xl); padding: var(--spacing-md) 0; background: var(--color-bg-fill-base); }
+    .ic-find .shell-input { flex: 0 1 360px; }
+    .ic-find-count { color: var(--color-text-fill-tertiary); font-size: var(--font-size-12); line-height: var(--font-line-height-20); white-space: nowrap; }
+    #icon-table, .ic-group h3 { scroll-margin-top: 64px; }
+
+    /* 表格第一列不换行 */
+    .doc td:first-child { white-space: nowrap; }
+    .ic-alias td:nth-child(2), .ic-alias td:nth-child(3), .ic-alias td:nth-child(5) { white-space: nowrap; }
+
+    /* 有序步骤 */
+    .doc ol { max-width: 760px; margin: 0 0 var(--spacing-md); padding-left: 20px; }
+    .doc ol > li { color: var(--color-text-fill-secondary); }
+    .doc ol > li + li { margin-top: var(--spacing-sm); }
+    .doc ol ul { margin: var(--spacing-xxs) 0 0; }
+
+    /* 尺寸、颜色演示 */
+    .ic-color small { color: var(--color-text-fill-tertiary); font-size: var(--font-size-12); line-height: var(--font-line-height-20); white-space: nowrap; }
+    .ic-colors { display: flex; flex-wrap: wrap; gap: var(--spacing-xl); }
+    .ic-color { display: grid; justify-items: center; gap: var(--spacing-sm); }
+    .ic-color .kv-icon { width: 24px; height: 24px; }
+    .ic-on-brand { display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--border-radius-sm); background: var(--color-brand-solid); }
+
+    /* 图标表 */
+    .ic-count { margin-left: var(--spacing-xs); color: var(--color-text-fill-tertiary); font-size: var(--font-size-13); font-weight: var(--font-weight-regular); }
+    .ic-table .kv-icon { width: 24px; height: 24px; }
+    .ic-table .kv-icon.is-logo { width: 54px; }
+    .ic-table th:first-child, .ic-table td:first-child { width: 88px; }
+    .ic-table th:nth-child(2), .ic-table td:nth-child(2) { width: 240px; }
+    .ic-table th:nth-child(3), .ic-table td:nth-child(3) { width: 200px; }
+    .ic-table td:nth-child(2) { white-space: nowrap; }
+    .ic-table td:nth-child(4) .tag { margin-right: var(--spacing-xs); }
+    .ic-name {
+      padding: 2px var(--spacing-xs); border: 0; border-radius: var(--border-radius-xxs);
+      background: var(--color-bg-fill-container-light-1); color: var(--color-text-fill-primary);
+      font: inherit; font-family: var(--shell-mono); font-size: var(--font-size-12); line-height: var(--font-line-height-20);
+      cursor: pointer;
+      transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+    }
+    .ic-name:hover { background: var(--color-bg-fill-container-light-1-hover); }
+    .ic-name.is-copied { background: var(--color-brand-subtle); color: var(--color-brand-solid); }
+    .ic-empty { margin: var(--spacing-xl) 0; color: var(--color-text-fill-tertiary); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body data-root="../" data-page="icons">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">基础</p>
+    <h1>图标</h1>
+    <p class="doc-lead">一套 24×24 的线性图标，全部转轮廓。设计、产品、研发用的是同一套图标、同一个名字。要用图标，先在下面的「图标表」里按意思找。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=44-2" target="_blank" rel="noopener">「图标」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">草稿 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/icons.js</code></dd></div>
+    </dl>
+  </header>
+
+  <div class="ic-find">
+    <input class="shell-input" type="search" id="ic-q" placeholder="按名字或意思搜索，比如 Close、关闭、箭头" aria-label="搜索图标" autocomplete="off">
+    <span class="ic-find-count" id="ic-found" aria-live="polite"></span>
+  </div>
+
+  <p>共 13 组 159 个图标，另有品牌 Logo 1 个。</p>
+
+  <!-- ==================== 规格 ==================== -->
+
+  <h2 id="spec">规格</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>框和图形</td><td>组件框 24×24，图形缩到 22，居中，四边各留 1。名字带 Small 的图标，图形缩到 18。</td></tr>
+        <tr><td>线宽</td><td>1.5</td></tr>
+        <tr><td>形态</td><td>发布用的是转轮廓、合并后的版本。Figma 里另外留一份能改线宽的描边版，在「_源文件 · 图标描边」页。</td></tr>
+        <tr><td>名字</td><td>英文大驼峰，按意思起，比如 <code>Close</code>、<code>OneClickSameModel</code>。Figma 组件名、字体类名 <code>icon-kivi-名字</code>、代码里 Icon 的 <code>name</code>、<code>kivi/icons.js</code> 的 <code>data-icon</code> 用同一个名字，区分大小写。</td></tr>
+        <tr><td>背景和内边距</td><td>不加。要底色和点击区域，就放进 IconButton。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>尺寸</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>尺寸</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr><td>16（默认）</td><td>按钮、菜单、输入框里</td></tr>
+        <tr><td>20</td><td>工具栏、面板标题、弹窗关闭</td></tr>
+        <tr><td>24</td><td>大入口、竖向工具栏</td></tr>
+        <tr><td>40 / 64</td><td>空状态、大入口插图位</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>尺寸由外层容器决定，图标按比例缩放。不为每个尺寸单独画图。</li>
+    <li>40 和 64 是整体放大，线条会跟着变粗（40 约 2.5px，64 约 4px），和旧版 iconfont 放大的效果一样。</li>
+  </ul>
+  <div data-demo>
+    <i class="kv-icon" data-icon="Close" style="width:16px;height:16px"></i>
+    <i class="kv-icon" data-icon="DownArrowSmall" style="width:16px;height:16px"></i>
+    <i class="kv-icon" data-icon="Search" style="width:20px;height:20px"></i>
+    <i class="kv-icon" data-icon="Download" style="width:24px;height:24px"></i>
+    <i class="kv-icon" data-icon="Configuration" style="width:40px;height:40px"></i>
+    <i class="kv-icon" data-icon="More" style="width:64px;height:64px"></i>
+  </div>
+
+  <h3>颜色</h3>
+  <p>图标是单色的，颜色跟着文字走，用文字颜色变量，不写死颜色。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>颜色</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>primary</td><td><code>--color-text-fill-primary</code></td></tr>
+        <tr><td>secondary</td><td><code>--color-text-fill-secondary</code></td></tr>
+        <tr><td>tertiary</td><td><code>--color-text-fill-tertiary</code></td></tr>
+        <tr><td>disabled</td><td><code>--color-text-fill-disabled</code></td></tr>
+        <tr><td>on-brand</td><td><code>--color-text-fill-on-brand</code></td></tr>
+        <tr><td>brand/solid</td><td><code>--color-brand-solid</code></td></tr>
+        <tr><td>danger</td><td><code>--color-status-danger</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo="nocode">
+    <div class="ic-colors">
+      <div class="ic-color" style="color:var(--color-text-fill-primary)"><i class="kv-icon" data-icon="Add"></i><small>primary</small></div>
+      <div class="ic-color" style="color:var(--color-text-fill-secondary)"><i class="kv-icon" data-icon="Add"></i><small>secondary</small></div>
+      <div class="ic-color" style="color:var(--color-text-fill-tertiary)"><i class="kv-icon" data-icon="Add"></i><small>tertiary</small></div>
+      <div class="ic-color" style="color:var(--color-text-fill-disabled)"><i class="kv-icon" data-icon="Add"></i><small>disabled</small></div>
+      <div class="ic-color"><span class="ic-on-brand" style="color:var(--color-text-fill-on-brand)"><i class="kv-icon" data-icon="Add" style="width:24px;height:24px"></i></span><small>on-brand</small></div>
+      <div class="ic-color" style="color:var(--color-brand-solid)"><i class="kv-icon" data-icon="Add"></i><small>brand/solid</small></div>
+      <div class="ic-color" style="color:var(--color-status-danger)"><i class="kv-icon" data-icon="Add"></i><small>danger</small></div>
+    </div>
+  </div>
+  <pre data-code="html">
+    &lt;i class="kv-icon" data-icon="Add" style="color: var(--color-text-fill-secondary)"&gt;&lt;/i&gt;
+  </pre>
+  <ul>
+    <li>设计稿里改颜色，就改 Icon 里 shape 图层的填充。先改色再换图标，颜色保留。</li>
+    <li>唯一带两种颜色的是品牌 Logo（星星是品牌绿），见图标表最后一组。</li>
+  </ul>
+
+  <h3>一个图标只有一个意思</h3>
+  <p>不要拿意思相近的图标顶替。专用规则：</p>
+  <ul>
+    <li><strong>Agent</strong>（大号星星）只给 Agent 用；其他 AI 功能用「素材 + 小星星」类的图标。</li>
+    <li><strong>FirstLastFrame</strong>（胶片）只给首尾帧用；「视频」用 Video。</li>
+    <li>文本节点用 <strong>Text</strong>；字号设置用 <strong>FontSize</strong>。</li>
+    <li>思考过程用 <strong>Lightbulb</strong>；工具调用用 <strong>Tool</strong>。</li>
+  </ul>
+
+  <h3>设计稿里怎么放：Icon 组件</h3>
+  <p>设计稿里统一用 Icon 组件放图标，尺寸和图标都在右侧属性面板里选。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>尺寸</td><td>16（默认）/ 20 / 24 / 40 / 64</td><td>给 <code>kv-icon</code> 写 <code>width</code>、<code>height</code></td></tr>
+        <tr><td>图标</td><td>图标库里的任意图标。首选列表是全部已转轮廓的图标（159 个，品牌 Logo 不在里面）</td><td><code>data-icon="名字"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>默认是空图标，显示虚线方块占位（<code>_Placeholder</code>，不发布）。换成真正的图标后虚线方块就没了。</li>
+    <li>需要底色、内边距或点击区域时，用按钮组件把 Icon 包起来，不要做进图标里。</li>
+  </ul>
+
+  <!-- ==================== 画法 ==================== -->
+
+  <h2 id="draw">画法</h2>
+  <p>新画的图标，不管是设计师画进 Figma，还是原型里临时画，都照下面这几条，和库里的图标放在一起才不突兀。</p>
+
+  <h3>Lucide 的规格</h3>
+  <ul>
+    <li>在 24×24 的网格上画，四边至少留 1。</li>
+    <li>线端是圆头，转折是圆角；只描边，不填充。</li>
+    <li>矩形圆角：边长 8 以上用 2，小于 8 用 1。</li>
+    <li>分开的两个部分之间至少留 2。</li>
+  </ul>
+
+  <h3>KIVI 的调整</h3>
+  <ul>
+    <li>画好后等比缩到 22，再把线宽改回 1.5。</li>
+  </ul>
+
+  <h3>从库里已有图标提炼的写法</h3>
+  <ul>
+    <li><strong>内容类</strong>（文本、视频、图片）：一个圆角方框，里面放一个认得出的符号，比如 T、播放三角、山形。参考 Text、Video、ImageToText。</li>
+    <li><strong>AI、生成类</strong>：在主体的一角加一个小四角星，星和主体之间断开留缝。参考 ImageGeneration、VideoGeneration、AIEnhancement。大号四角星只给 Agent。</li>
+    <li><strong>关闭、隐藏类</strong>：在原图标上加一条斜线，斜线两边留缝。参考 DisableSnap、HideConnections。</li>
+    <li><strong>多份、批量</strong>：两层叠放，后面一层只露出一部分。参考 ImageToImage、OneClickSameModel。</li>
+  </ul>
+
+  <!-- ==================== 怎么加新图标 ==================== -->
+
+  <h2 id="add-icon">怎么加新图标（设计）</h2>
+  <p>图标表里没有合适的，按下面的步骤加。不要拿意思相近的旧图标顶替。</p>
+  <ol>
+    <li><strong>去 Lucide 找</strong>：
+      <ul>
+        <li>静态图标：<a href="https://lucide.dev/icons/" target="_blank" rel="noopener">lucide.dev/icons</a></li>
+        <li>动态图标：<a href="https://lucide-animated.com/" target="_blank" rel="noopener">lucide-animated.com</a></li>
+      </ul>
+    </li>
+    <li><strong>下载</strong>：按 24px、线宽 1.5 下载 SVG。</li>
+    <li><strong>缩放</strong>：等比缩到 22，居中放进 24×24 的框，四边各留 1。缩完把线宽改回 1.5，不要跟着缩成 1.375。</li>
+    <li><strong>放进 Figma（KIVI UI KIT V2）</strong>：
+      <ul>
+        <li>描边版放进「_源文件 · 图标描边」页，留着以后改。</li>
+        <li>转轮廓、合并后做成组件，放进「图标」页对应的分组，按上面的规则起名。</li>
+        <li>组件描述照下面的格式写。</li>
+        <li>把它加进 Icon 组件里「图标」属性的首选值，之后在 Icon 实例里才选得到。</li>
+        <li>在图标页的展示格里写名字和备注，备注的颜色见下面。</li>
+      </ul>
+    </li>
+    <li><strong>标「待确认」</strong>：新加进 Figma 的图标，不管是谁加的，都先标「待确认」：描述里加一行「状态：待确认（用在哪）」，备注用橙色。设计师确认后才转为正式图标。</li>
+    <li><strong>补到本页的图标表里</strong>：写名字、意思、备注。之后重新导出 <code>kivi/icons.js</code>。</li>
+  </ol>
+  <pre data-code="html">
+    关键词：发送 提交 上箭头
+    来源：lucide/arrow-up · 缩到 22/24 · 线宽 1.5，已转轮廓
+  </pre>
+
+  <h3>Lucide 里找不到</h3>
+  <p>必须由设计师亲自画，按上面的「画法」来，描述里加一行「标记：自绘」。AI 不能代替设计师画图标放进 Figma。</p>
+
+  <h3>图标页上的备注颜色</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>颜色</th><th>意思</th></tr></thead>
+      <tbody>
+        <tr><td>白色「自绘」</td><td>图标库里没有对应的，按旧图标重画的。原线稿留在源文件页的隐藏图层里。</td></tr>
+        <tr><td>绿色</td><td>改过名，或合并了重复的图标，显示旧名。</td></tr>
+        <tr><td>橙色</td><td>待确认。</td></tr>
+        <tr><td>红色</td><td>旧图标，还没处理。</td></tr>
+        <tr><td>灰色</td><td>Lucide 原名。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 研发 ==================== -->
+
+  <h2 id="dev">研发：怎么取图标</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>现在</th><th>之后</th></tr></thead>
+      <tbody>
+        <tr><td>来源</td><td>阿里 iconfont（旧项目）</td><td>KIVI 自己打包的字体：GitLab 图标仓库，前端当依赖装</td></tr>
+        <tr><td>类名</td><td><code>iconfont icon-kivi-名字</code></td><td>不变</td></tr>
+        <tr><td>仓库地址</td><td>—</td><td><span class="tag tag--draft">待定</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <pre data-code="html">
+    &lt;i class="iconfont icon-kivi-Close"&gt;&lt;/i&gt;
+  </pre>
+  <ul>
+    <li>名字用下面图标表里的名字，区分大小写。</li>
+    <li>字体只能单色。Logo 有两种颜色，字体里怎么放，<span class="tag tag--draft">待定</span>。</li>
+    <li>旧名（<code>Mdoel</code>、<code>Snap1</code> 等）在字体里留别名，见「旧名对照」。</li>
+    <li>图标表里没有的，不要自己去网上找，也不要用意思相近的顶替。在交付里写「缺图标：××（用在哪）」，交给设计按上面的步骤加。</li>
+  </ul>
+
+  <h3>网站和原型里</h3>
+  <p>引用不了字体的地方（这个网站、HTML 原型），用 <code>kivi/icons.js</code>，名字和上面一样。</p>
+  <pre data-code="html">
+    &lt;i class="kv-icon" data-icon="Close"&gt;&lt;/i&gt;
+
+    &lt;script src="kivi/icons.js"&gt;&lt;/script&gt;
+    &lt;script&gt;KiviIcons.render();&lt;/script&gt;
+  </pre>
+  <ul>
+    <li>图标表和 <code>icons.js</code> 里都没有合适的：原型里可以自己画（也可以让 AI 画）一个 SVG，照「画法」，<code>viewBox="0 0 24 24"</code>、<code>stroke-width="1.5"</code>、<code>stroke="currentColor"</code>、<code>fill="none"</code>。在原型备注里写「临时图标：××」。</li>
+    <li>临时图标只能留在原型里。要进 Figma 和代码，得交给设计师按上面的步骤做。</li>
+  </ul>
+
+  <!-- ==================== 图标表 ==================== -->
+
+  <h2 id="icon-table">图标表</h2>
+  <p>按 Figma 的分组排。点名字复制名字。备注里的「自绘」是图标库里没有、按旧图标重画的；<span class="tag tag--draft">待确认</span> 是 Figma 里标了待确认的。</p>
+
+  <div class="ic-table">
+    <section class="ic-group">
+      <h3 id="ic-direction">方向 <span class="ic-count">11</span></h3>
+      <p>箭头、展开收起、全屏、置顶、切换。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="LeftArrow"></i></td><td><button class="ic-name" type="button" title="点击复制名字">LeftArrow</button></td><td>左、返回、上一个</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="RightArrow"></i></td><td><button class="ic-name" type="button" title="点击复制名字">RightArrow</button></td><td>右、下一个、进入</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="DownArrow"></i></td><td><button class="ic-name" type="button" title="点击复制名字">DownArrow</button></td><td>下、展开</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="LeftArrowSmall"></i></td><td><button class="ic-name" type="button" title="点击复制名字">LeftArrowSmall</button></td><td>小箭头、上一页</td><td>图形缩到 18/24</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="RightArrowSmall"></i></td><td><button class="ic-name" type="button" title="点击复制名字">RightArrowSmall</button></td><td>小箭头、下一页</td><td>图形缩到 18/24</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="DownArrowSmall"></i></td><td><button class="ic-name" type="button" title="点击复制名字">DownArrowSmall</button></td><td>下拉、展开</td><td>下拉选择的箭头；图形缩到 18/24</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="UpArrowSmall"></i></td><td><button class="ic-name" type="button" title="点击复制名字">UpArrowSmall</button></td><td>收起</td><td>下拉展开时的箭头；图形缩到 18/24</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="FullScreen"></i></td><td><button class="ic-name" type="button" title="点击复制名字">FullScreen</button></td><td>全屏、放大</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Fold"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Fold</button></td><td>收起、退出全屏</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="StickyOnTop"></i></td><td><button class="ic-name" type="button" title="点击复制名字">StickyOnTop</button></td><td>置顶</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Switch"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Switch</button></td><td>切换、交换</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-basic">基础操作 <span class="ic-count">22</span></h3>
+      <p>增删改查、撤销重做、上传下载等通用操作。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="Add"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Add</button></td><td>添加、新建</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="AddSmall"></i></td><td><button class="ic-name" type="button" title="点击复制名字">AddSmall</button></td><td>小加号</td><td>图形缩到 18/24</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Subtract"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Subtract</button></td><td>减少</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="SubtractSmall"></i></td><td><button class="ic-name" type="button" title="点击复制名字">SubtractSmall</button></td><td>小减号、缩小</td><td>图形缩到 18/24</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Close"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Close</button></td><td>关闭、取消</td><td>弹窗关闭用它</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="CloseSmall"></i></td><td><button class="ic-name" type="button" title="点击复制名字">CloseSmall</button></td><td>移除、小叉</td><td>标签、输入框里的清除；图形缩到 18/24</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="CheckSmall"></i></td><td><button class="ic-name" type="button" title="点击复制名字">CheckSmall</button></td><td>勾、选中、完成</td><td>菜单里标当前项；图形缩到 18/24</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="More"></i></td><td><button class="ic-name" type="button" title="点击复制名字">More</button></td><td>更多</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Search"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Search</button></td><td>搜索</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Copy"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Copy</button></td><td>复制</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Delete"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Delete</button></td><td>删除</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Reset"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Reset</button></td><td>重置、刷新、重试</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Previous"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Previous</button></td><td>撤销、上一步</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="NextStep"></i></td><td><button class="ic-name" type="button" title="点击复制名字">NextStep</button></td><td>重做、下一步</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Loading"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Loading</button></td><td>加载</td><td>1 秒一圈匀速旋转</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Link"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Link</button></td><td>链接</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Pin"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Pin</button></td><td>固定</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Share"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Share</button></td><td>分享、外部打开</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Download"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Download</button></td><td>下载、保存</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Upload"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Upload</button></td><td>上传</td><td>旧名 upload，改成首字母大写</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ReUpload"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ReUpload</button></td><td>重新上传、替换</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Configuration"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Configuration</button></td><td>设置、配置、参数</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-files">文件与资产 <span class="ic-count">11</span></h3>
+      <p>文件、文件夹、移动、模板、打包等资产管理操作。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="File"></i></td><td><button class="ic-name" type="button" title="点击复制名字">File</button></td><td>文件、文档</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Folder"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Folder</button></td><td>文件夹</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="AddFile"></i></td><td><button class="ic-name" type="button" title="点击复制名字">AddFile</button></td><td>新建文件</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="AddFolder"></i></td><td><button class="ic-name" type="button" title="点击复制名字">AddFolder</button></td><td>新建文件夹</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="FileMusic"></i></td><td><button class="ic-name" type="button" title="点击复制名字">FileMusic</button></td><td>音频文件</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="MoveTo"></i></td><td><button class="ic-name" type="button" title="点击复制名字">MoveTo</button></td><td>移动到</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Remove"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Remove</button></td><td>移出</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Stacking"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Stacking</button></td><td>堆叠、多选</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Template"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Template</button></td><td>模板</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Pack"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Pack</button></td><td>打包、素材包</td><td>图形和 LoraModel 相同</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Subtitle"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Subtitle</button></td><td>字幕、srt、文本轨</td><td><span class="tag tag--draft">待确认</span>FileCard 字幕文件（srt）用</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-generate">生成与 AI <span class="ic-count">17</span></h3>
+      <p>文本 / 图片 / 视频 / 音乐生成，以及各类 AI 功能入口。以后新增的生成类图标也放这里。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="Text"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Text</button></td><td>文本节点</td><td>自绘；不要用于字号设置（用 FontSize）；旧名 text</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ImageGeneration"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ImageGeneration</button></td><td>图片生成</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="VideoGeneration"></i></td><td><button class="ic-name" type="button" title="点击复制名字">VideoGeneration</button></td><td>视频生成</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Video"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Video</button></td><td>视频</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Music"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Music</button></td><td>音乐、音频</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="AIEnhancement"></i></td><td><button class="ic-name" type="button" title="点击复制名字">AIEnhancement</button></td><td>AI 增强</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ImageToImage"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ImageToImage</button></td><td>图生图</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ImageToText"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ImageToText</button></td><td>图生文</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="OneClickSameModel"></i></td><td><button class="ic-name" type="button" title="点击复制名字">OneClickSameModel</button></td><td>一键同款</td><td>自绘：两张叠放的卡，前面一张带四角星</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="SmartEditing"></i></td><td><button class="ic-name" type="button" title="点击复制名字">SmartEditing</button></td><td>智能编辑</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="LoraModel"></i></td><td><button class="ic-name" type="button" title="点击复制名字">LoraModel</button></td><td>LoRA 模型</td><td>图形和 Pack 相同</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Skill"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Skill</button></td><td>技能</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Manual"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Manual</button></td><td>手册、说明</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Agent"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Agent</button></td><td>Agent、智能体、助手</td><td>大号星星只给 Agent 用；其他 AI 功能用「素材 + 小星星」</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="OmniReference"></i></td><td><button class="ic-name" type="button" title="点击复制名字">OmniReference</button></td><td>全能参考、多模态参考</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="FirstLastFrame"></i></td><td><button class="ic-name" type="button" title="点击复制名字">FirstLastFrame</button></td><td>首尾帧</td><td>胶片只给首尾帧用；「视频」用 Video</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Audio"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Audio</button></td><td>音频、声音、音轨</td><td>音频节点用它；音频封面用 Music</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-image-edit">图片编辑 <span class="ic-count">9</span></h3>
+      <p>裁剪、扩图、高清、抠图、消除、画笔、橡皮擦等图片编辑工具。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="Crop"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Crop</button></td><td>裁剪</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Expand"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Expand</button></td><td>扩图</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="HD"></i></td><td><button class="ic-name" type="button" title="点击复制名字">HD</button></td><td>高清、超分</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Rmbg"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Rmbg</button></td><td>抠图、去背景</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="RemoveEle"></i></td><td><button class="ic-name" type="button" title="点击复制名字">RemoveEle</button></td><td>消除、去除</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ImageEditing"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ImageEditing</button></td><td>图片编辑</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Brush"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Brush</button></td><td>画笔</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="BrushSize"></i></td><td><button class="ic-name" type="button" title="点击复制名字">BrushSize</button></td><td>笔刷大小</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Eraser"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Eraser</button></td><td>橡皮擦</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-video-edit">视频剪辑 <span class="ic-count">9</span></h3>
+      <p>视频编辑器里的剪切、分割、裁剪手柄、拼接、循环、比例关联等。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="Cutting"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Cutting</button></td><td>剪切</td><td>连线删除按钮也用它；旧名 Cutting1 已合并到这里</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Divide"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Divide</button></td><td>分割、拆分</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="CropLeft"></i></td><td><button class="ic-name" type="button" title="点击复制名字">CropLeft</button></td><td>左侧裁剪</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="CropRight"></i></td><td><button class="ic-name" type="button" title="点击复制名字">CropRight</button></td><td>右侧裁剪</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="VideoEditing"></i></td><td><button class="ic-name" type="button" title="点击复制名字">VideoEditing</button></td><td>视频编辑</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="VideoLoop"></i></td><td><button class="ic-name" type="button" title="点击复制名字">VideoLoop</button></td><td>循环播放</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Connecting"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Connecting</button></td><td>拼接、连接</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="EnableConstraint"></i></td><td><button class="ic-name" type="button" title="点击复制名字">EnableConstraint</button></td><td>关联、锁定</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="DisableConstraint"></i></td><td><button class="ic-name" type="button" title="点击复制名字">DisableConstraint</button></td><td>取消关联</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-playback">播放与音量 <span class="ic-count">9</span></h3>
+      <p>播放、暂停、音量、预览开关。播放控制按旧版保持实心风格。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="Play"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Play</button></td><td>播放（实心）</td><td>按旧版加了填充</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Pause"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Pause</button></td><td>暂停（实心）</td><td>按旧版加了填充</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="PlayLine"></i></td><td><button class="ic-name" type="button" title="点击复制名字">PlayLine</button></td><td>播放（线框）</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="VolumeFull"></i></td><td><button class="ic-name" type="button" title="点击复制名字">VolumeFull</button></td><td>音量大</td><td>实心，按旧版加了填充</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="VolumeHalf"></i></td><td><button class="ic-name" type="button" title="点击复制名字">VolumeHalf</button></td><td>音量中</td><td>实心，按旧版加了填充</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="VolumeOff"></i></td><td><button class="ic-name" type="button" title="点击复制名字">VolumeOff</button></td><td>静音</td><td>实心，按旧版加了填充</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="VolumeLevel"></i></td><td><button class="ic-name" type="button" title="点击复制名字">VolumeLevel</button></td><td>音量、音轨</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Preview"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Preview</button></td><td>预览、显示</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ClosePreview"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ClosePreview</button></td><td>关闭预览、隐藏</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-canvas">画布与视图 <span class="ic-count">15</span></h3>
+      <p>画布导航、缩放、吸附、连线、编组、抓手等。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="Map"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Map</button></td><td>小地图、导航</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="FitContent"></i></td><td><button class="ic-name" type="button" title="点击复制名字">FitContent</button></td><td>适应画布</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ZoomIn"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ZoomIn</button></td><td>放大</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ZoomOut"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ZoomOut</button></td><td>缩小</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Snap"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Snap</button></td><td>吸附</td><td>旧名 Snap1 已合并到这里</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="DisableSnap"></i></td><td><button class="ic-name" type="button" title="点击复制名字">DisableSnap</button></td><td>关闭吸附</td><td>自绘：Snap 加斜线，斜线两侧留缝</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ShowConnections"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ShowConnections</button></td><td>显示连线</td><td>旧名 ShowConnections-1 已合并到这里</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="HideConnections"></i></td><td><button class="ic-name" type="button" title="点击复制名字">HideConnections</button></td><td>隐藏连线</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Group"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Group</button></td><td>编组</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="UnGroup"></i></td><td><button class="ic-name" type="button" title="点击复制名字">UnGroup</button></td><td>取消编组</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="AddToCanvas"></i></td><td><button class="ic-name" type="button" title="点击复制名字">AddToCanvas</button></td><td>添加到画布</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Hand"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Hand</button></td><td>抓手、拖动</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="UseCanvas"></i></td><td><button class="ic-name" type="button" title="点击复制名字">UseCanvas</button></td><td>使用画布</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Canvas"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Canvas</button></td><td>画布、画布项目、画框</td><td><span class="tag tag--draft">待确认</span>主站侧栏画布列表用</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Locate"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Locate</button></td><td>定位、定位到画布</td><td><span class="tag tag--draft">待确认</span>画布 Agent 生成结果「定位到画布」用</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-text-format">文本格式 <span class="ic-count">9</span></h3>
+      <p>文本节点工具栏里的标题、加粗、斜体、字号、列表、分割线。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="H1"></i></td><td><button class="ic-name" type="button" title="点击复制名字">H1</button></td><td>标题 1</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="H2"></i></td><td><button class="ic-name" type="button" title="点击复制名字">H2</button></td><td>标题 2</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="H3"></i></td><td><button class="ic-name" type="button" title="点击复制名字">H3</button></td><td>标题 3</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="TextBold"></i></td><td><button class="ic-name" type="button" title="点击复制名字">TextBold</button></td><td>加粗</td><td>旧名 TextBlod</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="TextItalic"></i></td><td><button class="ic-name" type="button" title="点击复制名字">TextItalic</button></td><td>斜体</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="FontSize"></i></td><td><button class="ic-name" type="button" title="点击复制名字">FontSize</button></td><td>字号设置</td><td>不要用于文本节点（用 Text）</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="OrderedList"></i></td><td><button class="ic-name" type="button" title="点击复制名字">OrderedList</button></td><td>有序列表</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="UnOrderedList"></i></td><td><button class="ic-name" type="button" title="点击复制名字">UnOrderedList</button></td><td>无序列表</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="DividingLine"></i></td><td><button class="ic-name" type="button" title="点击复制名字">DividingLine</button></td><td>分割线</td><td>自绘；旧名 DivdingLine</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-ratio">比例 <span class="ic-count">12</span></h3>
+      <p>生成参数里的画面比例。名字里的数字就是比例，比如 Square169 = 16:9。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="AutoAspect"></i></td><td><button class="ic-name" type="button" title="点击复制名字">AutoAspect</button></td><td>自动比例</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square11"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square11</button></td><td>1:1</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square43"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square43</button></td><td>4:3</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square34"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square34</button></td><td>3:4</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square169"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square169</button></td><td>16:9</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square916"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square916</button></td><td>9:16</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square23"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square23</button></td><td>2:3</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square32"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square32</button></td><td>3:2</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square14"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square14</button></td><td>1:4</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square41"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square41</button></td><td>4:1</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Square921"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Square921</button></td><td>9:21</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="OriginalProportions"></i></td><td><button class="ic-name" type="button" title="点击复制名字">OriginalProportions</button></td><td>原始比例</td><td>自绘</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-chat">对话与反馈 <span class="ic-count">13</span></h3>
+      <p>AI 对话里的点赞点踩、收藏、复制 Trace ID、思考过程、工具调用、反馈。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="ThumbsUp"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ThumbsUp</button></td><td>点赞</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ThumbsUpFill"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ThumbsUpFill</button></td><td>已点赞（实心）</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ThumbsDown"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ThumbsDown</button></td><td>点踩</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="ThumbsDownFill"></i></td><td><button class="ic-name" type="button" title="点击复制名字">ThumbsDownFill</button></td><td>已点踩（实心）</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Collect"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Collect</button></td><td>收藏</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="CollectSolid"></i></td><td><button class="ic-name" type="button" title="点击复制名字">CollectSolid</button></td><td>已收藏（实心）</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="CopyTraceID"></i></td><td><button class="ic-name" type="button" title="点击复制名字">CopyTraceID</button></td><td>复制 Trace ID</td><td>自绘</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Lightbulb"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Lightbulb</button></td><td>思考过程、灵感</td><td>旧名 Light，容易和「亮色模式」混淆，所以改名</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Tool"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Tool</button></td><td>工具调用</td><td>旧名 icon，按图形（扳手）改名</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Feedback"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Feedback</button></td><td>反馈</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Message"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Message</button></td><td>询问、对话、消息</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Send"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Send</button></td><td>发送、提交</td><td>上箭头</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="NewChat"></i></td><td><button class="ic-name" type="button" title="点击复制名字">NewChat</button></td><td>新对话、新建、编辑</td><td><span class="tag tag--draft">待确认</span>主站侧栏对话、画布分组的新建按钮用；和 Add 区分开</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-system">系统 <span class="ic-count">9</span></h3>
+      <p>首页、文档、语言、日历，主站侧栏导航（创作、探索、AI 工具、收起侧栏），积分（Kiwi）等全局入口。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="Home"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Home</button></td><td>首页</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Document"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Document</button></td><td>文档、教程</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Localization"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Localization</button></td><td>语言、国际化</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Calendar"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Calendar</button></td><td>日历、日期</td><td>旧名 calendar</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Create"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Create</button></td><td>创作、生成</td><td><span class="tag tag--draft">待确认</span>主站侧栏「创作」用</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Explore"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Explore</button></td><td>探索、发现</td><td><span class="tag tag--draft">待确认</span>主站侧栏「探索」用</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="AITools"></i></td><td><button class="ic-name" type="button" title="点击复制名字">AITools</button></td><td>AI 工具、应用</td><td><span class="tag tag--draft">待确认</span>主站侧栏「AI工具」用</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Sidebar"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Sidebar</button></td><td>侧栏、收起、展开</td><td><span class="tag tag--draft">待确认</span>主站侧栏收起 / 展开用</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Kiwi"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Kiwi</button></td><td>猕猴桃、积分、余额、消耗</td><td><span class="tag tag--draft">待确认</span>主站积分余额、生成按钮消耗用；颜色跟随所在位置，余额处用品牌绿</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-models">模型 Logo <span class="ic-count">13</span></h3>
+      <p>模型品牌 Logo，保持原样，不按 Lucide 重画。名字来自后端的模型配置，不要改名（Mdoel 拼错了也先不改，改之前要和后端确认）。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon" data-icon="Mdoel"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Mdoel</button></td><td>模型 Logo</td><td><span class="tag tag--draft">先不改</span>名字拼错了，应为 Model；代码里在用，改名前要和后端确认</td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Auto"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Auto</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Gemini"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Gemini</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Openai"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Openai</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Bytedance"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Bytedance</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Flux"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Flux</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Vidu"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Vidu</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Qwen"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Qwen</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Kling"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Kling</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Minimax"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Minimax</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="Sora"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Sora</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="HappyHorse"></i></td><td><button class="ic-name" type="button" title="点击复制名字">HappyHorse</button></td><td>模型 Logo</td><td></td></tr>
+            <tr data-row><td><i class="kv-icon" data-icon="grok"></i></td><td><button class="ic-name" type="button" title="点击复制名字">grok</button></td><td>模型 Logo</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="ic-group">
+      <h3 id="ic-brand">品牌 <span class="ic-count">1</span></h3>
+      <p>KIVI 字标等品牌图形。不进 Icon 统一组件，单独用；颜色已绑变量。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>图标</th><th>名字</th><th>意思</th><th>备注</th></tr></thead>
+          <tbody>
+            <tr data-row><td><i class="kv-icon is-logo" data-icon="Logo"></i></td><td><button class="ic-name" type="button" title="点击复制名字">Logo</button></td><td>KIVI 字标</td><td><span class="tag tag--draft">待确认</span>54×24，单独用；字母跟文字色，星星是品牌绿（brand/solid）；缩放时按比例拉；主站侧栏左上角用</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <p class="ic-empty" id="ic-empty" hidden>没有找到。换个词试试，或者按「怎么加新图标」去加。</p>
+
+  <!-- ==================== 旧名对照 ==================== -->
+
+  <h2 id="aliases">旧名对照</h2>
+  <p>改名和合并的对照表。旧名是代码和 iconfont 里现在用的名字，新名是图标库里的组件名。来自 Figma「图标」页的迁移映射，共 10 条。</p>
+  <div class="table-wrap ic-alias">
+    <table>
+      <thead><tr><th>旧名</th><th>新名</th><th>类型</th><th>说明 · 代码影响</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td><code>upload</code></td><td><code>Upload</code></td><td>改名</td><td>统一首字母大写。代码 8 处：ai-chat 技能弹窗 3 处、media-node-renderer、create-tab-content 2 处、node-list、left-toolbar</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td><code>text</code></td><td><code>Text</code></td><td>改名</td><td>统一首字母大写，图形改成带框的 T。代码 2 处：left-toolbar、文本节点空状态（custom-component）。另外 node-list 的「文本生成」误用了 FontSize，也要改成 Text</td><td><span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td><code>TextBlod</code></td><td><code>TextBold</code></td><td>改名</td><td>拼写错误。代码 1 处：文本节点工具栏 topbar-content</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td><code>DivdingLine</code></td><td><code>DividingLine</code></td><td>改名</td><td>拼写错误。代码 1 处：文本节点工具栏 topbar-content</td><td><span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td><code>Light</code></td><td><code>Lightbulb</code></td><td>改名</td><td>容易和「亮色模式」混淆。代码 1 处：AI 对话 ReasonContent</td><td><span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td><code>icon</code></td><td><code>Tool</code></td><td>改名</td><td>名字没有含义，按图形（扳手）改名。代码 2 处：SkillSelectorPopover、SkillMentionPopup</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td><code>calendar</code></td><td><code>Calendar</code></td><td>改名</td><td>统一首字母大写。代码 1 处：TimeRangeFilter / DateField</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td><code>Cutting1</code></td><td><code>Cutting</code></td><td>合并</td><td>和 Cutting 重复。代码 1 处：添加节点面板 node-list</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td><code>Snap1</code></td><td><code>Snap</code></td><td>合并</td><td>和 Snap 重复。代码 1 处：画布底部工具栏 bottom-toolbar（吸附开关）</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td><code>ShowConnections-1</code></td><td><code>ShowConnections</code></td><td>合并</td><td>和 ShowConnections 重复。代码 1 处：画布底部工具栏 bottom-toolbar</td><td><span class="tag tag--off">草稿</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><strong>状态</strong>：草稿 = 图标库里已经改好，代码还没改；待确认 = 新图标的图形还要再看一下；稳定 = 前端改完、iconfont 也换好了。目前没有稳定的。</li>
+    <li><strong>上线顺序</strong>：先在 iconfont 里上传新名字的图标，旧名字的先别删；等前端把代码里的旧名都换完并发版，再删 iconfont 里的旧名。这样中间任何时候都不会出现图标显示不出来。</li>
+  </ul>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 这一页的搜索和复制名字（演示用）
+  (function () {
+    var q = document.getElementById('ic-q');
+    var found = document.getElementById('ic-found');
+    var empty = document.getElementById('ic-empty');
+    var rows = [].slice.call(document.querySelectorAll('.ic-table tr[data-row]'));
+    var groups = [].slice.call(document.querySelectorAll('.ic-group'));
+    var texts = rows.map(function (r) { return r.textContent.toLowerCase(); });
+    var table = document.getElementById('icon-table');
+
+    function filter() {
+      var words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
+      var shown = 0;
+      rows.forEach(function (r, i) {
+        var ok = words.every(function (w) { return texts[i].indexOf(w) >= 0; });
+        r.hidden = !ok;
+        if (ok) shown++;
+      });
+      groups.forEach(function (g) {
+        g.hidden = !g.querySelector('tr[data-row]:not([hidden])');
+      });
+      empty.hidden = shown > 0;
+      found.textContent = words.length ? '找到 ' + shown + ' 个' : '共 ' + rows.length + ' 个';
+    }
+
+    q.addEventListener('input', function () {
+      filter();
+      // 输入后，如果还没滚到图标表，就跳过去
+      if (q.value && table.getBoundingClientRect().top > window.innerHeight * 0.6) {
+        table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    // 点名字复制名字
+    document.querySelector('.ic-table').addEventListener('click', function (e) {
+      var b = e.target.closest('.ic-name');
+      if (!b) return;
+      KiviShell.copyText(b.textContent, function () {
+        b.classList.add('is-copied');
+        clearTimeout(b._t);
+        b._t = setTimeout(function () { b.classList.remove('is-copied'); }, 1000);
+      });
+    });
+
+    filter();
+  })();
+</script>
+</body>
+</html>

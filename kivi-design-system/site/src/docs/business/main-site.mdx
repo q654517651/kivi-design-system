@@ -1,0 +1,255 @@
+import { Demo, PageHeader } from '@shell';
+import { PreviewHost } from '../components/video-player.demos';
+import PromptBoxDoc from './main-site-prompt-box.mdx';
+import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
+
+<style>{`
+  /* 这一页的演示用 */
+
+  /* 主站的底色是 base，GenPrompt 盖字的渐变也是 base，演示台也用 base，不用网站默认的浅灰 */
+  .shell-demo-preview:not([data-stage="media"]),
+  .shell-pg-stage:not(.is-media) {
+    background: var(--color-bg-fill-base);
+  }
+
+  /* 结果格在记录里宽度跟格子走，演示台里限成 Figma 的 256 */
+  .shell-pg-stage > .kv-result-tile,
+  .shell-demo-preview > .kv-result-tile {
+    width: 256px;
+  }
+
+  /* 记录头拉满，演示台里限个宽度，方便看换行 */
+  .shell-pg-stage > .kv-gen-prompt,
+  .shell-demo-preview > .kv-gen-prompt {
+    max-width: 640px;
+  }
+
+  /* 属性面板里记录头的浮层往下开，台子留够高度 */
+  .ms-pg-gen-prompt .shell-pg-stage {
+    align-items: flex-start;
+    min-height: 400px;
+    padding-top: 72px;
+  }
+`}</style>
+
+<PageHeader
+  eyebrow="业务组件"
+  title="主站"
+  lead="主站的业务组件：生成记录的记录头 GenPrompt 和结果格 ResultTile，创作输入框 PromptBox。"
+  figma={['主站', '422:658']}
+  status="待确认 0.1.0"
+  code="kivi/main-site"
+/>
+
+<PreviewHost />
+
+## 示例：一条记录
+
+### 4 张 · 同比例 1:1，第 2 张悬停
+
+<Demo code={`
+() => {
+  const top = [
+    { icon: 'Delete', label: '删除' },
+    { icon: 'Download', label: '下载' },
+  ];
+  const quick = [
+    { icon: 'ImageEditing', label: '图片编辑' },
+    { icon: 'VideoGeneration', label: '图生视频' },
+    { icon: 'ImageToImage', label: '一键垫图' },
+    { icon: 'More', label: '更多' },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+      <GenPrompt prompt="生成一张赛博朋克风格的猕猴桃海报">
+        <Tag icon="ImageGeneration">图片生成</Tag>
+        <Tag icon="Bytedance">Seedance 2.0 Fast</Tag>
+        <Tag>2K</Tag>
+        <Tag>1:1</Tag>
+      </GenPrompt>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+        <ResultTile src="./placeholders/ip-gouache-1x1.webp" />
+        <ResultTile className="is-hover" src="./placeholders/kivi-future-1x1.webp" topActions={top} collect quickActions={quick} />
+        <ResultTile src="./placeholders/bunny-gouache-1x1.webp" />
+        <ResultTile src="./placeholders/ip-kiwi-pile-1x1.webp" />
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button variant="light">重新编辑</Button>
+        <Button variant="light">再次生成</Button>
+        <Button variant="light">删除整组</Button>
+      </div>
+    </div>
+  );
+}
+`} />
+
+### 4 张 · 生成中和失败混在一起
+
+<Demo code={`
+<div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+  <GenPrompt
+    length="long"
+    prompt="生成一张赛博朋克风格的猕猴桃海报：霓虹灯下的未来都市街道，雨夜反光的路面，巨大的全息广告牌上写着 KIVI，画面中央是一颗发光的猕猴桃切面，周围漂浮着数据流和粒子，电影级光影，广角镜头，高对比度，细节丰富，8K 质感，整体色调以青色和品红色为主，带一点胶片颗粒。"
+  >
+    <Tag icon="ImageGeneration">图片生成</Tag>
+    <Tag icon="Bytedance">Seedance 2.0 Fast</Tag>
+    <Tag>2K</Tag>
+    <Tag>1:1</Tag>
+  </GenPrompt>
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+    <ResultTile src="./placeholders/kivi-future-1x1.webp" />
+    <ResultTile status="loading" badge="59s 生成中" />
+    <ResultTile status="loading" badge="生成中" src="./placeholders/kivi-future-1x1.webp" />
+    <ResultTile status="failed" />
+  </div>
+  <div style={{ display: 'flex', gap: 8 }}>
+    <Button variant="light">重新编辑</Button>
+    <Button variant="light">再次生成</Button>
+    <Button variant="light">删除整组</Button>
+  </div>
+</div>
+`} />
+
+## GenPrompt
+
+<GenPromptPlayground />
+
+## ResultTile
+
+<ResultTilePlayground />
+
+<PromptBoxDoc components={props.components} />
+
+## 参数
+
+### GenPrompt
+
+一条记录最上面那块：提示词 + 参数，垂直排列，间距 4。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `length` | `"short"` `"long"` | `"short"` | 短 / 超出两行。超出两行最多 2 行，末尾省略，复制按钮放在第二行行尾，左边 40 的渐变从透明过渡到底色 base 盖住截断的文字（放在别的底色上改 `--kv-gen-prompt-bg`） |
+| `prompt` | `ReactNode` | — | 提示词，14 / 22 常规，primary。没有提示词就不显示这一行（照线上）；工具类任务（抠图、高清…）不传，只显示参数 |
+| `onCopy` | `() => void` | — | 点复制按钮（IconButton 28 · 轻）。有提示词就固定显示，和文字间距 6 `--spacing-6` |
+| `children` | `ReactNode` | — | 参数：一排 Tag（任务类型、模型、清晰度、比例、时长…），间距 6，放不下换行；参考区 `GenPromptRefs` 也放在这里。工具类任务的第一个 Tag 带工具图标（抠图 `Rmbg`、扩图 `Expand`、重绘 `SmartEditing`、高清 `HD`、元素去除 `RemoveEle`、视频拼接 `Connecting`…），参考区写「原图」或「原视频」 |
+
+### GenPromptRefs
+
+GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆角 6 `--border-radius-6`，底 container-light-1，内边距 4 / 6 / 4 / 4（上右下左），元素间距 4，缩略图 AssetThumb 16。悬停时下面弹出玻璃浮层显示全部素材：圆角 8，内边距 6，间距 6，ReferenceItem 72，一行最多 5 个。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `items` | `GenPromptRefItem[]` | — | 参考素材，必填，图片、视频（首帧）、音频可以混排。最多露 5 格，超过 5 个第 5 个渐隐；浮层里显示全部 |
+| `label` | `ReactNode` | — | 参考方式文字，必填，12 / 20 常规，secondary，比如「全能参考」「参考图」「原图」 |
+
+`items` 每一项：
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"video"` `"audio"` | — | 素材类型，视频用首帧 |
+| `src` | `string` | — | 图片或视频首帧的地址，音频不用 |
+| `duration` | `string` | — | 视频、音频的时长，比如 `"5s"` `"12s"`，只在浮层里显示，在 ReferenceItem 左下角 |
+
+### ResultTile
+
+一条记录里的一张图或一段视频，每格任务独立。默认 256 方，宽高随排版改；底 surface，描边 border-subtle 1，圆角 6 `--border-radius-6`，内容裁切。悬停才出操作（150ms）。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"video"` | `"image"` | 图片 / 视频。视频就是播放器 VideoPlayer 小号（见「播放器」页），时长、悬停播放、控制条都在里面 |
+| `status` | `"done"` `"loading"` `"failed"` | `"done"` | 完成 / 生成中 / 失败。生成中分两种：第一次生成（没有原素材）只有 `GeneratingDots` 铺满，没有遮罩；重新生成（传了 `src`）原素材 + 遮罩 `--color-bg-fill-container-dark`（黑 40%）+ 背景模糊 24（CSS `blur(12px)`），上面叠 `GeneratingDots` 和角标；失败：EmptyState 小 · 生成失败，居中，右上操作和 children 照常渲染（失败的格子还能删除）。悬停由鼠标触发 |
+| `src` | `string` | — | 图片是图片地址，视频是视频文件。生成中传了就是「有原素材」的样子（见 `status`） |
+| `poster` | `string` | — | 视频封面，没播时显示；不传是首帧 |
+| `fit` | `boolean` | `false` | 比例和格子不一致时画面完整显示，留底色；默认铺满，居中裁切 |
+| `badge` | `ReactNode` | — | 任务角标，左上，Tag · 浮层，离边 8。生成中用，比如「59s 生成中」 |
+| `topActions` | `ResultTileAction[]` | — | 右上操作：删除、下载，合成一条 ButtonGroup（IconButton 28 · 文字），每个都带 Tooltip（文字用 `label`），离边 8。失败时也显示 |
+| `collect` | `boolean` | `false` | 完成：右上按钮条最后放收藏（`Collect`，收藏了换 `CollectSolid`，图标 `--color-brand-solid` 绿色）。没收藏时悬停才出现；收藏了，鼠标移开后右上还留一个绿星（只是标记，点不到），悬停换回整条（150ms） |
+| `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 完成：收藏了没有。传了 `collected` 就是受控；`onCollectedChange(collected)` 点收藏时触发 |
+| `quickActions` | `ResultTileAction[]` | — | 左下快捷操作，合成一条 ButtonGroup，离边 8，最后一个是「更多」。视频要抬到控制条上面，离底 46 |
+| `onPreview` | `(currentTime) => void` | — | 视频右下「预览」，打开大号预览接着放；不传就没有这个按钮 |
+| `failedText` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败时的文字 |
+
+`ResultTileAction` 每一项：`icon`（`IconName`）、`label`（`string`，读屏和 Tooltip 用）、`onClick`。
+
+### PromptBox
+
+外框底 container-light-1，描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`，宽度拉满；内容区和工具条间距 12 `--spacing-12`。提示词 14 / 20 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `value` | `string` | — | 提示词。传了就是受控，要在 `onChange` 里更新 |
+| `defaultValue` | `string` | — | 非受控的初始提示词 |
+| `onChange` | `(value: string) => void` | — | 提示词变了触发，参数是新的文字 |
+| `placeholder` | `string` | — | 没输入时的占位文字，随模式变，比如「描述你想生成的视频，@ 引用参考素材」 |
+| `references` | `ReactNode` | — | 参考区，在提示词左边，间距 24 `--spacing-24`，从顶端对齐：`ReferenceStack`，或首尾帧的两格（`ReferenceItem` 72 + `ReferenceAddSlot`）。不传没有参考区，提示词从最左边开始。展开时浮在提示词上面，被盖住的字由输入框藏起来 |
+| `toolbar` | `ReactNode` | — | 工具条左边，间距 6 `--spacing-6`：任务类型、模型、参考方式、参数、其他开关。一般是 `Select variant="plain"`，放不下换行 |
+| `actions` | `ReactNode` | — | 工具条右边，间距 8 `--spacing-8`：张数 + `GenerateButton` |
+| `maxHeight` | `number` | `240` | 提示词最高多高，单位 px，超过就在里面滚动 |
+| `onDropFiles` | `(files: File[]) => void` | — | 把文件拖进输入框时触发，参数是文件列表。不传就不接收拖拽 |
+| `inputRef` | `Ref<HTMLTextAreaElement>` | — | 提示词输入框的 ref，聚焦、选中用 |
+| `inputLabel` | `string` | `"提示词"` | 输入框的说明，读屏用 |
+
+工具条里的 Select 无底：高 32，圆角 8，左右 8，13 号字，左图标 16，右箭头 16 tertiary，悬停白 8%。参数把分辨率、比例、时长合成一个 Select，写「720P · 16:9 · 8s」。
+
+### ReferenceStack
+
+放进 `PromptBox` 的 `references` 里用。72 见方，圆角 8。空：只有添加格（白 4%）；一个：卡片正放，右下角 24 的圆形上传按钮；多个：卡片缩到 56 叠放，最后加的在最上面，露 3 张，底部写最上面那张的名字。鼠标移上去向右展开，卡片 72，间距 6，展开收起 400ms 起每多一张加 10ms、最多 700ms，缓动 `--motion-ease-expand`；移开收回。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `items` | `ReferenceStackItem[]` | — | 参考素材，必填，按添加顺序排，最后一个是叠放时最上面那张。每项见下表 |
+| `onAdd` | `() => void` | — | 点添加格、右下角圆形上传按钮时触发：弹出选文件，选完把素材加进 `items` |
+| `onRemove` | `(id: string) => void` | — | 点卡片右上角的删除时触发，参数是素材的 `id`：从 `items` 里去掉它 |
+| `onItemClick` | `(item: ReferenceStackItem) => void` | — | 点卡片时触发，预览大图用 |
+| `expanded` | `boolean` | — | 展开（受控）：传 `true` 一直展开。不传是鼠标移上去展开、移开收起，键盘聚焦也展开 |
+| `defaultExpanded` | `boolean` | `false` | 非受控时的初始状态 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开、收起时触发，参数是展开了没有 |
+| `maxWidth` | `number` | 输入框内容区宽度 | 展开后最宽多宽，超过横向滚动 |
+
+`items` 每一项：
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `id` | `string` | — | 唯一标识，增删时用它认哪一张 |
+| `kind` | `"image"` `"video"` `"audio"` | — | 类型。视频用封面当缩略图，音频是渐变底加音符 |
+| `name` | `string` | — | 名字，写在卡片底部，比如「图片1」，要和提示词里 @ 引用的一致。`referenceName(items, kind)` 按类型给出下一个编号 |
+| `src` | `string` | — | 缩略图地址：图片、视频封面。音频不用 |
+| `duration` | `string` | — | 时长，视频、音频用，比如 `"8s"` `"15s"`，展开后显示在卡片左上角 |
+| `progress` | `number` | — | 上传进度 0–100。不传就是已经上传完；传了卡片盖一层黑 40%，中间是进度环 28 |
+
+### GenerateButton
+
+就是主要类型的 Button：品牌渐变底，on-brand 字，左图标固定 `Kiwi` 20，文字固定是消耗数，间距 4。宽度跟着数字走，最小 64。其余 Button 属性都能传（`variant`、图标除外）。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `cost` | `number` `string` | — | 这次生成消耗的猕猴桃数，必填，写在图标右边 |
+| `size` | `"sm"` `"md"` `"lg"` | `"md"` | 同按钮：高 28 / 32 / 36。Figma 里是中号 32，圆角 8，左右 12，文字 13 |
+| `loading` | `boolean` | `false` | 点了等结果时用：猕猴桃换成转圈，数字和宽度不变，不能点 |
+| `disabled` | `boolean` | `false` | 参数不全或正在生成时用 |
+| `aria-label` | `string` | `"生成，消耗 N 个猕猴桃"` | 读屏用，N 是 `cost` |
+
+### ReferenceAddSlot
+
+添加格，72 见方，白 4% 底，中间 `AddSmall` 20。首尾帧里没放素材的那一格用，图片生成、音频生成没素材时也放它。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `onClick` | `() => void` | — | 点一下上传 |
+| `aria-label` | `string` | `"添加参考素材"` | 读屏用 |
+
+### ToolbarDivider
+
+工具条里的竖线，1 × 16，border，前后间距同工具条 6，把参数组和后面的开关隔开。没有专有属性，其余原生 `<span>` 属性都能传。
+
+### ToolbarSwitch
+
+文字加 Switch：13 号字 + Switch 36 × 20，间距 8，左右各留 6，点文字也能切换。其余原生 `<label>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `label` | `string` | — | 开关的文字，必填，比如「样片模式」 |
+| `checked` | `boolean` | — | 开 / 关。传了就是受控 |
+| `defaultChecked` | `boolean` | `false` | 非受控时的初始值 |
+| `onChange` | `(checked: boolean) => void` | — | 切换时触发，参数是切换后的值 |
+| `disabled` | `boolean` | `false` | 禁用 |

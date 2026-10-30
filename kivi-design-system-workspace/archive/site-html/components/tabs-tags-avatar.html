@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>选项卡、标签和头像 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../kivi/tabs-tags-avatar.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用：旧名对照里「废弃」的状态标 */
+    .tag--danger { background: var(--color-status-danger-subtle); color: var(--color-status-danger); }
+  </style>
+</head>
+<body data-root="../" data-page="tabs-tags-avatar">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">通用组件</p>
+    <h1>选项卡、标签和头像</h1>
+    <p class="doc-lead">四个组件：TabItem 一个组件管选项卡和分段两种用法；Tag 展示参数和状态，盖在图片上的小角标也算标签；Avatar 统一成 3 档；AssetThumb 是素材的小预览。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=183-627" target="_blank" rel="noopener">「选项卡、标签和头像」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">待确认 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/tabs-tags-avatar.css</code></dd></div>
+    </dl>
+  </header>
+
+  <p style="margin-top:24px">勾选框在「选择控件」页。选项卡组、标签组、作者信息这些组合，Figma 放在「模板 · 通用」页，这里的「用法」里也摆了。点了要执行动作的用按钮，不用这一页的组件。</p>
+
+  <!-- ==================== TabItem ==================== -->
+
+  <h2 id="tab-item">TabItem</h2>
+  <p>一个组件管两种用法，用「样式」切换：选项卡切换下面整块内容，分段在一条底槽里选一个参数值。在右边面板选属性，和 Figma 右侧属性面板一样。面板调的是第一项，另外两项是陪衬。</p>
+  <div id="pg-tab-item"></div>
+
+  <h3>用途</h3>
+  <ul>
+    <li><strong>选项卡</strong>：切换下面整块内容，比如「全部 / 收藏」「图片 / 视频」。</li>
+    <li><strong>分段</strong>：在一条底槽里选一个参数值，比如比例、分辨率。</li>
+  </ul>
+  <p>切换内容用选项卡，选一个参数值用分段，两个不要混。</p>
+
+  <h3>结构</h3>
+  <p>一项 = 左图标（可选）+ 文字。一组里同一时间只有一个选中。</p>
+  <ul>
+    <li><strong>选项卡 · 横排</strong>：左图标（可选，16）+ 文字，间距 6。没有底槽，一组选项卡之间间距 4。</li>
+    <li><strong>分段 · 横排</strong>：只有文字，没有左图标。放进底槽，选项设成「填满」，平分宽度。</li>
+    <li><strong>分段 · 竖排</strong>：图标 20 在上，12 号字在下，间距 4，56 × 56。只有分段、中号用，比如比例选择。</li>
+    <li>一组放进 <code>kv-tab-group</code>；分段的底槽是 <code>kv-tab-group--segment</code>：内边距 4、圆角 12、底白 8%。这两个来自「模板 · 通用」页，不是组件。<span class="tag tag--draft">待确认</span></li>
+  </ul>
+  <ul>
+    <li><strong>选项卡</strong>：一组放进 <code>role="tablist"</code>，每项 <code>role="tab"</code>，选中用 <code>aria-selected="true"</code>。对应的内容区用 <code>role="tabpanel"</code>，用 <code>aria-controls</code> 连上。</li>
+    <li><strong>分段</strong>：选的是一个值，不是换一块内容，所以用 <code>role="radiogroup"</code>，每项 <code>role="radio"</code>，选中用 <code>aria-checked="true"</code>。</li>
+    <li>选中的一项 <code>tabindex="0"</code>，其他 <code>-1</code>；左右方向键移动选中。库里不带脚本，演示里有写。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>文字</td><td>选项上的字</td><td>按钮里的文字</td></tr>
+        <tr><td>样式</td><td>选项卡 / 分段</td><td><code>kv-tab-item--tab</code>（默认）/ <code>--segment</code></td></tr>
+        <tr><td>布局</td><td>横排 / 竖排</td><td>横排是默认；竖排 <code>--vertical</code></td></tr>
+        <tr><td>尺寸</td><td>中 / 大</td><td><code>kv-tab-item--md</code> / <code>--lg</code>，中是默认；竖排不写尺寸</td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 选中 / 禁用</td><td>悬停由鼠标触发；选中 <code>aria-selected="true"</code>（分段用 <code>aria-checked="true"</code>）；禁用 <code>disabled</code></td></tr>
+        <tr><td>左图标</td><td>开 / 关</td><td>放不放 <code>&lt;i class="kv-icon"&gt;</code>，只有选项卡横排有</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>竖排只有分段、中号；选项卡没有竖排。竖排自带图标，不用开「左图标」。</li>
+    <li>分段横排没有左图标。</li>
+  </ul>
+
+  <h3>样子</h3>
+  <h4>尺寸</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>尺寸</th><th>高</th><th>左右内边距</th><th>文字</th><th>行高</th><th>圆角</th><th>间距</th></tr></thead>
+      <tbody>
+        <tr><td>中（默认）</td><td>32</td><td>12 · <code>--spacing-md</code></td><td>13 · <code>--font-size-13</code></td><td>20</td><td>8 · <code>--border-radius-sm</code></td><td>图标和文字 6 · <code>--spacing-xs</code></td></tr>
+        <tr><td>大</td><td>36</td><td>16 · <code>--spacing-lg</code></td><td>14 · <code>--font-size-14</code></td><td>22</td><td>8 · <code>--border-radius-sm</code></td><td>图标和文字 6 · <code>--spacing-xs</code></td></tr>
+        <tr><td>竖排</td><td>56（宽 56）</td><td>0</td><td>12 · <code>--font-size-12</code></td><td>20</td><td>8 · <code>--border-radius-sm</code></td><td>图标和文字 4 · <code>--spacing-xxs</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>字重都是常规（400），选中也不加粗，免得切换时宽度跳动。</li>
+    <li>左图标 16，竖排的图标 20，颜色跟文字走。</li>
+  </ul>
+
+  <h4>样式和状态</h4>
+  <p>悬停在这里摆成静态的，方便对照；鼠标移上去也能试。分段单独放时宽度是 Figma 变体的 80 / 88，放进底槽后平分。</p>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-tab-item"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>样式</th><th>默认</th><th>悬停</th><th>选中</th><th>禁用</th></tr></thead>
+      <tbody>
+        <tr><td>选项卡</td><td>透明；文字 text-fill-secondary</td><td>透明；文字 primary，只有字变白</td><td>container-light-1（白 8%）；文字 primary</td><td>透明；文字 text-fill-disabled（白 20%）</td></tr>
+        <tr><td>分段</td><td>透明；文字 text-fill-secondary</td><td>container-light-2（白 4%）；文字不变</td><td>container-light-1-hover（白 12%）；文字 primary</td><td>透明；文字 text-fill-disabled（白 20%）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>底色和文字颜色的变化 100ms ease-in-out，见「动效」。Figma 没有选中滑块，选中项直接换底色，不做位移动画。</li>
+    <li>Figma 没有「按下」状态，也没定焦点样式；焦点用浏览器默认。</li>
+  </ul>
+
+  <h4>分段的底槽</h4>
+  <p>选项等宽平分，选项之间没有间距。底槽比选项高 8（上下各 4）：中号 40，大号 44，竖排 64。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部位</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>内边距</td><td>4</td><td><code>--spacing-xxs</code></td></tr>
+        <tr><td>圆角</td><td>12</td><td><code>--border-radius-md</code></td></tr>
+        <tr><td>底色</td><td>白 8%</td><td><code>--color-bg-fill-container-light-1</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>尺寸</strong>：页面顶部用大号 36，面板和弹窗里用中号 32。</li>
+    <li><strong>选项卡</strong>：切换的是下面整块内容。没有底槽，一组之间间距 4。</li>
+    <li><strong>分段</strong>：选一个参数值，比如分辨率、比例。放进底槽，选项设成「填满」平分宽度。</li>
+    <li><strong>竖排</strong>：图标 + 文字的选项，比如比例选择。</li>
+    <li><strong>禁用</strong>：条件不满足时用。</li>
+  </ul>
+
+  <h4>页面顶部：选项卡，大号，切换内容</h4>
+  <p>点一下切换，用 <code>aria-selected</code> 记状态；左右方向键也行。</p>
+  <div data-demo>
+    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:var(--spacing-lg);width:100%">
+      <div class="kv-tab-group" role="tablist" aria-label="作品类型">
+        <button class="kv-tab-item kv-tab-item--lg kv-tab-item--tab" type="button" role="tab" id="tab-all" aria-selected="true" aria-controls="panel-all">全部</button>
+        <button class="kv-tab-item kv-tab-item--lg kv-tab-item--tab" type="button" role="tab" id="tab-image" aria-selected="false" aria-controls="panel-image" tabindex="-1">图片</button>
+        <button class="kv-tab-item kv-tab-item--lg kv-tab-item--tab" type="button" role="tab" id="tab-video" aria-selected="false" aria-controls="panel-video" tabindex="-1">视频</button>
+        <button class="kv-tab-item kv-tab-item--lg kv-tab-item--tab" type="button" role="tab" id="tab-fav" aria-selected="false" aria-controls="panel-fav" tabindex="-1">收藏</button>
+      </div>
+      <div role="tabpanel" id="panel-all" aria-labelledby="tab-all" style="color:var(--color-text-fill-secondary)">全部作品</div>
+      <div role="tabpanel" id="panel-image" aria-labelledby="tab-image" style="color:var(--color-text-fill-secondary)" hidden>图片作品</div>
+      <div role="tabpanel" id="panel-video" aria-labelledby="tab-video" style="color:var(--color-text-fill-secondary)" hidden>视频作品</div>
+      <div role="tabpanel" id="panel-fav" aria-labelledby="tab-fav" style="color:var(--color-text-fill-secondary)" hidden>收藏的作品</div>
+    </div>
+  </div>
+
+  <h4>面板里：选项卡，中号</h4>
+  <div data-demo>
+    <div class="kv-tab-group" role="tablist" aria-label="模型来源">
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--tab" type="button" role="tab" aria-selected="true">我的模型</button>
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--tab" type="button" role="tab" aria-selected="false" tabindex="-1">收藏</button>
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--tab" type="button" role="tab" aria-selected="false" tabindex="-1">最近使用</button>
+    </div>
+  </div>
+
+  <h4>带左图标：选项卡，中号</h4>
+  <div data-demo>
+    <div class="kv-tab-group" role="tablist" aria-label="素材类型">
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--tab" type="button" role="tab" aria-selected="true">
+        <i class="kv-icon" data-icon="ImageGeneration"></i>图片
+      </button>
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--tab" type="button" role="tab" aria-selected="false" tabindex="-1">
+        <i class="kv-icon" data-icon="VideoGeneration"></i>视频
+      </button>
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--tab" type="button" role="tab" aria-selected="false" tabindex="-1">
+        <i class="kv-icon" data-icon="Music"></i>音频
+      </button>
+    </div>
+  </div>
+
+  <h4>分辨率：分段，两项</h4>
+  <p>底槽的宽度由外面定，选项平分。</p>
+  <div data-demo>
+    <div class="kv-tab-group kv-tab-group--segment" role="radiogroup" aria-label="分辨率" style="width:240px">
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--segment" type="button" role="radio" aria-checked="true">2K</button>
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--segment" type="button" role="radio" aria-checked="false" tabindex="-1">4K</button>
+    </div>
+  </div>
+
+  <h4>类型：分段，三项</h4>
+  <div data-demo>
+    <div class="kv-tab-group kv-tab-group--segment" role="radiogroup" aria-label="类型" style="width:320px">
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--segment" type="button" role="radio" aria-checked="true">图片</button>
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--segment" type="button" role="radio" aria-checked="false" tabindex="-1">视频</button>
+      <button class="kv-tab-item kv-tab-item--md kv-tab-item--segment" type="button" role="radio" aria-checked="false" tabindex="-1">音频</button>
+    </div>
+  </div>
+
+  <h4>比例：分段，竖排</h4>
+  <div data-demo>
+    <div class="kv-tab-group kv-tab-group--segment" role="radiogroup" aria-label="比例" style="width:388px">
+      <button class="kv-tab-item kv-tab-item--segment kv-tab-item--vertical" type="button" role="radio" aria-checked="true">
+        <i class="kv-icon" data-icon="AutoAspect"></i>智能
+      </button>
+      <button class="kv-tab-item kv-tab-item--segment kv-tab-item--vertical" type="button" role="radio" aria-checked="false" tabindex="-1">
+        <i class="kv-icon" data-icon="Square11"></i>1:1
+      </button>
+      <button class="kv-tab-item kv-tab-item--segment kv-tab-item--vertical" type="button" role="radio" aria-checked="false" tabindex="-1">
+        <i class="kv-icon" data-icon="Square43"></i>4:3
+      </button>
+      <button class="kv-tab-item kv-tab-item--segment kv-tab-item--vertical" type="button" role="radio" aria-checked="false" tabindex="-1">
+        <i class="kv-icon" data-icon="Square34"></i>3:4
+      </button>
+      <button class="kv-tab-item kv-tab-item--segment kv-tab-item--vertical" type="button" role="radio" aria-checked="false" tabindex="-1">
+        <i class="kv-icon" data-icon="Square169"></i>16:9
+      </button>
+      <button class="kv-tab-item kv-tab-item--segment kv-tab-item--vertical" type="button" role="radio" aria-checked="false" tabindex="-1">
+        <i class="kv-icon" data-icon="Square916"></i>9:16
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== Tag ==================== -->
+
+  <h2 id="tag">Tag</h2>
+  <p>在右边面板选类型、缩略图、左图标。</p>
+  <div id="pg-tag"></div>
+
+  <h3>用途</h3>
+  <p>展示参数、状态这类短信息，不能点。盖在图片、视频上的角标（时长、序号、4K）也是标签，用「覆盖」类型。旧的各种 badge 都并到这里。</p>
+
+  <h3>结构</h3>
+  <p>缩略图（可选）+ 左图标（可选）+ 文字，水平排列，间距 4，左右内边距 6。</p>
+  <ul>
+    <li>缩略图 16，圆角 2，放参考图。</li>
+    <li>左图标 16，比如模型 Logo；换图标在里面换。</li>
+    <li>任务角标 = 覆盖 +「59s 生成中」，不带图标。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>文字</td><td>标签上的字</td><td>标签里的文字</td></tr>
+        <tr><td>类型</td><td>默认 / 覆盖 / 品牌</td><td><code>kv-tag--default</code> / <code>--on-media</code> / <code>--brand</code></td></tr>
+        <tr><td>缩略图</td><td>开 / 关</td><td>放不放 <code>&lt;img&gt;</code>（<code>alt=""</code>）</td></tr>
+        <tr><td>左图标</td><td>开 / 关</td><td>放不放 <code>&lt;i class="kv-icon"&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>没有悬停、按下、禁用：标签不能点。</p>
+
+  <h3>样子</h3>
+  <h4>规格</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部位</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>高</td><td>24</td><td>—</td></tr>
+        <tr><td>左右内边距</td><td>6</td><td><code>--spacing-xs</code></td></tr>
+        <tr><td>元素间距</td><td>4</td><td><code>--spacing-xxs</code></td></tr>
+        <tr><td>圆角</td><td>6</td><td><code>--border-radius-xs</code></td></tr>
+        <tr><td>文字</td><td>12 常规，行高 20</td><td><code>--font-size-12</code></td></tr>
+        <tr><td>缩略图</td><td>16，圆角 2，垫底白 8%</td><td><code>--color-bg-fill-container-light-1</code></td></tr>
+        <tr><td>左图标</td><td>16</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>圆角：Figma 页面文字和迁移映射写的是 4，组件本身是 6（绑定 <code>--border-radius-xs</code>），这里按组件写 6。<span class="tag tag--draft">待确认</span></p>
+
+  <h4>类型</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>类型</th><th>底色</th><th>文字</th><th>左图标</th></tr></thead>
+      <tbody>
+        <tr><td>默认</td><td>container-light-1（白 8%）</td><td>text-fill-secondary</td><td>白，透明度 50%（<code>--opacity-50</code>）</td></tr>
+        <tr><td>覆盖</td><td>on-media/fill（黑 40%）</td><td>on-media/text（白）</td><td>白</td></tr>
+        <tr><td>品牌</td><td>brand/subtle（品牌绿 12%）</td><td>brand/solid</td><td>待定</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>覆盖没有背景模糊，只有黑 40% 的底。品牌类型的左图标颜色 Figma 没定，暂时跟文字走。<span class="tag tag--draft">待定</span></p>
+
+  <div data-demo="nocode" data-layout="matrix" id="matrix-tag"></div>
+  <p>覆盖类型放在图片上看：</p>
+  <div data-demo="nocode" data-stage="media" id="matrix-tag-media"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>默认</strong>：生成参数、状态，比如模型名、比例、分辨率。</li>
+    <li><strong>覆盖</strong>：盖在图片、视频上的时长、序号、4K。离图片边缘 8。</li>
+    <li><strong>品牌</strong>：少量需要用品牌色突出的状态，比如「已发布」。</li>
+    <li><strong>缩略图</strong>：带参考图的参数，比如会话流里的 LoRA。</li>
+    <li>能点、能删的不是标签，用 Button 或分段选择。</li>
+    <li>红点、数字角标（徽标）先不做，以后有消息提醒再加。</li>
+  </ul>
+
+  <h4>生成参数：一排默认标签</h4>
+  <div data-demo>
+    <div style="display:flex;align-items:center;gap:var(--spacing-xxs)">
+      <span class="kv-tag kv-tag--default">FLUX</span>
+      <span class="kv-tag kv-tag--default">1:1</span>
+      <span class="kv-tag kv-tag--default">1K</span>
+      <span class="kv-tag kv-tag--default">
+        <img src="../../assets/placeholders/ip-gouache-1x1.webp" alt="">写实人像
+      </span>
+    </div>
+  </div>
+
+  <h4>盖在图片上：覆盖</h4>
+  <div data-demo>
+    <div style="position:relative;width:200px;height:200px;overflow:hidden;border-radius:var(--border-radius-md);background:var(--color-bg-fill-container-light-1)">
+      <img src="../../assets/placeholders/ip-gouache-1x1.webp" alt="" style="display:block;width:100%;height:100%;object-fit:cover">
+      <span class="kv-tag kv-tag--on-media" style="position:absolute;top:var(--spacing-sm);left:var(--spacing-sm)">00:05</span>
+      <span class="kv-tag kv-tag--on-media" style="position:absolute;top:var(--spacing-sm);right:var(--spacing-sm)">4K</span>
+    </div>
+  </div>
+
+  <h4>状态：品牌 + 默认</h4>
+  <div data-demo>
+    <div style="display:flex;align-items:center;gap:var(--spacing-xxs)">
+      <span class="kv-tag kv-tag--brand">已发布</span>
+      <span class="kv-tag kv-tag--default">草稿</span>
+    </div>
+  </div>
+
+  <h4>任务角标：覆盖，不带图标</h4>
+  <div data-demo data-stage="media">
+    <span class="kv-tag kv-tag--on-media">59s 生成中</span>
+  </div>
+
+  <!-- ==================== Avatar ==================== -->
+
+  <h2 id="avatar">Avatar</h2>
+  <p>在右边面板选类型、尺寸。</p>
+  <div id="pg-avatar"></div>
+
+  <h3>用途</h3>
+  <p>圆形的用户头像。没有头像图时，显示用户名首字。会员头像框是运营装饰，不放进组件。</p>
+
+  <h3>结构</h3>
+  <ul>
+    <li><strong>图片</strong>：圆形，图片铺满，加载前垫白 8%。</li>
+    <li><strong>文字</strong>：圆形底，中间一个首字。</li>
+    <li>头像和名字的间距 8。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>类型</td><td>图片 / 文字</td><td><code>kv-avatar--image</code> / <code>--text</code></td></tr>
+        <tr><td>尺寸</td><td>16 / 24 / 32</td><td><code>kv-avatar--16</code> / <code>--24</code> / <code>--32</code>，16 是默认</td></tr>
+        <tr><td>首字</td><td>用户名的第一个字</td><td>文字类型里的文字</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>图片类型：<code>&lt;img&gt;</code> 的 <code>alt</code> 写用户名。</li>
+    <li>文字类型：写 <code>role="img"</code> 和 <code>aria-label</code>（用户名）。</li>
+  </ul>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>尺寸</th><th>用在哪</th><th>首字字号</th><th>行高</th></tr></thead>
+      <tbody>
+        <tr><td>16</td><td>卡片作者</td><td>10 · <code>--font-size-10</code></td><td>16</td></tr>
+        <tr><td>24</td><td>列表、对话</td><td>12 · <code>--font-size-12</code></td><td>20</td></tr>
+        <tr><td>32</td><td>详情作者、导航</td><td>14 · <code>--font-size-14</code></td><td>22</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>类型</th><th>底色</th><th>文字</th></tr></thead>
+      <tbody>
+        <tr><td>图片</td><td>container-light-1（白 8%），垫在图下面</td><td>—</td></tr>
+        <tr><td>文字</td><td>container-light-1-pressed（白 16%）</td><td>text-fill-primary，粗（500）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>圆角 <code>--border-radius-round</code>。头像没有悬停、按下、禁用状态。</p>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-avatar"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>16</strong>：卡片作者。<strong>24</strong>：列表、对话。<strong>32</strong>：详情作者、导航。</li>
+    <li>统一到 3 档：导航栏头像 36 → 32，技能市场作者头像 20 → 24。</li>
+    <li>没有头像图时用「文字」类型，显示用户名首字。</li>
+    <li>头像和名字的间距 8。</li>
+    <li>会员头像框不放进组件。</li>
+  </ul>
+
+  <h4>卡片作者：16 + 名字</h4>
+  <div data-demo>
+    <div style="display:flex;align-items:center;gap:var(--spacing-sm);font-size:var(--font-size-12);line-height:var(--font-line-height-20);color:var(--color-text-fill-secondary)">
+      <span class="kv-avatar kv-avatar--16 kv-avatar--image"><img src="../../assets/placeholders/ip-gouache-1x1.webp" alt="阿远"></span>
+      <span>阿远</span>
+    </div>
+  </div>
+
+  <h4>详情作者：32 + 名字 + 日期</h4>
+  <div data-demo>
+    <div style="display:flex;align-items:center;gap:var(--spacing-sm)">
+      <span class="kv-avatar kv-avatar--32 kv-avatar--image"><img src="../../assets/placeholders/ip-gouache-1x1.webp" alt="阿远"></span>
+      <div style="font-size:var(--font-size-12);line-height:var(--font-line-height-20);color:var(--color-text-fill-tertiary)">
+        <div style="font-size:var(--font-size-13);color:var(--color-text-fill-primary)">阿远</div>
+        2026-10-26
+      </div>
+    </div>
+  </div>
+
+  <h4>无头像：文字类型，24</h4>
+  <div data-demo>
+    <div style="display:flex;align-items:center;gap:var(--spacing-sm);font-size:var(--font-size-12);line-height:var(--font-line-height-20);color:var(--color-text-fill-secondary)">
+      <span class="kv-avatar kv-avatar--24 kv-avatar--text" role="img" aria-label="Kivi 用户">K</span>
+      <span>Kivi 用户</span>
+    </div>
+  </div>
+
+  <!-- ==================== AssetThumb ==================== -->
+
+  <h2 id="asset-thumb">AssetThumb</h2>
+  <p>在右边面板选类型、尺寸。</p>
+  <div id="pg-asset-thumb"></div>
+
+  <h3>用途</h3>
+  <p>素材的小预览。图片和视频首帧放图；音频用统一的渐变底加音符；没封面时用「图标」占位。</p>
+
+  <h3>结构</h3>
+  <ul>
+    <li><strong>图片</strong>：图片铺满。图片、视频首帧都用它。</li>
+    <li><strong>音频</strong>：渐变底 + 居中的音符（Music）。</li>
+    <li><strong>图标</strong>：白 8% 底 + 居中的图标，图标不透明度 30%。图标可换：对话用 Message，画布用 Canvas。</li>
+    <li>三种类型都有 1 的内描边。</li>
+    <li>序号、时长这类角标由外层叠加，不放进来。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>类型</td><td>图片 / 音频 / 图标</td><td><code>kv-asset-thumb--image</code> / <code>--audio</code> / <code>--icon</code></td></tr>
+        <tr><td>尺寸</td><td>16 / 24 / 56 / 72</td><td><code>kv-asset-thumb--16</code> / <code>--24</code> / <code>--56</code> / <code>--72</code>，16 是默认</td></tr>
+        <tr><td>图</td><td>缩略图的图片</td><td>图片类型里的 <code>&lt;img&gt;</code>（<code>alt=""</code>）</td></tr>
+        <tr><td>图标</td><td>音频固定 Music；图标类型可换</td><td><code>&lt;i class="kv-icon" data-icon="名字"&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>没有悬停、按下、禁用状态。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>尺寸</th><th>圆角</th><th>音符、占位图标</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr><td>16</td><td>4 · <code>--border-radius-xxs</code></td><td>12</td><td>@引用标签（MentionChip）、生成记录的参考区（GenPrompt）</td></tr>
+        <tr><td>24</td><td>4 · <code>--border-radius-xxs</code></td><td>12</td><td>菜单项（MenuItem）、侧栏列表（SidebarItem）</td></tr>
+        <tr><td>56</td><td>8 · <code>--border-radius-sm</code></td><td>24</td><td>参考图（ReferenceItem）</td></tr>
+        <tr><td>72</td><td>8 · <code>--border-radius-sm</code></td><td>24</td><td>输入框参考区、生成记录的悬停浮层（ReferenceItem 72）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>类型</th><th>底</th><th>中间</th><th>描边</th></tr></thead>
+      <tbody>
+        <tr><td>图片</td><td>图片铺满，没有底色</td><td>—</td><td rowspan="3">1 · border-subtle（白 8%），盖在图上</td></tr>
+        <tr><td>音频</td><td>从上到下渐变 #89A0BE → #7286AA</td><td>Music，白</td></tr>
+        <tr><td>图标</td><td>container-light-1（白 8%）</td><td>图标白，不透明度 30%（<code>--opacity-30</code>）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>音频渐变的两个颜色 Figma 里没有变量，写在 <code>kv-asset-thumb--audio</code> 上。原来 3 处各复制一份音频封面，渐变色还不一样，现在统一。</p>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-asset-thumb"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>图片</strong>：图片、视频首帧。<strong>音频</strong>：音频条目。<strong>图标</strong>：没封面时占位。</li>
+    <li>外层组件（MentionChip、MenuItem、ReferenceItem 等）已经暴露「类型」，直接切图片 / 音频 / 图标。</li>
+    <li>在 Figma 里换图：选中缩略图改填充；换占位图标：选中里面的图标换。</li>
+    <li>图标类型的颜色用图标图层的不透明度，不改图标本身的填充，换图标后颜色仍跟着组件走。</li>
+  </ul>
+
+  <h4>参考图：56，图片 / 音频 / 没封面</h4>
+  <div data-demo>
+    <span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></span>
+    <span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--audio"><i class="kv-icon" data-icon="Music"></i></span>
+    <span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--icon"><i class="kv-icon" data-icon="Message"></i></span>
+  </div>
+
+  <h4>列表项：24 + 名字</h4>
+  <div data-demo>
+    <div style="display:flex;align-items:center;gap:var(--spacing-sm);font-size:var(--font-size-13);line-height:var(--font-line-height-20);color:var(--color-text-fill-primary)">
+      <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--audio"><i class="kv-icon" data-icon="Music"></i></span>
+      <span>旁白配音.mp3</span>
+    </div>
+  </div>
+
+  <!-- ==================== 旧名对照 ==================== -->
+
+  <h2 id="migration">旧名对照</h2>
+  <p>代码和旧组件库里的选项卡、标签、角标、头像，对应到新组件的哪里。代码没改，前端按这张表改。这是 Figma「迁移映射」的搬运。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>旧</th><th>新</th><th>类型</th><th>说明</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td>代码 CustomTab（7 处，高 40，圆角 12，14 号）</td><td>TabItem · 大 36 / 中 32</td><td>改尺寸</td><td>高 40 → 36，圆角 12 → 8；选比例、分辨率这类值的改用分段选择器</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>代码 gen-info__badge · status-tag · tag-element（浅底小标签）</td><td>Tag · 默认</td><td>合并</td><td>高 24，底白 8%，12 号，圆角统一 4（组件实际 6，见 Tag 一节）</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>代码 ModelCard badge · 详情页 main-badge · 视频时长 · 参考图序号 · 文件夹角标（黑 40% 底）</td><td>Tag · 覆盖</td><td>合并</td><td>底色用 on-media/fill，圆角 6 / 8 统一成 4（组件实际 6，见 Tag 一节）</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>旧库 小标签（会话流参数：FLUX、1:1、Lora…）</td><td>Tag · 默认 + 缩略图</td><td>替换</td><td>会话流重构时一起换</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td>旧库 AI工具小标签（图标 + 文字，无底）</td><td>删除</td><td>删除</td><td>只是排版，用自动布局 + 图标 + 文字</td><td><span class="tag tag--danger">废弃</span></td></tr>
+        <tr><td>代码 Avatar（HeroUI，w-4 / w-8）· CustomAvatar（w-9）· 技能作者头像 20</td><td>Avatar · 16 / 24 / 32</td><td>改尺寸</td><td>导航 36 → 32，技能作者 20 → 24</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>代码 没有头像图时的灰色圆</td><td>Avatar · 文字</td><td>替换</td><td>显示用户名首字</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>旧库 头像（KIVI 标志）</td><td>待定</td><td>待定</td><td>AI 的头像等会话流重构时一起定</td><td><span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td>旧库 封面 · 头像框扩展 / 拆件</td><td>不收</td><td>不收</td><td>会员头像框是运营素材，留在设计稿里</td><td><span class="tag">稳定</span></td></tr>
+        <tr><td>MentionChip 里的 16 缩略图 · 音乐封面</td><td>AssetThumb 尺寸=16</td><td>新增</td><td>原来 3 处各复制一份音频封面，渐变色还不一样，统一成 #89A0BE → #7286AA</td><td><span class="tag">新增</span></td></tr>
+        <tr><td>MenuItem 缩略图（纯色块，放不了图标）</td><td>AssetThumb 尺寸=24</td><td>新增</td><td>音频条目切「音频」，补回音符</td><td><span class="tag">新增</span></td></tr>
+        <tr><td>ReferenceItem 的图片底 · 音频封面（56）</td><td>AssetThumb 尺寸=56</td><td>新增</td><td>序号、时长角标留在 ReferenceItem 里。前端可以把这 3 处的封面抽成一个组件</td><td><span class="tag">新增</span></td></tr>
+        <tr><td>TabItem（尺寸 · 状态）</td><td>TabItem 样式=选项卡，布局=横排（尺寸 · 状态不变）</td><td>加属性</td><td>新增「样式」「布局」两个属性；原来的 8 个变体样子不变</td><td><span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td>SegmentItem（类型=文字 / 图标 · 状态）</td><td>TabItem 样式=分段，布局=横排 / 竖排</td><td>合并</td><td>选中白 12%、悬停白 4% 不变；图标型 = 布局=竖排；新增 分段 · 大 36</td><td><span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td>模板/选项卡组 ×2、示例/生成参数、示例/卡片作者 / 详情作者 / 无头像；示例/图片卡片、状态</td><td>「模板 · 通用」页「选项卡」「标签组」「作者信息」分区；图片卡片、状态改名「示意 / …」留在本页</td><td>移动</td><td>示意只演示组件放在什么场景，不复制</td><td><span class="tag tag--draft">待确认</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 这一页的属性面板、状态矩阵和演示交互
+  (function () {
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+    var IMG = '../../assets/placeholders/';
+
+    // ---------- TabItem ----------
+
+    var TAB_ICONS = ['ImageGeneration', 'VideoGeneration', 'Music'];
+    var RATIO_ICONS = ['AutoAspect', 'Square11', 'Square43'];
+
+    // o: { style, layout, size, state, icon, text, roles }；roles 为 true 时带上 role 和 aria 状态
+    function tabItem(o) {
+      var seg = o.style === 'segment';
+      var cls = 'kv-tab-item kv-tab-item--' + (seg ? 'segment' : 'tab');
+      cls += o.layout === 'vertical' ? ' kv-tab-item--vertical' : ' kv-tab-item--' + o.size;
+      if (o.state === 'hover') cls += ' is-hover';
+      var attr = ' type="button"';
+      if (o.roles) attr += seg ? ' role="radio"' : ' role="tab"';
+      if (o.roles || o.state === 'selected') attr += (seg ? ' aria-checked="' : ' aria-selected="') + (o.state === 'selected') + '"';
+      if (o.roles && o.state !== 'selected') attr += ' tabindex="-1"';
+      if (o.state === 'disabled') attr += ' disabled';
+      var inner = '';
+      if (o.icon) inner += '\n  <i class="kv-icon" data-icon="' + o.icon + '"></i>';
+      inner += '\n  ' + esc(o.text);
+      return '<button class="' + cls + '"' + attr + '>' + inner + '\n</button>';
+    }
+
+    // 一组三项：第一项按面板，第二项补一个选中，第三项默认
+    function tabGroup(s) {
+      var seg = s.style === 'segment';
+      var vertical = seg && s.layout === 'vertical';
+      var icons = vertical ? RATIO_ICONS : TAB_ICONS;
+      var states = [s.state, s.state === 'selected' ? 'default' : 'selected', 'default'];
+      var texts = [s.text, '选项 2', '选项 3'];
+      var items = states.map(function (st, i) {
+        return tabItem({
+          style: s.style, layout: vertical ? 'vertical' : 'horizontal', size: s.size, state: st, text: texts[i],
+          icon: (vertical || (!seg && s.left)) ? icons[i] : '', roles: true
+        }).replace(/^/gm, '  ');
+      }).join('\n');
+      var open = seg
+        ? '<div class="kv-tab-group kv-tab-group--segment" role="radiogroup" aria-label="选项">'
+        : '<div class="kv-tab-group" role="tablist" aria-label="选项">';
+      return open + '\n' + items + '\n</div>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-tab-item'), {
+      controls: [
+        { key: 'style', label: '样式', type: 'segment', value: 'tab', options: [['tab', '选项卡'], ['segment', '分段']] },
+        { key: 'layout', label: '布局', type: 'segment', value: 'horizontal', options: [['horizontal', '横排'], ['vertical', '竖排']] },
+        { key: 'size', label: '尺寸', type: 'segment', value: 'md', options: [['md', '中'], ['lg', '大']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['selected', '选中'], ['disabled', '禁用']] },
+        { key: 'left', label: '左图标', type: 'toggle', value: false },
+        { key: 'text', label: '文字', type: 'text', value: '选项' }
+      ],
+      // 竖排只有分段、中号；竖排自带图标；分段横排没有左图标
+      rules: function (s) {
+        var vertical = s.style === 'segment' && s.layout === 'vertical';
+        var r = {};
+        if (s.style === 'tab') r.layout = ['vertical'];
+        if (vertical) r.size = ['lg'];
+        if (vertical || s.style === 'segment') r.left = true;
+        return r;
+      },
+      render: tabGroup
+    });
+
+    // 状态矩阵：行是样式 · 布局 · 尺寸，列是状态
+    function matrix(host, rows, cols, make) {
+      var html = '<table class="shell-matrix"><thead><tr><th></th>';
+      cols.forEach(function (c) { html += '<th>' + c[1] + '</th>'; });
+      html += '</tr></thead><tbody>';
+      rows.forEach(function (r) {
+        html += '<tr><th scope="row">' + r[1] + '</th>';
+        cols.forEach(function (c) { html += '<td>' + (make(r[0], c[0]) || '<span style="color:var(--color-text-fill-disabled)">—</span>') + '</td>'; });
+        html += '</tr>';
+      });
+      host.innerHTML = html + '</tbody></table>';
+      KiviIcons.render(host);
+    }
+
+    // 分段单独放时用 Figma 变体的宽度 80 / 88 / 56，方便对齐
+    var TAB_ROWS = [
+      ['tab-md', '选项卡 · 中 32', { style: 'tab', layout: 'horizontal', size: 'md' }],
+      ['tab-lg', '选项卡 · 大 36', { style: 'tab', layout: 'horizontal', size: 'lg' }],
+      ['seg-md', '分段 · 中 32', { style: 'segment', layout: 'horizontal', size: 'md', width: 80 }],
+      ['seg-lg', '分段 · 大 36', { style: 'segment', layout: 'horizontal', size: 'lg', width: 88 }],
+      ['seg-v', '分段 · 竖排 56', { style: 'segment', layout: 'vertical', size: 'md', icon: 'Add' }]
+    ];
+    var TAB_STATES = [['default', '默认'], ['hover', '悬停'], ['selected', '选中'], ['disabled', '禁用']];
+    matrix(document.getElementById('matrix-tab-item'),
+      TAB_ROWS.map(function (r) { return [r[0], r[1]]; }), TAB_STATES,
+      function (rowKey, st) {
+        var o = TAB_ROWS.filter(function (r) { return r[0] === rowKey; })[0][2];
+        var html = tabItem({ style: o.style, layout: o.layout, size: o.size, state: st, text: '选项', icon: o.icon || '' });
+        return o.width ? html.replace('<button ', '<button style="width:' + o.width + 'px" ') : html;
+      });
+
+    // 演示用：选项卡、分段的切换。点击和左右方向键；选中的 tabindex=0，其他 -1；有 aria-controls 就切对应的内容区
+    document.querySelectorAll('[data-demo] [role="tablist"], [data-demo] [role="radiogroup"]').forEach(function (group) {
+      var items = [].slice.call(group.querySelectorAll('[role="tab"], [role="radio"]'));
+      var attr = group.getAttribute('role') === 'tablist' ? 'aria-selected' : 'aria-checked';
+      function select(item) {
+        items.forEach(function (it) {
+          var on = it === item;
+          it.setAttribute(attr, String(on));
+          it.tabIndex = on ? 0 : -1;
+          var id = it.getAttribute('aria-controls');
+          var panel = id && document.getElementById(id);
+          if (panel) panel.hidden = !on;
+        });
+      }
+      group.addEventListener('click', function (e) {
+        var it = e.target.closest('[role="tab"], [role="radio"]');
+        if (it && !it.disabled) select(it);
+      });
+      group.addEventListener('keydown', function (e) {
+        var step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        var on = items.filter(function (it) { return !it.disabled; });
+        var next = on[(on.indexOf(document.activeElement) + step + on.length) % on.length];
+        e.preventDefault();
+        next.focus();
+        select(next);
+      });
+    });
+
+    // ---------- Tag ----------
+
+    function tag(o) {
+      var inner = '';
+      if (o.thumb) inner += '\n  <img src="' + IMG + 'ip-gouache-1x1.webp" alt="">';
+      if (o.icon) inner += '\n  <i class="kv-icon" data-icon="Bytedance"></i>';
+      inner += '\n  ' + esc(o.text);
+      return '<span class="kv-tag kv-tag--' + o.type + '">' + inner + '\n</span>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-tag'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'default', options: [['default', '默认'], ['on-media', '覆盖'], ['brand', '品牌']] },
+        { key: 'thumb', label: '缩略图', type: 'toggle', value: false },
+        { key: 'icon', label: '左图标', type: 'toggle', value: false },
+        { key: 'text', label: '文字', type: 'text', value: '标签' }
+      ],
+      media: function (s) { return s.type === 'on-media'; },
+      render: tag
+    });
+
+    var TAG_COLS = [['plain', '纯文字'], ['thumb', '缩略图'], ['icon', '左图标']];
+    function cellTag(type, col) {
+      return tag({ type: type, text: '标签', thumb: col === 'thumb', icon: col === 'icon' });
+    }
+    matrix(document.getElementById('matrix-tag'), [['default', '默认'], ['brand', '品牌']], TAG_COLS, cellTag);
+    matrix(document.getElementById('matrix-tag-media'), [['on-media', '覆盖']], TAG_COLS, cellTag);
+
+    // ---------- Avatar ----------
+
+    function avatar(o) {
+      var cls = 'kv-avatar kv-avatar--' + o.size + ' kv-avatar--' + o.type;
+      if (o.type === 'image') return '<span class="' + cls + '">\n  <img src="' + IMG + 'ip-gouache-1x1.webp" alt="阿远">\n</span>';
+      return '<span class="' + cls + '" role="img" aria-label="Kivi 用户">' + esc(o.initial) + '</span>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-avatar'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['text', '文字']] },
+        { key: 'size', label: '尺寸', type: 'segment', value: '32', options: [['16', '16'], ['24', '24'], ['32', '32']] },
+        { key: 'initial', label: '首字', type: 'text', value: 'K' }
+      ],
+      render: avatar
+    });
+
+    var AV_SIZES = [['16', '16'], ['24', '24'], ['32', '32']];
+    matrix(document.getElementById('matrix-avatar'), [['image', '图片'], ['text', '文字']], AV_SIZES,
+      function (type, size) { return avatar({ type: type, size: size, initial: 'K' }); });
+
+    // ---------- AssetThumb ----------
+
+    function thumb(o) {
+      var cls = 'kv-asset-thumb kv-asset-thumb--' + o.size + ' kv-asset-thumb--' + o.type;
+      var inner = o.type === 'image'
+        ? '\n  <img src="' + IMG + 'kivi-future-1x1.webp" alt="">'
+        : '\n  <i class="kv-icon" data-icon="' + (o.type === 'audio' ? 'Music' : o.icon) + '"></i>';
+      return '<span class="' + cls + '">' + inner + '\n</span>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-asset-thumb'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['audio', '音频'], ['icon', '图标']] },
+        { key: 'size', label: '尺寸', type: 'segment', value: '56', options: [['16', '16'], ['24', '24'], ['56', '56'], ['72', '72']] },
+        { key: 'icon', label: '图标', type: 'segment', value: 'Message', options: [['Message', 'Message'], ['Canvas', 'Canvas']] }
+      ],
+      // 图标只有「图标」类型可换
+      rules: function (s) { return s.type === 'icon' ? {} : { icon: ['Message', 'Canvas'] }; },
+      render: thumb
+    });
+
+    var TH_SIZES = [['16', '16'], ['24', '24'], ['56', '56'], ['72', '72']];
+    matrix(document.getElementById('matrix-asset-thumb'), [['image', '图片'], ['audio', '音频'], ['icon', '图标']], TH_SIZES,
+      function (type, size) { return thumb({ type: type, size: size, icon: 'Message' }); });
+  })();
+</script>
+</body>
+</html>

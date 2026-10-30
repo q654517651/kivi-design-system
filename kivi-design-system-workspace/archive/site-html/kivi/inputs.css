@@ -1,0 +1,339 @@
+/*
+  KIVI · 输入控件
+  Figma「输入控件」页：Input（输入框）、NumberInput（数字输入框）、Select（下拉选择）、Textarea（多行输入框）。
+  依赖 tokens.css、base.css。Select 展开的列表用 menus-tooltip.css 的菜单模板（kv-menu、kv-menu-item）。
+
+  写法
+    <label class="kv-input">
+      <i class="kv-icon" data-icon="Search"></i>
+      <input class="kv-input-field" placeholder="请输入">
+      <span class="kv-input-counter">0/50</span>
+    </label>
+
+    <label class="kv-number-input">
+      <input class="kv-number-input-field" inputmode="numeric" value="12">
+      <span class="kv-number-input-unit">秒</span>
+    </label>
+
+    <div class="kv-select-wrap">
+      <button class="kv-select kv-select--fill" aria-haspopup="menu" aria-expanded="false">
+        <span class="kv-select-text kv-select-text--placeholder">请选择</span>
+        <i class="kv-icon" data-icon="DownArrowSmall"></i>
+      </button>
+      <div class="kv-menu kv-menu--popup kv-select-list" role="menu">
+        <button class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>选项一</span></button>
+      </div>
+    </div>
+
+    <label class="kv-textarea">
+      <textarea class="kv-textarea-field" placeholder="请输入描述"></textarea>
+      <span class="kv-textarea-counter">0/500</span>
+    </label>
+
+  状态（输入框、数字输入框、多行输入框共用）
+    悬停    鼠标触发
+    聚焦    输入框获得焦点；Figma 没有聚焦样式，只出现光标，不加描边
+    已输入  有内容，文字 primary
+    错误    <input> 上写 aria-invalid="true"，加 1px danger 描边（数字输入框没有错误）
+    禁用    <input> 上写 disabled
+  下拉选择
+    展开    触发器上写 aria-expanded="true"，右边箭头换成 UpArrowSmall，列表加 is-open 出现
+            当前项：role="menuitemradio" aria-checked="true"，右边放 <i class="kv-icon kv-menu-item__check" data-icon="CheckSmall">
+    已选    文字用 kv-select-text；没选用 kv-select-text--placeholder
+    禁用    disabled
+  is-hover、is-focus 只给文档摆静态的悬停、聚焦用，项目里不用写
+  组件本身不带 JS：展开收起、选中、字数、箭头换图标要自己接
+*/
+
+/* ---------- 共用：输入框、数字输入框、多行输入框的外框 ---------- */
+
+.kv-input,
+.kv-number-input,
+.kv-textarea {
+  /* 1px 透明边留给错误描边，内边距各减 1，文字位置不变 */
+  display: flex;
+  box-sizing: border-box;
+  margin: 0;
+  border: var(--border-width-sm) solid transparent;
+  border-radius: var(--border-radius-sm);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  cursor: text;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 里面真正输入的框：没有自己的底色、描边，光标 primary */
+.kv-input-field,
+.kv-number-input-field,
+.kv-textarea-field {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  caret-color: var(--color-text-fill-primary);
+  font: inherit;
+}
+
+.kv-input-field::placeholder,
+.kv-number-input-field::placeholder,
+.kv-textarea-field::placeholder {
+  color: var(--color-text-fill-placeholder);
+  opacity: 1;
+}
+
+/* 悬停：白 12% */
+:is(.kv-input, .kv-number-input, .kv-textarea):where(:hover, .is-hover):not(:has(:disabled)) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+/* 聚焦：底色回到白 8%，不加描边 */
+:is(.kv-input, .kv-number-input, .kv-textarea):where(:focus-within, .is-focus):not(:has(:disabled)) {
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 错误：1px danger 描边 */
+:is(.kv-input, .kv-textarea):has([aria-invalid="true"]) {
+  border-color: var(--color-status-danger);
+}
+
+/* 禁用：底色白 4%，文字 disabled */
+:is(.kv-input, .kv-number-input, .kv-textarea):has(:disabled) {
+  background: var(--color-bg-fill-container-light-2);
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+:is(.kv-input-field, .kv-number-input-field, .kv-textarea-field):disabled {
+  cursor: not-allowed;
+}
+
+:is(.kv-input-field, .kv-number-input-field, .kv-textarea-field):disabled::placeholder {
+  color: var(--color-text-fill-disabled);
+}
+
+/* ---------- Input ---------- */
+
+/* 高 32，左右 12，元素间距 8。宽度在使用时设成填满 */
+.kv-input {
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  height: 32px;
+  padding: 0 11px;
+}
+
+.kv-input-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+}
+
+/* 左图标 16，右边字数 12 号 tertiary */
+.kv-input > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-tertiary);
+}
+
+.kv-input-counter {
+  flex: none;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.kv-input:has(:disabled) > .kv-icon,
+.kv-input:has(:disabled) .kv-input-counter {
+  color: var(--color-text-fill-disabled);
+}
+
+/* ---------- NumberInput ---------- */
+
+/* 高 32，最小宽 64，宽度跟着内容走；左右 8，数值和单位间距 4 */
+.kv-number-input {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xxs);
+  min-width: 64px;
+  height: 32px;
+  padding: 0 7px;
+}
+
+/* 输入框宽度跟着字数走；不支持 field-sizing 的旧浏览器退回固定 4 个字符宽 */
+.kv-number-input-field {
+  width: 4ch;
+  text-align: center;
+}
+
+@supports (field-sizing: content) {
+  .kv-number-input-field {
+    field-sizing: content;
+    width: auto;
+    min-width: 1ch;
+  }
+}
+
+.kv-number-input-unit {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  white-space: nowrap;
+}
+
+.kv-number-input:has(:disabled) .kv-number-input-unit {
+  color: var(--color-text-fill-disabled);
+}
+
+/* ---------- Select ---------- */
+
+/* 触发器：高 32，13 号字，左图标 16、右箭头 16，元素间距 4 */
+.kv-select {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  box-sizing: border-box;
+  height: 32px;
+  margin: 0;
+  border: 0;
+  border-radius: var(--border-radius-sm);
+  background: var(--kv-select-fill);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-select > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-tertiary);
+}
+
+.kv-select-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 没选时的占位文字 */
+.kv-select-text--placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+/* 填充：表单、面板里用。底白 8%，左右 12，宽度拉伸 */
+.kv-select--fill {
+  --kv-select-fill: var(--color-bg-fill-container-light-1);
+  --kv-select-fill-hover: var(--color-bg-fill-container-light-1-hover);
+  --kv-select-fill-open: var(--color-bg-fill-container-light-1);
+  width: 100%;
+  padding: 0 var(--spacing-md);
+}
+
+/* 无底：工具条上用，比如输入框里的模型选择。左右 8，宽度跟着内容走 */
+.kv-select--plain {
+  --kv-select-fill: transparent;
+  --kv-select-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-select-fill-open: var(--color-bg-fill-container-light-2-pressed);
+  display: inline-flex;
+  padding: 0 var(--spacing-sm);
+}
+
+/* 悬停、展开 */
+.kv-select:where(:hover, .is-hover):not(:disabled) {
+  background: var(--kv-select-fill-hover);
+}
+
+.kv-select[aria-expanded="true"] {
+  background: var(--kv-select-fill-open);
+}
+
+/* 禁用：填充底白 4%；无底不加底。文字和箭头 disabled */
+.kv-select:disabled {
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+.kv-select--fill:disabled {
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.kv-select:disabled > .kv-icon,
+.kv-select:disabled .kv-select-text--placeholder {
+  color: var(--color-text-fill-disabled);
+}
+
+/* 展开的列表：用菜单模板（menus-tooltip.css 的 kv-menu + kv-menu--popup），宽度和触发器一样宽。
+   出现、消失的动效（200ms ease-out / 150ms ease-in）在 kv-menu--popup 里，展开时给列表加 is-open。
+   列表和触发器的间距 Figma 没定，这里暂用 4 */
+.kv-select-wrap {
+  position: relative;
+  display: block;
+}
+
+.kv-select-wrap--plain {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.kv-select-wrap > .kv-select-list {
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 10;
+  width: 100%;
+}
+
+/* 无底的触发器很窄：列表按内容撑宽，但不比触发器窄（Figma 没定，待定） */
+.kv-select-wrap--plain > .kv-select-list {
+  width: max-content;
+  min-width: 100%;
+}
+
+/* ---------- Textarea ---------- */
+
+/* 默认 320×104，可以拉伸；内边距 12，14/22 号字，右下角字数。宽度在使用时设成填满 */
+.kv-textarea {
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+  min-height: 104px;
+  padding: 11px;
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-textarea-field {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+}
+
+.kv-textarea-counter {
+  align-self: flex-end;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}
+
+/* 错误：字数也变 danger */
+.kv-textarea:has([aria-invalid="true"]) .kv-textarea-counter {
+  color: var(--color-status-danger);
+}
+
+.kv-textarea:has(:disabled) .kv-textarea-counter {
+  color: var(--color-text-fill-disabled);
+}

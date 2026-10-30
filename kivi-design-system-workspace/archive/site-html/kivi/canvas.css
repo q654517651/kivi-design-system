@@ -1,0 +1,929 @@
+/*
+  KIVI · 画布
+  Figma「画布」页：NodeCard、NodeMedia、PlayBar、AudioWave、ConnectorDot、NodeWrapper、
+  Connector、ConnectorRemove、CropHandles、MentionChip、PromptInput、ReferenceItem。
+  「模板 · 画布」页里的节点工具栏、画布工具栏、生成面板是模板（不发布），这里只给拼它们用的外框样式。
+  依赖 tokens.css、base.css、button.css；
+  引导项用 menus-tooltip.css 的 kv-menu-item；倒计时和时长用 tabs-tags-avatar.css 的 kv-tag--on-media（Figma 的 Tag「覆盖」）；
+  参考图和 @ 标签里的缩略图用同一个文件的 kv-asset-thumb。
+
+  写法
+    <div class="kv-node-wrapper kv-node-wrapper--1-1" aria-selected="true">
+      <span class="kv-node-wrapper__name">节点名称</span>
+      <div class="kv-node-card kv-node-card--done">
+        <div class="kv-node-media kv-node-media--image"><img class="kv-node-media__picture" src="…" alt=""></div>
+      </div>
+      <span class="kv-connector-dot kv-node-wrapper__dot kv-node-wrapper__dot--left"></span>
+      <span class="kv-connector-dot kv-node-wrapper__dot kv-node-wrapper__dot--right"></span>
+    </div>
+
+    <div class="kv-connector kv-connector--active" style="width:240px;height:48px">
+      <svg viewBox="0 0 240 48" preserveAspectRatio="none"><path d="M0 48C120 48 120 0 240 0"/></svg>
+    </div>
+
+  状态
+    节点状态      kv-node-card--guide / --pending / --generating / --done / --failed
+    节点内容类型  kv-node-media--image / --video / --audio / --text
+    连接点        kv-connector-dot--connected / --highlight（不加是默认）
+    连线          kv-connector--active / --drawing / --flowing（不加是默认）
+    选中          NodeWrapper 写 aria-selected="true"
+    生成中        kv-node-card--generating 同时写 aria-busy="true"
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+
+  Figma 里没有变量的值（#0A0A0A、#4AFF70、#181818 70%、白 20%、白 30% 等）直接写数字，不新建变量。
+*/
+
+/* ---------- NodeCard：节点本体 ---------- */
+
+.kv-node-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 256px;
+  height: 256px;
+  overflow: hidden;
+  border-radius: var(--border-radius-lg);
+  background: var(--color-bg-fill-surface);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+/* 1px 描边。Figma 里描边在内容下面，所以放在最底层：图片盖住它，半透明的遮罩盖不住 */
+.kv-node-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* 放进 NodeWrapper 后，大小跟着外框走 */
+.kv-node-wrapper > .kv-node-card {
+  width: 100%;
+  height: 100%;
+}
+
+/* 引导：三个起步方式，用 MenuItem（36 高，13 号字） */
+.kv-node-card--guide {
+  padding: var(--spacing-xl);
+}
+
+.kv-node-card__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  width: 176px;
+}
+
+/* 待生成：64 的类型图标，视频封装、视频剪辑下面多一个按钮 */
+.kv-node-card--pending {
+  gap: var(--spacing-xs);
+}
+
+.kv-node-card__icon {
+  width: 64px;
+  height: 64px;
+  color: var(--color-text-fill-tertiary);
+}
+
+/* 生成中：底图（可选）+ 遮罩 + 进度 + 扫光，左上倒计时 */
+.kv-node-card--generating {
+  display: block;
+}
+
+.kv-node-card__cover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kv-node-card__mask {
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg-fill-container-dark);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+
+/* 进度：宽度 = 进度，用 --progress 设；白 60% 渐变，越靠近前沿越亮 */
+.kv-node-card__progress,
+.kv-node-card__sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--progress, 0%);
+}
+
+.kv-node-card__progress {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.6));
+}
+
+/* 扫光：白 30% 的亮带，在进度范围里从左往右扫。一轮多久 Figma 没定，先用 1.4 秒匀速 */
+.kv-node-card__sweep {
+  overflow: hidden;
+}
+
+.kv-node-card__sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+  transform: translateX(-100%);
+  animation: kv-node-sweep var(--kv-node-sweep-duration, 1.4s) linear infinite;
+}
+
+@keyframes kv-node-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-node-card__sweep::after {
+    animation: none;
+  }
+}
+
+/* 倒计时：Tag 覆盖，左上 */
+.kv-node-card__tag {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+}
+
+/* 完成：里面是 NodeMedia；左上「上传中」、右上「文字按钮」「图标按钮」按需打开 */
+.kv-node-card--done {
+  display: block;
+}
+
+.kv-node-card__upload {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+}
+
+.kv-node-card__actions {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+/* 失败：插画 120 + 一行文案 */
+.kv-node-card--failed {
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.kv-node-card__illustration {
+  display: block;
+  flex: none;
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+.kv-node-card__message {
+  position: relative;
+  margin: 0;
+  color: rgb(255 255 255 / var(--opacity-50));
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-22);
+}
+
+/* ---------- NodeMedia：节点完成态的内容 ---------- */
+
+.kv-node-media {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  font-family: var(--font-family);
+}
+
+.kv-node-media__picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 视频：左下时长（Tag 覆盖），悬停时换成底部播放条 */
+.kv-node-media__duration {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  left: var(--spacing-sm);
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-node-media__playbar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+.kv-node-media--video:where(:hover, .is-hover) .kv-node-media__playbar {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-node-media--video:where(:hover, .is-hover) .kv-node-media__duration {
+  opacity: 0;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+/* 音频：波形 + 播放键 + 时间 */
+.kv-node-media--audio {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+}
+
+.kv-node-media__wave {
+  flex: 1;
+  min-height: 0;
+}
+
+.kv-node-media__wave > .kv-audio-wave {
+  height: 100%;
+}
+
+.kv-node-media__controls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-md);
+  height: 44px;
+  padding-top: var(--spacing-md);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.kv-node-media__time {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+  white-space: nowrap;
+}
+
+/* 文字：正文 14 号，超出的裁掉 */
+.kv-node-media--text {
+  padding: var(--spacing-lg);
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-22);
+}
+
+/* ---------- PlayBar：视频播放条 ---------- */
+
+.kv-play-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-sm);
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.6));
+  color: var(--color-on-media-text);
+  font-family: var(--font-family);
+}
+
+.kv-play-bar__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 16px;
+}
+
+.kv-play-bar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+.kv-play-bar .kv-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.kv-play-bar__time {
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+  white-space: nowrap;
+}
+
+.kv-play-bar__track {
+  height: 2px;
+  overflow: hidden;
+  border-radius: var(--border-radius-round);
+  background: rgb(255 255 255 / var(--opacity-50));
+}
+
+.kv-play-bar__played {
+  display: block;
+  width: var(--progress, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-on-media-text);
+}
+
+/* ---------- AudioWave：音频波形 ---------- */
+
+.kv-audio-wave {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 80px;
+}
+
+/* 竖条：2 宽圆头，左右均匀铺开，高度由音频定，最高 69 */
+.kv-audio-wave__bars {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 69px;
+}
+
+.kv-audio-wave__bars > i {
+  flex: none;
+  width: 2px;
+  height: var(--h, 1px);
+  border-radius: var(--border-radius-round);
+  background: var(--color-text-fill-primary);
+}
+
+/* 没播放到的部分白 30% */
+.kv-audio-wave__bars > i.is-rest {
+  opacity: var(--opacity-30);
+}
+
+/* 播放头：顶上一个 6 的点 + 一条 2 宽的线，品牌绿，位置用 --progress 设 */
+.kv-audio-wave__head {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--progress, 0%);
+  width: 6px;
+  margin-left: -3px;
+}
+
+.kv-audio-wave__head::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--border-radius-round);
+  background: var(--color-brand-solid);
+}
+
+.kv-audio-wave__head::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 0;
+  left: 2px;
+  width: 2px;
+  background: var(--color-brand-solid);
+}
+
+/* ---------- ConnectorDot：连接点 ---------- */
+
+.kv-connector-dot {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius-round);
+  background: #0A0A0A;
+}
+
+/* 已连接、高亮：中间多一个 6 的实心点 */
+.kv-connector-dot--connected::after,
+.kv-connector-dot--highlight::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: var(--border-radius-round);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.kv-connector-dot--highlight {
+  border-color: var(--color-border-strong);
+}
+
+.kv-connector-dot--highlight::after {
+  background: var(--color-border-strong);
+}
+
+/* ---------- NodeWrapper：节点外框 ---------- */
+
+.kv-node-wrapper {
+  position: relative;
+  display: block;
+  width: 256px;
+  height: 256px;
+}
+
+/* 比例：短边 256 */
+.kv-node-wrapper--1-1 { width: 256px; height: 256px; }
+.kv-node-wrapper--3-4 { width: 256px; height: 341px; }
+.kv-node-wrapper--16-9 { width: 455px; height: 256px; }
+.kv-node-wrapper--4-3 { width: 341px; height: 256px; }
+.kv-node-wrapper--9-16 { width: 256px; height: 455px; }
+
+/* 节点名：在节点上方，左对齐，离节点 11 */
+.kv-node-wrapper__name {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 11px;
+  overflow: hidden;
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 连接点：左右各一个，在节点外 8，垂直居中 */
+.kv-node-wrapper__dot {
+  position: absolute;
+  top: 50%;
+  margin-top: -8px;
+}
+
+.kv-node-wrapper__dot--left {
+  right: calc(100% + 8px);
+}
+
+.kv-node-wrapper__dot--right {
+  left: calc(100% + 8px);
+}
+
+/* 选中：节点外面盖一圈 2px 白 40% 描边，圆角 16 */
+.kv-node-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--border-radius-lg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kv-node-wrapper:where(:hover, .is-hover)::after,
+.kv-node-wrapper[aria-selected="true"]::after {
+  opacity: 1;
+}
+
+/* ---------- Connector：连线 ---------- */
+
+.kv-connector {
+  position: relative;
+  display: block;
+  width: 240px;
+  height: 48px;
+}
+
+.kv-connector > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.kv-connector path {
+  fill: none;
+  stroke: var(--g-workflow-line-color-default);
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  transition:
+    stroke var(--motion-duration-100) var(--motion-ease-in-out),
+    stroke-width var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 激活：悬停、点击、选中节点的关联线 */
+.kv-connector--active path,
+.kv-connector:where(:hover, .is-hover):not(.kv-connector--drawing, .kv-connector--flowing) path {
+  stroke: var(--g-workflow-line-color-active);
+  stroke-width: 2px;
+}
+
+/* 拖拽中：虚线 6 / 6 */
+.kv-connector--drawing path {
+  stroke: var(--g-workflow-line-color-drawing);
+  stroke-dasharray: 6 6;
+}
+
+/* 执行中：白 90% + 流光，流光 2 秒一轮。流光的形状 Figma 没定，这里是示意 */
+.kv-connector--flowing path {
+  stroke: var(--g-workflow-line-color-flowing);
+}
+
+.kv-connector path.kv-connector__flow {
+  stroke: var(--color-text-fill-primary);
+  stroke-width: 3px;
+  stroke-dasharray: 24 400;
+  stroke-dashoffset: 24;
+  animation: kv-connector-flow 2s linear infinite;
+}
+
+@keyframes kv-connector-flow {
+  to {
+    stroke-dashoffset: -400;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-connector__flow {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* 删除按钮：在连线中点 */
+.kv-connector__remove {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -12px 0 0 -12px;
+}
+
+/* ---------- ConnectorRemove：连线删除按钮 ---------- */
+
+.kv-connector-remove {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: var(--border-radius-round);
+  background: var(--color-bg-fill-container-light-1);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--color-text-fill-primary);
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-connector-remove > .kv-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 悬停或选中连线才出现：不出现时写 aria-hidden="true" */
+.kv-connector-remove[aria-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+/* ---------- CropHandles：裁剪框 ---------- */
+
+.kv-crop-handles {
+  --kv-crop-color: #4AFF70;
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 250px;
+  height: 250px;
+  border: 2px solid var(--kv-crop-color);
+}
+
+.kv-crop-handles > i {
+  position: absolute;
+  background: #FFFFFF;
+}
+
+/* 四个角：12 的圆，圆心在描边的角上 */
+.kv-crop-handles > .is-nw,
+.kv-crop-handles > .is-ne,
+.kv-crop-handles > .is-sw,
+.kv-crop-handles > .is-se {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--border-radius-round);
+}
+
+.kv-crop-handles > .is-nw { top: -7px; left: -7px; }
+.kv-crop-handles > .is-ne { top: -7px; right: -7px; }
+.kv-crop-handles > .is-sw { bottom: -7px; left: -7px; }
+.kv-crop-handles > .is-se { right: -7px; bottom: -7px; }
+
+/* 四条边：120 × 6 的圆头条，在每条边的中间 */
+.kv-crop-handles > .is-n,
+.kv-crop-handles > .is-s {
+  left: 50%;
+  width: 120px;
+  height: 6px;
+  margin-left: -60px;
+  border-radius: var(--border-radius-round);
+}
+
+.kv-crop-handles > .is-w,
+.kv-crop-handles > .is-e {
+  top: 50%;
+  width: 6px;
+  height: 120px;
+  margin-top: -60px;
+  border-radius: var(--border-radius-round);
+}
+
+.kv-crop-handles > .is-n { top: -4px; }
+.kv-crop-handles > .is-s { bottom: -4px; }
+.kv-crop-handles > .is-w { left: -4px; }
+.kv-crop-handles > .is-e { right: -4px; }
+
+/* ---------- MentionChip：提示词里的 @ 引用标签 ---------- */
+
+.kv-mention-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  box-sizing: border-box;
+  height: 17px;
+  padding: 0 var(--spacing-xxs) 0 2px;
+  overflow: hidden;
+  border-radius: var(--border-radius-xxs);
+  /* 1px 描边画在里面 */
+  outline: var(--border-width-sm) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-sm) * -1);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: 17px;
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* 缩略图用 kv-asset-thumb--16（图片或音频），和文字之间的间距 4 在 gap 里 */
+
+/* ---------- PromptInput：提示词输入 ---------- */
+
+.kv-prompt-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 120px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: 17px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* 未输入：高 68，显示占位文字 */
+.kv-prompt-input:empty {
+  min-height: 68px;
+}
+
+.kv-prompt-input:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-fill-placeholder);
+}
+
+/* ---------- ReferenceItem：参考图一格 ---------- */
+
+.kv-reference-item {
+  position: relative;
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: var(--border-radius-sm);
+  background: var(--color-bg-fill-container-light-1);
+  font-family: var(--font-family);
+}
+
+.kv-reference-item--72 {
+  width: 72px;
+  height: 72px;
+}
+
+.kv-reference-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* 缩略图用 kv-asset-thumb（56 或 72，和外框一致），铺满外框 */
+
+/* 右上角标：序号或首帧 / 尾帧，20 × 20，只有左下角是圆的 */
+.kv-reference-item__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 0 0 0 var(--border-radius-xxs);
+  background: var(--color-bg-fill-container-dark);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+  line-height: 14px;
+}
+
+/* 左下视频时长 */
+.kv-reference-item__duration {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  padding: 0 var(--spacing-xs);
+  border-radius: var(--border-radius-xs);
+  background: var(--color-bg-fill-container-dark);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+  line-height: 14px;
+}
+
+/* 底部通栏：Lora 权重，或「图片1」这类名字 */
+.kv-reference-item__weight {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  background: var(--color-bg-fill-container-dark);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+  line-height: 14px;
+}
+
+/* ---------- 模板外框：节点工具栏、画布工具栏、生成面板 ----------
+   这三个是模板，由 Button / IconButton 等拼成，不发布成组件。这里只给外框的样子。 */
+
+/* 节点工具栏：选中节点后出现在节点上方 */
+.kv-node-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-sizing: border-box;
+  height: 44px;
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-md);
+  outline: var(--border-width-sm) solid var(--color-border);
+  outline-offset: calc(var(--border-width-sm) * -1);
+  background: rgb(24 24 24 / 0.7);
+  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(32px);
+}
+
+.kv-node-toolbar__divider {
+  flex: none;
+  width: var(--border-width-sm);
+  height: 20px;
+  background: var(--color-border);
+}
+
+/* 画布底部工具栏：圆角胶囊 */
+.kv-canvas-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  box-sizing: border-box;
+  height: 56px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-round);
+  outline: var(--border-width-sm) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-sm) * -1);
+  background: var(--color-bg-fill-surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* 第一个「添加」：白底黑图标（Figma 里手动改的，IconButton 没有这个类型） */
+.kv-canvas-toolbar__add {
+  --kv-fill: var(--color-text-fill-primary);
+  --kv-fill-hover: var(--color-text-fill-primary);
+  --kv-fill-pressed: var(--color-text-fill-primary);
+  --kv-content: var(--color-bg-fill-base);
+}
+
+/* 其余按钮的图标是 24 */
+.kv-canvas-toolbar > .kv-icon-button:not(.kv-canvas-toolbar__add) {
+  --kv-icon-size: 24px;
+}
+
+/* 生成面板：节点下方 */
+.kv-node-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  box-sizing: border-box;
+  width: 620px;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  background: var(--color-bg-fill-surface);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.kv-node-panel__refs {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+.kv-node-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 36px;
+}
+
+.kv-node-panel__bar-left,
+.kv-node-panel__bar-right {
+  display: flex;
+  align-items: center;
+}
+
+.kv-node-panel__bar-left {
+  gap: var(--spacing-xs);
+}
+
+.kv-node-panel__bar-right {
+  gap: var(--spacing-sm);
+}
+
+/* 右上角的全屏图标，24 */
+.kv-node-panel__expand {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-fill-primary);
+}

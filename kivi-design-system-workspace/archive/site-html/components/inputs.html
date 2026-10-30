@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>输入控件 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../kivi/menus-tooltip.css">
+  <link rel="stylesheet" href="../kivi/inputs.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用 */
+    #pg-input .shell-pg-stage .kv-input { width: 240px; }
+    #pg-textarea .shell-pg-stage .kv-textarea { width: 320px; }
+    #pg-select .shell-pg-stage { align-items: flex-start; padding-top: 56px; }
+    #pg-select .shell-pg-stage .kv-select--fill { width: 200px; }
+    #pg-select .shell-pg-stage .kv-select-wrap:not(.kv-select-wrap--plain) { width: 200px; }
+
+    /* 状态摆成网格，每个状态上面一行小字 */
+    .in-grid { display: grid; gap: 24px; justify-content: center; }
+    .in-grid--3 { grid-template-columns: repeat(3, 240px); }
+    .in-grid--2 { grid-template-columns: repeat(2, 320px); }
+    .in-grid figcaption { margin-bottom: var(--spacing-sm); color: var(--color-text-fill-tertiary); font-size: var(--font-size-12); line-height: var(--font-line-height-20); }
+    .in-cell { width: 200px; }
+    /* 下拉的列表会伸到预览区外，预览区要留够高度 */
+    #demo-select-fill, #demo-select-plain { align-items: flex-start; min-height: 220px; }
+  </style>
+</head>
+<body data-root="../" data-page="inputs">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">通用组件</p>
+    <h1>输入控件</h1>
+    <p class="doc-lead">让用户输入内容的控件：输入框、数字输入框、下拉选择、多行输入框。高度只有 32 一档，圆角 8，底色白 8%；单行用 13 号字，多行用 14 号字。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=169-1439" target="_blank" rel="noopener">「输入控件」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">草稿 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/inputs.css</code></dd></div>
+    </dl>
+  </header>
+
+  <h3>共用的状态</h3>
+  <p>输入框、数字输入框、多行输入框用同一套状态。聚焦没有特殊样式，只出现光标，不加描边。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>状态</th><th>底色</th><th>文字</th><th>描边</th></tr></thead>
+      <tbody>
+        <tr><td>默认（空）</td><td>白 8% · <code>--color-bg-fill-container-light-1</code></td><td>占位文字，白 30% · <code>--color-text-fill-placeholder</code></td><td>无</td></tr>
+        <tr><td>悬停</td><td>白 12% · <code>--color-bg-fill-container-light-1-hover</code></td><td>同默认</td><td>无</td></tr>
+        <tr><td>聚焦</td><td>白 8%</td><td>只出现光标（<code>--color-text-fill-primary</code>）</td><td>无</td></tr>
+        <tr><td>已输入</td><td>白 8%</td><td>primary · <code>--color-text-fill-primary</code></td><td>无</td></tr>
+        <tr><td>错误</td><td>白 8%</td><td>primary</td><td>1px · <code>--color-status-danger</code></td></tr>
+        <tr><td>禁用</td><td>白 4% · <code>--color-bg-fill-container-light-2</code></td><td>disabled，白 20% · <code>--color-text-fill-disabled</code></td><td>无</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>数字输入框只有默认、悬停、聚焦、禁用四个，没有「已输入」和「错误」。下拉选择的状态见它自己那一节。</p>
+
+  <!-- ==================== Input ==================== -->
+
+  <h2 id="input">Input</h2>
+  <p>在右边面板选状态、左图标、字数，和 Figma 右侧属性面板一样。预览里的输入框也能打字。</p>
+  <div id="pg-input"></div>
+
+  <h3>用途</h3>
+  <p>单行输入：搜索、改名、表单。</p>
+
+  <h3>结构</h3>
+  <p>左图标（可选）+ 输入的文字 + 字数（可选），水平排列，间距 8。外面是一个 <code>&lt;label&gt;</code>，点框的任何地方都能输入。</p>
+  <ul>
+    <li>占位文字和输入内容是同一个 <code>&lt;input&gt;</code>：没内容时显示 <code>placeholder</code>，有内容显示内容。</li>
+    <li>左图标固定 16，比如搜索框用 Search。</li>
+    <li>字数放在框内右侧，比如「0/50」。</li>
+    <li>宽度在使用时设成填满（默认 <code>width: 100%</code>）；Figma 里摆的是 240。</li>
+    <li>没有可见文字标签时，必须在 <code>&lt;input&gt;</code> 上写 <code>aria-label</code>。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>占位文字</td><td>没输入时的提示</td><td><code>placeholder="请输入"</code></td></tr>
+        <tr><td>文字</td><td>输入的内容</td><td><code>value="…"</code></td></tr>
+        <tr><td>左图标</td><td>开 / 关</td><td>放不放 <code>&lt;i class="kv-icon"&gt;</code></td></tr>
+        <tr><td>字数、字数文字</td><td>开 / 关</td><td>放不放 <code>&lt;span class="kv-input-counter"&gt;</code></td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 聚焦 / 已输入 / 错误 / 禁用</td><td>悬停、聚焦由鼠标、键盘触发；已输入是有 <code>value</code>；错误 <code>aria-invalid="true"</code>；禁用 <code>disabled</code>，都写在 <code>&lt;input&gt;</code> 上</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>高度不分档，只有 32。弹窗里的输入框也是 32。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>高</td><td>32</td><td>—</td></tr>
+        <tr><td>圆角</td><td>8</td><td><code>--border-radius-sm</code></td></tr>
+        <tr><td>左右内边距</td><td>12</td><td><code>--spacing-md</code></td></tr>
+        <tr><td>元素间距</td><td>8</td><td><code>--spacing-sm</code></td></tr>
+        <tr><td>文字</td><td>13 常规，行高 20</td><td><code>--font-size-13</code> / <code>--font-line-height-20</code></td></tr>
+        <tr><td>左图标</td><td>16，tertiary</td><td><code>--color-text-fill-tertiary</code></td></tr>
+        <tr><td>字数</td><td>12 常规，tertiary</td><td><code>--font-size-12</code> / <code>--color-text-fill-tertiary</code></td></tr>
+        <tr><td>错误描边</td><td>1px，向里画</td><td><code>--border-width-sm</code> / <code>--color-status-danger</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>底色变化 100ms ease-in-out，见「动效」。</li>
+    <li>描边用 1px 透明边占位，错误时只换颜色，框的大小和文字位置不变。</li>
+    <li>禁用时占位文字、左图标、字数都是 disabled 色。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-input"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>搜索、改名、表单里的单行输入用它。只输入数字的用数字输入框。</li>
+    <li>搜索框：左边放 Search 图标，宽度填满。</li>
+    <li>需要限制字数的：右边放字数；超了变错误，提示写清楚原因。</li>
+    <li>表单行是模板（Figma「模板 · 通用」页「表单」）：标签 13 号 secondary 在上，间距 8；提示 12 号 tertiary 在下；出错时提示换成 danger 色。</li>
+  </ul>
+
+  <h4>搜索框：左图标 Search</h4>
+  <div data-demo>
+    <div style="width:240px">
+      <label class="kv-input">
+        <i class="kv-icon" data-icon="Search"></i>
+        <input class="kv-input-field" placeholder="搜索" aria-label="搜索">
+      </label>
+    </div>
+  </div>
+
+  <h4>表单行：标签 + 输入框 + 提示（超过 50 个字变错误）</h4>
+  <div data-demo id="demo-form">
+    <div style="display:flex;flex-direction:column;gap:8px;width:320px">
+      <span style="color:var(--color-text-fill-secondary);font-size:13px;line-height:20px">画布名称</span>
+      <label class="kv-input">
+        <input class="kv-input-field" value="未命名画布" aria-label="画布名称">
+        <span class="kv-input-counter">5/50</span>
+      </label>
+      <span style="color:var(--color-text-fill-tertiary);font-size:12px;line-height:20px">最多 50 个字</span>
+    </div>
+  </div>
+
+  <!-- ==================== NumberInput ==================== -->
+
+  <h2 id="number-input">NumberInput</h2>
+  <div id="pg-number-input"></div>
+
+  <h3>用途</h3>
+  <p>输入一个数值，可以带单位，比如时长「12 秒」。只输入数字的地方用它，不用普通输入框。</p>
+
+  <h3>结构</h3>
+  <p>数值 + 单位（可选），水平排列，间距 4，居中。宽度跟着内容走，最小 64。</p>
+  <ul>
+    <li>范围有限、要拖着调的，左边配一个滑块（见<a href="selection.html#slider">「选择控件」页 Slider</a>）。</li>
+    <li>用文字输入框加 <code>inputmode="numeric"</code>，不用 <code>type="number"</code>，免得出现上下小箭头。只允许数字要自己接。</li>
+    <li>没有可见标签时，必须在 <code>&lt;input&gt;</code> 上写 <code>aria-label</code>。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>数值</td><td>输入的数字</td><td><code>value="12"</code></td></tr>
+        <tr><td>显示单位、单位</td><td>开 / 关</td><td>放不放 <code>&lt;span class="kv-number-input-unit"&gt;秒&lt;/span&gt;</code></td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 聚焦 / 禁用</td><td>悬停、聚焦由鼠标、键盘触发；禁用 <code>disabled</code>（写在 <code>&lt;input&gt;</code> 上）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>高 / 最小宽</td><td>32 / 64</td><td>—</td></tr>
+        <tr><td>圆角</td><td>8</td><td><code>--border-radius-sm</code></td></tr>
+        <tr><td>左右内边距</td><td>8</td><td><code>--spacing-sm</code></td></tr>
+        <tr><td>数值和单位间距</td><td>4</td><td><code>--spacing-xxs</code></td></tr>
+        <tr><td>数值</td><td>13 常规，primary</td><td><code>--font-size-13</code> / <code>--color-text-fill-primary</code></td></tr>
+        <tr><td>单位</td><td>12 常规，tertiary</td><td><code>--font-size-12</code> / <code>--color-text-fill-tertiary</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>底色和状态同「共用的状态」，聚焦没有描边。禁用时数值和单位都是 disabled 色。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-number-input"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>时长、数量这类只输入数字、可以带单位的地方。</li>
+    <li>要拖着调的，和滑块放在一起，两个联动，见「选择控件」页的「时长」例子。</li>
+  </ul>
+
+  <h4>时长：数值 + 单位（只能输入数字）</h4>
+  <div data-demo id="demo-number">
+    <label class="kv-number-input">
+      <input class="kv-number-input-field" inputmode="numeric" value="12" aria-label="时长（秒）">
+      <span class="kv-number-input-unit">秒</span>
+    </label>
+  </div>
+
+  <!-- ==================== Select ==================== -->
+
+  <h2 id="select">Select</h2>
+  <p>在右边面板选样式、状态，和 Figma 右侧属性面板一样。预览里的下拉也能点开、选值。</p>
+  <div id="pg-select"></div>
+
+  <h3>用途</h3>
+  <p>点开后从列表里选一个值。「填充」用在表单和面板里；「无底」用在工具条上，比如输入框里的模型选择。</p>
+
+  <h3>结构</h3>
+  <p>Select 只是触发器：左图标（可选）+ 文字 + 右箭头，间距 4。展开后的列表是菜单模板（<code>kv-menu</code> + <code>kv-menu--popup</code>）+ MenuItem（<code>kv-menu-item</code>），见「菜单和提示」页。</p>
+  <ul>
+    <li>外面包一层 <code>kv-select-wrap</code>，列表放在触发器后面，由它定位。无底样式加 <code>kv-select-wrap--plain</code>。展开时触发器写 <code>aria-expanded="true"</code>，列表加 <code>is-open</code>。</li>
+    <li>左图标 16，右边是 16 的小箭头 DownArrowSmall；展开时换成 UpArrowSmall（换图标，不是旋转）。</li>
+    <li>文字没选时是占位文字，选了是选中的值。</li>
+    <li>列表宽度和触发器一样宽；单选时给当前项打勾：<code>role="menuitemradio"</code> + <code>aria-checked="true"</code>，右边放 <code>kv-menu-item__check</code>（CheckSmall）。</li>
+    <li>选项只有 2–6 个、而且一眼能看完的，用分段选择器，不用下拉。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>样式</td><td>填充 / 无底</td><td><code>kv-select--fill</code> / <code>kv-select--plain</code></td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 展开 / 已选 / 禁用</td><td>悬停由鼠标触发；展开 <code>aria-expanded="true"</code>，列表加 <code>is-open</code>；已选是文字用 <code>kv-select-text</code>（没选用 <code>kv-select-text--placeholder</code>）；禁用 <code>disabled</code></td></tr>
+        <tr><td>占位文字、文字</td><td>没选时的提示、选中的值</td><td><code>&lt;span class="kv-select-text"&gt;</code> 里的字</td></tr>
+        <tr><td>左图标</td><td>开 / 关</td><td>放不放左边的 <code>&lt;i class="kv-icon"&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>只有 32 一档（36 已去掉）。无底一般都有当前值，所以「默认」「悬停」「展开」「已选」都显示值；还没有值时才显示占位文字。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>填充</th><th>无底</th></tr></thead>
+      <tbody>
+        <tr><td>高、圆角</td><td colspan="2">32、8（<code>--border-radius-sm</code>）</td></tr>
+        <tr><td>左右内边距</td><td>12 · <code>--spacing-md</code></td><td>8 · <code>--spacing-sm</code></td></tr>
+        <tr><td>宽度</td><td>拉伸（Figma 里摆的是 200）</td><td>跟着内容走</td></tr>
+        <tr><td>元素间距</td><td colspan="2">4 · <code>--spacing-xxs</code></td></tr>
+        <tr><td>文字</td><td colspan="2">13 常规，行高 20；占位文字 <code>--color-text-fill-placeholder</code>，选中的值 <code>--color-text-fill-primary</code></td></tr>
+        <tr><td>左图标、右箭头</td><td colspan="2">16，tertiary · <code>--color-text-fill-tertiary</code></td></tr>
+        <tr><td>默认</td><td>白 8% · <code>--color-bg-fill-container-light-1</code></td><td>透明</td></tr>
+        <tr><td>悬停</td><td>白 12% · <code>--color-bg-fill-container-light-1-hover</code></td><td>白 8% · <code>--color-bg-fill-container-light-2-hover</code></td></tr>
+        <tr><td>展开</td><td>白 8%，箭头朝上</td><td>白 12% · <code>--color-bg-fill-container-light-2-pressed</code>，箭头朝上</td></tr>
+        <tr><td>已选</td><td>文字 primary，底同默认</td><td>文字 primary，底同默认</td></tr>
+        <tr><td>禁用</td><td>白 4% · <code>--color-bg-fill-container-light-2</code>；占位文字、箭头 disabled</td><td>透明；占位文字、箭头 disabled</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>悬停、展开的底色变化 100ms ease-in-out。</li>
+    <li>列表出现 200ms ease-out（淡入），消失 150ms ease-in（淡出），见「动效」。</li>
+    <li>列表和触发器的间距：<span class="tag tag--draft">待定</span>。Figma 没定，下面暂用 4。</li>
+    <li>无底的触发器很窄，列表要不要跟着窄：<span class="tag tag--draft">待定</span>。Figma 只写了「和触发器一样宽」；下面暂时让无底的列表按内容撑宽、但不比触发器窄，填充的列表和触发器一样宽。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-select"></div>
+  <p>展开后的样子（列表是菜单模板）：</p>
+  <div data-demo="nocode" data-static>
+    <div style="display:flex;align-items:flex-start;justify-content:center;gap:24px;width:100%;min-height:190px">
+      <div class="kv-select-wrap" style="width:200px">
+        <button type="button" class="kv-select kv-select--fill" aria-haspopup="menu" aria-expanded="true">
+          <span class="kv-select-text kv-select-text--placeholder">请选择</span>
+          <i class="kv-icon" data-icon="UpArrowSmall"></i>
+        </button>
+        <div class="kv-menu kv-menu--popup kv-select-list is-open" role="menu">
+          <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>选项一</span></button>
+          <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>选项二</span></button>
+          <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>选项三</span></button>
+        </div>
+      </div>
+      <div class="kv-select-wrap kv-select-wrap--plain">
+        <button type="button" class="kv-select kv-select--plain" aria-haspopup="menu" aria-expanded="true">
+          <span class="kv-select-text">选项一</span>
+          <i class="kv-icon" data-icon="UpArrowSmall"></i>
+        </button>
+        <div class="kv-menu kv-menu--popup kv-select-list is-open" role="menu">
+          <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="true"><span>选项一</span><i class="kv-icon kv-menu-item__check" data-icon="CheckSmall"></i></button>
+          <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>选项二</span></button>
+          <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>选项三</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>填充</strong>：表单、面板里，宽度拉伸，和输入框并排时高度一致。</li>
+    <li><strong>无底</strong>：工具条上，比如输入框里的模型选择，宽度跟着内容走。</li>
+    <li>从列表里选一个值，选项多、或者文字长的用下拉；只有 2–6 个、一眼能看完的用分段选择器。</li>
+    <li>展开后的列表用菜单模板，单选时给当前项打勾。</li>
+  </ul>
+
+  <h4>填充：表单里选一个值</h4>
+  <p>点开选一个，点别处或按 Esc 收起。</p>
+  <div data-demo id="demo-select-fill">
+    <div class="kv-select-wrap" style="width:200px">
+      <button type="button" class="kv-select kv-select--fill" aria-haspopup="menu" aria-expanded="false" aria-label="导出格式">
+        <span class="kv-select-text kv-select-text--placeholder">请选择</span>
+        <i class="kv-icon" data-icon="DownArrowSmall"></i>
+      </button>
+      <div class="kv-menu kv-menu--popup kv-select-list" role="menu">
+        <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>PNG</span></button>
+        <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>JPG</span></button>
+        <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>WebP</span></button>
+      </div>
+    </div>
+  </div>
+
+  <h4>无底：工具条上选模型，带左图标</h4>
+  <div data-demo id="demo-select-plain">
+    <div class="kv-select-wrap kv-select-wrap--plain">
+      <button type="button" class="kv-select kv-select--plain" aria-haspopup="menu" aria-expanded="false" aria-label="模型">
+        <i class="kv-icon" data-icon="ImageGeneration"></i>
+        <span class="kv-select-text">模型 A</span>
+        <i class="kv-icon" data-icon="DownArrowSmall"></i>
+      </button>
+      <div class="kv-menu kv-menu--popup kv-select-list" role="menu">
+        <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="true"><span>模型 A</span><i class="kv-icon kv-menu-item__check" data-icon="CheckSmall"></i></button>
+        <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>模型 B</span></button>
+        <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>模型 C</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Textarea ==================== -->
+
+  <h2 id="textarea">Textarea</h2>
+  <p>在右边面板选状态、字数，和 Figma 右侧属性面板一样。预览里的输入框也能打字，右下角可以拖着改高度。</p>
+  <div id="pg-textarea"></div>
+
+  <h3>用途</h3>
+  <p>输入一段话：描述、备注。14 号字，是需要阅读的内容。</p>
+
+  <h3>结构</h3>
+  <p>输入的文字在上，字数在右下角，垂直排列，间距 8。外面是一个 <code>&lt;label&gt;</code>，点框的任何地方都能输入。</p>
+  <ul>
+    <li>默认 320 × 104，可以拉伸；使用时宽度设成填满（默认 <code>width: 100%</code>），高度可以拖。</li>
+    <li>占位文字和输入内容是同一个 <code>&lt;textarea&gt;</code>。</li>
+    <li>字数放在右下角，和正文间距 8。</li>
+    <li>提示词输入用画布页的 PromptInput；首页、对话里的整块输入区是模板，见下面「提示词输入框」。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>占位文字</td><td>没输入时的提示</td><td><code>placeholder="请输入描述"</code></td></tr>
+        <tr><td>文字</td><td>输入的内容</td><td><code>&lt;textarea&gt;</code> 里的字</td></tr>
+        <tr><td>字数</td><td>开 / 关</td><td>放不放 <code>&lt;span class="kv-textarea-counter"&gt;</code></td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 聚焦 / 已输入 / 错误 / 禁用</td><td>同输入框：错误 <code>aria-invalid="true"</code>，禁用 <code>disabled</code>，都写在 <code>&lt;textarea&gt;</code> 上</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>默认尺寸</td><td>320 × 104，可以拉伸</td><td>—</td></tr>
+        <tr><td>圆角</td><td>8</td><td><code>--border-radius-sm</code></td></tr>
+        <tr><td>内边距</td><td>12</td><td><code>--spacing-md</code></td></tr>
+        <tr><td>文字</td><td>14 常规，行高 22</td><td><code>--font-size-14</code> / <code>--font-line-height-22</code></td></tr>
+        <tr><td>字数</td><td>12 常规，tertiary，右下角</td><td><code>--font-size-12</code> / <code>--color-text-fill-tertiary</code></td></tr>
+        <tr><td>错误</td><td>1px danger 描边，字数也变 danger</td><td><code>--color-status-danger</code></td></tr>
+        <tr><td>禁用</td><td>字数 disabled 色</td><td><code>--color-text-fill-disabled</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>底色和状态同「共用的状态」，聚焦没有描边。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-textarea"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>描述、备注这类一段话的输入用它；一行的用输入框。</li>
+    <li>需要限制字数的，右下角放字数；超了变错误，字数一起变红。</li>
+  </ul>
+
+  <h4>描述：字数实时变化（超过 500 个字变错误）</h4>
+  <div data-demo id="demo-textarea">
+    <div style="width:320px">
+      <label class="kv-textarea">
+        <textarea class="kv-textarea-field" placeholder="请输入描述" aria-label="描述"></textarea>
+        <span class="kv-textarea-counter">0/500</span>
+      </label>
+    </div>
+  </div>
+
+  <h4>提示词输入框（模板，不是组件）</h4>
+  <p>产品首页、对话面板里的输入区按它做。底色 surface，圆角 24，内边距 16，文字 14/22；下面一条工具条：左边上传（IconButton 32 · 次要）、模型选择（Select · 无底），右边发送（IconButton 36 · 主要）。工具条里的东西按场景增删。完整版在 Figma「模板 · 通用」页「输入框」。</p>
+  <div data-demo>
+    <div style="display:flex;flex-direction:column;gap:12px;box-sizing:border-box;width:560px;max-width:100%;padding:16px;border-radius:24px;background:var(--color-bg-fill-surface)">
+      <textarea class="kv-textarea-field" rows="3" placeholder="输入想法、剧本或上传参考，和 Agent 一起创作" aria-label="提示词" style="display:block;width:100%;resize:none;font-size:14px;line-height:22px"></textarea>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="kv-icon-button kv-icon-button--32 kv-icon-button--secondary" aria-label="上传">
+          <i class="kv-icon" data-icon="Upload"></i>
+        </button>
+        <div class="kv-select-wrap kv-select-wrap--plain">
+          <button type="button" class="kv-select kv-select--plain" aria-haspopup="menu" aria-expanded="false" aria-label="模型">
+            <span class="kv-select-text">模型 A</span>
+            <i class="kv-icon" data-icon="DownArrowSmall"></i>
+          </button>
+          <div class="kv-menu kv-menu--popup kv-select-list" role="menu" style="top:auto;bottom:calc(100% + 4px)">
+            <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="true"><span>模型 A</span><i class="kv-icon kv-menu-item__check" data-icon="CheckSmall"></i></button>
+            <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="false"><span>模型 B</span></button>
+          </div>
+        </div>
+        <span style="flex:1"></span>
+        <button class="kv-icon-button kv-icon-button--36 kv-icon-button--primary" aria-label="发送">
+          <i class="kv-icon" data-icon="Send"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 这一页的属性面板、状态矩阵和演示交互
+  (function () {
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+    function attrEsc(s) { return esc(s).replace(/"/g, '&quot;'); }
+
+    // ---------- 属性面板：HTML 生成 ----------
+
+    function stateClass(state) { return state === 'hover' ? ' is-hover' : state === 'focus' ? ' is-focus' : ''; }
+    function hasValue(state) { return state === 'focus' || state === 'typed' || state === 'error'; }
+
+    function inputHtml(s) {
+      var attr = ' placeholder="' + attrEsc(s.placeholder) + '"';
+      if (hasValue(s.state)) attr += ' value="' + attrEsc(s.text) + '"';
+      if (s.state === 'error') attr += ' aria-invalid="true"';
+      if (s.state === 'disabled') attr += ' disabled';
+      var inner = '';
+      if (s.icon) inner += '\n  <i class="kv-icon" data-icon="Search"></i>';
+      inner += '\n  <input class="kv-input-field"' + attr + ' aria-label="输入框">';
+      if (s.count) inner += '\n  <span class="kv-input-counter">' + esc(s.countText) + '</span>';
+      return '<label class="kv-input' + stateClass(s.state) + '">' + inner + '\n</label>';
+    }
+
+    function numberHtml(s) {
+      var attr = ' inputmode="numeric" value="' + attrEsc(s.value) + '"';
+      if (s.state === 'disabled') attr += ' disabled';
+      var inner = '\n  <input class="kv-number-input-field"' + attr + ' aria-label="数值">';
+      if (s.unit) inner += '\n  <span class="kv-number-input-unit">' + esc(s.unitText) + '</span>';
+      return '<label class="kv-number-input' + stateClass(s.state) + '">' + inner + '\n</label>';
+    }
+
+    var OPTIONS = ['选项一', '选项二', '选项三'];
+
+    function selectHtml(s) {
+      var plain = s.style === 'plain';
+      var open = s.state === 'open';
+      // 无底一般都有当前值；填充要选过才有值（展开时还没选）
+      var showValue = !(s.state === 'disabled') && (plain || s.state === 'selected');
+      var cls = 'kv-select kv-select--' + s.style + (s.state === 'hover' ? ' is-hover' : '');
+      var attr = ' aria-haspopup="menu" aria-expanded="' + open + '"';
+      if (s.state === 'disabled') attr += ' disabled';
+      var inner = '';
+      if (s.icon) inner += '\n    <i class="kv-icon" data-icon="Add"></i>';
+      inner += showValue
+        ? '\n    <span class="kv-select-text">' + esc(s.text) + '</span>'
+        : '\n    <span class="kv-select-text kv-select-text--placeholder">' + esc(s.placeholder) + '</span>';
+      inner += '\n    <i class="kv-icon" data-icon="' + (open ? 'UpArrowSmall' : 'DownArrowSmall') + '"></i>';
+      var html = '<div class="kv-select-wrap' + (plain ? ' kv-select-wrap--plain' : '') + '">\n  <button type="button" class="' + cls + '"' + attr + '>' + inner + '\n  </button>';
+      if (s.list) {
+        html += '\n  <div class="kv-menu kv-menu--popup kv-select-list is-open" role="menu">';
+        OPTIONS.forEach(function (o) {
+          var on = showValue && o === s.text;
+          html += '\n    <button type="button" class="kv-menu-item" role="menuitemradio" aria-checked="' + on + '"><span>' + o + '</span>' +
+            (on ? '<i class="kv-icon kv-menu-item__check" data-icon="CheckSmall"></i>' : '') + '</button>';
+        });
+        html += '\n  </div>';
+      }
+      return html + '\n</div>';
+    }
+
+    function textareaHtml(s) {
+      var attr = ' placeholder="' + attrEsc(s.placeholder) + '"';
+      if (s.state === 'error') attr += ' aria-invalid="true"';
+      if (s.state === 'disabled') attr += ' disabled';
+      var value = hasValue(s.state) ? esc(s.text) : '';
+      var inner = '\n  <textarea class="kv-textarea-field"' + attr + ' aria-label="描述">' + value + '</textarea>';
+      if (s.count) inner += '\n  <span class="kv-textarea-counter">' + Array.from(hasValue(s.state) ? s.text : '').length + '/500</span>';
+      return '<label class="kv-textarea' + stateClass(s.state) + '">' + inner + '\n</label>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-input'), {
+      controls: [
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['focus', '聚焦'], ['typed', '已输入'], ['error', '错误'], ['disabled', '禁用']] },
+        { key: 'icon', label: '左图标', type: 'toggle', value: false },
+        { key: 'count', label: '字数', type: 'toggle', value: false },
+        { key: 'placeholder', label: '占位文字', type: 'text', value: '请输入' },
+        { key: 'text', label: '文字', type: 'text', value: '输入的内容' },
+        { key: 'countText', label: '字数文字', type: 'text', value: '0/50' }
+      ],
+      render: inputHtml
+    });
+
+    KiviShell.playground(document.getElementById('pg-number-input'), {
+      controls: [
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['focus', '聚焦'], ['disabled', '禁用']] },
+        { key: 'unit', label: '显示单位', type: 'toggle', value: true },
+        { key: 'value', label: '数值', type: 'text', value: '12' },
+        { key: 'unitText', label: '单位', type: 'text', value: '秒' }
+      ],
+      render: numberHtml
+    });
+
+    KiviShell.playground(document.getElementById('pg-select'), {
+      controls: [
+        { key: 'style', label: '样式', type: 'segment', value: 'fill', options: [['fill', '填充'], ['plain', '无底']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['open', '展开'], ['selected', '已选'], ['disabled', '禁用']] },
+        { key: 'icon', label: '左图标', type: 'toggle', value: false },
+        { key: 'placeholder', label: '占位文字', type: 'text', value: '请选择' },
+        { key: 'text', label: '文字', type: 'text', value: '选项一' }
+      ],
+      render: function (s) { return selectHtml({ style: s.style, state: s.state, icon: s.icon, placeholder: s.placeholder, text: s.text, list: s.state === 'open' }); }
+    });
+
+    KiviShell.playground(document.getElementById('pg-textarea'), {
+      controls: [
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['focus', '聚焦'], ['typed', '已输入'], ['error', '错误'], ['disabled', '禁用']] },
+        { key: 'count', label: '字数', type: 'toggle', value: true },
+        { key: 'placeholder', label: '占位文字', type: 'text', value: '请输入描述' },
+        { key: 'text', label: '文字', type: 'text', value: '一个女生站在樱花树下，镜头从远景慢慢推近，背景是黄昏的城市天际线。' }
+      ],
+      render: textareaHtml
+    });
+
+    // ---------- 状态矩阵：静态摆出来，不响应点击 ----------
+
+    function matrix(host, rows, cols, make) {
+      var html = '<table class="shell-matrix"><thead><tr><th></th>';
+      cols.forEach(function (c) { html += '<th>' + c[1] + '</th>'; });
+      html += '</tr></thead><tbody>';
+      rows.forEach(function (r) {
+        html += '<tr><th scope="row">' + r[1] + '</th>';
+        cols.forEach(function (c) { html += '<td>' + make(r[0], c[0]) + '</td>'; });
+        html += '</tr>';
+      });
+      host.innerHTML = html + '</tbody></table>';
+    }
+
+    // 网格：每个状态一格，上面一行小字
+    function grid(host, cls, items) {
+      host.innerHTML = '<div class="in-grid ' + cls + '">' + items.map(function (it) {
+        return '<figure style="margin:0"><figcaption>' + it[0] + '</figcaption>' + it[1] + '</figure>';
+      }).join('') + '</div>';
+    }
+
+    var SAMPLE = '一个女生站在樱花树下，镜头从远景慢慢推近，背景是黄昏的城市天际线。';
+
+    function inputCell(state) {
+      return inputHtml({ state: state, icon: false, count: false, placeholder: '请输入', text: '输入的内容', countText: '0/50' });
+    }
+    grid(document.getElementById('matrix-input'), 'in-grid--3', [
+      ['默认', inputCell('default')], ['悬停', inputCell('hover')], ['聚焦', inputCell('focus')],
+      ['已输入', inputCell('typed')], ['错误', inputCell('error')], ['禁用', inputCell('disabled')]
+    ]);
+
+    matrix(document.getElementById('matrix-number-input'), [['n', '']],
+      [['default', '默认'], ['hover', '悬停'], ['focus', '聚焦'], ['disabled', '禁用']],
+      function (r, c) { return numberHtml({ state: c, unit: true, value: '12', unitText: '秒' }); });
+
+    function selectCell(style, state) {
+      var html = selectHtml({ style: style, state: state, icon: false, placeholder: '请选择', text: '选中的值', list: false });
+      return style === 'fill' ? '<div class="in-cell">' + html + '</div>' : html;
+    }
+    matrix(document.getElementById('matrix-select'),
+      [['fill', '填充'], ['plain', '无底']],
+      [['default', '默认'], ['hover', '悬停'], ['open', '展开'], ['selected', '已选'], ['disabled', '禁用']],
+      selectCell);
+
+    function textareaCell(state) {
+      return textareaHtml({ state: state, count: true, placeholder: '请输入描述', text: SAMPLE });
+    }
+    grid(document.getElementById('matrix-textarea'), 'in-grid--2', [
+      ['默认', textareaCell('default')], ['悬停', textareaCell('hover')], ['聚焦', textareaCell('focus')],
+      ['已输入', textareaCell('typed')], ['错误', textareaCell('error')], ['禁用', textareaCell('disabled')]
+    ]);
+
+    KiviIcons.render(document);
+
+    // ---------- 演示用：打字、展开收起。组件本身不带 JS ----------
+
+    function isStatic(el) { return el.closest('[data-layout="matrix"], [data-static]'); }
+
+    // 表单行：字数实时变，超过 50 变错误
+    (function () {
+      var host = document.getElementById('demo-form');
+      var field = host.querySelector('.kv-input-field');
+      var counter = host.querySelector('.kv-input-counter');
+      var help = host.querySelector('div > span:last-child');
+      field.addEventListener('input', function () {
+        var n = Array.from(field.value).length;
+        var bad = n > 50;
+        counter.textContent = n + '/50';
+        if (bad) field.setAttribute('aria-invalid', 'true'); else field.removeAttribute('aria-invalid');
+        help.textContent = bad ? '名称不能超过 50 个字' : '最多 50 个字';
+        help.style.color = bad ? 'var(--color-status-danger)' : 'var(--color-text-fill-tertiary)';
+      });
+    })();
+
+    // 数字输入框：只留数字
+    (function () {
+      var field = document.querySelector('#demo-number .kv-number-input-field');
+      field.addEventListener('input', function () { field.value = field.value.replace(/\D/g, ''); });
+    })();
+
+    // 多行输入框：字数实时变，超过 500 变错误
+    (function () {
+      var host = document.getElementById('demo-textarea');
+      var field = host.querySelector('.kv-textarea-field');
+      var counter = host.querySelector('.kv-textarea-counter');
+      field.addEventListener('input', function () {
+        var n = Array.from(field.value).length;
+        counter.textContent = n + '/500';
+        if (n > 500) field.setAttribute('aria-invalid', 'true'); else field.removeAttribute('aria-invalid');
+      });
+    })();
+
+    // 下拉选择：点触发器展开收起，点选项选值，点别处或 Esc 收起
+    function setOpen(btn, open) {
+      btn.setAttribute('aria-expanded', String(open));
+      var list = btn.nextElementSibling;
+      if (list) list.classList.toggle('is-open', open);
+      var arrow = btn.lastElementChild;
+      arrow.setAttribute('data-icon', open ? 'UpArrowSmall' : 'DownArrowSmall');
+      arrow.innerHTML = '';
+      KiviIcons.render(btn);
+    }
+    function closeAll(except) {
+      document.querySelectorAll('.kv-select[aria-expanded="true"]').forEach(function (b) {
+        if (b !== except && !isStatic(b)) setOpen(b, false);
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.shell-pg-panel')) return; // 点属性面板不收起预览里的下拉
+      var btn = e.target.closest('.kv-select');
+      if (btn && !btn.disabled && !isStatic(btn)) {
+        closeAll(btn);
+        setOpen(btn, btn.getAttribute('aria-expanded') !== 'true');
+        return;
+      }
+      var item = e.target.closest('.kv-select-list .kv-menu-item');
+      if (item && !isStatic(item)) {
+        var wrap = item.closest('.kv-select-wrap');
+        var text = wrap.querySelector('.kv-select-text');
+        text.textContent = item.querySelector('span').textContent;
+        text.classList.remove('kv-select-text--placeholder');
+        wrap.querySelectorAll('.kv-menu-item').forEach(function (it) {
+          var on = it === item;
+          it.setAttribute('aria-checked', String(on));
+          var mark = it.querySelector('.kv-menu-item__check');
+          if (!on && mark) mark.remove();
+          if (on && !mark) {
+            mark = document.createElement('i');
+            mark.className = 'kv-icon kv-menu-item__check';
+            mark.setAttribute('data-icon', 'CheckSmall');
+            it.appendChild(mark);
+            KiviIcons.render(it);
+          }
+        });
+        setOpen(wrap.querySelector('.kv-select'), false);
+        return;
+      }
+      closeAll(null);
+    });
+
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(null); });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+import { GeneratingDotsPlayground, GeneratingRowPlayground } from './motion-generating.demos';
+
+## 生成中
+
+节点和结果图正在生成时的点阵动效：点阵拼出类型图标，再散成星点，循环。GeneratingDots 管一张，GeneratingRow 管一次多张；都铺满最近的定位父元素。
+
+### GeneratingDots
+
+<GeneratingDotsPlayground />
+
+### GeneratingRow
+
+<GeneratingRowPlayground />
+
+### 参数
+
+#### GeneratingDots
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"video"` `"audio"` `"text"` | — | 汇聚时拼出的图标，必填。用 Figma 图标 ImageGeneration / VideoGeneration / Audio / Text，居中，大小是格子短边的 56%，按填充轮廓算格子（盖住 30% 以上算一个点） |
+| `effect` | `"twinkle"` `"drift"` `"sheen"` | 不传：挂载时在方案一、二里随机选一个 | 方案一 `twinkle` 星点闪烁：点不飞，图标上的点和背景星点轮流淡入淡出。方案二 `drift` 斜飘：图标往右上约 35° 飘散、变淡，星点亮起；汇聚时点从左下飘回图标。方案三 `sheen` 静态扫光：图标拼好不动，没有星点，只有扫光循环，节奏和一轮一样（0.5× 下每 11.6s 扫一次）。不传时每个实例挂载时只在方案一、二里随机选一个，重渲染不换。系统开了「减少动态效果」时一律用方案三，盖过 `effect` 传的值。方案一、二的背景星点一样：每张 16% 的格子是候选，由往右上滚动的噪波（三层叠加，权重 0.45 / 0.33 / 0.22）决定亮灭，每颗用 0.4s 缓入缓出地追上；每轮换一张噪波，成形时只剩几颗 |
+| `speed` | `number` | `0.5` | 速度倍数。1× 一轮 5.8s：星点 1.6 / 汇聚 1.4 / 成形 1.6 / 散开 1.2。默认 0.5×，一轮 11.6s。常用 0.5 / 1 / 1.5 |
+| `spacing` | `number` | `6` | 点距，参照 256 边长。常用 6 / 8 / 10。格子短边小于 256 时点距、点的大小按比例缩，最小缩到 1/4；大于 256 不放大 |
+| `color` | `"brand"` `"white"` | `"white"` | 品牌渐变（`--color-brand-gradient-1` 到 `-2`）/ 白色（`--color-text-fill-primary`）。底层网点固定 `--color-bg-fill-container-light-1`（白 8%） |
+| `glow` | `number` | `0.25` | 光晕强度 0–1，0 是没有。光晕是模糊半径为点距 60% 的亮度图，叠在点下面 |
+| `paused` | `boolean` | `false` | 暂停，停在当前画面 |
+| `seed` | `number` | 每个实例各一个 | 随机种子，决定星点位置和每轮的亮灭、飘动路线。要固定就传 |
+
+其余原生 `<div>` 属性都能传。
+
+#### GeneratingRow
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"video"` `"audio"` `"text"` | `"image"` | 每张里拼出的图标，同 GeneratingDots |
+| `count` | `number` | `4` | 一次生成几张。父元素要排成同样多的等宽格子。每张比左边一张晚 0.1 时间线秒（0.5× 下 200ms），扫光也跟着错开，每张各扫一道；几张的噪波连成一片，按整排坐标算 |
+| `gap` | `number` | `8` | 格子之间的缝，要和父元素排版里的 gap 一样。缝里不画点 |
+| `radius` | `number` | `8` | 每个格子的圆角，`--border-radius-8`，用来裁掉格子之外的光晕 |
+| `effect` | `"twinkle"` `"drift"` `"sheen"` | 不传：挂载时在方案一、二里随机选一个 | 同 GeneratingDots。方案二飘散时往右上飘向下一张，汇聚时从左下的上一张飘进来，飞得比单张远（0.55 倍格子边长起，单张 0.4） |
+| `speed` | `number` | `0.5` | 同 GeneratingDots |
+| `spacing` | `number` | `6` | 同 GeneratingDots |
+| `color` | `"brand"` `"white"` | `"white"` | 同 GeneratingDots |
+| `glow` | `number` | `0.25` | 同 GeneratingDots |
+| `paused` | `boolean` | `false` | 同 GeneratingDots |
+| `seed` | `number` | 每个实例各一个 | 同 GeneratingDots |
+
+其余原生 `<div>` 属性都能传。

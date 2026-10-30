@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>菜单和提示 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../kivi/tabs-tags-avatar.css">
+  <link rel="stylesheet" href="../kivi/menus-tooltip.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用，不属于组件库 */
+
+    /* 属性面板、状态矩阵里的菜单给个宽度 */
+    .shell-pg-stage .kv-menu { width: 200px; }
+    .shell-matrix .kv-menu { width: 168px; }
+    .shell-pg-stage .kv-sidebar-item { width: 216px; }
+
+    /* 侧栏演示：宽 216 一列，底色 base */
+    .mt-sidebar { flex-direction: column; align-items: center; gap: var(--spacing-xxs); background: var(--color-bg-fill-base) !important; }
+    .mt-sidebar > * { width: 216px; flex: none; }
+    .shell-matrix .mt-cell { width: 216px; }
+
+    /* 说明型 Tooltip 在属性面板里别被撑开 */
+    .shell-pg-stage .kv-tooltip--desc { max-width: 240px; }
+  </style>
+</head>
+<body data-root="../" data-page="menus-tooltip">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">通用组件</p>
+    <h1>菜单和提示</h1>
+    <p class="doc-lead">非模态浮层：Tooltip 和菜单。底色都是 popup，不加描边、阴影和毛玻璃。菜单项、分组标题、分割线是组件；整个菜单是模板。最后是主站侧栏的三个零件。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=146-607" target="_blank" rel="noopener">「菜单和提示」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">草稿 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/menus-tooltip.css</code></dd></div>
+    </dl>
+  </header>
+
+  <p style="margin-top:24px">Tooltip 是鼠标停留时的说明，移开就消失；菜单是点开或右键后选一个操作。操作结果（保存成功、生成失败）不用 Tooltip，用 Toast。</p>
+  <ul>
+    <li>菜单不是一个组件：复制「菜单模板」的容器，往里放 MenuItem、MenuLabel、MenuDivider，条目随便增删。画布右键、节点右键、模型选择、@素材、下拉选择展开的列表，都用它拼，不单独做组件。</li>
+    <li>弹出菜单、Tooltip 的出现和消失动效写在 <code>menus-tooltip.css</code> 里，规则见「动效」页。</li>
+  </ul>
+
+  <!-- ==================== Tooltip ==================== -->
+
+  <h2 id="tooltip">Tooltip</h2>
+  <p>在右边面板选类型、改文字，和 Figma 右侧属性面板一样。下面的代码跟着变，可以直接复制。面板里摆的是静态的，真实的悬停出现看「用法」。</p>
+  <div id="pg-tooltip"></div>
+
+  <h3>用途</h3>
+  <p>鼠标停留时出现的文字提示，移开就消失。</p>
+  <ul>
+    <li>只有图标的按钮必须加 Tooltip，写清楚它是做什么的；按钮上已经有文字的不用加。</li>
+    <li>有快捷键的把快捷键带上，比如「撤销 ⌘Z」。</li>
+    <li>和 Toast 的区别：Tooltip 是鼠标停留才出现、移开就消失的说明；操作结果的反馈（保存成功、生成失败）用 Toast。</li>
+  </ul>
+
+  <h3>结构</h3>
+  <ul>
+    <li><strong>简单</strong>：一行文字，后面可以带快捷键，间距 8。</li>
+    <li><strong>说明</strong>：标题 + 一段说明，竖排，间距 4，最宽 240。</li>
+    <li>不带小箭头、描边、阴影、毛玻璃。</li>
+    <li>要悬停弹出，把目标和 Tooltip 一起放进 <code>kv-tooltip-anchor</code>；Tooltip 自己定位，出现在目标下方 8px。不放进去的 <code>kv-tooltip</code> 是静态的，文档摆样子用。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>类型</td><td>简单 / 说明</td><td><code>kv-tooltip</code>（简单，默认）/ <code>kv-tooltip--desc</code></td></tr>
+        <tr><td>文字</td><td>提示的文字</td><td>简单：直接写在里面；说明：<code>&lt;span class="kv-tooltip__text"&gt;</code></td></tr>
+        <tr><td>显示快捷键、快捷键</td><td>开 / 关；快捷键文字，比如 ⌘Z</td><td><code>&lt;span class="kv-tooltip__shortcut"&gt;⌘Z&lt;/span&gt;</code>，只有简单有</td></tr>
+        <tr><td>标题</td><td>说明的标题</td><td><code>&lt;b class="kv-tooltip__title"&gt;</code>，只有说明有</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>简单</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>尺寸</td><td>高 32，宽跟内容</td><td>最宽 240，高跟内容</td></tr>
+        <tr><td>内边距</td><td>上下 6 · <code>--spacing-xs</code>，左右 12 · <code>--spacing-md</code></td><td>12 · <code>--spacing-md</code></td></tr>
+        <tr><td>圆角</td><td>8 · <code>--border-radius-sm</code></td><td>8 · <code>--border-radius-sm</code></td></tr>
+        <tr><td>底色</td><td><code>--color-bg-fill-popup</code></td><td><code>--color-bg-fill-popup</code></td></tr>
+        <tr><td>文字</td><td>12 常规，行高 20，primary</td><td>标题 13 粗，primary；说明 12 常规，secondary；行高都是 20</td></tr>
+        <tr><td>间距</td><td>文字和快捷键 8 · <code>--spacing-sm</code></td><td>标题和说明 4 · <code>--spacing-xxs</code></td></tr>
+        <tr><td>快捷键</td><td>12 常规，tertiary</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo>
+    <div class="kv-tooltip" role="tooltip">提示文字</div>
+    <div class="kv-tooltip" role="tooltip">撤销<span class="kv-tooltip__shortcut">⌘Z</span></div>
+    <div class="kv-tooltip kv-tooltip--desc" role="tooltip">
+      <b class="kv-tooltip__title">提示标题</b>
+      <span class="kv-tooltip__text">提示文字，一段说明，太长就换行。</span>
+    </div>
+  </div>
+
+  <h4>出现和消失</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>规则</th></tr></thead>
+      <tbody>
+        <tr><td>位置</td><td>目标下方 8px。水平方向 Figma 没定，演示里居中。<span class="tag tag--draft">待定</span></td></tr>
+        <tr><td>出现</td><td>鼠标停在目标上 500ms 后，150ms ease-out 淡入。键盘 Tab 到目标也会出现。</td></tr>
+        <tr><td>消失</td><td>移开立刻 100ms ease-in 淡出。</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>层级（z-index）Figma 没定，由使用方定。<span class="tag tag--draft">待定</span></li>
+  </ul>
+
+  <h3>用法</h3>
+  <h4>图标按钮配 Tooltip</h4>
+  <p>把鼠标停在按钮上，等半秒。按钮写 <code>aria-label</code>，再用 <code>aria-describedby</code> 指向 Tooltip。</p>
+  <div data-demo style="min-height:200px;align-items:flex-start">
+    <span class="kv-tooltip-anchor">
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="下载" aria-describedby="tip-download">
+        <i class="kv-icon" data-icon="Download"></i>
+      </button>
+      <span class="kv-tooltip" role="tooltip" id="tip-download">下载</span>
+    </span>
+    <span class="kv-tooltip-anchor">
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="复制" aria-describedby="tip-copy">
+        <i class="kv-icon" data-icon="Copy"></i>
+      </button>
+      <span class="kv-tooltip" role="tooltip" id="tip-copy">复制<span class="kv-tooltip__shortcut">⌘C</span></span>
+    </span>
+    <span class="kv-tooltip-anchor">
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="删除" aria-describedby="tip-delete">
+        <i class="kv-icon" data-icon="Delete"></i>
+      </button>
+      <span class="kv-tooltip" role="tooltip" id="tip-delete">删除</span>
+    </span>
+  </div>
+
+  <h4>说明型：要多解释一句时用</h4>
+  <div data-demo style="min-height:200px;align-items:flex-start">
+    <span class="kv-tooltip-anchor">
+      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--secondary" type="button" aria-label="参数设置" aria-describedby="tip-config">
+        <i class="kv-icon" data-icon="Configuration"></i>
+      </button>
+      <span class="kv-tooltip kv-tooltip--desc" role="tooltip" id="tip-config">
+        <b class="kv-tooltip__title">参数设置</b>
+        <span class="kv-tooltip__text">调整比例、分辨率和生成数量。</span>
+      </span>
+    </span>
+  </div>
+
+  <!-- ==================== MenuItem ==================== -->
+
+  <h2 id="menu-item">MenuItem</h2>
+  <p>在右边面板选类型、状态和左右两边放什么。「左边二选一、右边三选一」已经写进面板规则：一边开了，同组的其他开关就灰掉。</p>
+  <div id="pg-menu-item"></div>
+
+  <h3>用途</h3>
+  <p>菜单里的一条。可以点，点了执行一个操作或选定一个值。</p>
+
+  <h3>结构</h3>
+  <p>左边（可选）+ 文字 + 右边（可选），水平排列，间距 8。</p>
+  <ul>
+    <li>左边放图标或缩略图，<strong>二选一</strong>。图标 16；缩略图是 AssetThumb 24，可以切图片 / 音频。</li>
+    <li>右边放快捷键、子菜单箭头、勾选，<strong>三选一</strong>。</li>
+    <li>文字撑满剩下的宽度。宽度在菜单里是「填满」。</li>
+    <li>可以点的写 <code>&lt;button type="button"&gt;</code>，文字包一层 <code>&lt;span&gt;</code>。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>文字</td><td>菜单项上的字</td><td><code>&lt;span&gt;菜单项&lt;/span&gt;</code></td></tr>
+        <tr><td>类型</td><td>普通 / 危险</td><td><code>kv-menu-item</code>（普通）/ <code>kv-menu-item--danger</code></td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 禁用 / 选中</td><td>悬停由鼠标触发；禁用 <code>disabled</code>；选中 <code>aria-selected="true"</code></td></tr>
+        <tr><td>左图标</td><td>开 / 关</td><td><code>&lt;i class="kv-icon" data-icon="名字"&gt;</code>，放在文字前面</td></tr>
+        <tr><td>缩略图</td><td>开 / 关</td><td><code>&lt;span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--image"&gt;</code>，放在文字前面，和左图标二选一</td></tr>
+        <tr><td>快捷键、快捷键文字</td><td>开 / 关；文字，比如 ⌘C</td><td><code>&lt;span class="kv-menu-item__shortcut"&gt;⌘C&lt;/span&gt;</code></td></tr>
+        <tr><td>子菜单箭头</td><td>开 / 关</td><td><code>&lt;i class="kv-icon kv-menu-item__arrow" data-icon="RightArrowSmall"&gt;</code></td></tr>
+        <tr><td>勾选</td><td>开 / 关</td><td><code>&lt;i class="kv-icon kv-menu-item__check" data-icon="CheckSmall"&gt;</code>，再加 <code>role="menuitemradio"</code> 和 <code>aria-checked="true"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>「危险」只有默认、悬停、禁用，没有选中。</li>
+    <li>危险菜单项（删除）放在菜单最后，用分割线和上面隔开。</li>
+  </ul>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>高</td><td>36</td><td>—</td></tr>
+        <tr><td>圆角</td><td>8</td><td><code>--border-radius-sm</code></td></tr>
+        <tr><td>左右内边距</td><td>12</td><td><code>--spacing-md</code></td></tr>
+        <tr><td>元素间距</td><td>8</td><td><code>--spacing-sm</code></td></tr>
+        <tr><td>左图标</td><td>16</td><td>—</td></tr>
+        <tr><td>缩略图</td><td>24，圆角 4（AssetThumb）</td><td>—</td></tr>
+        <tr><td>文字</td><td>13 常规，行高 20</td><td><code>--font-size-13</code> · <code>--font-line-height-20</code></td></tr>
+        <tr><td>快捷键</td><td>12 常规，tertiary</td><td><code>--font-size-12</code> · <code>--color-text-fill-tertiary</code></td></tr>
+        <tr><td>子菜单箭头</td><td>RightArrowSmall，16，tertiary</td><td><code>--color-text-fill-tertiary</code></td></tr>
+        <tr><td>勾选</td><td>CheckSmall，16，brand/solid</td><td><code>--color-brand-solid</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>类型和状态</h4>
+  <p>悬停在这里摆成静态的，方便对照；鼠标移上去也能试。</p>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-menu-item"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>状态</th><th>普通</th><th>危险</th></tr></thead>
+      <tbody>
+        <tr><td>默认</td><td>透明底；文字和图标 primary</td><td>透明底；文字和图标 status/danger</td></tr>
+        <tr><td>悬停</td><td>底 container-light-2-hover（白 8%）</td><td>底 status/danger-subtle（danger 12%）</td></tr>
+        <tr><td>禁用</td><td>文字、图标、快捷键 disabled（白 20%），不响应悬停和点击</td><td>同普通</td></tr>
+        <tr><td>选中</td><td>底 container-light-1（白 8%），不打勾；文字和图标 primary</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>底色变化 100ms ease-in-out，见「动效」。</li>
+    <li>键盘焦点的样子 Figma 没定，现在暂时和悬停一样。<span class="tag tag--draft">待定</span></li>
+    <li>禁用时子菜单箭头、勾选的颜色 Figma 没定，代码里不改它们的颜色。<span class="tag tag--draft">待定</span></li>
+  </ul>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>左图标</strong>：基础菜单、分组菜单，让每一项好认。<strong>什么都不放</strong>：右键菜单、比例、数量这类纯文字的选项。<strong>缩略图</strong>：@素材。</li>
+    <li><strong>快捷键</strong>：右键菜单里有快捷键的操作，比如「撤销 ⌘Z」。<strong>子菜单箭头</strong>：点了会再弹一个菜单的项。</li>
+    <li><strong>选中</strong>：单选菜单里标出当前项，白 8% 底，不打勾，比如数量、比例。<strong>勾选</strong>：在右边打勾。当前项怎么标，Figma 里「选中」和「勾选」两种写法并存，详见「菜单模板」的单选例子。<span class="tag tag--draft">待确认</span></li>
+    <li><strong>危险</strong>：删除这类操作，放在菜单最后，用 MenuDivider 和上面隔开。</li>
+    <li><strong>禁用</strong>：条件不满足时用，比如没东西可粘贴。</li>
+    <li>整个菜单的拼法见「菜单模板」。</li>
+  </ul>
+
+  <!-- ==================== MenuLabel ==================== -->
+
+  <h2 id="menu-label">MenuLabel</h2>
+
+  <h3>用途</h3>
+  <p>菜单里的分组标题，给下面几项起个名字。不能点。</p>
+
+  <h3>结构</h3>
+  <p>一行文字，左右内边距 12。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>文字</td><td>标题上的字</td><td><code>&lt;div class="kv-menu-label"&gt;分组标题&lt;/div&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>高</td><td>28</td><td>—</td></tr>
+        <tr><td>左右内边距</td><td>12</td><td><code>--spacing-md</code></td></tr>
+        <tr><td>文字</td><td>12 常规，行高 20，tertiary</td><td><code>--font-size-12</code> · <code>--color-text-fill-tertiary</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo>
+    <div class="kv-menu" role="menu" style="width: 200px">
+      <div class="kv-menu-label">分组标题</div>
+      <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="Text"></i><span>文本生成</span></button>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>菜单分成几组、每组要一个名字时放在这组的最上面，比如「引用该节点生成」。</li>
+    <li>只有一组的菜单不用标题。</li>
+  </ul>
+
+  <!-- ==================== MenuDivider ==================== -->
+
+  <h2 id="menu-divider">MenuDivider</h2>
+
+  <h3>用途</h3>
+  <p>菜单里的分割线，把不同性质的几项隔开。</p>
+
+  <h3>结构</h3>
+  <p>一条横线，上下各留 4，左右各缩进 8。</p>
+
+  <h3>属性</h3>
+  <p>没有属性。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td><code>&lt;div class="kv-menu-divider" role="separator"&gt;&lt;/div&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>线</td><td>1px</td><td><code>--border-width-sm</code></td></tr>
+        <tr><td>颜色</td><td>border-subtle（白 8%）</td><td><code>--color-border-subtle</code></td></tr>
+        <tr><td>上下留白</td><td>各 4，合起来高 9</td><td><code>--spacing-xxs</code></td></tr>
+        <tr><td>左右缩进</td><td>各 8</td><td><code>--spacing-sm</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo>
+    <div class="kv-menu" role="menu" style="width: 200px">
+      <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="Download"></i><span>下载</span></button>
+      <div class="kv-menu-divider" role="separator"></div>
+      <button class="kv-menu-item kv-menu-item--danger" role="menuitem" type="button"><i class="kv-icon" data-icon="Delete"></i><span>删除</span></button>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>危险操作（删除）和上面的普通操作之间必须有。</li>
+    <li>分组菜单里，两组之间用分割线；有了 MenuLabel 的菜单，组与组之间也可以再加。</li>
+  </ul>
+
+  <!-- ==================== 菜单模板 ==================== -->
+
+  <h2 id="menu">菜单模板</h2>
+  <p>容器 <code>kv-menu</code> 加上 MenuItem、MenuLabel、MenuDivider。Figma 里这个模板在「模板 · 通用」页「菜单」分区。</p>
+
+  <h3>用途</h3>
+  <p>下拉菜单、右键菜单、单选菜单、素材菜单。下拉选择展开的列表也是它，宽度和触发器一样宽。</p>
+
+  <h3>结构</h3>
+  <ul>
+    <li>容器：底色 popup，圆角 12，内边距 4，条目之间不留空。</li>
+    <li>里面放条目：MenuItem、MenuLabel、MenuDivider，数量和顺序随便。</li>
+    <li>菜单不是组件：条目写死在组件里，加一项就要改组件或解绑，所以用模板拼。</li>
+    <li>子菜单：点了会再弹出的项，右边放子菜单箭头；弹出来的也是一个菜单模板。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <p>容器没有属性，往里放条目就行。代码里有两个开关用来弹出：</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>用在</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>摊开的面板</td><td>直接放在页面里</td><td><code>kv-menu</code></td></tr>
+        <tr><td>弹出的菜单</td><td>默认隐藏；开 / 关</td><td><code>kv-menu--popup</code>，开着加 <code>is-open</code></td></tr>
+        <tr><td>触发它的按钮</td><td>展开 / 收起</td><td><code>aria-haspopup="menu"</code> <code>aria-expanded</code> <code>aria-controls</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>底色</td><td>popup（#2C2D2E），实色</td><td><code>--color-bg-fill-popup</code></td></tr>
+        <tr><td>圆角</td><td>12</td><td><code>--border-radius-md</code></td></tr>
+        <tr><td>内边距</td><td>4</td><td><code>--spacing-xxs</code></td></tr>
+        <tr><td>条目间距</td><td>0</td><td>—</td></tr>
+        <tr><td>描边、投影、毛玻璃</td><td>都不加</td><td>—</td></tr>
+        <tr><td>宽度</td><td>由使用方定。Figma 里的例子有 120、160、220 几种</td><td>—</td></tr>
+        <tr><td>最宽、最高、超出怎么办</td><td>Figma 没定，要不要滚动待定 <span class="tag tag--draft">待定</span></td><td>—</td></tr>
+        <tr><td>离触发按钮、子菜单离父项的位置</td><td>Figma 没定，演示里用 4 <span class="tag tag--draft">待定</span></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>出现和消失</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>规则</th></tr></thead>
+      <tbody>
+        <tr><td>出现</td><td>200ms ease-out，淡入</td></tr>
+        <tr><td>消失</td><td>150ms ease-in，淡出</td></tr>
+        <tr><td>关闭</td><td>点菜单项、点菜单外面、按 Esc。这是使用方的脚本，组件库不带</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>用法</h3>
+  <p>五种常见拼法，都能点、能复制。弹出的菜单位置（<code>top</code>、<code>left</code>）和层级由使用方定，下面的 <code>style</code> 只是演示。</p>
+
+  <h4>基础菜单：图标 + 文字，删除放最后</h4>
+  <p>点按钮打开，点外面或按 Esc 关掉。</p>
+  <div data-demo style="min-height:300px;align-items:flex-start">
+    <div style="position: relative">
+      <button class="kv-button kv-button--md kv-button--secondary" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-basic">
+        <span>更多操作</span><i class="kv-icon" data-icon="DownArrowSmall"></i>
+      </button>
+      <div class="kv-menu kv-menu--popup" id="menu-basic" role="menu" style="top: calc(100% + 4px); left: 0; width: 200px">
+        <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="Copy"></i><span>复制</span></button>
+        <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="Share"></i><span>分享</span></button>
+        <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="Download"></i><span>下载</span></button>
+        <div class="kv-menu-divider" role="separator"></div>
+        <button class="kv-menu-item kv-menu-item--danger" role="menuitem" type="button"><i class="kv-icon" data-icon="Delete"></i><span>删除</span></button>
+      </div>
+    </div>
+  </div>
+
+  <h4>右键菜单：文字 + 快捷键，不带图标</h4>
+  <p>在下面的灰色区域里点右键，菜单出现在鼠标位置。</p>
+  <div data-demo id="demo-context" style="min-height:260px;position:relative">
+    <div class="kv-menu kv-menu--popup" id="menu-context" role="menu" style="width: 220px">
+      <button class="kv-menu-item" role="menuitem" type="button"><span>上传</span></button>
+      <button class="kv-menu-item" role="menuitem" type="button"><span>撤销</span><span class="kv-menu-item__shortcut">⌘Z</span></button>
+      <button class="kv-menu-item" role="menuitem" type="button" disabled><span>粘贴</span><span class="kv-menu-item__shortcut">⌘V</span></button>
+    </div>
+  </div>
+
+  <h4>分组标题 + 子菜单箭头</h4>
+  <div data-demo>
+    <div class="kv-menu" role="menu" style="width: 220px">
+      <div class="kv-menu-label">引用该节点生成</div>
+      <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="Text"></i><span>文本生成</span></button>
+      <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="ImageGeneration"></i><span>图片生成</span></button>
+      <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="VideoGeneration"></i><span>视频生成</span></button>
+      <button class="kv-menu-item" role="menuitem" type="button"><i class="kv-icon" data-icon="Music"></i><span>音频生成</span></button>
+      <div class="kv-menu-divider" role="separator"></div>
+      <button class="kv-menu-item" role="menuitem" type="button" aria-haspopup="menu">
+        <span>更多生成方式</span><i class="kv-icon kv-menu-item__arrow" data-icon="RightArrowSmall"></i>
+      </button>
+    </div>
+  </div>
+
+  <h4>单选：当前项用「选中」状态</h4>
+  <p>白 8% 底，不打勾。外层 <code>role="listbox"</code>，每项 <code>role="option"</code>，用 <code>aria-selected</code> 记当前项。点一下切换。</p>
+  <div data-demo id="demo-pick-selected">
+    <div class="kv-menu" role="listbox" style="width: 120px">
+      <button class="kv-menu-item" role="option" type="button" aria-selected="true"><span>x4</span></button>
+      <button class="kv-menu-item" role="option" type="button" aria-selected="false"><span>x2</span></button>
+      <button class="kv-menu-item" role="option" type="button" aria-selected="false"><span>x1</span></button>
+    </div>
+  </div>
+
+  <h4>单选：当前项打勾</h4>
+  <p>勾放在右边。每项 <code>role="menuitemradio"</code>，用 <code>aria-checked</code> 记当前项。点一下切换。</p>
+  <div data-demo id="demo-pick-check">
+    <div class="kv-menu" role="menu" style="width: 160px">
+      <button class="kv-menu-item" role="menuitemradio" type="button" aria-checked="true"><span>智能</span><i class="kv-icon kv-menu-item__check" data-icon="CheckSmall"></i></button>
+      <button class="kv-menu-item" role="menuitemradio" type="button" aria-checked="false"><span>1:1</span></button>
+      <button class="kv-menu-item" role="menuitemradio" type="button" aria-checked="false"><span>4:3</span></button>
+      <button class="kv-menu-item" role="menuitemradio" type="button" aria-checked="false"><span>3:4</span></button>
+      <button class="kv-menu-item" role="menuitemradio" type="button" aria-checked="false"><span>16:9</span></button>
+      <button class="kv-menu-item" role="menuitemradio" type="button" aria-checked="false"><span>9:16</span></button>
+    </div>
+  </div>
+  <p><strong>单选的当前项用哪种？</strong>Figma 里两种都在：「模板 · 通用」页的单选示例和「菜单项」分区的提示用勾选；MenuItem 的组件说明和迁移映射写的是「选中」（比例、数量用选中，勾选只给多选）。<span class="tag tag--draft">待确认</span>两种代码都能用，定了再删一种。</p>
+
+  <h4>素材：左边是缩略图</h4>
+  <div data-demo>
+    <div class="kv-menu" role="menu" style="width: 160px">
+      <button class="kv-menu-item" role="menuitem" type="button">
+        <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--image"><img src="../../assets/placeholders/kiwi-light-1x1.webp" alt=""></span><span>图片 1</span>
+      </button>
+      <button class="kv-menu-item" role="menuitem" type="button">
+        <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--image"><img src="../../assets/placeholders/ip-kiwi-pile-1x1.webp" alt=""></span><span>图片 2</span>
+      </button>
+      <button class="kv-menu-item" role="menuitem" type="button">
+        <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--image"><img src="../../assets/placeholders/monstera-dots-1x1.webp" alt=""></span><span>视频 1</span>
+      </button>
+      <button class="kv-menu-item" role="menuitem" type="button">
+        <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--audio"><i class="kv-icon" data-icon="Music"></i></span><span>音频 1</span>
+      </button>
+    </div>
+  </div>
+
+  <h4>什么时候用什么</h4>
+  <ul>
+    <li>点开一个按钮选操作：基础菜单。在画布、节点上点右键：右键菜单。</li>
+    <li>要把操作分成几类：加 MenuLabel 或 MenuDivider。</li>
+    <li>选一个值（比例、数量、模型）：单选菜单。引用素材：素材菜单。</li>
+    <li>每个菜单里危险操作最多一项，放最后。</li>
+  </ul>
+
+  <!-- ==================== 侧栏：SidebarItem ==================== -->
+
+  <h2 id="sidebar-item">SidebarItem</h2>
+  <p>下面三个组件是主站侧栏的零件，不是菜单。整条侧栏是模板，在「模板 · 主站」页，主站页里会用到它们。</p>
+  <div id="pg-sidebar-item"></div>
+
+  <h3>用途</h3>
+  <p>主站侧栏的一项。「导航」是固定入口，比如新建；「列表」是历史记录，对话和画布。</p>
+
+  <h3>结构</h3>
+  <ul>
+    <li><strong>导航</strong>：左图标 20 + 文字，文字和图标都是 primary。</li>
+    <li><strong>列表</strong>：左边缩略图（AssetThumb 24）+ 文字；文字默认 secondary，悬停、选中变 primary。有封面的选「图片」；没封面的选「图标」，对话用 Message，画布用 Canvas，不要直接放裸图标。</li>
+    <li>右边可以有「更多」：IconButton 28 弱，More 图标，点了单独弹一个菜单；悬停和选中时才显示。</li>
+    <li>带「更多」时外层用 <code>&lt;div&gt;</code>，不要把按钮放进 <code>&lt;button&gt;</code> 或 <code>&lt;a&gt;</code> 里。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>文字</td><td>这一项的字</td><td><code>&lt;span&gt;侧栏项&lt;/span&gt;</code></td></tr>
+        <tr><td>类型</td><td>导航 / 列表</td><td><code>kv-sidebar-item--nav</code>（默认）/ <code>--list</code></td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 选中</td><td>悬停由鼠标触发；选中 <code>aria-current="page"</code></td></tr>
+        <tr><td>更多</td><td>开 / 关</td><td>放不放 <code>kv-icon-button kv-icon-button--28 kv-icon-button--weak kv-sidebar-item__more</code></td></tr>
+        <tr><td>左边</td><td>导航：图标；列表：缩略图</td><td><code>&lt;i class="kv-icon" data-icon="名字"&gt;</code>；<code>kv-asset-thumb kv-asset-thumb--24</code> 加 <code>--image</code>（有封面）或 <code>--icon</code>（没封面）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>导航</th><th>列表</th></tr></thead>
+      <tbody>
+        <tr><td>高</td><td>36</td><td>36</td></tr>
+        <tr><td>圆角</td><td>8 · <code>--border-radius-sm</code></td><td>8 · <code>--border-radius-sm</code></td></tr>
+        <tr><td>内边距</td><td>左右 12 · <code>--spacing-md</code></td><td>左 12 · <code>--spacing-md</code>，右 8 · <code>--spacing-sm</code></td></tr>
+        <tr><td>元素间距</td><td>6 · <code>--spacing-xs</code></td><td>6 · <code>--spacing-xs</code></td></tr>
+        <tr><td>左边</td><td>图标 20</td><td>缩略图 24</td></tr>
+        <tr><td>文字</td><td>13 常规，行高 20，primary</td><td>13 常规，行高 20，默认 secondary，悬停、选中 primary</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>悬停：底 container-light-2-hover（白 8%）。选中：底 container-light-1-hover（白 12%）。底色变化 100ms ease-in-out。</li>
+    <li>侧栏整体：宽 240，底色 base，右边 1px border-subtle；内边距上下 16、左右 12，各块之间 6，组内各项之间 4。这些写在侧栏模板里，不在这个组件上。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-sidebar-item"></div>
+
+  <h3>用法</h3>
+  <p>下面是导航 + 一组对话的样子，鼠标移到列表项上能看到「更多」。</p>
+  <div data-demo class="mt-sidebar">
+    <div class="kv-sidebar-item kv-sidebar-item--nav" tabindex="0">
+      <i class="kv-icon" data-icon="Create"></i><span>新建</span>
+    </div>
+    <div class="kv-sidebar-item kv-sidebar-item--list" tabindex="0" aria-current="page">
+      <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--icon"><i class="kv-icon" data-icon="Message"></i></span>
+      <span>生成一张猕猴桃海报</span>
+      <button class="kv-icon-button kv-icon-button--28 kv-icon-button--weak kv-sidebar-item__more" type="button" aria-label="更多"><i class="kv-icon" data-icon="More"></i></button>
+    </div>
+    <div class="kv-sidebar-item kv-sidebar-item--list" tabindex="0">
+      <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--image"><img src="../../assets/placeholders/ip-kiwi-pile-1x1.webp" alt=""></span>
+      <span>夏日饮品系列</span>
+      <button class="kv-icon-button kv-icon-button--28 kv-icon-button--weak kv-sidebar-item__more" type="button" aria-label="更多"><i class="kv-icon" data-icon="More"></i></button>
+    </div>
+  </div>
+  <ul>
+    <li><strong>导航</strong>：新建、探索这类固定入口。<strong>列表</strong>：对话、画布的历史记录。</li>
+    <li><strong>选中</strong>：当前打开的那一项，同一时间只有一项。</li>
+  </ul>
+
+  <!-- ==================== 侧栏：SidebarLabel ==================== -->
+
+  <h2 id="sidebar-label">SidebarLabel</h2>
+
+  <h3>用途</h3>
+  <p>侧栏的分组标题，比如「对话」「画布」。点标题展开或收起这一组，右边的按钮新建一个。</p>
+
+  <h3>结构</h3>
+  <p>左边：标题文字 + 展开箭头；右边：新建按钮。两端对齐。</p>
+  <ul>
+    <li>展开时箭头朝下（DownArrowSmall），收起时朝右（RightArrowSmall），下面的列表收起。</li>
+    <li>新建按钮是 IconButton 28，对话、画布都用 NewChat 图标。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>文字</td><td>分组名</td><td><code>&lt;span&gt;对话&lt;/span&gt;</code>，放在 <code>kv-sidebar-label__title</code> 里</td></tr>
+        <tr><td>展开</td><td>是 / 否</td><td><code>aria-expanded="true"</code> / <code>"false"</code>，同时换箭头图标</td></tr>
+        <tr><td>新建</td><td>开 / 关</td><td>放不放 <code>kv-icon-button kv-icon-button--28 kv-icon-button--weak kv-sidebar-label__new</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>高</td><td>28</td><td>—</td></tr>
+        <tr><td>内边距</td><td>左 12，右 4</td><td><code>--spacing-md</code> · <code>--spacing-xxs</code></td></tr>
+        <tr><td>标题</td><td>12 常规，行高 16，tertiary</td><td><code>--font-size-12</code> · <code>--color-text-fill-tertiary</code></td></tr>
+        <tr><td>箭头</td><td>16，和标题间距 4</td><td><code>--spacing-xxs</code></td></tr>
+        <tr><td>新建按钮</td><td>IconButton 28，整体透明度 30%（<code>--opacity-30</code>）</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>新建按钮是「弱」还是「文字」类型：Figma 的组件说明写「文字」，实际用的实例是弱（旧名「轻」）。代码按实际实例写成弱。<span class="tag tag--draft">待确认</span></li>
+    <li>新建按钮整体 30% 透明度是 Figma 实例上的值，悬停时要不要变亮没定。<span class="tag tag--draft">待确认</span></li>
+  </ul>
+  <div data-demo class="mt-sidebar">
+    <div class="kv-sidebar-label">
+      <button class="kv-sidebar-label__title" type="button" aria-expanded="true">
+        <span>对话</span><i class="kv-icon" data-icon="DownArrowSmall"></i>
+      </button>
+      <button class="kv-icon-button kv-icon-button--28 kv-icon-button--weak kv-sidebar-label__new" type="button" aria-label="新建对话"><i class="kv-icon" data-icon="NewChat"></i></button>
+    </div>
+    <div class="kv-sidebar-label">
+      <button class="kv-sidebar-label__title" type="button" aria-expanded="false">
+        <span>画布</span><i class="kv-icon" data-icon="RightArrowSmall"></i>
+      </button>
+      <button class="kv-icon-button kv-icon-button--28 kv-icon-button--weak kv-sidebar-label__new" type="button" aria-label="新建画布"><i class="kv-icon" data-icon="NewChat"></i></button>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>放在一组 SidebarItem 的上面，对话、画布各一个。</li>
+    <li>点标题切换展开：展开 <code>aria-expanded="true"</code> 配 DownArrowSmall，收起 <code>"false"</code> 配 RightArrowSmall，同时把下面的列表收起来。</li>
+  </ul>
+
+  <!-- ==================== 侧栏：SidebarMore ==================== -->
+
+  <h2 id="sidebar-more">SidebarMore</h2>
+
+  <h3>用途</h3>
+  <p>侧栏一组列表底部的「更多」，点了看这一组剩下的。</p>
+
+  <h3>结构</h3>
+  <p>一行文字，左对齐，和列表的图标、分组标题的文字对齐。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>文字</td><td>默认「更多」</td><td><code>&lt;button class="kv-sidebar-more" type="button"&gt;更多&lt;/button&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>高</td><td>36</td><td>—</td></tr>
+        <tr><td>左内边距</td><td>12</td><td><code>--spacing-md</code></td></tr>
+        <tr><td>文字</td><td>12 常规，行高 16，tertiary</td><td><code>--font-size-12</code> · <code>--color-text-fill-tertiary</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>悬停、按下的样子 Figma 没定。<span class="tag tag--draft">待定</span></li>
+  </ul>
+  <div data-demo class="mt-sidebar">
+    <button class="kv-sidebar-more" type="button">更多</button>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>一组列表只显示最近几条时，放在这组最后。</li>
+  </ul>
+
+  <!-- ==================== 旧名对照 ==================== -->
+
+  <h2 id="legacy">旧名对照</h2>
+  <p>来自 Figma 本页的「迁移映射」。代码没改，前端按这张表改。</p>
+
+  <h4>旧组件库（KIVI UI KITS）→ 新组件</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>旧</th><th>新</th><th>类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>MenuItem</td><td>MenuItem</td><td>改尺寸</td><td>44 → 36，圆角 12 → 8，左右 16 → 12，14 → 13 号字</td></tr>
+        <tr><td>MenuItem · TrailingContent=icon-text</td><td>「快捷键」「子菜单箭头」开关</td><td>合并</td><td>右边的内容不再用变体区分</td></tr>
+        <tr><td>MenuItem · State=悬浮</td><td>状态=悬停</td><td>改名</td><td>悬停底色白 8%；新增「危险」类型</td></tr>
+        <tr><td>MenuItemAsset</td><td>MenuItem 的「缩略图」开关</td><td>合并</td><td>不再单独一个组件</td></tr>
+        <tr><td>菜单容器（毛玻璃）</td><td>菜单模板</td><td>改样式</td><td>#181818 70% + 毛玻璃 + 描边、圆角 16 → popup 实色、圆角 12，不加描边和毛玻璃；条目间距 4 → 0</td></tr>
+        <tr><td>数量 / 比例 / 模型选择、快捷添加节点、封面「更多」、画布右键、节点右键、@素材</td><td>设计稿里用菜单模板拼</td><td>不再是组件</td><td>条目写死在组件里，加一项就要改组件或解绑</td></tr>
+        <tr><td>单选菜单的当前项（数量、比例，旧库白 8% 底）</td><td>MenuItem 状态=选中</td><td>新增 <span class="tag">新增</span></td><td>白 8% 底，不打勾。「勾选」开关只给需要打勾的多选场景</td></tr>
+        <tr><td>MenuItem 缩略图（24 纯色块）</td><td>AssetThumb 尺寸=24（选项卡、标签和头像页）</td><td>改样式 <span class="tag">调整</span></td><td>缩略图换成 AssetThumb 实例，在 MenuItem 面板上直接切图片 / 音频</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>代码 → 新组件</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>代码</th><th>新</th><th>类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>CustomMenu 容器</td><td>菜单模板</td><td>改样式</td><td>rgba(24,24,24,.7) + 描边 + 阴影、圆角 16 → popup、圆角 12，去掉描边和阴影；条目间距 4 → 0</td></tr>
+        <tr><td>CustomMenu 菜单项</td><td>MenuItem</td><td>改值</td><td>高 36，圆角 12 → 8，14 → 13 号字；悬停白 8% 不变</td></tr>
+        <tr><td>CustomMenu 子菜单</td><td>菜单模板</td><td>改值</td><td>底色 popup-light-1（#36393d）→ popup</td></tr>
+        <tr><td>.custom-tooltip（global.less）</td><td>Tooltip · 简单</td><td>改值</td><td>底色 popup-light-1（#36393d）→ popup；14 → 12 号字</td></tr>
+        <tr><td>ChatTooltip</td><td>Tooltip · 说明</td><td>改值</td><td>底色 popup-light-2 → popup；最宽 240</td></tr>
+        <tr><td>AnchoredDropdown、CommonDropdown 等</td><td>菜单模板 + MenuItem</td><td>合并</td><td>样式统一到菜单模板；这几个组件的细节还没逐个核对</td></tr>
+        <tr><td>菜单模板分区：菜单 · 模板（复制这个）、示例 · 右键菜单 / 分组和子菜单 / 单选菜单 / 素材菜单</td><td>「模板 · 通用」页「菜单」分区</td><td>移动 <span class="tag tag--draft">待确认</span></td><td>改名、去重在整理模板时做</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 这一页的属性面板、状态矩阵和演示交互
+  (function () {
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+    var STATE_CLASS = { hover: ' is-hover' };
+    var THUMB_IMG = '../../assets/placeholders/kiwi-light-1x1.webp';
+
+    // ---------- Tooltip ----------
+
+    function tooltip(s) {
+      if (s.type === 'desc') {
+        return '<div class="kv-tooltip kv-tooltip--desc" role="tooltip">\n' +
+          '  <b class="kv-tooltip__title">' + esc(s.title) + '</b>\n' +
+          '  <span class="kv-tooltip__text">' + esc(s.text) + '</span>\n' +
+          '</div>';
+      }
+      var inner = esc(s.text);
+      if (s.shortcut) inner += '<span class="kv-tooltip__shortcut">' + esc(s.shortcutText) + '</span>';
+      return '<div class="kv-tooltip" role="tooltip">' + inner + '</div>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-tooltip'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'simple', options: [['simple', '简单'], ['desc', '说明']] },
+        { key: 'text', label: '文字', type: 'text', value: '提示文字' },
+        { key: 'title', label: '标题（说明才有）', type: 'text', value: '提示标题' },
+        { key: 'shortcut', label: '显示快捷键（简单才有）', type: 'toggle', value: false },
+        { key: 'shortcutText', label: '快捷键', type: 'text', value: '⌘Z' }
+      ],
+      rules: function (s) { return s.type === 'desc' ? { shortcut: true } : {}; },
+      render: tooltip
+    });
+
+    // ---------- MenuItem ----------
+
+    function menuItem(s) {
+      var danger = s.type === 'danger';
+      var cls = 'kv-menu-item' + (danger ? ' kv-menu-item--danger' : '') + (STATE_CLASS[s.state] || '');
+      var role = s.check ? 'menuitemradio' : s.state === 'selected' ? 'option' : 'menuitem';
+      var attr = ' role="' + role + '" type="button"';
+      if (s.state === 'selected') attr += ' aria-selected="true"';
+      if (s.check) attr += ' aria-checked="true"';
+      if (s.state === 'disabled') attr += ' disabled';
+      var inner = '';
+      if (s.icon) inner += '\n  <i class="kv-icon" data-icon="' + (danger ? 'Delete' : 'Copy') + '"></i>';
+      if (s.thumb) inner += '\n  <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--image"><img src="' + THUMB_IMG + '" alt=""></span>';
+      inner += '\n  <span>' + esc(s.text) + '</span>';
+      if (s.shortcut) inner += '\n  <span class="kv-menu-item__shortcut">' + esc(s.shortcutText) + '</span>';
+      if (s.arrow) inner += '\n  <i class="kv-icon kv-menu-item__arrow" data-icon="RightArrowSmall"></i>';
+      if (s.check) inner += '\n  <i class="kv-icon kv-menu-item__check" data-icon="CheckSmall"></i>';
+      return { cls: cls, attr: attr, inner: inner, role: s.state === 'selected' && !s.check ? 'listbox' : 'menu' };
+    }
+
+    // 属性面板里的菜单项放在 kv-menu 里，才有 popup 底色
+    function menuItemInMenu(s) {
+      var m = menuItem(s);
+      var html = '<button class="' + m.cls + '"' + m.attr + '>' + m.inner + '\n</button>';
+      return '<div class="kv-menu" role="' + m.role + '">\n' + html.replace(/^/gm, '  ') + '\n</div>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-menu-item'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'normal', options: [['normal', '普通'], ['danger', '危险']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['disabled', '禁用'], ['selected', '选中']] },
+        { key: 'text', label: '文字', type: 'text', value: '菜单项' },
+        { key: 'icon', label: '左图标', type: 'toggle', value: true },
+        { key: 'thumb', label: '缩略图', type: 'toggle', value: false },
+        { key: 'shortcut', label: '快捷键', type: 'toggle', value: false },
+        { key: 'shortcutText', label: '快捷键文字', type: 'text', value: '⌘C' },
+        { key: 'arrow', label: '子菜单箭头', type: 'toggle', value: false },
+        { key: 'check', label: '勾选', type: 'toggle', value: false }
+      ],
+      rules: function (s) {
+        var r = {};
+        if (s.type === 'danger') r.state = ['selected'];
+        if (s.thumb) r.icon = true;
+        if (s.icon) r.thumb = true;
+        if (s.shortcut) { r.arrow = true; r.check = true; }
+        if (s.arrow) { r.shortcut = true; r.check = true; }
+        if (s.check) { r.shortcut = true; r.arrow = true; }
+        return r;
+      },
+      render: menuItemInMenu
+    });
+
+    // 状态矩阵：行是类型，列是状态
+    function matrix(host, rows, cols, make) {
+      var html = '<table class="shell-matrix"><thead><tr><th></th>';
+      cols.forEach(function (c) { html += '<th>' + c[1] + '</th>'; });
+      html += '</tr></thead><tbody>';
+      rows.forEach(function (r) {
+        html += '<tr><th scope="row">' + r[1] + '</th>';
+        cols.forEach(function (c) { html += '<td>' + (make(r[0], c[0]) || '<span style="color:var(--color-text-fill-disabled)">—</span>') + '</td>'; });
+        html += '</tr>';
+      });
+      host.innerHTML = html + '</tbody></table>';
+      KiviIcons.render(host);
+    }
+
+    matrix(document.getElementById('matrix-menu-item'),
+      [['normal', '普通'], ['danger', '危险']],
+      [['default', '默认'], ['hover', '悬停'], ['disabled', '禁用'], ['selected', '选中']],
+      function (type, state) {
+        if (type === 'danger' && state === 'selected') return '';
+        return menuItemInMenu({ type: type, state: state, text: '菜单项', icon: true, thumb: false, shortcut: false, shortcutText: '⌘C', arrow: false, check: false });
+      });
+
+    // ---------- SidebarItem ----------
+
+    function sidebarItem(s) {
+      var list = s.type === 'list';
+      var cls = 'kv-sidebar-item kv-sidebar-item--' + s.type + (STATE_CLASS[s.state] || '');
+      var attr = ' tabindex="0"' + (s.state === 'selected' ? ' aria-current="page"' : '');
+      var left = '';
+      if (!list) left = '\n  <i class="kv-icon" data-icon="Create"></i>';
+      else if (s.thumb === 'image') left = '\n  <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--image"><img src="' + THUMB_IMG + '" alt=""></span>';
+      else left = '\n  <span class="kv-asset-thumb kv-asset-thumb--24 kv-asset-thumb--icon"><i class="kv-icon" data-icon="Message"></i></span>';
+      var more = s.more ? '\n  <button class="kv-icon-button kv-icon-button--28 kv-icon-button--weak kv-sidebar-item__more" type="button" aria-label="更多"><i class="kv-icon" data-icon="More"></i></button>' : '';
+      return '<div class="' + cls + '"' + attr + '>' + left + '\n  <span>' + esc(s.text) + '</span>' + more + '\n</div>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-sidebar-item'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'nav', options: [['nav', '导航'], ['list', '列表']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['selected', '选中']] },
+        { key: 'text', label: '文字', type: 'text', value: '侧栏项' },
+        { key: 'thumb', label: '缩略图（列表才有）', type: 'segment', value: 'icon', options: [['icon', '图标'], ['image', '图片']] },
+        { key: 'more', label: '更多（悬停、选中才显示）', type: 'toggle', value: false }
+      ],
+      rules: function (s) { return s.type === 'nav' ? { thumb: ['icon', 'image'] } : {}; },
+      render: sidebarItem
+    });
+
+    matrix(document.getElementById('matrix-sidebar-item'),
+      [['nav', '导航'], ['list', '列表']],
+      [['default', '默认'], ['hover', '悬停'], ['selected', '选中']],
+      function (type, state) {
+        return '<div class="mt-cell">' + sidebarItem({ type: type, state: state, text: '侧栏项', thumb: 'icon', more: false }) + '</div>';
+      });
+
+    // ---------- 演示用：菜单的开关 ----------
+
+    // 点按钮打开、点外面 / 按 Esc / 点菜单项关闭
+    function closeMenus(except) {
+      document.querySelectorAll('.kv-menu--popup.is-open').forEach(function (m) {
+        if (m === except) return;
+        m.classList.remove('is-open');
+        var t = document.querySelector('[aria-controls="' + m.id + '"]');
+        if (t) t.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    document.querySelectorAll('[aria-haspopup="menu"][aria-controls]').forEach(function (trigger) {
+      var menu = document.getElementById(trigger.getAttribute('aria-controls'));
+      if (!menu || !menu.classList.contains('kv-menu--popup')) return;
+      trigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = !menu.classList.contains('is-open');
+        closeMenus(menu);
+        menu.classList.toggle('is-open', open);
+        trigger.setAttribute('aria-expanded', String(open));
+      });
+      menu.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (e.target.closest('.kv-menu-item:not(:disabled)')) closeMenus();
+      });
+    });
+
+    // 右键：菜单出现在鼠标位置
+    var ctxHost = document.getElementById('demo-context');
+    var ctxMenu = document.getElementById('menu-context');
+    ctxHost.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      closeMenus(ctxMenu);
+      var r = ctxHost.getBoundingClientRect();
+      var x = Math.min(e.clientX - r.left, r.width - ctxMenu.offsetWidth - 8);
+      var y = Math.min(e.clientY - r.top, r.height - ctxMenu.offsetHeight - 8);
+      ctxMenu.style.left = Math.max(8, x) + 'px';
+      ctxMenu.style.top = Math.max(8, y) + 'px';
+      ctxMenu.classList.add('is-open');
+    });
+    ctxMenu.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (e.target.closest('.kv-menu-item:not(:disabled)')) closeMenus();
+    });
+
+    document.addEventListener('click', function () { closeMenus(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenus(); });
+
+    // 单选：点一下切换当前项
+    document.querySelectorAll('#demo-pick-selected .kv-menu, #demo-pick-check .kv-menu').forEach(function (menu) {
+      menu.addEventListener('click', function (e) {
+        var item = e.target.closest('.kv-menu-item');
+        if (!item) return;
+        menu.querySelectorAll('.kv-menu-item').forEach(function (it) {
+          var on = it === item;
+          if (menu.getAttribute('role') === 'listbox') { it.setAttribute('aria-selected', String(on)); return; }
+          it.setAttribute('aria-checked', String(on));
+          var c = it.querySelector('.kv-menu-item__check');
+          if (!on && c) c.remove();
+          if (on && !c) {
+            c = document.createElement('i');
+            c.className = 'kv-icon kv-menu-item__check';
+            c.setAttribute('data-icon', 'CheckSmall');
+            it.appendChild(c);
+            KiviIcons.render(it);
+          }
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

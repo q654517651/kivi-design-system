@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "样式用 CSS 变量并带兜底值（如 var(--color-bg-fill-surface, #191A1B)），Less 里几乎没有不在 var() 兜底位置的裸色值",
+      "passed": true,
+      "evidence": "自己写的 5 个 .less 共 15 处色值，14 处在 var() 兜底里；裸色值只有 1 处：AssetSelectOverlay/index.module.less L35 --custom-checkbox-active-border-color: #061320。算「几乎没有」。注意它复用的 CustomCheckbox、BaseModal 的 less 里有裸色值（#fff、#37ff74、rgba(0,0,0,0.6)）。"
+    },
+    {
+      "text": "删除确认弹窗：宽 400、底色 surface（#191A1B）、圆角 16、内边距 24；遮罩黑 60% 且不模糊",
+      "passed": false,
+      "evidence": "BatchDeleteConfirm 复用 ConfirmModal：宽 400、padding 24、圆角 var(--spacing-lg,16px) 对；但底色 var(--color-bg-fill-popup-light-2, #2b2d31)，不是 surface #191A1B；BaseModal 遮罩 rgba(0,0,0,0.6) 带 backdrop-filter: blur(24px)，是模糊的。"
+    },
+    {
+      "text": "删除确认的确认按钮是危险类型（status/danger 红底），取消是次要按钮（白 8%），底栏按钮高 36",
+      "passed": false,
+      "evidence": "ConfirmModal 确认按钮 btnType=\"balance\"（品牌渐变 #ceff5d→#2bff75），不是红色危险按钮，NOTES 第 7 条也写了「确认按钮是品牌色，不是红色」；两个按钮 height=\"32px\"，不是 36。取消按钮 btnType=\"primary\"（light-1 = 白 8%）这一项是对的。"
+    },
+    {
+      "text": "图片上的勾选框：没选时黑 40% 底 + 白 50% 描边，选中时品牌绿底 + 黑勾，放在图片右上角",
+      "passed": false,
+      "evidence": "复用 CustomCheckbox（没传 rounded，圆角 4 的方形）：未选 border 1px solid #fff（白 100%）+ background rgba(0,0,0,0.2)（黑 20%），不是黑 40% + 白 50%；选中底 #37ff74（不是 #2bff75），对勾 #061320。位置 top/right 12px，在右上角。"
+    },
+    {
+      "text": "按钮高度只出现 28 / 32 / 36，按钮文字 13 号、字重 500（小号 12）",
+      "passed": false,
+      "evidence": "按钮高度都是 32（BatchActionBar BUTTON_PROPS height 32、BatchManageButton height 32、ConfirmModal 32px），这一项符合；但 fontSize=\"sm\" → --font-size-sm 12px，fontWeight regular 400（ConfirmModal 是 semibold 600），不是 13 号 / 500。"
+    },
+    {
+      "text": "浮层、操作条和弹窗都没有 box-shadow 投影",
+      "passed": false,
+      "evidence": "BatchActionBar/index.module.less L18：box-shadow: 0 8px 24px var(--black-40, rgba(0,0,0,0.4))，操作条有投影。另外 AssetSelectOverlay 用 inset box-shadow 做选中描边。"
+    },
+    {
+      "text": "「批量管理」按钮不是品牌渐变的主要按钮",
+      "passed": true,
+      "evidence": "BatchManageButton 用 CustomButton btnType=\"primary\"；仓库里 .custom-btn__primary 是 var(--color-bg-fill-container-light-1)（白 8%）底，不是渐变，渐变是 btnType=\"balance\"。"
+    },
+    {
+      "text": "图标使用 KIVI 图标名（如 Delete、Download、MoveTo、Close）",
+      "passed": true,
+      "evidence": "Icon name 用了 Stacking、Close、MoveTo、DownArrowSmall、Download、Delete，都是仓库 Icon 组件（icon-kivi-*）已有的名字。"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 5,
+    "total": 8,
+    "pass_rate": 0.375
+  }
+}

@@ -1,0 +1,56 @@
+// 示例页：按「页面骨架 · 媒体网格」摆。真实页面里这些已有，只看批量管理相关的几处。
+.page {
+  min-height: 100%;
+  padding: 0 var(--spacing-xl, 24px);
+  background: var(--color-bg-fill-base, #0f1012);
+  font-family: var(--font-family, 'PingFang SC');
+}
+
+// 顶部筛选条：吸顶，底色 base，一行，项间距 24
+.filterBar {
+  position: sticky;
+  top: 0;
+  z-index: var(--zindex-fixed, 400);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl, 24px);
+  padding: var(--spacing-lg, 16px) 0;
+  background: var(--color-bg-fill-base, #0f1012);
+}
+
+// 资产网格：7 列（≥1920 时 8 列），间距 4
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--spacing-xxs, 4px);
+
+  @media screen and (min-width: 1920px) {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+// 批量管理时给底部留出操作条的位置，最后一行不被盖住：操作条高 50（8 + 32 + 8 + 上下描边）+ 上下各 24
+.gridWithBar {
+  padding-bottom: calc(50px + var(--spacing-xl, 24px) * 2);
+}
+
+// 正方形，圆角 8，垫底 light-1
+.card {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--border-radius-sm, 8px);
+  background: var(--color-bg-fill-container-light-1, rgba(255, 255, 255, 0.08));
+  cursor: pointer;
+}
+
+.cardSelectable {
+  user-select: none;
+}
+
+.media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

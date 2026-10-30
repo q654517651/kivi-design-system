@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>主站 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../kivi/tabs-tags-avatar.css">
+  <link rel="stylesheet" href="../kivi/feedback.css">
+  <link rel="stylesheet" href="../kivi/canvas.css">
+  <link rel="stylesheet" href="../kivi/main-site.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用 */
+
+    /* 主站的底色是 base，GenPrompt 盖字的渐变也是 base，演示台也用 base，不用网站默认的浅灰 */
+    .shell-demo-preview:not([data-stage="media"]),
+    .shell-pg-stage:not(.is-media) {
+      background: var(--color-bg-fill-base);
+    }
+
+    /* 结果格在记录里宽度跟格子走，演示台里限成 Figma 的 256 */
+    .shell-pg-stage > .kv-result-tile,
+    .shell-demo-preview > .kv-result-tile {
+      width: 256px;
+    }
+
+    /* 记录头拉满，演示台里限个宽度，方便看换行 */
+    .shell-pg-stage > .kv-gen-prompt,
+    .shell-demo-preview > .kv-gen-prompt {
+      max-width: 640px;
+    }
+
+    /* 属性面板里记录头的浮层往下开，台子留够高度 */
+    #pg-gen-prompt .shell-pg-stage {
+      align-items: flex-start;
+      min-height: 400px;
+      padding-top: 72px;
+    }
+
+    /* 表里第一列不换行 */
+    .table-wrap td:first-child,
+    .table-wrap th:first-child { white-space: nowrap; }
+
+    /* 「主站里不是组件的部分」表里「处理」列不换行 */
+    #tbl-notes td:nth-child(2),
+    #tbl-notes th:nth-child(2) { white-space: nowrap; }
+
+    /* 矩阵里的格子定宽 */
+    .ms-cell { width: 184px; }
+  </style>
+</head>
+<body data-root="../" data-page="main-site">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">业务组件</p>
+    <h1>主站</h1>
+    <p class="doc-lead">主站生成记录的业务组件：记录头 GenPrompt、结果格 ResultTile。画布 Agent 的结果不用这里的组件（用 NodeCard），整条记录在「模板 · 主站」页拼。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=422-658" target="_blank" rel="noopener">「主站」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">待确认 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/main-site.css</code></dd></div>
+    </dl>
+  </header>
+
+  <h3>一条记录怎么拼</h3>
+  <p>一条记录 = GenPrompt + 结果网格 + 底部按钮（重新编辑 / 再次生成 / 删除整组，Button 中 · 弱）。不做组合组件，复制本页最下面的示例用。</p>
+  <ul>
+    <li>网格 4 列，间距 4，每格宽 1 列，高按比例（最小 120，最大 474）。</li>
+    <li>单张：横图占 2 列；方图改成 3 列网格占 1 列；竖图占 1 列。</li>
+    <li>多张比例不一致时，全部改成方格，画面完整显示。</li>
+  </ul>
+
+  <!-- ==================== GenPrompt ==================== -->
+
+  <h2 id="gen-prompt">GenPrompt</h2>
+  <p>在右边面板选长度、开关，和 Figma 右侧属性面板一样。鼠标移到参考区上，下面会弹出浮层显示全部参考素材。</p>
+  <div id="pg-gen-prompt"></div>
+
+  <h3>用途</h3>
+  <p>主站生成记录的头：一条记录最上面那块，显示时间、提示词、参数。</p>
+
+  <h3>结构</h3>
+  <p>垂直排列，间距 4：时间（可关）+ 提示词 + 参数（一排 Tag，间距 6，放不下换行）。</p>
+  <ul>
+    <li><strong>提示词</strong>：短的在一行内，复制按钮紧跟在文字后。超出两行的最多 2 行，末尾省略；复制按钮放在第二行行尾，左边 40 的渐变从透明过渡到底色，盖住被截断的文字。</li>
+    <li><strong>参数</strong>：任务类型（Tag 带左图标：图片生成 / 视频生成 / 音频生成；工具类直接写工具名，比如抠图、扩图、视频拼接）· 参考区 · Tag 1–3（Lora 带缩略图、清晰度、比例、时长、语速、音调…）· 模型（左图标 + 模型 Logo）。</li>
+    <li><strong>参考区</strong>：所有参考素材放一块，图片、视频（首帧）、音频可以混排，原图、原视频也放这里。图在前，后面跟参考方式文字（首帧 / 首尾帧 / 全能参考 / 参考图 / 原图…）。</li>
+    <li>帧率、张数、生成音频都不展示；没有图生图、控制图、ControlNet。</li>
+  </ul>
+  <p><span class="tag tag--draft">待确认</span> 参数的顺序。Figma 的说明文字写「任务类型 · 参考区 · Tag 1–3 · 模型」，但组件和「模板 · 主站」里实际画的是「任务类型 · 模型 · 参考区 · Tag 1–3」。下面的示例按画出来的排。</p>
+  <p>组件里摆的是最全的情况（生视频），用的时候把不要的 Tag 隐藏、改文字，不另做变体。各种情况的摆法见「模板 · 主站」的「参数全集」。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>长度</td><td>短 / 超出两行</td><td>超出两行加 <code>kv-gen-prompt--clamp</code></td></tr>
+        <tr><td>时间</td><td>文字，默认「10-28 16:59」；显示时间 开 / 关，默认关</td><td><code>&lt;div class="kv-gen-prompt__time"&gt;</code>，不显示就不放</td></tr>
+        <tr><td>显示提示词</td><td>开 / 关，默认开</td><td>放不放 <code>.kv-gen-prompt__prompt</code>。抠图、高清这类没有提示词的关掉</td></tr>
+        <tr><td>复制</td><td>开 / 关，默认开</td><td>放不放 <code>.kv-gen-prompt__copy</code>（IconButton 28 · 弱）</td></tr>
+        <tr><td>参考</td><td>开 / 关，默认开</td><td>放不放 <code>.kv-gen-prompt__refs</code></td></tr>
+        <tr><td>参考超出</td><td>开 / 关，默认开</td><td>参考区里放不放第 5 个渐隐的缩略图 <code>kv-gen-prompt__thumb--fade</code></td></tr>
+        <tr><td>参考文字</td><td>文字，默认「全能参考」</td><td>参考区缩略图后面的文字</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>时间</td><td>12 tertiary</td></tr>
+        <tr><td>提示词</td><td>14 / 22 常规，primary；提示词和复制按钮间距 6 · <code>--spacing-xs</code></td></tr>
+        <tr><td>复制按钮</td><td>IconButton 28 · 弱</td></tr>
+        <tr><td>盖字的渐变</td><td>宽 40，从透明到底色 base；终点绑的是 base，放在别的底色上要换成那个底色（<code>--kv-gen-prompt-bg</code>）</td></tr>
+        <tr><td>参数 Tag</td><td>Tag 默认：高 24，圆角 6，12 号；间距 6 · <code>--spacing-xs</code></td></tr>
+        <tr><td>参考区</td><td>高 24，圆角 6 · <code>--border-radius-xs</code>，底 container-light-1，内边距 4 / 6 / 4 / 4（上右下左），元素间距 4</td></tr>
+        <tr><td>参考区缩略图</td><td>AssetThumb 16，间距 4</td></tr>
+        <tr><td>参考方式文字</td><td>12 / 20 常规，secondary</td></tr>
+        <tr><td>宽度</td><td>跟内容列走（拉满）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><strong>参考区最多 5 格</strong>，少了隐藏多的。超过 5 个打开「参考超出」，露 4 个半：第 5 个用透明度蒙版从左到右渐隐（<code>mask-image</code>），放在什么底上都对。</li>
+    <li><strong>悬停参考区</strong>，下面弹出浮层显示全部：popup 底，圆角 8，内边距 6，间距 6，格子 ReferenceItem 72，一行最多 5 个。</li>
+    <li>浮层离参考区的距离 <span class="tag tag--draft">待定</span>：Figma 没定，先用 4。出现 200ms ease-out，消失 150ms ease-in，鼠标离开后等 150ms 再收，见「动效」。</li>
+  </ul>
+
+  <h4>两种长度</h4>
+  <div data-demo>
+    <div class="kv-gen-prompt">
+      <div class="kv-gen-prompt__prompt">
+        <span class="kv-gen-prompt__text">生成一张赛博朋克风格的猕猴桃海报</span>
+        <span class="kv-gen-prompt__copy">
+          <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--weak" aria-label="复制提示词"><i class="kv-icon" data-icon="Copy"></i></button>
+        </span>
+      </div>
+      <div class="kv-gen-prompt__params">
+        <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="VideoGeneration"></i>视频生成</span>
+        <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="Bytedance"></i>Seedance 2.0 Fast</span>
+        <span class="kv-tag kv-tag--default">2K</span>
+        <span class="kv-tag kv-tag--default">智能比例</span>
+        <span class="kv-tag kv-tag--default">8s</span>
+      </div>
+    </div>
+    <div class="kv-gen-prompt kv-gen-prompt--clamp">
+      <div class="kv-gen-prompt__prompt">
+        <span class="kv-gen-prompt__text">生成一张赛博朋克风格的猕猴桃海报：霓虹灯下的未来都市街道，雨夜反光的路面，巨大的全息广告牌上写着 KIVI，画面中央是一颗发光的猕猴桃切面，周围漂浮着数据流和粒子，电影级光影，广角镜头，高对比度，细节丰富，8K 质感，整体色调以青色和品红色为主。</span>
+        <span class="kv-gen-prompt__copy">
+          <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--weak" aria-label="复制提示词"><i class="kv-icon" data-icon="Copy"></i></button>
+        </span>
+      </div>
+      <div class="kv-gen-prompt__params">
+        <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="VideoGeneration"></i>视频生成</span>
+        <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="Bytedance"></i>Seedance 2.0 Fast</span>
+        <span class="kv-tag kv-tag--default">2K</span>
+        <span class="kv-tag kv-tag--default">智能比例</span>
+        <span class="kv-tag kv-tag--default">8s</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <p>各种能力的参数怎么排（和画布对齐）：</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>能力</th><th>文字 Tag</th><th>参考区（悬停预览）</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>生图</td>
+          <td>任务类型「图片生成」· 清晰度（1K / 2K / 4K）· 比例（1:1 等）· 模型</td>
+          <td>参考图（可多张）+「参考图」；Lora 单独一个带缩略图的 Tag，浮层里显示权重</td>
+          <td>图生图、控制图删掉；张数不展示</td>
+        </tr>
+        <tr>
+          <td>生视频</td>
+          <td>任务类型「视频生成」· 分辨率（2K / 4K）· 比例（智能 / 1:1 / 4:3 / 3:4 / 16:9 / 9:16）· 时长（8s / 自动）· 模型</td>
+          <td>图在前，参考方式在后：全能参考 / 首尾帧 / 首帧 / 尾帧 / 视频编辑 / 视频延长；素材可能是图片、视频、音频，混排</td>
+          <td>比例「智能」、时长「自动」时照写。帧率、张数、生成音频不展示</td>
+        </tr>
+        <tr>
+          <td>生音频</td>
+          <td>任务类型「音频生成」· 语速（1.0x）· 音调（0）· 模型</td>
+          <td>参考音频 +「参考音频」（有才显示）</td>
+          <td>参数面板里只有语速、音调；音色要不要显示 <span class="tag tag--draft">待定</span></td>
+        </tr>
+        <tr>
+          <td>图片编辑</td>
+          <td>任务类型直接写工具名：抠图 / 裁剪 / 扩图 / 高清 / 重绘 / 元素去除 · 裁剪、扩图带比例</td>
+          <td>原图 +「原图」</td>
+          <td>抠图、高清、裁剪没有提示词；重绘、元素去除有</td>
+        </tr>
+        <tr>
+          <td>视频编辑</td>
+          <td>任务类型直接写工具名：视频循环 / 视频高清 / 视频拼接 / 抠视频 / 剪辑 / 封装</td>
+          <td>原视频 +「原视频」（拼接是多段）</td>
+          <td>都没有提示词</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>生图：带参考图</h4>
+  <div data-demo>
+    <div class="kv-gen-prompt">
+      <div class="kv-gen-prompt__prompt">
+        <span class="kv-gen-prompt__text">生成一张赛博朋克风格的猕猴桃海报</span>
+        <span class="kv-gen-prompt__copy">
+          <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--weak" aria-label="复制提示词"><i class="kv-icon" data-icon="Copy"></i></button>
+        </span>
+      </div>
+      <div class="kv-gen-prompt__params">
+        <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="ImageGeneration"></i>图片生成</span>
+        <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="Bytedance"></i>Seedance 2.0 Fast</span>
+        <span class="kv-gen-prompt__refs" tabindex="0">
+          <span class="kv-gen-prompt__thumbs">
+            <span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--image"><img src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></span>
+          </span>
+          参考图
+          <span class="kv-gen-prompt__popover" role="tooltip">
+            <span class="kv-reference-item kv-reference-item--72"><span class="kv-asset-thumb kv-asset-thumb--72 kv-asset-thumb--image"><img src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></span></span>
+          </span>
+        </span>
+        <span class="kv-tag kv-tag--default">2K</span>
+        <span class="kv-tag kv-tag--default">1:1</span>
+      </div>
+    </div>
+  </div>
+
+  <h4>图片编辑：抠图没有提示词，只有原图</h4>
+  <div data-demo>
+    <div class="kv-gen-prompt">
+      <div class="kv-gen-prompt__params">
+        <span class="kv-tag kv-tag--default">抠图</span>
+        <span class="kv-gen-prompt__refs" tabindex="0">
+          <span class="kv-gen-prompt__thumbs">
+            <span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--image"><img src="../../assets/placeholders/kiwi-glass-1x1.webp" alt=""></span>
+          </span>
+          原图
+          <span class="kv-gen-prompt__popover" role="tooltip">
+            <span class="kv-reference-item kv-reference-item--72"><span class="kv-asset-thumb kv-asset-thumb--72 kv-asset-thumb--image"><img src="../../assets/placeholders/kiwi-glass-1x1.webp" alt=""></span></span>
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ResultTile ==================== -->
+
+  <h2 id="result-tile">ResultTile</h2>
+  <p>在右边面板选类型和状态。鼠标移到完成的格子上也会出操作。</p>
+  <div id="pg-result-tile"></div>
+
+  <h3>用途</h3>
+  <p>主站生成结果的一格：一条记录里的一张图或一段视频。每格的任务独立：各自生成、完成或失败。画布 Agent 不用它，用 NodeCard。</p>
+
+  <h3>结构</h3>
+  <p>一个方块，里面叠放：画面 + 左上任务角标（生成中）+ 右上操作 + 左下快捷操作（悬停才出）。视频完成时左下是时长，悬停时底部出播放条。</p>
+  <ul>
+    <li>快捷操作的最后一个是「更多」。</li>
+    <li>任务角标 = Tag 覆盖，只有文字。</li>
+    <li>没有排队状态。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>类型</td><td>图片 / 视频</td><td>视频加 <code>kv-result-tile--video</code></td></tr>
+        <tr><td>状态</td><td>生成中 / 完成 / 悬停 / 失败</td><td>生成中 <code>aria-busy="true"</code>，进度用 <code>--progress</code>；失败 <code>aria-invalid="true"</code>；完成不用写；悬停由鼠标触发</td></tr>
+        <tr><td>画面</td><td>图片、视频首帧</td><td><code>&lt;img class="kv-result-tile__media"&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>规格</th></tr></thead>
+      <tbody>
+        <tr><td>整体</td><td>默认 256 方，宽高随排版改；底 surface，描边 border-subtle 1，圆角 6 · <code>--border-radius-xs</code>，内容裁切</td></tr>
+        <tr><td>画面</td><td>默认铺满；比例不一致时用 <code>kv-result-tile--fit</code> 完整显示，留底色</td></tr>
+        <tr><td>任务角标</td><td>Tag 覆盖，左上，离边 8</td></tr>
+        <tr><td>右上操作</td><td>删除、下载、收藏，IconButton 28 · 浮层，间距 4，离边 8</td></tr>
+        <tr><td>左下快捷操作</td><td>IconButton 28 · 浮层（上下统一 28），间距 4，离边 8；视频要抬到播放条上面（38 + 8）</td></tr>
+        <tr><td>视频时长</td><td>Tag 覆盖，左下，离边 8</td></tr>
+        <tr><td>播放条</td><td>PlayBar，宽跟格子，高 38，贴底</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>状态</th><th>样子</th></tr></thead>
+      <tbody>
+        <tr><td>生成中</td><td>遮罩（container-dark 黑 40% + 背景模糊 24）+ 进度（白 60% 渐变）+ 扫光，同 NodeCard；左上任务角标</td></tr>
+        <tr><td>完成</td><td>画面；视频左下有时长</td></tr>
+        <tr><td>悬停</td><td>右上出删除 / 下载 / 收藏；左下出快捷操作；视频底部是播放条</td></tr>
+        <tr><td>失败</td><td>EmptyState 小 · 生成失败，居中，写「生成失败，消耗猕猴桃已退回」</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>任务角标写「59s 生成中」。剩余时间由前端按最近 1 小时同类任务耗时估算，算不出时只写「生成中」。Figma 里画的角标只有「59s」。<span class="tag tag--draft">待确认</span></li>
+    <li>悬停时操作出现 150ms ease-out，消失 150ms ease-in，见「动效」。</li>
+    <li>扫光时长 <span class="tag tag--draft">待定</span>：Figma 没定，暂用 1.4 秒匀速。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-result-tile"></div>
+  <p>矩阵里缩成 184 宽方便并排，规格是 256。</p>
+
+  <h3>用法</h3>
+  <ul>
+    <li>一条记录的结果网格里，每一格一个 ResultTile。每格各自生成，所以一条记录里可以同时有生成中、完成、失败的格子。</li>
+    <li><strong>快捷操作</strong>按代码现有的排：图片常显「图片编辑、图生视频、一键垫图」，高清修复、一键抠图、一键扩图、添加文件夹收进「更多」；视频常显「视频编辑、视频高清、视频循环」，视频拼接收进「更多」。<span class="tag tag--draft">待定</span> 哪些常显。</li>
+    <li><strong>失败</strong>时消耗的猕猴桃已退回，所以文字里直接写。</li>
+  </ul>
+
+  <h4>图片：完成</h4>
+  <div data-demo>
+    <div class="kv-result-tile" tabindex="0">
+      <img class="kv-result-tile__media" src="../../assets/placeholders/kiwi-glass-1x1.webp" alt="">
+      <div class="kv-result-tile__actions kv-result-tile__actions--top">
+        <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="删除"><i class="kv-icon" data-icon="Delete"></i></button>
+        <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="下载"><i class="kv-icon" data-icon="Download"></i></button>
+        <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="收藏"><i class="kv-icon" data-icon="Collect"></i></button>
+      </div>
+      <div class="kv-result-tile__actions kv-result-tile__actions--quick">
+        <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="图片编辑"><i class="kv-icon" data-icon="ImageEditing"></i></button>
+        <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="图生视频"><i class="kv-icon" data-icon="VideoGeneration"></i></button>
+        <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="一键垫图"><i class="kv-icon" data-icon="ImageToImage"></i></button>
+        <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="更多"><i class="kv-icon" data-icon="More"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <h4>失败：消耗的猕猴桃已退回</h4>
+  <div data-demo>
+    <div class="kv-result-tile" aria-invalid="true">
+      <div class="kv-empty-state kv-empty-state--sm">
+        <div class="kv-empty-state__illustration"><img class="kv-empty-state__ip" src="../../assets/empty-state/failed.png" alt=""></div>
+        <div class="kv-empty-state__text"><div class="kv-empty-state__title">生成失败，消耗猕猴桃已退回</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 示例：一条记录 ==================== -->
+
+  <h2 id="record">示例：一条记录</h2>
+  <p>照「模板 · 主站」页「生成记录」拼的，只做演示。一条记录 = GenPrompt + 结果网格 + 底部按钮，三块间距 12。网格 4 列，间距 4。底部按钮是 Button 中 · 弱。</p>
+
+  <h4>4 张 · 同比例 1:1（第 2 张是悬停）</h4>
+  <div data-demo>
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%">
+      <div class="kv-gen-prompt">
+        <div class="kv-gen-prompt__prompt">
+          <span class="kv-gen-prompt__text">生成一张赛博朋克风格的猕猴桃海报</span>
+          <span class="kv-gen-prompt__copy">
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--weak" aria-label="复制提示词"><i class="kv-icon" data-icon="Copy"></i></button>
+          </span>
+        </div>
+        <div class="kv-gen-prompt__params">
+          <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="ImageGeneration"></i>图片生成</span>
+          <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="Bytedance"></i>Seedance 2.0 Fast</span>
+          <span class="kv-tag kv-tag--default">2K</span>
+          <span class="kv-tag kv-tag--default">1:1</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+        <div class="kv-result-tile" tabindex="0"><img class="kv-result-tile__media" src="../../assets/placeholders/ip-gouache-1x1.webp" alt=""></div>
+        <div class="kv-result-tile is-hover" tabindex="0">
+          <img class="kv-result-tile__media" src="../../assets/placeholders/kivi-future-1x1.webp" alt="">
+          <div class="kv-result-tile__actions kv-result-tile__actions--top">
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="删除"><i class="kv-icon" data-icon="Delete"></i></button>
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="下载"><i class="kv-icon" data-icon="Download"></i></button>
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="收藏"><i class="kv-icon" data-icon="Collect"></i></button>
+          </div>
+          <div class="kv-result-tile__actions kv-result-tile__actions--quick">
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="图片编辑"><i class="kv-icon" data-icon="ImageEditing"></i></button>
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="图生视频"><i class="kv-icon" data-icon="VideoGeneration"></i></button>
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="一键垫图"><i class="kv-icon" data-icon="ImageToImage"></i></button>
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="更多"><i class="kv-icon" data-icon="More"></i></button>
+          </div>
+        </div>
+        <div class="kv-result-tile" tabindex="0"><img class="kv-result-tile__media" src="../../assets/placeholders/bunny-gouache-1x1.webp" alt=""></div>
+        <div class="kv-result-tile" tabindex="0"><img class="kv-result-tile__media" src="../../assets/placeholders/ip-kiwi-pile-1x1.webp" alt=""></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="kv-button kv-button--md kv-button--weak"><span>重新编辑</span></button>
+        <button type="button" class="kv-button kv-button--md kv-button--weak"><span>再次生成</span></button>
+        <button type="button" class="kv-button kv-button--md kv-button--weak"><span>删除整组</span></button>
+      </div>
+    </div>
+  </div>
+
+  <h4>4 张 · 生成中和失败混在一起（每格任务独立）</h4>
+  <div data-demo>
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%">
+      <div class="kv-gen-prompt kv-gen-prompt--clamp">
+        <div class="kv-gen-prompt__prompt">
+          <span class="kv-gen-prompt__text">生成一张赛博朋克风格的猕猴桃海报：霓虹灯下的未来都市街道，雨夜反光的路面，巨大的全息广告牌上写着 KIVI，画面中央是一颗发光的猕猴桃切面，周围漂浮着数据流和粒子，电影级光影，广角镜头，高对比度，细节丰富，8K 质感，整体色调以青色和品红色为主，带一点胶片颗粒。</span>
+          <span class="kv-gen-prompt__copy">
+            <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--weak" aria-label="复制提示词"><i class="kv-icon" data-icon="Copy"></i></button>
+          </span>
+        </div>
+        <div class="kv-gen-prompt__params">
+          <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="ImageGeneration"></i>图片生成</span>
+          <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="Bytedance"></i>Seedance 2.0 Fast</span>
+          <span class="kv-tag kv-tag--default">2K</span>
+          <span class="kv-tag kv-tag--default">1:1</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+        <div class="kv-result-tile" tabindex="0"><img class="kv-result-tile__media" src="../../assets/placeholders/kivi-future-1x1.webp" alt=""></div>
+        <div class="kv-result-tile" aria-busy="true" style="--progress:65%">
+          <span class="kv-result-tile__mask"></span>
+          <span class="kv-result-tile__progress"></span>
+          <span class="kv-result-tile__sweep"></span>
+          <span class="kv-tag kv-tag--on-media kv-result-tile__badge">59s 生成中</span>
+        </div>
+        <div class="kv-result-tile" aria-busy="true" style="--progress:30%">
+          <span class="kv-result-tile__mask"></span>
+          <span class="kv-result-tile__progress"></span>
+          <span class="kv-result-tile__sweep"></span>
+          <span class="kv-tag kv-tag--on-media kv-result-tile__badge">生成中</span>
+        </div>
+        <div class="kv-result-tile" aria-invalid="true">
+          <div class="kv-empty-state kv-empty-state--sm">
+            <div class="kv-empty-state__illustration"><img class="kv-empty-state__ip" src="../../assets/empty-state/failed.png" alt=""></div>
+            <div class="kv-empty-state__text"><div class="kv-empty-state__title">生成失败，消耗猕猴桃已退回</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="kv-button kv-button--md kv-button--weak"><span>重新编辑</span></button>
+        <button type="button" class="kv-button kv-button--md kv-button--weak"><span>再次生成</span></button>
+        <button type="button" class="kv-button kv-button--md kv-button--weak"><span>删除整组</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 主站里不做成组件的部分 ==================== -->
+
+  <h2 id="template-notes">主站里不是组件的部分</h2>
+  <p>主站首页、输入框是模板，在「模板 · 主站」页。主站 UI 正在重构，先把 3.14 新首页稿套进 V2 的组件和变量。下面几条是那一页已经定下的，状态也是待确认。</p>
+  <div class="table-wrap">
+    <table id="tbl-notes">
+      <thead><tr><th>位置</th><th>处理</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>分段选择「生成 / 画布」</td>
+          <td>特例</td>
+          <td>按原稿做：底槽 container-light-1-hover，选中品牌渐变 + on-brand 字，全圆角 round。只在主站首页用，不进 TabItem。</td>
+        </tr>
+        <tr>
+          <td>输入框</td>
+          <td>已定</td>
+          <td>主站 Agent 专用。底用 container-light-1 纯色，圆角 xl 24，描边 border-subtle。以后主站对话页参考即梦主站。零件：Select 无底（已选）、IconButton 32 · 文字、Button 中 · 主要（猕猴桃 + 消耗）、ReferenceItem 56、Switch。不做成组件，复制模板里对应模式的改。</td>
+        </tr>
+        <tr>
+          <td>生成按钮</td>
+          <td>已定</td>
+          <td>Button 大 · 主要 + 左图标 <code>Kiwi</code> + 消耗数字，主站沿用这个按钮。</td>
+        </tr>
+        <tr>
+          <td>Agent 的发送按钮</td>
+          <td>—</td>
+          <td>主站创作的 Agent 输入框用 Agent 页的 SendButton，生成面板的「生成」仍用上面的 Button。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>生成按钮：猕猴桃 + 消耗数</h4>
+  <div data-demo>
+    <button type="button" class="kv-button kv-button--lg kv-button--primary">
+      <i class="kv-icon" data-icon="Kiwi"></i><span>99</span>
+    </button>
+  </div>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 这一页的属性面板和状态矩阵
+  (function () {
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+    var IMG = '../../assets/placeholders/';
+
+    // ---------- GenPrompt ----------
+
+    var SHORT = '生成一张赛博朋克风格的猕猴桃海报';
+    var LONG = '生成一张赛博朋克风格的猕猴桃海报：霓虹灯下的未来都市街道，雨夜反光的路面，巨大的全息广告牌上写着 KIVI，画面中央是一颗发光的猕猴桃切面，周围漂浮着数据流和粒子，电影级光影，广角镜头，高对比度，细节丰富，8K 质感，整体色调以青色和品红色为主。';
+
+    function thumb(name) {
+      return '<span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--image"><img src="' + IMG + name + '-1x1.webp" alt=""></span>';
+    }
+    var AUDIO16 = '<span class="kv-asset-thumb kv-asset-thumb--16 kv-asset-thumb--audio"><i class="kv-icon" data-icon="Music"></i></span>';
+
+    function refItem(name) {
+      return '<span class="kv-reference-item kv-reference-item--72"><span class="kv-asset-thumb kv-asset-thumb--72 kv-asset-thumb--image"><img src="' + IMG + name + '-1x1.webp" alt=""></span></span>';
+    }
+    var AUDIO72 = '<span class="kv-reference-item kv-reference-item--72"><span class="kv-asset-thumb kv-asset-thumb--72 kv-asset-thumb--audio"><i class="kv-icon" data-icon="Music"></i></span></span>';
+
+    function genPrompt(s) {
+      var clamp = s.length === 'long';
+      var out = '<div class="kv-gen-prompt' + (clamp ? ' kv-gen-prompt--clamp' : '') + '">';
+      if (s.time) out += '\n  <div class="kv-gen-prompt__time">' + esc(s.timeText) + '</div>';
+      if (s.prompt) {
+        out += '\n  <div class="kv-gen-prompt__prompt">' +
+          '\n    <span class="kv-gen-prompt__text">' + (clamp ? LONG : SHORT) + '</span>';
+        if (s.copy) {
+          out += '\n    <span class="kv-gen-prompt__copy">' +
+            '\n      <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--weak" aria-label="复制提示词"><i class="kv-icon" data-icon="Copy"></i></button>' +
+            '\n    </span>';
+        }
+        out += '\n  </div>';
+      }
+      out += '\n  <div class="kv-gen-prompt__params">' +
+        '\n    <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="VideoGeneration"></i>视频生成</span>' +
+        '\n    <span class="kv-tag kv-tag--default"><i class="kv-icon" data-icon="Bytedance"></i>Seedance 2.0 Fast</span>';
+      if (s.refs) {
+        out += '\n    <span class="kv-gen-prompt__refs" tabindex="0">' +
+          '\n      <span class="kv-gen-prompt__thumbs">' +
+          '\n        ' + thumb('kivi-future') +
+          '\n        ' + thumb('monstera-dots') +
+          '\n        ' + thumb('kiwi-light') +
+          '\n        ' + AUDIO16;
+        if (s.overflow) out += '\n        ' + thumb('ip-gouache').replace('kv-asset-thumb--image', 'kv-asset-thumb--image kv-gen-prompt__thumb--fade');
+        out += '\n      </span>' +
+          '\n      ' + esc(s.refText) +
+          '\n      <span class="kv-gen-prompt__popover" role="tooltip">' +
+          '\n        ' + refItem('kivi-future') +
+          '\n        ' + refItem('monstera-dots') +
+          '\n        ' + refItem('kiwi-light') +
+          '\n        ' + AUDIO72 +
+          '\n        ' + refItem('ip-gouache') +
+          '\n        ' + refItem('bunny-gouache') +
+          '\n      </span>' +
+          '\n    </span>';
+      }
+      out += '\n    <span class="kv-tag kv-tag--default">2K</span>' +
+        '\n    <span class="kv-tag kv-tag--default">智能比例</span>' +
+        '\n    <span class="kv-tag kv-tag--default">8s</span>' +
+        '\n  </div>\n</div>';
+      return out;
+    }
+
+    KiviShell.playground(document.getElementById('pg-gen-prompt'), {
+      controls: [
+        { key: 'length', label: '长度', type: 'segment', value: 'short', options: [['short', '短'], ['long', '超出两行']] },
+        { key: 'time', label: '显示时间', type: 'toggle', value: false },
+        { key: 'prompt', label: '显示提示词', type: 'toggle', value: true },
+        { key: 'copy', label: '复制', type: 'toggle', value: true },
+        { key: 'refs', label: '参考', type: 'toggle', value: true },
+        { key: 'overflow', label: '参考超出', type: 'toggle', value: true },
+        { key: 'timeText', label: '时间', type: 'text', value: '10-28 16:59' },
+        { key: 'refText', label: '参考文字', type: 'text', value: '全能参考' }
+      ],
+      rules: function (s) {
+        var r = {};
+        if (!s.prompt) r.copy = true;
+        if (!s.refs) r.overflow = true;
+        return r;
+      },
+      render: genPrompt
+    });
+
+    // ---------- ResultTile ----------
+
+    var TOP = [['Delete', '删除'], ['Download', '下载'], ['Collect', '收藏']];
+    var QUICK = {
+      image: [['ImageEditing', '图片编辑'], ['VideoGeneration', '图生视频'], ['ImageToImage', '一键垫图'], ['More', '更多']],
+      video: [['VideoEditing', '视频编辑'], ['HD', '视频高清'], ['VideoLoop', '视频循环'], ['More', '更多']]
+    };
+    var PIC = {
+      image: { done: 'kiwi-glass', hover: 'monstera-dots' },
+      video: { done: 'bunny-gouache', hover: 'ip-kiwi-pile' }
+    };
+
+    function iconButtons(list) {
+      return list.map(function (a) {
+        return '\n    <button type="button" class="kv-icon-button kv-icon-button--28 kv-icon-button--on-media" aria-label="' + a[1] + '"><i class="kv-icon" data-icon="' + a[0] + '"></i></button>';
+      }).join('');
+    }
+
+    function resultTile(s) {
+      var video = s.type === 'video';
+      var cls = 'kv-result-tile' + (video ? ' kv-result-tile--video' : '') + (s.state === 'hover' ? ' is-hover' : '');
+      if (s.state === 'loading') {
+        return '<div class="' + cls + '" aria-busy="true" style="--progress:65%">' +
+          '\n  <span class="kv-result-tile__mask"></span>' +
+          '\n  <span class="kv-result-tile__progress"></span>' +
+          '\n  <span class="kv-result-tile__sweep"></span>' +
+          '\n  <span class="kv-tag kv-tag--on-media kv-result-tile__badge">59s 生成中</span>' +
+          '\n</div>';
+      }
+      if (s.state === 'failed') {
+        return '<div class="' + cls + '" aria-invalid="true">' +
+          '\n  <div class="kv-empty-state kv-empty-state--sm">' +
+          '\n    <div class="kv-empty-state__illustration"><img class="kv-empty-state__ip" src="../../assets/empty-state/failed.png" alt=""></div>' +
+          '\n    <div class="kv-empty-state__text"><div class="kv-empty-state__title">生成失败，消耗猕猴桃已退回</div></div>' +
+          '\n  </div>' +
+          '\n</div>';
+      }
+      var pic = PIC[s.type][s.state === 'hover' ? 'hover' : 'done'];
+      var out = '<div class="' + cls + '" tabindex="0">' +
+        '\n  <img class="kv-result-tile__media" src="' + IMG + pic + '-1x1.webp" alt="">';
+      if (video && s.state !== 'hover') out += '\n  <span class="kv-tag kv-tag--on-media kv-result-tile__duration">00:05</span>';
+      out += '\n  <div class="kv-result-tile__actions kv-result-tile__actions--top">' + iconButtons(TOP) + '\n  </div>';
+      out += '\n  <div class="kv-result-tile__actions kv-result-tile__actions--quick">' + iconButtons(QUICK[s.type]) + '\n  </div>';
+      if (video) {
+        out += '\n  <div class="kv-play-bar kv-result-tile__playbar">' +
+          '\n    <div class="kv-play-bar__controls">' +
+          '\n      <div class="kv-play-bar__left"><i class="kv-icon" data-icon="Play"></i><span class="kv-play-bar__time">0:03 / 0:06</span></div>' +
+          '\n      <i class="kv-icon" data-icon="VolumeFull"></i>' +
+          '\n    </div>' +
+          '\n    <div class="kv-play-bar__track"><span class="kv-play-bar__played" style="--progress:40%"></span></div>' +
+          '\n  </div>';
+      }
+      return out + '\n</div>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-result-tile'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'done', options: [['loading', '生成中'], ['done', '完成'], ['hover', '悬停'], ['failed', '失败']] }
+      ],
+      render: resultTile
+    });
+
+    // 状态矩阵：行是类型，列是状态
+    function matrix(host, rows, cols, make) {
+      var html = '<table class="shell-matrix"><thead><tr><th></th>';
+      cols.forEach(function (c) { html += '<th>' + c[1] + '</th>'; });
+      html += '</tr></thead><tbody>';
+      rows.forEach(function (r) {
+        html += '<tr><th scope="row">' + r[1] + '</th>';
+        cols.forEach(function (c) { html += '<td>' + (make(r[0], c[0]) || '—') + '</td>'; });
+        html += '</tr>';
+      });
+      host.innerHTML = html + '</tbody></table>';
+      KiviIcons.render(host);
+    }
+
+    matrix(document.getElementById('matrix-result-tile'),
+      [['image', '图片'], ['video', '视频']],
+      [['loading', '生成中'], ['done', '完成'], ['hover', '悬停'], ['failed', '失败']],
+      function (t, st) { return '<div class="ms-cell">' + resultTile({ type: t, state: st }) + '</div>'; });
+  })();
+</script>
+</body>
+</html>

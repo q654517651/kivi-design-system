@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>反馈 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../kivi/feedback.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用 */
+
+    /* Toast 的小舞台：模拟「页面」，Toast 固定在舞台顶部居中，不跑到真的屏幕顶上 */
+    .fb-stage { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: var(--spacing-sm); width: 100%; height: 280px; padding: var(--spacing-xl); overflow: hidden; border-radius: var(--border-radius-lg); background: var(--color-bg-fill-base); }
+    .fb-stage .kv-toast-region { position: absolute; }
+
+    /* Loading、EmptyState 的场景框：照 Figma 的「示意」 */
+    .fb-card { display: grid; place-items: center; width: 240px; height: 240px; border-radius: var(--border-radius-md); background: var(--color-bg-fill-container-light-2); }
+    .fb-area { display: grid; place-items: center; width: 100%; max-width: 560px; height: 240px; border-radius: var(--border-radius-lg); background: var(--color-bg-fill-base); }
+    .fb-page { display: grid; place-items: center; width: 100%; max-width: 800px; height: 420px; border-radius: var(--border-radius-lg); background: var(--color-bg-fill-base); }
+    .fb-dropdown { display: grid; place-items: center; width: 320px; max-width: 100%; height: 240px; border-radius: var(--border-radius-md); background: var(--color-bg-fill-popup); }
+
+    /* 骨架屏的组合示例：一行头像 + 两行字，下面一张图 */
+    .fb-skel-card { display: grid; grid-template-columns: 40px 1fr; gap: var(--spacing-md); width: 320px; max-width: 100%; }
+    .fb-skel-lines { display: grid; gap: var(--spacing-sm); align-content: center; }
+
+  </style>
+</head>
+<body data-root="../" data-page="feedback">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">通用组件</p>
+    <h1>反馈</h1>
+    <p class="doc-lead">操作之后告诉用户「发生了什么」：Toast 轻提示、Loading 加载、Skeleton 骨架屏、EmptyState 空状态，四个组件。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=177-714" target="_blank" rel="noopener">「反馈」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">待确认 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/feedback.css</code></dd></div>
+    </dl>
+  </header>
+
+  <p style="margin-top:24px">Toast 和 Tooltip 长得像，但用途不同：Tooltip 是鼠标悬停时解释一个东西，Toast 是操作完成后系统主动告诉用户结果。</p>
+
+  <!-- ==================== Toast ==================== -->
+
+  <h2 id="toast">Toast 轻提示</h2>
+  <p>在右边面板选类型、开关操作、改文字，和 Figma 右侧属性面板一样。下面的代码跟着变，可以直接复制。</p>
+  <div id="pg-toast"></div>
+
+  <h3>用途</h3>
+  <p>操作完成后，系统主动告诉用户结果。几秒后自己消失，不打断操作。</p>
+
+  <h3>结构</h3>
+  <p>左图标 + 文字 + 操作文字（可选），水平排列，间距 8。</p>
+  <ul>
+    <li>左边是 16 的状态图标：实心圆 + 镂空符号，符号的颜色就是弹层底色。加载中不画圆，直接用 Loading 图标。</li>
+    <li>文字一行说完，不加标题。</li>
+    <li>操作文字在最右边，比如「撤销」「取消」，点了做一个动作。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>类型</td><td>信息 / 成功 / 警告 / 错误 / 加载中</td><td><code>kv-toast--info</code> / <code>--success</code> / <code>--warning</code> / <code>--error</code> / <code>--loading</code>，信息是默认</td></tr>
+        <tr><td>文字</td><td>提示文字</td><td><code>&lt;span class="kv-toast__message"&gt;</code></td></tr>
+        <tr><td>显示操作</td><td>开 / 关，默认关</td><td>放不放 <code>&lt;button class="kv-toast__action"&gt;</code></td></tr>
+        <tr><td>操作文字</td><td>默认「撤销」</td><td><code>kv-toast__action</code> 里的字</td></tr>
+        <tr><td>状态图标</td><td>跟着类型走</td><td>信息、成功、警告、错误：<code>&lt;span class="kv-toast__icon"&gt;&lt;/span&gt;</code>；加载中：<code>&lt;i class="kv-icon kv-icon--spin" data-icon="Loading"&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <h4>类型</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>类型</th><th>圆的颜色</th><th>符号</th></tr></thead>
+      <tbody>
+        <tr><td>信息</td><td>secondary · <code>--color-text-fill-secondary</code></td><td>感叹号「i」</td></tr>
+        <tr><td>成功</td><td>status/success · <code>--color-status-success</code></td><td>对勾</td></tr>
+        <tr><td>警告</td><td>status/warning · <code>--color-status-warning</code></td><td>感叹号</td></tr>
+        <tr><td>错误</td><td>status/danger · <code>--color-status-danger</code></td><td>叉</td></tr>
+        <tr><td>加载中</td><td>不画圆，Loading 图标 primary · <code>--color-text-fill-primary</code></td><td>旋转，1 秒一圈，匀速</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div data-demo>
+    <div class="kv-toast kv-toast--info">
+      <span class="kv-toast__icon"></span>
+      <span class="kv-toast__message">提示文字</span>
+    </div>
+    <div class="kv-toast kv-toast--success">
+      <span class="kv-toast__icon"></span>
+      <span class="kv-toast__message">提示文字</span>
+    </div>
+    <div class="kv-toast kv-toast--warning">
+      <span class="kv-toast__icon"></span>
+      <span class="kv-toast__message">提示文字</span>
+    </div>
+    <div class="kv-toast kv-toast--error">
+      <span class="kv-toast__icon"></span>
+      <span class="kv-toast__message">提示文字</span>
+    </div>
+    <div class="kv-toast kv-toast--loading">
+      <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>
+      <span class="kv-toast__message">提示文字</span>
+    </div>
+  </div>
+
+  <h4>规格</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>高</td><td>40</td><td>—</td></tr>
+        <tr><td>内边距</td><td>上下 8，左右 16</td><td><code>--spacing-sm</code> · <code>--spacing-lg</code></td></tr>
+        <tr><td>元素间距</td><td>8</td><td><code>--spacing-sm</code></td></tr>
+        <tr><td>圆角</td><td>12</td><td><code>--border-radius-md</code></td></tr>
+        <tr><td>底色</td><td>popup（弹层色，和 Tooltip 一样），不加描边和阴影</td><td><code>--color-bg-fill-popup</code></td></tr>
+        <tr><td>文字</td><td>14 / 22，常规，primary</td><td><code>--font-size-14</code> · <code>--font-line-height-22</code> · <code>--color-text-fill-primary</code></td></tr>
+        <tr><td>状态图标</td><td>16；符号描边 1.6、圆头，颜色同底色</td><td><code>--color-bg-fill-popup</code></td></tr>
+        <tr><td>操作文字</td><td>14 / 22，常规，secondary，和前面的文字多空 8</td><td><code>--color-text-fill-secondary</code></td></tr>
+        <tr><td>最大宽度</td><td><span class="tag tag--draft">待定</span></td><td>—</td></tr>
+        <tr><td>操作文字的悬停、按下</td><td><span class="tag tag--draft">待定</span></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>位置和动效</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>怎么定</th></tr></thead>
+      <tbody>
+        <tr><td>位置</td><td>页面顶部居中，距顶 24</td></tr>
+        <tr><td>数量</td><td>同一时间只留 1 条，新的顶掉旧的</td></tr>
+        <tr><td>出现</td><td>从上方移入，200ms · ease-out（<code>--motion-duration-200</code> · <code>--motion-ease-out</code>）</td></tr>
+        <tr><td>停留</td><td>3 秒后自己消失；加载中不消失，结束后换成成功或错误</td></tr>
+        <tr><td>消失</td><td>淡出，150ms · ease-in（<code>--motion-duration-150</code> · <code>--motion-ease-in</code>）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>固定在页面顶部的 Toast 放进 <code>kv-toast-region</code>：出现的动画放进去就自己播；要消失时给 Toast 加 <code>is-leaving</code>，150ms 后自己把它拿掉。3 秒的计时组件库不管，自己写。</p>
+  <script type="text/plain" data-code="html">
+    <div class="kv-toast-region" role="status">
+      <div class="kv-toast kv-toast--success">
+        <span class="kv-toast__icon"></span>
+        <span class="kv-toast__message">已保存到我的作品</span>
+      </div>
+    </div>
+  </script>
+
+  <h3>用法</h3>
+  <ul>
+    <li>操作做完了，告诉用户结果：成功、失败、要注意的事。</li>
+    <li>要等一会儿的操作用「加载中」，不消失；做完了把它换成成功或错误。</li>
+    <li>可以带一个操作，比如「撤销」「取消」「查看原因」。</li>
+    <li>文字一行说完，不加标题。</li>
+    <li>鼠标悬停时解释一个东西，用 Tooltip，不用 Toast。</li>
+    <li>页面里一直挂着的提醒条，不是 Toast；Figma 里暂时不收，用的地方多了再做 Alert。</li>
+  </ul>
+
+  <h4>三个例子</h4>
+  <div data-demo>
+    <div class="kv-toast kv-toast--success">
+      <span class="kv-toast__icon"></span>
+      <span class="kv-toast__message">任务已提交</span>
+    </div>
+    <div class="kv-toast kv-toast--loading">
+      <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>
+      <span class="kv-toast__message">正在上传 3 张图片</span>
+      <button class="kv-toast__action" type="button">取消</button>
+    </div>
+    <div class="kv-toast kv-toast--error">
+      <span class="kv-toast__icon"></span>
+      <span class="kv-toast__message">生成失败，请重试</span>
+      <button class="kv-toast__action" type="button">查看原因</button>
+    </div>
+  </div>
+
+  <h4>点出来试试</h4>
+  <p>Toast 从上方移入，3 秒后淡出。连点几次，新的会顶掉旧的。「上传」是加载中：不消失，2 秒后换成成功；点「取消」直接收起。</p>
+  <div data-demo="nocode">
+    <div class="fb-stage" id="toast-stage">
+      <div class="kv-toast-region" id="toast-region" role="status"></div>
+      <button class="kv-button kv-button--md kv-button--secondary" type="button" data-toast="info"><span>信息</span></button>
+      <button class="kv-button kv-button--md kv-button--secondary" type="button" data-toast="success"><span>成功</span></button>
+      <button class="kv-button kv-button--md kv-button--secondary" type="button" data-toast="warning"><span>警告</span></button>
+      <button class="kv-button kv-button--md kv-button--secondary" type="button" data-toast="error"><span>错误</span></button>
+      <button class="kv-button kv-button--md kv-button--secondary" type="button" data-toast="undo"><span>带操作</span></button>
+      <button class="kv-button kv-button--md kv-button--secondary" type="button" data-toast="upload"><span>上传</span></button>
+    </div>
+  </div>
+
+  <!-- ==================== Loading ==================== -->
+
+  <h2 id="loading">Loading 加载</h2>
+  <div id="pg-loading"></div>
+
+  <h3>用途</h3>
+  <p>转圈 + 可选文字，告诉用户正在等。</p>
+
+  <h3>结构</h3>
+  <p>转圈图标 + 文字（可选）。图标就是图标库里的 <code>Loading</code>，和按钮「加载中」用的是同一个，1 秒转一圈，匀速。</p>
+  <ul>
+    <li>小：横排，图标在左，文字在右。</li>
+    <li>中、大：竖排，图标在上，文字在下。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>尺寸</td><td>小 / 中 / 大</td><td><code>kv-loading--sm</code> / <code>--md</code> / <code>--lg</code>，小是默认</td></tr>
+        <tr><td>显示文字</td><td>开 / 关，默认开</td><td>放不放 <code>&lt;span&gt;</code></td></tr>
+        <tr><td>文字</td><td>默认「加载中…」</td><td><code>&lt;span&gt;加载中…&lt;/span&gt;</code></td></tr>
+        <tr><td>图标</td><td>Loading，转起来</td><td><code>&lt;i class="kv-icon kv-icon--spin" data-icon="Loading"&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>尺寸</th><th>图标</th><th>文字</th><th>排列</th></tr></thead>
+      <tbody>
+        <tr><td>小</td><td>16</td><td>12 / 20，常规，secondary · <code>--font-size-12</code></td><td>横排，间距 8 · <code>--spacing-sm</code></td></tr>
+        <tr><td>中</td><td>24</td><td>13 / 20，常规，secondary · <code>--font-size-13</code></td><td>竖排，间距 8 · <code>--spacing-sm</code></td></tr>
+        <tr><td>大</td><td>40</td><td>14 / 22，常规，secondary · <code>--font-size-14</code></td><td>竖排，间距 12 · <code>--spacing-md</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>图标颜色 primary（<code>--color-text-fill-primary</code>），文字颜色 secondary（<code>--color-text-fill-secondary</code>）。</li>
+    <li>转圈 1 秒一圈，匀速，见「动效」。</li>
+  </ul>
+  <div data-demo>
+    <div class="kv-loading kv-loading--sm">
+      <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>
+      <span>加载中…</span>
+    </div>
+    <div class="kv-loading kv-loading--md" style="margin: 0 32px">
+      <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>
+      <span>加载中…</span>
+    </div>
+    <div class="kv-loading kv-loading--lg">
+      <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>
+      <span>加载中…</span>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>知道内容长什么样</strong>（列表、卡片）：用骨架屏，不用转圈。</li>
+    <li><strong>不知道长什么样、或者很快就好</strong>：才用转圈。</li>
+    <li><strong>按钮里的加载</strong>：用 Button 的「加载中」状态，见<a href="button.html">「按钮」</a>，不用 Loading。</li>
+    <li><strong>小</strong>：一行里的小块加载。<strong>中</strong>：卡片里。<strong>大</strong>：整块区域。</li>
+  </ul>
+  <h4>卡片里：中</h4>
+  <div data-demo="nocode">
+    <div class="fb-card">
+      <div class="kv-loading kv-loading--md">
+        <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>
+        <span>图片上传中…</span>
+      </div>
+    </div>
+  </div>
+  <h4>整块区域：大</h4>
+  <div data-demo="nocode">
+    <div class="fb-area">
+      <div class="kv-loading kv-loading--lg">
+        <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>
+        <span>加载中…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Skeleton ==================== -->
+
+  <h2 id="skeleton">Skeleton 骨架屏</h2>
+  <div id="pg-skeleton"></div>
+
+  <h3>用途</h3>
+  <p>内容还没出来时，先用灰块占住位置，告诉用户内容长什么样、很快就来。</p>
+
+  <h3>结构</h3>
+  <p>一个色块，没有内容。组件只管颜色和圆角，形状照真实内容摆：图片、卡片用矩形，头像用圆形，文字用文字行。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>形状</td><td>矩形 / 圆形 / 文字行</td><td><code>kv-skeleton--rect</code> / <code>--circle</code> / <code>--text</code>，矩形是默认</td></tr>
+        <tr><td>宽、高</td><td>照真实内容</td><td>自己写 <code>style="width: …; height: …"</code>；文字行高默认 12</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Figma 里摆的 160×90、32×32、200×12 只是示意，不是默认尺寸。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>形状</th><th>用在</th><th>圆角</th></tr></thead>
+      <tbody>
+        <tr><td>矩形</td><td>图片、卡片</td><td>8 · <code>--border-radius-sm</code></td></tr>
+        <tr><td>圆形</td><td>头像</td><td>999 · <code>--border-radius-round</code></td></tr>
+        <tr><td>文字行</td><td>文字</td><td>高 12，圆角 4 · <code>--border-radius-xxs</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>底色白 8%（<code>--color-bg-fill-container-light-1</code>）。</li>
+    <li>动效：高光从左往右扫，白 12%（<code>--color-bg-fill-container-light-1-hover</code>），1.4 秒一轮，匀速（linear）。Figma 里看不到动效。</li>
+    <li>高光的渐变形状 <span class="tag tag--draft">待定</span>：Figma 只写了「白 12%，从左往右」，先用两头透明的横向渐变。</li>
+    <li>系统开了「减少动态效果」时不扫光，只留底色。</li>
+  </ul>
+  <div data-demo>
+    <div class="kv-skeleton kv-skeleton--rect" style="width: 160px; height: 90px"></div>
+    <div class="kv-skeleton kv-skeleton--circle" style="width: 32px; height: 32px"></div>
+    <div class="kv-skeleton kv-skeleton--text" style="width: 200px"></div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>知道内容长什么样（列表、卡片）就用骨架屏；不知道、或者很快就好的才用 Loading。</li>
+    <li>骨架屏的组合是模板，不做成组件：哪个页面要用，照着真实布局拿 Skeleton 摆。模板在 Figma 的「模板 · 通用」页「骨架屏」分区 <span class="tag tag--draft">待确认</span>。</li>
+  </ul>
+  <h4>示例：一条带头像的卡片</h4>
+  <p>头像用圆形，标题和说明用文字行，图用矩形，宽高和真实内容一样。</p>
+  <div data-demo="nocode">
+    <div class="fb-skel-card">
+      <div class="kv-skeleton kv-skeleton--circle" style="width: 40px; height: 40px"></div>
+      <div class="fb-skel-lines">
+        <div class="kv-skeleton kv-skeleton--text" style="width: 60%"></div>
+        <div class="kv-skeleton kv-skeleton--text"></div>
+      </div>
+      <div class="kv-skeleton kv-skeleton--rect" style="grid-column: 1 / -1; height: 160px"></div>
+    </div>
+  </div>
+
+  <!-- ==================== EmptyState ==================== -->
+
+  <h2 id="empty-state">EmptyState 空状态</h2>
+  <div id="pg-empty"></div>
+
+  <h3>用途</h3>
+  <p>页面、面板、下拉里没有东西可看时，用 IP 插图告诉用户为什么是空的、下一步做什么。</p>
+
+  <h3>结构</h3>
+  <p>IP 插图 + 标题 + 一句说明（可选），竖排居中。</p>
+  <ul>
+    <li><strong>插图</strong>：每个场景一张 IP 图，背后有一圈绿色光晕，脚下有一块地面阴影。</li>
+    <li><strong>标题</strong>：一句话说清楚现在是什么情况。</li>
+    <li><strong>说明</strong>（可选）：写清楚下一步做什么。下拉里不要说明。</li>
+    <li><strong>引导操作</strong>（可选）：需要引导操作时，在插图下面再放一个「中」号按钮（次要），间距 24。</li>
+  </ul>
+  <p>IP 图从 Figma 反馈页导出，放在 <code>assets/empty-state/</code>：<code>empty.png</code>（暂无内容）、<code>no-favorites.png</code>（暂无收藏）、<code>offline.png</code>（无网络）、<code>failed.png</code>（生成失败）。320×320，够大号 160 用两倍图。</p>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>场景</td><td>暂无内容 / 暂无收藏 / 无网络 / 生成失败</td><td>换 <code>kv-empty-state__ip</code> 的图；样式一样，没有对应的类</td></tr>
+        <tr><td>尺寸</td><td>大 / 小</td><td><code>kv-empty-state--lg</code> / <code>--sm</code>，大是默认</td></tr>
+        <tr><td>标题</td><td>标题文字</td><td><code>&lt;div class="kv-empty-state__title"&gt;</code></td></tr>
+        <tr><td>显示描述</td><td>开 / 关，默认开</td><td>放不放 <code>kv-empty-state__desc</code></td></tr>
+        <tr><td>描述</td><td>一句话说清楚下一步做什么</td><td><code>&lt;div class="kv-empty-state__desc"&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>大（页面、大面板）</th><th>小（下拉、侧栏）</th></tr></thead>
+      <tbody>
+        <tr><td>插图</td><td>160</td><td>96</td></tr>
+        <tr><td>插图和文字间距</td><td>16 · <code>--spacing-lg</code></td><td>8 · <code>--spacing-sm</code></td></tr>
+        <tr><td>标题</td><td>16 / 24，粗，primary</td><td>14 / 22，粗，secondary</td></tr>
+        <tr><td>描述</td><td>14 / 22，常规，tertiary</td><td>12 / 20，常规，tertiary</td></tr>
+        <tr><td>标题和描述间距</td><td>4 · <code>--spacing-xxs</code></td><td>4 · <code>--spacing-xxs</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>文字颜色：primary <code>--color-text-fill-primary</code>，secondary <code>--color-text-fill-secondary</code>，tertiary <code>--color-text-fill-tertiary</code>。</li>
+    <li>光晕：比插图大 10% 的圆，品牌绿 10% 到 0 的径向渐变。地面阴影：宽是插图的 60%，黑 50% 到 0 的径向渐变。小号等比缩小。</li>
+    <li>最大宽度 <span class="tag tag--draft">待定</span>：Figma 里宽度跟着文字走。</li>
+    <li>旧的线条图标空状态（收藏、图片、视频、人脸）不再用。</li>
+  </ul>
+  <div data-demo="nocode">
+    <div class="kv-empty-state kv-empty-state--lg">
+      <div class="kv-empty-state__illustration">
+        <img class="kv-empty-state__ip" src="../../assets/empty-state/empty.png" alt="">
+      </div>
+      <div class="kv-empty-state__text">
+        <div class="kv-empty-state__title">标题文字</div>
+        <div class="kv-empty-state__desc">一句话说清楚下一步做什么</div>
+      </div>
+    </div>
+    <div class="kv-empty-state kv-empty-state--sm" style="margin-left: 48px">
+      <div class="kv-empty-state__illustration">
+        <img class="kv-empty-state__ip" src="../../assets/empty-state/empty.png" alt="">
+      </div>
+      <div class="kv-empty-state__text">
+        <div class="kv-empty-state__title">标题文字</div>
+        <div class="kv-empty-state__desc">一句话说清楚下一步做什么</div>
+      </div>
+    </div>
+  </div>
+
+  <h4>4 个场景</h4>
+  <p>4 个场景各用一张 IP 图。大号放页面和大面板，小号放下拉和侧栏。</p>
+  <div data-demo="nocode" id="demo-scenes"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>暂无内容</strong>：页面或面板里还没有东西。<strong>暂无收藏</strong>：收藏夹是空的。<strong>无网络</strong>：网络断了。<strong>生成失败</strong>：生成没成功。</li>
+    <li><strong>大</strong>：页面、大面板。<strong>小</strong>：下拉、侧栏。下拉里去掉描述。</li>
+    <li>说明写清楚下一步做什么，比如「去画布生成第一张图」。</li>
+    <li>需要引导操作时，在下面放一个中号次要按钮。</li>
+  </ul>
+  <h4>页面里：大</h4>
+  <div data-demo="nocode">
+    <div class="fb-page">
+      <div class="kv-empty-state">
+        <div class="kv-empty-state__illustration">
+          <img class="kv-empty-state__ip" src="../../assets/empty-state/empty.png" alt="">
+        </div>
+        <div class="kv-empty-state__text">
+          <div class="kv-empty-state__title">还没有作品</div>
+          <div class="kv-empty-state__desc">在左侧写下描述，生成第一张作品</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h4>下拉里：小，不要描述</h4>
+  <div data-demo="nocode">
+    <div class="fb-dropdown">
+      <div class="kv-empty-state kv-empty-state--sm">
+        <div class="kv-empty-state__illustration">
+          <img class="kv-empty-state__ip" src="../../assets/empty-state/empty.png" alt="">
+        </div>
+        <div class="kv-empty-state__text">
+          <div class="kv-empty-state__title">没有找到相关模型</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h4>带引导操作：下面放中号次要按钮</h4>
+  <div data-demo>
+    <div class="kv-empty-state">
+      <div class="kv-empty-state__illustration">
+        <img class="kv-empty-state__ip" src="../../assets/empty-state/empty.png" alt="">
+      </div>
+      <div class="kv-empty-state__text">
+        <div class="kv-empty-state__title">还没有作品</div>
+        <div class="kv-empty-state__desc">去画布生成第一张图</div>
+      </div>
+      <div class="kv-empty-state__action">
+        <button class="kv-button kv-button--md kv-button--secondary" type="button"><span>去画布</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 旧名对照 ==================== -->
+
+  <h2 id="migration">旧名对照</h2>
+  <p>旧组件库和代码里的反馈类组件，对应到新组件的哪里。代码没改，前端按这张表改。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>旧</th><th>新</th><th>类型</th><th>说明</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td>旧库 Toast · 成功 / 失败 / 提醒</td><td>Toast · 成功 / 错误 / 警告</td><td>改样式</td><td>圆角 8 → 12，图标改成镂空圆</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td>旧库 Toast · 处理中（带「取消」）</td><td>Toast · 加载中 + 显示操作</td><td>合并</td><td>「取消」变成 Toast 的操作文字</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td>旧库 Toast · 鼠标悬浮提示</td><td>Tooltip · 说明</td><td>替换</td><td>悬停时解释东西的是 Tooltip，不是 Toast</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>旧库 封装背景提醒 / 封装素材提醒（黄底条）</td><td>暂不收</td><td>待定</td><td>页面里常驻的提醒条，用的地方多了再做 Alert</td><td><span class="tag tag--draft">待确认</span></td></tr>
+        <tr><td>代码 message（antd，#2b2d31，14 号，约 130 处）</td><td>Toast</td><td>改样式</td><td>底色换弹层色，圆角 12，图标按新库</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>代码 Spinner（HeroUI，约 20 处）</td><td>Loading</td><td>改样式</td><td>统一用图标库的 Loading，尺寸 16 / 24 / 40</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>代码 CustomSkeleton · LoadingSkeleton · HeroUI Skeleton · 技能市场手写</td><td>Skeleton</td><td>合并</td><td>底色白 8%，扫光白 12%，1.4 秒一轮</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>代码 Empty（noData / noCollection，图 200）</td><td>EmptyState · 大</td><td>改尺寸</td><td>插图 200 → 160，加标题和说明两行</td><td><span class="tag">调整</span></td></tr>
+        <tr><td>旧库 空状态 · 资源空状态 / 没有收藏 / 无网络 / 生成失败</td><td>EmptyState · 暂无内容 / 暂无收藏 / 无网络 / 生成失败</td><td>改样式</td><td>同一套 IP 图，加光晕和地面阴影</td><td><span class="tag tag--off">草稿</span></td></tr>
+        <tr><td>旧库 空状态 · 收藏 / 图片 / 视频 / 人脸（线条图标）</td><td>删除</td><td>删除</td><td>统一用 IP 图</td><td><span class="tag tag--danger">废弃</span></td></tr>
+        <tr><td>模板/作品列表骨架、模板/对话骨架；示例/页面、卡片、区域、下拉</td><td>「模板 · 通用」页「骨架屏」分区；示例改名「示意 / …」留在本页</td><td>移动</td><td>示意只演示组件放在什么场景，不复制</td><td><span class="tag tag--draft">待确认</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 这一页的属性面板
+  (function () {
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+    // Toast
+    function toast(s) {
+      var icon = s.type === 'loading'
+        ? '<i class="kv-icon kv-icon--spin" data-icon="Loading"></i>'
+        : '<span class="kv-toast__icon"></span>';
+      var out = '<div class="kv-toast kv-toast--' + s.type + '">\n  ' + icon + '\n  <span class="kv-toast__message">' + esc(s.text) + '</span>';
+      if (s.action) out += '\n  <button class="kv-toast__action" type="button">' + esc(s.actionText) + '</button>';
+      return out + '\n</div>';
+    }
+    KiviShell.playground(document.getElementById('pg-toast'), {
+      controls: [
+        { key: 'type', label: '类型', type: 'segment', value: 'info', options: [['info', '信息'], ['success', '成功'], ['warning', '警告'], ['error', '错误'], ['loading', '加载中']] },
+        { key: 'text', label: '文字', type: 'text', value: '提示文字' },
+        { key: 'action', label: '显示操作', type: 'toggle', value: false },
+        { key: 'actionText', label: '操作文字', type: 'text', value: '撤销' }
+      ],
+      render: toast
+    });
+
+    // Loading
+    function loading(s) {
+      return '<div class="kv-loading kv-loading--' + s.size + '">\n  <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>' +
+        (s.showText ? '\n  <span>' + esc(s.text) + '</span>' : '') + '\n</div>';
+    }
+    KiviShell.playground(document.getElementById('pg-loading'), {
+      controls: [
+        { key: 'size', label: '尺寸', type: 'segment', value: 'sm', options: [['sm', '小'], ['md', '中'], ['lg', '大']] },
+        { key: 'showText', label: '显示文字', type: 'toggle', value: true },
+        { key: 'text', label: '文字', type: 'text', value: '加载中…' }
+      ],
+      render: loading
+    });
+
+    // Skeleton：宽高是 Figma 里摆的示意尺寸
+    var SKELETON_SIZE = { rect: 'width: 160px; height: 90px', circle: 'width: 32px; height: 32px', text: 'width: 200px' };
+    KiviShell.playground(document.getElementById('pg-skeleton'), {
+      controls: [
+        { key: 'shape', label: '形状', type: 'segment', value: 'rect', options: [['rect', '矩形'], ['circle', '圆形'], ['text', '文字行']] }
+      ],
+      render: function (s) {
+        return '<div class="kv-skeleton kv-skeleton--' + s.shape + '" style="' + SKELETON_SIZE[s.shape] + '"></div>';
+      }
+    });
+
+    // EmptyState
+    var SCENES = { empty: '暂无内容', favorite: '暂无收藏', offline: '无网络', failed: '生成失败' };
+    var IP_FILE = { empty: 'empty', favorite: 'no-favorites', offline: 'offline', failed: 'failed' };
+    function emptyState(s, withDesc, title, desc) {
+      var cls = 'kv-empty-state' + (s.size === 'sm' ? ' kv-empty-state--sm' : '');
+      var out = '<div class="' + cls + '">\n' +
+        '  <div class="kv-empty-state__illustration">\n' +
+        '    <img class="kv-empty-state__ip" src="../../assets/empty-state/' + IP_FILE[s.scene] + '.png" alt="">\n' +
+        '  </div>\n' +
+        '  <div class="kv-empty-state__text">\n' +
+        '    <div class="kv-empty-state__title">' + esc(title) + '</div>';
+      if (withDesc) out += '\n    <div class="kv-empty-state__desc">' + esc(desc) + '</div>';
+      return out + '\n  </div>\n</div>';
+    }
+    KiviShell.playground(document.getElementById('pg-empty'), {
+      controls: [
+        { key: 'scene', label: '场景', type: 'segment', value: 'empty', options: [['empty', '暂无内容'], ['favorite', '暂无收藏'], ['offline', '无网络'], ['failed', '生成失败']] },
+        { key: 'size', label: '尺寸', type: 'segment', value: 'lg', options: [['lg', '大'], ['sm', '小']] },
+        { key: 'title', label: '标题', type: 'text', value: '标题文字' },
+        { key: 'showDesc', label: '显示描述', type: 'toggle', value: true },
+        { key: 'desc', label: '描述', type: 'text', value: '一句话说清楚下一步做什么' }
+      ],
+      render: function (s) { return emptyState(s, s.showDesc, s.title, s.desc); }
+    });
+
+    // 4 个场景 × 大、小
+    var host = document.getElementById('demo-scenes');
+    var html = '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:32px 16px;width:100%;justify-items:center">';
+    ['lg', 'sm'].forEach(function (size) {
+      Object.keys(SCENES).forEach(function (k) {
+        html += emptyState({ scene: k, size: size }, true, '标题文字', '一句话说清楚下一步做什么');
+      });
+    });
+    host.innerHTML = html + '</div>';
+  })();
+
+  // 演示用：点按钮出 Toast。组件库本身不带 JS
+  (function () {
+    var region = document.getElementById('toast-region');
+    var hideTimer, loadTimer;
+
+    var TOASTS = {
+      info: ['info', '已复制链接'],
+      success: ['success', '已保存到我的作品'],
+      warning: ['warning', '余额不足，请先充值'],
+      error: ['error', '生成失败，请重试']
+    };
+
+    function html(type, text, action) {
+      var icon = type === 'loading'
+        ? '<i class="kv-icon kv-icon--spin" data-icon="Loading"></i>'
+        : '<span class="kv-toast__icon"></span>';
+      return '<div class="kv-toast kv-toast--' + type + '">' + icon + '<span class="kv-toast__message">' + text + '</span>' +
+        (action ? '<button class="kv-toast__action" type="button">' + action + '</button>' : '') + '</div>';
+    }
+
+    // 同一时间只留 1 条：直接换掉旧的。keep 为真就不自己消失
+    function show(type, text, action, keep) {
+      clearTimeout(hideTimer);
+      region.innerHTML = html(type, text, action);
+      KiviIcons.render(region);
+      if (!keep) hideTimer = setTimeout(hide, 3000);
+    }
+
+    // 淡出 150ms 后拿掉
+    function hide() {
+      clearTimeout(hideTimer);
+      clearTimeout(loadTimer);
+      var t = region.firstElementChild;
+      if (!t) return;
+      t.classList.add('is-leaving');
+      hideTimer = setTimeout(function () { region.innerHTML = ''; }, 150);
+    }
+
+    document.getElementById('toast-stage').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-toast]');
+      if (!b) return;
+      clearTimeout(loadTimer);
+      var k = b.getAttribute('data-toast');
+      if (TOASTS[k]) show(TOASTS[k][0], TOASTS[k][1]);
+      else if (k === 'undo') show('success', '已删除 1 张图片', '撤销');
+      else if (k === 'upload') {
+        show('loading', '正在上传 3 张图片', '取消', true);
+        loadTimer = setTimeout(function () { show('success', '上传完成'); }, 2000); // 加载中结束后换成成功
+      }
+    });
+
+    region.addEventListener('click', function (e) {
+      if (e.target.closest('.kv-toast__action')) hide();
+    });
+  })();
+</script>
+</body>
+</html>

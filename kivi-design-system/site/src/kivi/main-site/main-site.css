@@ -1,0 +1,297 @@
+/*
+  KIVI · 主站
+  Figma「主站」页：GenPrompt（记录头）、ResultTile（结果格）。参考区是 GenPrompt 里的一块，代码里单独成 GenPromptRefs。
+  依赖 tokens.css、base.css、button.css（按钮用 kv-icon-button、kv-button）。
+  别的页的组件：
+    tabs-tags-avatar  Tag（参数标签、角标）、AssetThumb（参考区缩略图）
+    canvas            ReferenceItem（悬停浮层里的参考图）
+    video-player      VideoPlayer（视频格子里的播放器，小号）
+    feedback          EmptyState（失败）
+    generating        GeneratingDots（生成中动效）
+  整条记录（GenPrompt + 结果网格 + 底部按钮）、输入框、首页分段都是模板，不在这里。
+  主站输入框是正式组件 PromptBox，在 prompt-box 里。
+
+  写法（React，见 GenPrompt.tsx、ResultTile.tsx）
+    <GenPrompt prompt="生成一张赛博朋克风格的猕猴桃海报" onCopy={…}>
+      <Tag><Icon name="VideoGeneration" />视频生成</Tag>
+      <Tag>2K</Tag>
+    </GenPrompt>
+    <ResultTile src="./placeholders/kivi-future-1x1.webp" />
+  渲染出来的结构
+    <div class="kv-gen-prompt">
+      <div class="kv-gen-prompt__prompt">
+        <span class="kv-gen-prompt__text">生成一张赛博朋克风格的猕猴桃海报</span>
+        <span class="kv-gen-prompt__copy"><button class="kv-icon-button kv-icon-button--28 kv-icon-button--light"/></span>
+      </div>
+      <div class="kv-gen-prompt__params">…</div>
+    </div>
+    <div class="kv-result-tile"><img class="kv-result-tile__media" src="…" alt=""></div>
+    参考区 GenPromptRefs
+    <div class="kv-gen-prompt-refs">
+      <span class="kv-gen-prompt-refs__thumbs">…</span>参考方式文字
+      <div class="kv-gen-prompt-refs__popover" role="tooltip">…</div>
+    </div>
+
+  状态
+    GenPrompt 长度  超出两行加 kv-gen-prompt--clamp（length="long"）
+    ResultTile 类型 视频加 kv-result-tile--video；画面要完整显示（比例不一致）加 kv-result-tile--fit
+    ResultTile 状态 生成中 aria-busy="true"（里面放 GeneratingDots）；失败 aria-invalid="true"；完成不用写；
+                    悬停由鼠标触发，操作才出现；视频的时长、控制条由 VideoPlayer 自己管
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+*/
+
+/* ---------- GenPrompt：记录头 ---------- */
+
+.kv-gen-prompt {
+  /* 超出两行时盖住文字的渐变，终点是它所在的底色，放在别的底色上改这个值 */
+  --kv-gen-prompt-bg: var(--color-bg-fill-base);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-family);
+}
+
+/* 提示词：14 / 22 primary。短的在一行内，复制按钮紧跟在文字后 */
+.kv-gen-prompt__prompt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  min-width: 0;
+}
+
+.kv-gen-prompt__text {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-gen-prompt__copy {
+  display: flex;
+  flex: none;
+}
+
+/* 超出两行：最多 2 行，末尾省略；复制按钮绝对定位在第二行行尾，
+   左边 40 的渐变从透明过渡到底色，盖住被截断的文字 */
+.kv-gen-prompt--clamp .kv-gen-prompt__prompt {
+  display: block;
+}
+
+.kv-gen-prompt--clamp .kv-gen-prompt__text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+
+.kv-gen-prompt--clamp .kv-gen-prompt__copy {
+  position: absolute;
+  right: 0;
+  bottom: -3px;
+  padding-left: 40px;
+  background: linear-gradient(90deg, transparent, var(--kv-gen-prompt-bg) 55%);
+}
+
+/* 参数：一排 Tag，间距 6，放不下换行 */
+.kv-gen-prompt__params {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-6);
+}
+
+/* 参考区（GenPromptRefs）：所有参考素材放一块，图在前，后面跟参考方式文字 */
+.kv-gen-prompt-refs {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  height: 24px;
+  padding: var(--spacing-4) var(--spacing-6) var(--spacing-4) var(--spacing-4);
+  border-radius: var(--border-radius-6);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+  white-space: nowrap;
+}
+
+.kv-gen-prompt-refs__thumbs {
+  display: flex;
+  gap: var(--spacing-4);
+}
+
+/* 超过 5 个：露 4 个半，第 5 个从左到右渐隐，放在什么底上都对 */
+.kv-gen-prompt-refs__thumb--fade {
+  display: flex;
+  -webkit-mask-image: linear-gradient(90deg, black, transparent);
+  mask-image: linear-gradient(90deg, black, transparent);
+}
+
+/* 悬停参考区，下面弹出浮层显示全部：玻璃浮层（底 glass、背景模糊 32、描边 border-subtle），圆角 8，内边距 6，间距 6，一行最多 5 个 ReferenceItem 72。
+   出现、消失照动效里菜单的档；鼠标离开后等 150ms 再收。离参考区的距离 Figma 没定，先用 4 */
+.kv-gen-prompt-refs__popover {
+  position: absolute;
+  top: calc(100% + var(--spacing-4));
+  left: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 72px);
+  gap: var(--spacing-6);
+  padding: var(--spacing-6);
+  border-radius: var(--border-radius-8);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-in) var(--motion-duration-150),
+    visibility 0s linear calc(var(--motion-duration-150) * 2);
+}
+
+/* 补上和参考区之间的缝，鼠标从参考区移到浮层时不会断 */
+.kv-gen-prompt-refs__popover::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--spacing-4) * -1);
+  right: 0;
+  left: 0;
+  height: var(--spacing-4);
+}
+
+.kv-gen-prompt-refs:where(:hover, :focus-within, .is-hover) > .kv-gen-prompt-refs__popover {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity var(--motion-duration-200) var(--motion-ease-out),
+    visibility 0s;
+}
+
+/* ---------- ResultTile：结果格 ---------- */
+
+/* 默认 256 方，宽跟着格子走，高按比例（默认方形）。画面默认铺满（居中裁切），和 Figma 里 PlaceholderImage 填充=铺满一致 */
+.kv-result-tile {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-6);
+  background: var(--color-bg-fill-surface);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.kv-result-tile__media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 一组里比例不一致时画面完整显示，比例不同的留底色（Figma 的 ResultTile 说明写「FIT」；
+   「模板 · 主站」写的是底下再垫放大模糊的原图，两处不一致，待确认，这里只做留底色） */
+.kv-result-tile--fit > .kv-result-tile__media {
+  object-fit: contain;
+}
+
+/* 悬停才出操作：右上删除 / 下载 / 收藏，左下快捷操作，各合成一条按钮条（ButtonGroup），离边 8。
+   出现 150ms ease-out，消失 150ms ease-in */
+.kv-result-tile__actions {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-in),
+    visibility 0s linear var(--motion-duration-150);
+}
+
+.kv-result-tile__actions--top,
+.kv-result-tile__pin {
+  top: var(--spacing-8);
+  right: var(--spacing-8);
+}
+
+.kv-result-tile__actions--quick {
+  bottom: var(--spacing-8);
+  left: var(--spacing-8);
+}
+
+.kv-result-tile:where(:hover, :focus-within, .is-hover) > .kv-result-tile__actions {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-out),
+    visibility 0s;
+}
+
+/* 收藏了、不悬停：右上只留一个星（__pin），悬停时淡出，换成整条 */
+.kv-result-tile__pin {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-result-tile:where(:hover, :focus-within, .is-hover) > .kv-result-tile__pin {
+  opacity: 0;
+  transition-timing-function: var(--motion-ease-in);
+}
+
+/* 视频：里面是 VideoPlayer 小号（时长、控制条它自己管）。操作盖在播放器上面；
+   左下快捷操作抬到控制条上面：控制行 28 + 下边距 8 + 间距 10 */
+.kv-result-tile > .kv-result-tile__actions {
+  z-index: 3;
+}
+
+.kv-result-tile--video > .kv-result-tile__actions--quick {
+  bottom: 46px;
+}
+
+/* 生成中分两种：
+   - 第一次生成（没有原素材）：里面只放 GeneratingDots，铺满格子（格子是 position: relative），没有遮罩
+   - 重新生成（有原素材）：原素材 __media + 遮罩 __mask（黑 40% + 背景模糊），GeneratingDots 叠在上面
+   左上是任务角标（Tag 覆盖）。动效的样子见「动效」页 */
+.kv-result-tile__mask {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-bg-fill-container-dark);
+  /* Figma 背景模糊 24 = CSS blur 12（Figma 没变量） */
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.kv-result-tile__badge {
+  position: absolute;
+  top: var(--spacing-8);
+  left: var(--spacing-8);
+  display: flex;
+}
+
+/* 失败：EmptyState 小，居中 */
+.kv-result-tile[aria-invalid="true"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

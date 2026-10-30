@@ -1,0 +1,377 @@
+/*
+  KIVI · 反馈
+  Figma「反馈」页：Toast（轻提示）、Loading（加载）、Skeleton（骨架屏）、EmptyState（空状态）。
+  依赖 tokens.css、base.css；EmptyState 下面的引导按钮用 button.css。页面状态：待确认 0.1.0。
+
+  写法
+    <div class="kv-toast kv-toast--success">
+      <span class="kv-toast__icon"></span>
+      <span class="kv-toast__message">任务已提交</span>
+    </div>
+    <div class="kv-toast kv-toast--loading">
+      <i class="kv-icon kv-icon--spin" data-icon="Loading"></i>
+      <span class="kv-toast__message">正在上传 3 张图片</span>
+      <button class="kv-toast__action" type="button">取消</button>
+    </div>
+
+    <div class="kv-loading kv-loading--sm">
+      <i class="kv-icon kv-icon--spin" data-icon="Loading"></i><span>加载中…</span>
+    </div>
+
+    <div class="kv-skeleton kv-skeleton--rect" style="width: 160px; height: 90px"></div>
+
+    <div class="kv-empty-state">
+      <div class="kv-empty-state__illustration">
+        <img class="kv-empty-state__ip" src="…" alt="">
+      </div>
+      <div class="kv-empty-state__text">
+        <div class="kv-empty-state__title">还没有作品</div>
+        <div class="kv-empty-state__desc">在左侧写下描述，生成第一张作品</div>
+      </div>
+    </div>
+
+  状态
+    Toast 类型   kv-toast--info / --success / --warning / --error / --loading
+    Toast 显示   放进 <div class="kv-toast-region" role="status">（页面顶部居中，距顶 24），里面同一时间只留一个 .kv-toast。
+                 新放进去的会自己从上方移入；要消失时加 is-leaving，150ms 后自己把它拿掉。3 秒的计时要自己写。
+    Loading 尺寸 kv-loading--sm / --md / --lg，小是默认
+    Skeleton 形状 kv-skeleton--rect / --circle / --text，矩形是默认；宽高照真实内容自己写
+    EmptyState 尺寸 kv-empty-state--lg / --sm，大是默认；场景只是换 IP 图和文字，样式一样
+
+  待定（Figma 没定）
+    Toast 的最大宽度、操作文字的悬停和按下、层级（z-index 先写 1100，比弹窗高）。
+    Skeleton 扫光的渐变形状：Figma 只写了「高光白 12%，从左往右」，先用两头透明的横向渐变。
+    EmptyState 的最大宽度、引导按钮的间距是从文字算起还是从插图算起（先按从文字算起 24）。
+*/
+
+/* ================= Toast ================= */
+
+/* 高 40，上下 8、左右 16，元素间距 8，圆角 12，底色弹层色，不加描边和阴影 */
+.kv-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  background: var(--color-bg-fill-popup);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-22);
+}
+
+/* 状态图标：16 的实心圆 + 镂空符号，符号的颜色就是弹层底色 */
+.kv-toast__icon {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--border-radius-round);
+  background: var(--kv-toast-icon-fill);
+}
+
+.kv-toast__icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg-fill-popup);
+  -webkit-mask: var(--kv-toast-glyph) center / 16px 16px no-repeat;
+  mask: var(--kv-toast-glyph) center / 16px 16px no-repeat;
+}
+
+/* 加载中：不画圆，直接用图标库的 Loading，16，primary */
+.kv-toast > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-primary);
+}
+
+/* 操作文字：14 secondary，和文字之间再空 8 */
+.kv-toast__action {
+  margin: 0;
+  padding: 0 0 0 var(--spacing-sm);
+  border: 0;
+  background: none;
+  color: var(--color-text-fill-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* 类型：每种改这两个值，状态图标圆的颜色、镂空符号。信息是默认 */
+
+/* 信息：secondary 的圆 + 「i」 */
+.kv-toast,
+.kv-toast--info {
+  --kv-toast-icon-fill: var(--color-text-fill-secondary);
+  --kv-toast-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='5' r='1'/><path d='M8 7.6V11.4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/></svg>");
+}
+
+/* 成功：对勾 */
+.kv-toast--success {
+  --kv-toast-icon-fill: var(--color-status-success);
+  --kv-toast-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M5 8.2L7.1 10.3L11 6.1' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+
+/* 警告：感叹号 */
+.kv-toast--warning {
+  --kv-toast-icon-fill: var(--color-status-warning);
+  --kv-toast-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='11.1' r='1'/><path d='M8 4.6V8.6' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/></svg>");
+}
+
+/* 错误：叉 */
+.kv-toast--error {
+  --kv-toast-icon-fill: var(--color-status-danger);
+  --kv-toast-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M5.7 5.7L10.3 10.3M10.3 5.7L5.7 10.3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/></svg>");
+}
+
+/* 加载中没有状态图标，用上面的 Loading */
+
+/* 位置：页面顶部居中，距顶 24。同一时间只留 1 条 */
+.kv-toast-region {
+  position: fixed;
+  top: var(--spacing-xl);
+  left: 50%;
+  z-index: 1100; /* 待定：先比弹窗高 */
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.kv-toast-region > .kv-toast {
+  pointer-events: auto;
+  /* 出现：200ms ease-out，从上方移入（刚好移出屏幕的距离 = 自己的高 + 距顶 24） */
+  animation: kv-toast-in var(--motion-duration-200) var(--motion-ease-out);
+}
+
+/* 消失：150ms ease-in 淡出 */
+.kv-toast-region > .kv-toast.is-leaving {
+  animation: kv-toast-out var(--motion-duration-150) var(--motion-ease-in) forwards;
+}
+
+@keyframes kv-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-100% - var(--spacing-xl)));
+  }
+}
+
+@keyframes kv-toast-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* ================= Loading ================= */
+
+/* 转圈 + 可选文字。图标就是图标库的 Loading，1 秒一圈，匀速（见 base.css 的 kv-icon--spin） */
+.kv-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+}
+
+.kv-loading > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-primary);
+}
+
+/* 小：横排，图标 16，文字 12 */
+.kv-loading--sm {
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}
+
+.kv-loading--sm > .kv-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 中：竖排，图标 24，文字 13。用在卡片里 */
+.kv-loading--md {
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+.kv-loading--md > .kv-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* 大：竖排，图标 40，文字 14，间距 12。用在整块区域 */
+.kv-loading--lg {
+  flex-direction: column;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-loading--lg > .kv-icon {
+  width: 40px;
+  height: 40px;
+}
+
+/* ================= Skeleton ================= */
+
+/* 只管颜色和圆角，宽高照真实内容写。底色白 8%，扫光白 12%，从左往右，1.4 秒一轮，匀速 */
+.kv-skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--color-bg-fill-container-light-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.kv-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--color-bg-fill-container-light-1-hover), transparent);
+  transform: translateX(-100%);
+  animation: kv-skeleton-sweep 1.4s linear infinite;
+}
+
+@keyframes kv-skeleton-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* 系统开了「减少动态效果」：不扫光，只留底色 */
+@media (prefers-reduced-motion: reduce) {
+  .kv-skeleton::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* 形状：矩形（图片、卡片）圆角 8；圆形（头像）；文字行高 12、圆角 4 */
+.kv-skeleton--rect {
+  border-radius: var(--border-radius-sm);
+}
+
+.kv-skeleton--circle {
+  border-radius: var(--border-radius-round);
+}
+
+.kv-skeleton--text {
+  height: 12px;
+  border-radius: var(--border-radius-xxs);
+}
+
+/* ================= EmptyState ================= */
+
+/* IP 插图 + 标题 + 可选描述。大是默认：插图 160，和文字间距 16 */
+.kv-empty-state {
+  --kv-empty-gap: var(--spacing-lg);
+  --kv-empty-ip: 160px;
+
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--kv-empty-gap);
+  box-sizing: border-box;
+  font-family: var(--font-family);
+  text-align: center;
+}
+
+.kv-empty-state--lg {
+  --kv-empty-gap: var(--spacing-lg);
+  --kv-empty-ip: 160px;
+}
+
+.kv-empty-state--sm {
+  --kv-empty-gap: var(--spacing-sm);
+  --kv-empty-ip: 96px;
+}
+
+/* 插图：IP 图，背后一圈绿色光晕，脚下一块地面阴影。尺寸跟着 --kv-empty-ip 等比走（大 160，小 96） */
+.kv-empty-state__illustration {
+  position: relative;
+  flex: none;
+  width: var(--kv-empty-ip);
+  height: var(--kv-empty-ip);
+}
+
+/* 光晕：比插图大 10%，品牌绿 10% → 0 的径向渐变，中心略低一点 */
+.kv-empty-state__illustration::before {
+  content: "";
+  position: absolute;
+  top: -1%;
+  left: -5%;
+  width: 110%;
+  height: 110%;
+  border-radius: var(--border-radius-round);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-brand-solid) 10%, transparent), transparent);
+}
+
+/* 地面阴影：黑 50% → 0 的径向渐变（Figma 里是写死的黑，没有变量） */
+.kv-empty-state__illustration::after {
+  content: "";
+  position: absolute;
+  top: 90%;
+  left: 20%;
+  width: 60%;
+  height: 8%;
+  border-radius: var(--border-radius-round);
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5), transparent);
+}
+
+.kv-empty-state__ip {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.kv-empty-state__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+/* 大：标题 16 粗 primary，描述 14 tertiary */
+.kv-empty-state__title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-24);
+}
+
+.kv-empty-state__desc {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-22);
+}
+
+/* 小：标题 14 粗 secondary，描述 12 tertiary；下拉里不要描述 */
+.kv-empty-state--sm .kv-empty-state__title {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-empty-state--sm .kv-empty-state__desc {
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}
+
+/* 引导操作：下面放一个中号次要按钮，离文字 24（外层间距已经有了，这里补差） */
+.kv-empty-state__action {
+  margin-top: calc(var(--spacing-xl) - var(--kv-empty-gap));
+}

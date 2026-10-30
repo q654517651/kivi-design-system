@@ -1,0 +1,282 @@
+import { Demo, PageHeader, Tag } from '@shell';
+import {
+  ActionCardPlayground,
+  FileCardPlayground,
+  MediaStackPlayground,
+  ProcessRowPlayground,
+  QuestionFlowDemo,
+  QuestionPanelPlayground,
+  SendButtonPlayground,
+  UserMessagePlayground,
+} from './agent.demos';
+
+<style>{`
+  /* 这一页的演示用 */
+
+  /* Agent 面板的底色是 base，演示台也用 base，不用网站默认的浅灰 */
+  .shell-demo-preview:not([data-stage="media"]),
+  .shell-pg-stage:not(.is-media) {
+    background: var(--color-bg-fill-base);
+  }
+
+  /* 组件在对话里宽度是拉满的，演示台里限成 Figma 的宽度 */
+  .shell-demo-preview > :is(.kv-action-card, .kv-question-panel, .kv-user-message),
+  .shell-pg-stage > :is(.kv-action-card, .kv-question-panel, .kv-user-message) {
+    max-width: 428px;
+  }
+
+  .shell-demo-preview > .kv-file-card,
+  .shell-pg-stage > .kv-file-card {
+    max-width: 360px;
+  }
+`}</style>
+
+<PageHeader
+  eyebrow="业务组件"
+  title="Agent"
+  lead="Agent 对话里的业务组件：过程行、用户消息、结果叠放、追问面板、确认卡片、发送按钮、文件卡（废弃）。"
+  figma={['Agent', '340:658']}
+  status="待确认 0.1.0"
+  code="kivi/agent"
+/>
+
+## 示例：侧栏 Agent
+
+### 对话：生成图片
+
+<Demo code={`
+<div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: 428, maxWidth: '100%' }}>
+  <UserMessage>帮我生成 10 个小狗的图片</UserMessage>
+  <div style={{ color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>
+    好的，马上为你同时生成 10 张小狗图片！
+  </div>
+  <ProcessRow icon="UseCanvas" action="调用了多个工具" />
+  <div style={{ color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>
+    新节点「可爱修狗 11-边牧 v2」已创建，现在发起生成审批。
+  </div>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <ProcessRow icon="Message" action="已询问" defaultExpanded />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ color: 'var(--color-text-fill-secondary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-20)' }}>
+        是否生成新节点「可爱修狗 11-边牧 v2」？
+      </div>
+      <div style={{ color: 'var(--color-text-fill-tertiary)', fontSize: 'var(--font-size-12)', lineHeight: 'var(--font-line-height-16)' }}>
+        批准生成
+      </div>
+    </div>
+  </div>
+  <ProcessRow icon="ImageGeneration" action="图片已生成 × 5" />
+  <MediaStack src="./placeholders/kivi-future-1x1.webp" count="+4" aria-label="展开 5 个结果" />
+  <div style={{ color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>
+    前 5 只狗狗已全部生成完成。剩余 5 只也已切换为 Lib Image 2.5 Fast，需要继续生成吗？
+  </div>
+  <div style={{ display: 'flex', gap: 8 }}>
+    <Button>直接生成</Button>
+    <Button>调整狗的品种</Button>
+    <Button>换一批狗的描述</Button>
+  </div>
+  <div style={{ display: 'flex' }}>
+    <IconButton icon="Copy" label="复制" variant="light" />
+    <IconButton icon="CopyTraceID" label="复制 TraceID" variant="light" />
+    <IconButton icon="ThumbsUp" label="赞" variant="light" />
+    <IconButton icon="ThumbsDown" label="踩" variant="light" />
+  </div>
+</div>
+`} />
+
+### 追问：问题面板替换输入框
+
+<QuestionFlowDemo />
+
+## ProcessRow
+
+<ProcessRowPlayground />
+
+### 展开列表
+
+<Demo code={`
+<div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 420, maxWidth: '100%' }}>
+  <ProcessRow icon="UseCanvas" action="调用了多个工具" defaultExpanded />
+  <div className="kv-process-list kv-process-list--fade">
+    <ProcessRow level="sub" icon="Skill" action="读取画布操作规范" />
+    <ProcessRow level="sub" icon="UseCanvas" action="创建节点" object="「魔法少女分镜脚本」" />
+    <ProcessRow level="sub" icon="UseCanvas" action="更新节点" object="「魔法少女分镜脚本」" />
+    <ProcessRow level="sub" icon="Skill" action="读取画布操作规范" />
+    <ProcessRow level="sub" icon="UseCanvas" action="创建节点" object="「魔法少女视频生成」" />
+    <ProcessRow level="sub" icon="UseCanvas" action="执行节点" object="「魔法少女视频生成」" />
+    <ProcessRow level="sub" status="running" icon="Skill" action="读取礼物等级细则" />
+  </div>
+</div>
+`} />
+
+## UserMessage
+
+<UserMessagePlayground />
+
+## MediaStack
+
+<MediaStackPlayground />
+
+## QuestionPanel
+
+<QuestionPanelPlayground />
+
+## ActionCard
+
+<ActionCardPlayground />
+
+## SendButton
+
+<SendButtonPlayground />
+
+### 输入框：发送按钮在工具条最右
+
+<Demo code={`
+<div
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    boxSizing: 'border-box',
+    width: 428,
+    maxWidth: '100%',
+    padding: 16,
+    border: '1px solid var(--color-border-subtle)',
+    borderRadius: 'var(--border-radius-16)',
+    background: 'var(--color-bg-fill-surface)',
+  }}
+>
+  <div style={{ minHeight: 68, color: 'var(--color-text-fill-placeholder)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>
+    描述任何你想要生成的内容
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+    <div style={{ display: 'flex', gap: 8 }}>
+      <IconButton icon="Add" label="添加" variant="secondary" />
+      <IconButton icon="Mdoel" label="模型" variant="secondary" />
+      <IconButton icon="Skill" label="技能" variant="secondary" />
+      <IconButton icon="Hand" label="手" variant="secondary" />
+      <IconButton icon="Openai" label="Openai" variant="secondary" />
+    </div>
+    <SendButton disabled />
+  </div>
+</div>
+`} />
+
+## FileCard
+
+<Tag kind="danger">废弃</Tag> 平台没有文件卡，不要用。组件先留着。
+
+<FileCardPlayground />
+
+## 参数
+
+### ProcessRow
+
+一行，行高 20，各部分间距 4 `--spacing-4`。其余原生 `<div>` 属性都能传，带箭头的一级整行是 `<button>`。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `action` | `ReactNode` | — | 动作文字，必填。14 / 20 常规 `--font-size-14`、`--font-line-height-20`，比如「创建节点」 |
+| `object` | `ReactNode` | — | 对象文字，比如「活动标题」，比动作淡一档。不传不显示 |
+| `level` | `"main"` `"sub"` | `"main"` | 一级 / 子项。子项是展开列表里的行，没有头像和箭头，不能点 |
+| `status` | `"running"` `"done"` `"failed"` | `"done"` | 进行中：动作文字扫光 / 完成 / 失败：图标和动作文字用 status/danger |
+| `icon` | `IconName` | — | 图标 20，常用 `UseCanvas` `Skill` `Message` `ImageGeneration`。不传不显示 |
+| `avatar` | `string` | — | 头像地址，Avatar 24 · 图片，圆形。不传不显示，子项没有 |
+| `arrow` | `boolean` | `true` | 箭头 16，tertiary，只放 `DownArrowSmall`，展开时转 180°。子项没有 |
+| `expanded` | `boolean` | — | 展开：受控。没有箭头的行没有展开状态 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+
+### UserMessage
+
+气泡靠右，宽度跟文字走。组件宽 428，放进对话里拉满。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `assets` | `ReactNode` | — | 素材行：一排 ReferenceItem 56（缩略图 AssetThumb 56），间距 8，图片、带时长的视频、音频都放这里。不传没有素材行 |
+| `children` | `ReactNode` | — | 气泡里的字：14 / 22 常规，primary，最宽 340，超出换行。气泡底 container-light-1（白 8%），圆角 12 `--border-radius-12`，内边距 12 / 16 `--spacing-12`、`--spacing-16`，和素材间距 8 `--spacing-8` |
+
+### MediaStack
+
+整个是一个 `<button>`，要自己写 `aria-label`，比如「展开 5 个结果」。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `src` | `string` | — | 第一张图的地址，必填。每层 174，圆角 16 `--border-radius-16`，整体 182；后两层底 container-light-2（白 4%），描边 border（白 12%）1，往右下错开 4、8 |
+| `count` | `ReactNode` | — | 右下角数量，比如 `"+4"`，渲染成 Tag · 浮层，离边 8。不传没有角标 |
+| `expanded` | `boolean` | `false` | 展开状态：展开收起由页面决定，组件只管收起的样子，这里只是写进 `aria-expanded` |
+
+### QuestionPanel
+
+外框底 surface，描边 border-subtle 1，圆角 16 `--border-radius-16`，内边距 16 `--spacing-16`，题目栏、选项、底部操作间距 12。其余原生 `<section>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `title` | `ReactNode` | — | 题目，必填。14 / 22 粗，primary |
+| `pager` | `ReactNode` | — | 分页文字，比如「1/5」，13 / 20 secondary。不传不显示分页；两边是 IconButton 28 · 文字（`LeftArrowSmall` `RightArrowSmall`），间距 4 |
+| `onPrev` | `() => void` | — | 点分页左边的「上一题」 |
+| `onNext` | `() => void` | — | 点分页右边的「下一题」 |
+| `multiple` | `boolean` | `false` | 多选。默认单选，只有一项选中 |
+| `value` | `string[]` | — | 选中的值：受控。值是 QuestionOption 的 `value`，单选最多一项 |
+| `defaultValue` | `string[]` | `[]` | 选中的值：非受控的初始值 |
+| `onChange` | `(value: string[]) => void` | — | 选中变化时触发 |
+| `skip` | `boolean` | `true` | 显示「忽略」（Button 中 · 文字，跳过这道题） |
+| `skipText` | `ReactNode` | `"忽略"` | 「忽略」的文字 |
+| `onSkip` | `() => void` | — | 点「忽略」 |
+| `submitText` | `ReactNode` | `"确认提交"` | 「确认提交」的文字 |
+| `onSubmit` | `() => void` | — | 点「确认提交」（Button 中 · 主要）。底部操作靠右，间距 8。一项都没选、「其他」也没填字时按钮不能点 |
+| `disabled` | `boolean` | `false` | 整个面板禁用：选项、分页、两个按钮都不能点，「其他」不能输入。提交中用 |
+| `children` | `ReactNode` | — | 选项：QuestionOption，间距 4，最后一个可以是 `type="other"`。没写编号的按顺序补 1、2、3 |
+
+- 单选是 `radiogroup`，组里只有一个 Tab 停点（选中的那项，没选就是第一项）；上、左 / 下、右方向键换到上一项 / 下一项，首尾相接，焦点到哪就选到哪。多选是 `group`，每项各自能 Tab，空格选。
+- 提交或忽略后面板消失，消息里留一行 ProcessRow「已询问」。
+
+### QuestionOption
+
+追问面板里的一个选项，不发布，只在 QuestionPanel 里用。高 36，圆角 8 `--border-radius-8`，左右内边距 8 `--spacing-8`，14 / 22。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"option"` `"other"` | `"option"` | 选项 / 其他。「其他」没有文字，是输入框，只有默认状态 |
+| `index` | `ReactNode` | — | 编号，放进 QuestionPanel 里可以不写。编号框 20，圆角 6 `--border-radius-6`，12 / 16 |
+| `value` | `string` | 编号 | 选项的值，QuestionPanel 靠它记哪些选中 |
+| `disabled` | `boolean` | `false` | 禁用，变淡不能点。QuestionPanel 禁用时自动跟着禁用 |
+| `checked` | `boolean` | — | 选中：放进 QuestionPanel 里由它管，单独用时才需要写。渲染成 `aria-checked`，单选 `role="radio"`，多选 `role="checkbox"` |
+| `children` | `ReactNode` | — | 选项文字 |
+| `placeholder` | `string` | `"其他，请直接输入"` | 「其他」的占位文字 |
+| `inputProps` | `InputHTMLAttributes` | — | 「其他」里输入框的属性，比如 `value` `onChange` |
+
+### ActionCard
+
+三种：生成确认、授权、出错。其余原生 `<section>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"confirm"` `"auth"` `"error"` | `"confirm"` | 生成确认 / 授权 / 出错。前两种样子一样：底 surface，描边 border-subtle 1，圆角 16 `--border-radius-16`，内边距 16，间距 12；出错只有一行说明，描边 border（白 12%）1，不填底，内边距 12 / 16 |
+| `title` | `ReactNode` | — | 标题，14 / 22 粗，primary。出错没有 |
+| `description` | `ReactNode` | — | 说明，13 / 20，tertiary（出错用 secondary）。可点的一段用 `<button className="kv-action-card__link">` |
+| `actions` | `ReactNode` | — | 操作，靠右，间距 8：Button 中。生成确认是取消（次要）+ 确认生成（主要），授权是去授权（主要）。出错没有 |
+
+### SendButton
+
+36 的圆形。默认品牌渐变底（gradient-1 → gradient-2，从左到右），`Send` 图标 20，on-brand。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `generating` | `boolean` | `false` | 生成中：图标换成停止方块 12 × 12，圆角 4 `--border-radius-4`，点了停止生成 |
+| `disabled` | `boolean` | `false` | 禁用，还没输入内容。底 container-light-1（白 8%），图标 disabled（白 20%） |
+| `aria-label` | `string` | `"发送"` | 只有图标，读屏靠它。生成中默认「停止生成」 |
+
+### FileCard
+
+<Tag kind="danger">废弃</Tag> 平台没有，不要用。宽 360（放进消息里可以拉满），高 64，底 container-light-1，圆角 12 `--border-radius-12`，内边距 12，间距 12；图标块 40，圆角 8 `--border-radius-8`，图标 20。悬停底色 container-light-1-hover，右边出操作（IconButton 28 · 轻，音频的播放常显）。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"doc"` `"subtitle"` `"audio"` | `"doc"` | 废弃，平台没有。文档（md、txt，图标 `File`）/ 字幕（srt，`Subtitle`）/ 音频（mp3 等，`FileMusic`）。文档、字幕的操作是预览、下载，音频是播放、下载 |
+| `name` | `ReactNode` | — | 文件名，必填。14 / 22 粗，primary，一行，超出省略 |
+| `meta` | `ReactNode` | — | 信息：创建时间 / 条数 / 时长。12 / 16 常规，tertiary |
+| `generating` | `boolean` | `false` | 生成中：信息固定写「正在撰写…」，右边换成 Loading 小（16，转圈），没有操作 |
+| `onPreview` | `() => void` | — | 点「预览」（文档、字幕） |
+| `onPlay` | `() => void` | — | 点「播放」（音频） |
+| `onDownload` | `() => void` | — | 点「下载」 |

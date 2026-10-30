@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>选择控件 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../kivi/selection.css">
+  <link rel="stylesheet" href="../kivi/inputs.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用 */
+    #pg-slider .shell-pg-stage .kv-slider { width: 240px; }
+    .sel-cell { width: 140px; }
+    .sel-cell .kv-slider { width: 100%; }
+  </style>
+</head>
+<body data-root="../" data-page="selection">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">通用组件</p>
+    <h1>选择控件</h1>
+    <p class="doc-lead">点了是「选一个值」的控件：开关、滑块、勾选框。三个组件，都能直接点、拖。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=164-627" target="_blank" rel="noopener">「选择控件」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">草稿 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/selection.css</code></dd></div>
+    </dl>
+  </header>
+
+  <p style="margin-top:24px">分段选择（比例、分辨率）不在这一页：用 TabItem 的「样式=分段」，在<a href="tabs-tags-avatar.html">「选项卡、标签和头像」</a>页 <span class="tag tag--draft">待确认</span>。参数面板这类组合是模板，在 Figma「模板 · 通用」页，不做成组件。</p>
+
+  <!-- ==================== Switch ==================== -->
+
+  <h2 id="switch">Switch</h2>
+  <p>在右边面板选开关和状态，和 Figma 右侧属性面板一样。下面的代码跟着变，可以直接复制。预览里的开关也能点。</p>
+  <div id="pg-switch"></div>
+
+  <h3>用途</h3>
+  <p>只有开和关两个状态，点一下立刻生效，比如「生成音频」。要选两个以上的值，或者要点「确定」才生效的，用分段选择器。</p>
+
+  <h3>结构</h3>
+  <p>一个胶囊底，里面一个白色圆形把手，四周留 2。</p>
+  <ul>
+    <li>文字说明不在组件里，放在旁边（模板里）。参数面板里标签在左、开关在右。</li>
+    <li>只有开关、没有文字时，必须写 <code>aria-label</code> 说明它控制什么。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>开关</td><td>开 / 关</td><td><code>aria-checked="true"</code> / <code>"false"</code></td></tr>
+        <tr><td>状态</td><td>默认 / 禁用</td><td>禁用 <code>disabled</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>开关没有悬停状态。</p>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>尺寸</td><td>36 × 20</td><td>—</td></tr>
+        <tr><td>圆角</td><td>999（胶囊）</td><td><code>--border-radius-round</code></td></tr>
+        <tr><td>把手</td><td>圆形 16，四周留 2，白色</td><td><code>--color-text-fill-primary</code></td></tr>
+        <tr><td>开</td><td>品牌绿</td><td><code>--color-brand-solid</code></td></tr>
+        <tr><td>关</td><td>白 16%</td><td><code>--color-bg-fill-container-light-1-pressed</code></td></tr>
+        <tr><td>禁用</td><td>整体透明度 30%，开、关都一样</td><td><code>--opacity-30</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>开、关切换时，底色和把手一起动，150ms ease-in-out，见「动效」。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-switch"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>两个状态、点了马上生效的设置用开关，比如「生成音频」。</li>
+    <li>要选两个以上的值，或者要点「确定」才生效的，用分段选择器。</li>
+    <li>标签在左、开关在右，整行对齐。</li>
+  </ul>
+
+  <h4>参数面板：标签在左、开关在右</h4>
+  <div data-demo id="demo-switch">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:240px;color:var(--color-text-fill-primary);font-size:13px">
+      <span>生成音频</span>
+      <button class="kv-switch" role="switch" aria-checked="true" aria-label="生成音频"></button>
+    </div>
+  </div>
+
+  <!-- ==================== Slider ==================== -->
+
+  <h2 id="slider">Slider</h2>
+  <p>选进度和状态，预览里的滑块也能拖。</p>
+  <div id="pg-slider"></div>
+
+  <h3>用途</h3>
+  <p>在一个范围里调一个数值，比如时长、语速。</p>
+
+  <h3>结构</h3>
+  <p>轨道 + 已选部分 + 把手，三层叠在一起，整体高 16。</p>
+  <ul>
+    <li>宽度拉伸，轨道跟着变长；进度用百分比，不用写死像素。</li>
+    <li>把手起点贴着轨道左端，终点贴着右端，不会伸出轨道。</li>
+    <li>要显示具体数值时，右边配一个数字输入框。刻度和数值写在模板里（Figma「模板 · 画布」页「参数面板」）。</li>
+    <li>没有文字，必须写 <code>aria-label</code>。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>进度</td><td>0 / 25 / 50 / 75 / 100（Figma 里先摆几个大概；代码里是 0 到 100 任意值）</td><td><code>style="--kv-value: 0.5"</code>（0 到 1），同时写 <code>aria-valuenow</code></td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 禁用</td><td>悬停由鼠标触发；禁用 <code>aria-disabled="true"</code></td></tr>
+        <tr><td>范围</td><td>最小、最大值</td><td><code>aria-valuemin</code> / <code>aria-valuemax</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>部分</th><th>默认</th><th>悬停</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>整体高度</td><td>16</td><td>16</td><td>—</td></tr>
+        <tr><td>轨道</td><td>高 4，圆角 999，白 16%</td><td>同默认</td><td><code>--color-bg-fill-container-light-1-pressed</code></td></tr>
+        <tr><td>已选部分</td><td>高 4，圆角 999，品牌绿</td><td>品牌悬停色</td><td><code>--color-brand-solid</code> / <code>--color-brand-hover</code></td></tr>
+        <tr><td>把手</td><td>白色圆形，直径 14</td><td>直径 16</td><td><code>--color-text-fill-primary</code></td></tr>
+        <tr><td>禁用</td><td colspan="2">整体透明度 30%，把手保持 14</td><td><code>--opacity-30</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>悬停时把手变大 100ms ease-in-out，已选部分换色，同按钮的悬停。</li>
+    <li>拖动时没有单独的样式，保持悬停的样子。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-slider"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>时长、语速这类在范围里连续调的数值用滑块。</li>
+    <li>要看到具体数字，右边配数字输入框，两个联动：拖滑块数字变，改数字滑块动。</li>
+    <li>只有几个固定选项的，用分段选择器，不用滑块。</li>
+  </ul>
+
+  <h4>时长：滑块 + 数字输入框（联动）</h4>
+  <p>范围 1 到 15 秒是示例，实际范围看具体功能。</p>
+  <div data-demo id="demo-slider">
+    <div style="display:flex;align-items:center;gap:12px;width:320px">
+      <div class="kv-slider" role="slider" tabindex="0" aria-label="时长" aria-valuemin="1" aria-valuemax="15" aria-valuenow="12" style="--kv-value: 0.7857"><span class="kv-slider-fill"></span><span class="kv-slider-thumb"></span></div>
+      <label class="kv-number-input">
+        <input class="kv-number-input-field" inputmode="numeric" value="12" aria-label="时长（秒）">
+        <span class="kv-number-input-unit">秒</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ==================== Checkbox ==================== -->
+
+  <h2 id="checkbox">Checkbox</h2>
+  <p>选形状、选中、状态，圆形放在图片上看。预览里的勾选框也能点。</p>
+  <div id="pg-checkbox"></div>
+
+  <h3>用途</h3>
+  <p>可以多选的用勾选框。方形用在列表和表单，圆形用在图片多选。</p>
+
+  <h3>结构</h3>
+  <p>16 的方框 + 可选的文字，水平排列，间距 8。整行（方框加文字）都能点。</p>
+  <ul>
+    <li>圆形用在图片多选时不带文字，放在图片右上角，距上、右各 8。</li>
+    <li>文字 13 号常规，primary，包一层 <code>&lt;span&gt;</code>。</li>
+    <li>没有文字时，必须写 <code>aria-label</code>。</li>
+    <li>「部分」只用在全选框上，表示下面选了一部分。</li>
+  </ul>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>形状</td><td>方形 / 圆形</td><td><code>kv-checkbox--square</code> / <code>--round</code></td></tr>
+        <tr><td>选中</td><td>否 / 是 / 部分</td><td><code>aria-checked="false"</code> / <code>"true"</code> / <code>"mixed"</code></td></tr>
+        <tr><td>状态</td><td>默认 / 悬停 / 禁用</td><td>悬停由鼠标触发；禁用 <code>disabled</code></td></tr>
+        <tr><td>显示文字、文字</td><td>开 / 关</td><td>放不放 <code>&lt;span&gt;文字&lt;/span&gt;</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>样子</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>选中</th><th>默认</th><th>悬停</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>否</td><td>黑 40% 底 + 1px 白 50% 描边</td><td>描边变白 100%</td><td><code>--color-on-media-fill</code> / <code>--color-border-strong</code> / <code>--color-text-fill-primary</code></td></tr>
+        <tr><td>是、部分</td><td>品牌绿底，没有描边</td><td>品牌悬停色底</td><td><code>--color-brand-solid</code> / <code>--color-brand-hover</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>方框 16 × 16，方形圆角 4（<code>--border-radius-xxs</code>），圆形 999（<code>--border-radius-round</code>）。</li>
+    <li>对勾和横线是黑色（<code>--color-text-fill-on-brand</code>），线宽 1.5，圆头。「是」画对勾，「部分」画一条横线。</li>
+    <li>没选时用黑 40% 底，是为了放在图片上也看得清。</li>
+    <li><strong>禁用</strong>：整体透明度 30%（<code>--opacity-30</code>），方框和文字一起，选中与否都一样。</li>
+    <li>文字和方框的间距 8（<code>--spacing-sm</code>），文字 13 号常规，primary。</li>
+  </ul>
+  <div data-demo="nocode" data-layout="matrix" id="matrix-checkbox"></div>
+
+  <h3>用法</h3>
+  <ul>
+    <li>可以选多个的用勾选框：列表、表单、图片多选。</li>
+    <li>只能选一个的不用勾选框：选比例、分辨率用分段选择器，开关类用开关。</li>
+    <li><strong>方形</strong>：列表和表单。<strong>圆形</strong>：图片多选。</li>
+    <li><strong>部分</strong>：只给全选框用。下面一个都没选是「否」，选了一部分是「部分」，全选了是「是」。点「部分」的全选框，变成全选。</li>
+  </ul>
+
+  <h4>列表全选</h4>
+  <p>点「全选」，下面跟着全选或全不选；下面选了一部分，「全选」自动变成「部分」。</p>
+  <div data-demo id="demo-list">
+    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:12px">
+      <button class="kv-checkbox kv-checkbox--square" role="checkbox" aria-checked="mixed" data-all>
+        <span class="kv-checkbox-box"></span><span>全选</span>
+      </button>
+      <button class="kv-checkbox kv-checkbox--square" role="checkbox" aria-checked="true">
+        <span class="kv-checkbox-box"></span><span>图片 1</span>
+      </button>
+      <button class="kv-checkbox kv-checkbox--square" role="checkbox" aria-checked="false">
+        <span class="kv-checkbox-box"></span><span>图片 2</span>
+      </button>
+      <button class="kv-checkbox kv-checkbox--square" role="checkbox" aria-checked="true">
+        <span class="kv-checkbox-box"></span><span>图片 3</span>
+      </button>
+    </div>
+  </div>
+
+  <h4>图片多选：圆形，右上角距边 8</h4>
+  <p>勾选框盖在图片上，不带文字。点勾选框选图片。</p>
+  <div data-demo id="demo-image">
+    <div style="display:flex;gap:4px">
+      <div style="position:relative;width:120px;height:120px;border-radius:8px;background:url('../../assets/placeholders/ip-kiwi-pile-1x1.webp') center/cover">
+        <button class="kv-checkbox kv-checkbox--round" role="checkbox" aria-checked="true" aria-label="选择图片 1" style="position:absolute;top:8px;right:8px">
+          <span class="kv-checkbox-box"></span>
+        </button>
+      </div>
+      <div style="position:relative;width:120px;height:120px;border-radius:8px;background:url('../../assets/placeholders/ip-peek-1x1.webp') center/cover">
+        <button class="kv-checkbox kv-checkbox--round" role="checkbox" aria-checked="false" aria-label="选择图片 2" style="position:absolute;top:8px;right:8px">
+          <span class="kv-checkbox-box"></span>
+        </button>
+      </div>
+      <div style="position:relative;width:120px;height:120px;border-radius:8px;background:url('../../assets/placeholders/kiwi-glass-1x1.webp') center/cover">
+        <button class="kv-checkbox kv-checkbox--round" role="checkbox" aria-checked="true" aria-label="选择图片 3" style="position:absolute;top:8px;right:8px">
+          <span class="kv-checkbox-box"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 这一页的属性面板、状态矩阵和演示交互
+  (function () {
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+    // ---------- 属性面板：HTML 生成 ----------
+
+    function switchHtml(s) {
+      var attr = ' role="switch" aria-checked="' + (s.on === 'on') + '" aria-label="生成音频"';
+      if (s.state === 'disabled') attr += ' disabled';
+      return '<button class="kv-switch"' + attr + '></button>';
+    }
+
+    function sliderHtml(s) {
+      var v = Number(s.value);
+      var cls = 'kv-slider' + (s.state === 'hover' ? ' is-hover' : '');
+      var attr = s.state === 'disabled' ? ' aria-disabled="true"' : ' tabindex="0"';
+      return '<div class="' + cls + '" role="slider" aria-label="时长" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + v + '"' + attr +
+        ' style="--kv-value: ' + (v / 100) + '">\n  <span class="kv-slider-fill"></span>\n  <span class="kv-slider-thumb"></span>\n</div>';
+    }
+
+    var CHECKED = { no: 'false', yes: 'true', part: 'mixed' };
+    function checkboxHtml(s) {
+      var cls = 'kv-checkbox kv-checkbox--' + s.shape + (s.state === 'hover' ? ' is-hover' : '');
+      var attr = ' role="checkbox" aria-checked="' + CHECKED[s.checked] + '"';
+      if (!s.label) attr += ' aria-label="选项"';
+      if (s.state === 'disabled') attr += ' disabled';
+      var inner = '\n  <span class="kv-checkbox-box"></span>';
+      if (s.label) inner += '\n  <span>' + esc(s.text) + '</span>';
+      return '<button class="' + cls + '"' + attr + '>' + inner + '\n</button>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-switch'), {
+      controls: [
+        { key: 'on', label: '开关', type: 'segment', value: 'on', options: [['on', '开'], ['off', '关']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['disabled', '禁用']] }
+      ],
+      render: switchHtml
+    });
+
+    KiviShell.playground(document.getElementById('pg-slider'), {
+      controls: [
+        { key: 'value', label: '进度', type: 'segment', value: '50', options: [['0', '0'], ['25', '25'], ['50', '50'], ['75', '75'], ['100', '100']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['disabled', '禁用']] }
+      ],
+      render: sliderHtml
+    });
+
+    KiviShell.playground(document.getElementById('pg-checkbox'), {
+      controls: [
+        { key: 'shape', label: '形状', type: 'segment', value: 'square', options: [['square', '方形'], ['round', '圆形']] },
+        { key: 'checked', label: '选中', type: 'segment', value: 'yes', options: [['no', '否'], ['yes', '是'], ['part', '部分']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['disabled', '禁用']] },
+        { key: 'label', label: '显示文字', type: 'toggle', value: true },
+        { key: 'text', label: '文字', type: 'text', value: '选项' }
+      ],
+      media: function (s) { return s.shape === 'round'; },
+      render: checkboxHtml
+    });
+
+    // ---------- 状态矩阵：静态摆出来，不响应点击 ----------
+
+    function matrix(host, rows, cols, make) {
+      var html = '<table class="shell-matrix"><thead><tr><th></th>';
+      cols.forEach(function (c) { html += '<th>' + c[1] + '</th>'; });
+      html += '</tr></thead><tbody>';
+      rows.forEach(function (r) {
+        html += '<tr><th scope="row">' + r[1] + '</th>';
+        cols.forEach(function (c) { html += '<td>' + make(r[0], c[0]) + '</td>'; });
+        html += '</tr>';
+      });
+      host.innerHTML = html + '</tbody></table>';
+    }
+
+    matrix(document.getElementById('matrix-switch'),
+      [['on', '开'], ['off', '关']],
+      [['default', '默认'], ['disabled', '禁用']],
+      function (r, c) { return switchHtml({ on: r, state: c }); });
+
+    matrix(document.getElementById('matrix-slider'),
+      [['default', '默认'], ['hover', '悬停'], ['disabled', '禁用']],
+      [['0', '进度 0'], ['25', '进度 25'], ['50', '进度 50'], ['75', '进度 75'], ['100', '进度 100']],
+      function (r, c) { return '<div class="sel-cell">' + sliderHtml({ value: c, state: r }) + '</div>'; });
+
+    matrix(document.getElementById('matrix-checkbox'),
+      [['square|no', '方形 · 没选'], ['square|yes', '方形 · 选中'], ['square|part', '方形 · 部分'],
+       ['round|no', '圆形 · 没选'], ['round|yes', '圆形 · 选中'], ['round|part', '圆形 · 部分']],
+      [['default', '默认'], ['hover', '悬停'], ['disabled', '禁用']],
+      function (r, c) {
+        var p = r.split('|');
+        return checkboxHtml({ shape: p[0], checked: p[1], state: c, label: true, text: '选项' });
+      });
+
+    // ---------- 演示用：点击、拖动。组件本身不带 JS ----------
+
+    function inMatrix(el) { return el.closest('[data-layout="matrix"]'); }
+
+    // 开关、勾选框：点一下切换
+    function toggleSwitch(sw) {
+      sw.setAttribute('aria-checked', String(sw.getAttribute('aria-checked') !== 'true'));
+    }
+    function toggleCheckbox(cb) {
+      cb.setAttribute('aria-checked', cb.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
+    }
+
+    // 列表全选：子项变了，全选跟着变；点全选，子项一起变
+    function syncAll(list) {
+      var all = list.querySelector('[data-all]');
+      var items = Array.prototype.slice.call(list.querySelectorAll('.kv-checkbox:not([data-all])'));
+      var n = items.filter(function (c) { return c.getAttribute('aria-checked') === 'true'; }).length;
+      all.setAttribute('aria-checked', n === 0 ? 'false' : n === items.length ? 'true' : 'mixed');
+    }
+
+    document.addEventListener('click', function (e) {
+      var sw = e.target.closest('.kv-switch');
+      if (sw && !sw.disabled && !inMatrix(sw)) { toggleSwitch(sw); return; }
+
+      var cb = e.target.closest('.kv-checkbox');
+      if (!cb || cb.disabled || inMatrix(cb)) return;
+      var list = cb.closest('#demo-list');
+      if (list && cb.hasAttribute('data-all')) {
+        var on = cb.getAttribute('aria-checked') !== 'true';
+        list.querySelectorAll('.kv-checkbox').forEach(function (c) { c.setAttribute('aria-checked', String(on)); });
+        return;
+      }
+      toggleCheckbox(cb);
+      if (list) syncAll(list);
+    });
+
+    // 滑块：拖动、键盘。进度存在 aria-valuenow，--kv-value 是 0 到 1
+    function sliderRange(s) {
+      return { min: Number(s.getAttribute('aria-valuemin')), max: Number(s.getAttribute('aria-valuemax')) };
+    }
+    function setSlider(s, value) {
+      var r = sliderRange(s);
+      value = Math.round(Math.max(r.min, Math.min(r.max, value)));
+      s.setAttribute('aria-valuenow', String(value));
+      s.style.setProperty('--kv-value', String(+((value - r.min) / (r.max - r.min)).toFixed(4)));
+      s.dispatchEvent(new CustomEvent('kv-input', { bubbles: true, detail: value }));
+    }
+    function sliderFromPointer(s, e) {
+      var r = sliderRange(s);
+      var box = s.getBoundingClientRect();
+      var f = (e.clientX - box.left - 7) / (box.width - 14);
+      setSlider(s, r.min + Math.max(0, Math.min(1, f)) * (r.max - r.min));
+    }
+
+    document.addEventListener('pointerdown', function (e) {
+      var s = e.target.closest('.kv-slider');
+      if (!s || s.getAttribute('aria-disabled') === 'true' || inMatrix(s)) return;
+      s.setPointerCapture(e.pointerId);
+      s.focus();
+      sliderFromPointer(s, e);
+      function move(ev) { sliderFromPointer(s, ev); }
+      function up() { s.removeEventListener('pointermove', move); s.removeEventListener('pointerup', up); s.removeEventListener('pointercancel', up); }
+      s.addEventListener('pointermove', move);
+      s.addEventListener('pointerup', up);
+      s.addEventListener('pointercancel', up);
+      e.preventDefault();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var s = e.target.closest && e.target.closest('.kv-slider');
+      if (!s || s.getAttribute('aria-disabled') === 'true') return;
+      var r = sliderRange(s), now = Number(s.getAttribute('aria-valuenow'));
+      var to = { ArrowLeft: now - 1, ArrowDown: now - 1, ArrowRight: now + 1, ArrowUp: now + 1, Home: r.min, End: r.max }[e.key];
+      if (to == null) return;
+      e.preventDefault();
+      setSlider(s, to);
+    });
+
+    // 时长：滑块和数字输入框联动
+    (function () {
+      var host = document.getElementById('demo-slider');
+      var s = host.querySelector('.kv-slider');
+      var num = host.querySelector('.kv-number-input-field');
+      host.addEventListener('kv-input', function (e) { num.value = e.detail; });
+      num.addEventListener('input', function () {
+        var v = num.value.replace(/\D/g, '');
+        num.value = v;
+        if (v !== '') setSlider(s, Number(v));
+      });
+      num.addEventListener('blur', function () { num.value = s.getAttribute('aria-valuenow'); });
+    })();
+  })();
+</script>
+</body>
+</html>

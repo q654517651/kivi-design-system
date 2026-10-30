@@ -1,0 +1,45 @@
+import { PageHeader } from '@shell';
+import { InNodeDemo, InResultDemo, PreviewHost, VideoPlayerPlayground } from './video-player.demos';
+
+<PageHeader
+  eyebrow="通用组件"
+  title="播放器"
+  lead="节点、主站生成结果、预览共用一个播放器，小号放卡片里，大号放预览。"
+  status="草稿 0.1.0"
+  code="kivi/video-player"
+/>
+
+<PreviewHost />
+
+## VideoPlayer
+
+<VideoPlayerPlayground />
+
+### 放进节点
+
+<InNodeDemo />
+
+### 放进生成结果
+
+<InResultDemo />
+
+## 参数
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `src` | `string` | — | 视频地址，必填 |
+| `poster` | `string` | — | 封面，没播时显示；不传是首帧 |
+| `size` | `"sm"` `"lg"` | `"sm"` | 小：不悬停左下是时长 Tag；悬停出 64 渐变和一行控制，按钮 28（图标 16），时间 12。大：渐变 96，按钮 32（图标 20），时间 14；播放中 2 秒不动控制条和光标都藏起来。进度在控制行下面，2 高，指上去、拖动时变 4：小号贴底边整宽，没有拖拽点；大号浮着，左右留 16、离底 8，带 10 的拖拽点 |
+| `fit` | `boolean` | 小 `false`，大 `true` | 画面完整显示，留黑边；关掉是铺满、居中裁切 |
+| `hoverPlay` | `boolean` | 小 `true`，大 `false` | 鼠标进来立刻静音播放，移开暂停，停在原地 |
+| `autoPlay` | `boolean` | 小 `false`，大 `true` | 打开就播 |
+| `loop` | `boolean` | `true` | 循环 |
+| `startTime` | `number` | — | 从第几秒开始，从小号打开预览时接着放 |
+| `muted` / `defaultMuted` / `onMutedChange` | `boolean` | 静音 | 静音。悬停自动播放不能出声，所以默认静音；点音量按钮切换 |
+| `volume` / `defaultVolume` / `onVolumeChange` | `number` 0–100 | `50` | 音量。拖到 0 就是静音；从静音点开时音量是 0 就回到 50 |
+| `onPlay` / `onPause` | `(event) => void` | — | 开始播放、暂停 |
+| `onError` | `(event) => void` | — | 视频加载失败、或 `play()` 因格式不支持等被拒时触发。进失败态：盖住画面，没有控制条 |
+| `errorText` | `ReactNode` | `"加载失败"` | 失败态的文字，插图是 EmptyState 小 · 生成失败 |
+| `onFullscreen` | `(currentTime) => void` | — | 小号：打开预览，不传就没有这个按钮。大号：不传就是浏览器全屏，按钮换成退出全屏 |
+
+时间 `00:03 / 00:15`，总时长 50%，超过一小时 `1:02:03`。按钮是 IconButton 浮层无底，平时没有底，悬停出黑 40% 底，按下 60%；播放、暂停用实心图标，音量、全屏用描边。音量点按钮静音，悬停在上方弹出竖条（玻璃，宽 40，圆角 12），上面写 0–100；默认静音。同一时间只播一个。缓冲（`waiting` / `stalled`）时画面正中转圈（Loading，小号 24、大号 40）；`play()` 被浏览器拦下（不让自动播放）或被暂停打断，回到暂停，不算失败。小号的控制条平时是透明的，键盘 Tab 到进度条、按钮时（`:focus-visible`）显示出来。大号键盘：空格 / K 播放暂停，M 静音，F 全屏，← → 跳 5 秒。

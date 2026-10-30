@@ -1,0 +1,83 @@
+/* 播放器页演示的摆放，不属于组件库 */
+
+.vp-stage {
+  min-height: 360px;
+}
+
+.vp-frame {
+  position: relative;
+  overflow: hidden;
+}
+
+.vp-frame--sm {
+  border-radius: var(--border-radius-16);
+}
+
+.vp-frame--sm.vp-frame--wide {
+  width: 320px;
+  height: 180px;
+}
+
+.vp-frame--sm.vp-frame--tall {
+  width: 180px;
+  height: 320px;
+}
+
+.vp-frame--lg {
+  border-radius: var(--border-radius-8);
+}
+
+.vp-frame--lg.vp-frame--wide {
+  width: min(100%, 720px);
+  aspect-ratio: 16 / 9;
+}
+
+.vp-frame--lg.vp-frame--tall {
+  height: 540px;
+  aspect-ratio: 9 / 16;
+}
+
+/* 放进节点、生成结果 */
+.vp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--spacing-24);
+}
+
+.vp-node--wide {
+  width: 320px;
+  height: 180px;
+}
+
+.vp-node--tall {
+  width: 180px;
+  height: 320px;
+}
+
+.vp-tile {
+  width: 400px;
+  aspect-ratio: 16 / 9;
+}
+
+/* 预览弹窗：只放播放器，宽高跟着视频 */
+.vp-preview.kv-dialog {
+  width: auto;
+  padding: 0;
+  overflow: hidden;
+}
+
+.vp-preview .kv-dialog__body {
+  overflow: hidden;
+}
+
+.vp-preview__stage {
+  width: min(960px, calc(100vw - 96px));
+  aspect-ratio: 16 / 9;
+}
+
+.vp-preview__stage--tall {
+  width: auto;
+  height: min(80vh, 720px);
+  aspect-ratio: 9 / 16;
+}

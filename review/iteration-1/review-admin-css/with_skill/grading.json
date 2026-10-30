@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "指出 #05080a 应改为 base #0F1012（--color-bg-fill-base）",
+      "passed": true,
+      "evidence": "review.md 全局 body 表：`background: #05080a` 旧的全局底色 → `--color-bg-fill-base`（#0F1012）；fixed.css body `background: var(--color-bg-fill-base, #0F1012)`。"
+    },
+    {
+      "text": "指出卡片和下拉的 box-shadow 都要去掉",
+      "passed": true,
+      "evidence": "review.md 卡片和下拉表里 `box-shadow` 都写「规范里不用投影 → 去掉」；fixed.css 的 .model-card 和 .dropdown 均无 box-shadow。"
+    },
+    {
+      "text": "指出按钮 40 高 / 圆角 12 / 14 号 600 应改为 36 或 32 高、圆角 8、13 号 500",
+      "passed": true,
+      "evidence": "review.md：40 → 默认中号 32、大号 36；圆角 12 → 8；14 号 600 → 13 号 500。fixed.css .btn `height: 32px`、`border-radius: 8px`、`font-size: 13px`、`font-weight: 500`，另有 .btn--lg 36。"
+    },
+    {
+      "text": "指出下拉菜单应改成玻璃（rgba(24,24,24,.7) + 1px 白 12% 描边 + blur 16 + 圆角 12），菜单项 36 高、圆角 8、13 号",
+      "passed": true,
+      "evidence": "fixed.css .dropdown：`rgba(24, 24, 24, 0.7)` + `border: 1px solid rgba(255,255,255,0.12)` + `backdrop-filter: blur(16px)` + `border-radius: 12px`；.dropdown-item `height: 36px`、`border-radius: 8px`、`font-size: 13px`。review.md 逐项列出。"
+    },
+    {
+      "text": "指出 Tooltip 底色 #36393d 应改为 popup #2C2D2E，字号 12",
+      "passed": true,
+      "evidence": "review.md：#36393d 已废弃 → `--color-bg-fill-popup`（#2C2D2E），14 号 → 12 号；fixed.css .tooltip `#2C2D2E`、`font-size: 12px`。"
+    },
+    {
+      "text": "指出弹窗遮罩应为黑 60% 且不模糊，弹窗底色 surface #191A1B 且不加描边",
+      "passed": true,
+      "evidence": "fixed.css .modal-mask 只有 `rgba(0, 0, 0, 0.6)`，删掉了 blur；.modal `background: #191A1B`，无 border。review.md 指出遮罩 45%→60%、去模糊、弹窗用 surface #191A1B、去描边。"
+    },
+    {
+      "text": "指出「生成」胶囊按钮应改为普通主要按钮（圆角 8，不做胶囊）",
+      "passed": true,
+      "evidence": "review.md：「生成」不做胶囊，用普通主要按钮，跟 .btn 一样圆角 8；fixed.css .btn-generate 去掉了 999px，继承 .btn 的 `border-radius: 8px`。"
+    },
+    {
+      "text": "指出输入框聚焦不加绿色描边，输入框底色应为白 8%",
+      "passed": true,
+      "evidence": "review.md：`:focus` 品牌绿描边 → 聚焦不加描边；底色 4% → 8%。fixed.css .input `rgba(255,255,255,0.08)`，:focus `outline: none; border-color: transparent`。"
+    },
+    {
+      "text": "指出次要文字白 50% 应为 secondary 白 60%，白 6% / 10% 叠加应并入 8% / 12%",
+      "passed": true,
+      "evidence": "review.md：.desc 白 50% → secondary 60%；按钮白 6%/10% → 8%/12%；菜单项悬停 10% → 8%。fixed.css .desc `0.6`，.btn `0.08` / hover `0.12`。"
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9,
+    "pass_rate": 1.0
+  }
+}

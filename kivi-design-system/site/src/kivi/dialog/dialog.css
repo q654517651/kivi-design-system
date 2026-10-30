@@ -1,0 +1,179 @@
+/*
+  KIVI · 弹窗
+  Figma「弹窗」页：Dialog（模态弹窗，尺寸 S / M / L / XL）。依赖 tokens.css、base.css、button.css。
+  内容区在 Figma 里是「内容」属性（实例替换），代码里就是 children，里面放什么都行。
+
+  写法（React，见 Dialog.tsx）
+    <Dialog
+      open={open}
+      onOpenChange={setOpen}
+      size="s"
+      title="弹窗标题"
+      description="一句话说明这个弹窗要做什么，或者操作的后果。"
+      footer={<><Button size="lg" onClick={() => setOpen(false)}>取消</Button><Button size="lg" variant="primary">确定</Button></>}
+    >
+      …内容…
+    </Dialog>
+  渲染出来的结构（Dialog 用 createPortal 挂到 body）
+    <div class="kv-dialog__mask">
+      <div class="kv-dialog kv-dialog--s" role="dialog" aria-modal="true" aria-labelledby="…">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header">
+            <div class="kv-dialog__title">弹窗标题</div>
+            <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" aria-label="关闭">…</button>
+          </div>
+          <div class="kv-dialog__desc">一句话说明…</div>
+        </div>
+        <div class="kv-dialog__body">…内容…</div>
+        <div class="kv-dialog__footer">…按钮…</div>
+      </div>
+    </div>
+
+  标题栏、描述、内容区、底栏都可以不放；不放就不写那一块。
+  标题、描述用 div，不用 h2、p，免得被页面里的 h2、p 样式带跑。
+  只摆弹窗本体、不要遮罩和开关时（文档里的静态示意）用 DialogPanel。
+
+  状态
+    遮罩关闭  aria-hidden="true"（遮罩上）；"false" 就是打开。Dialog 按 open 自己切，打开、关闭的动画都写在这里；
+              关闭的动画放完才从 body 里拿掉。
+    二级弹窗  再放一个 Dialog，后打开的遮罩盖在上面，两层遮罩自然叠起来，一级被压暗。最多两级。
+    Esc、点遮罩、关闭按钮、焦点进出、Tab 不跑出弹窗，Dialog 都做了。点遮罩不关用 closeOnMaskClick={false}。
+
+  待定（Figma 没定）
+    全屏：宽 100vw，高度、圆角没定。
+    最大高度、内容多时怎么滚：先限制在屏幕里，内容区滚动。
+    z-index：Figma 没有层级的概念，先写 1000。
+*/
+
+/* ---------- 弹窗本体 ---------- */
+
+/* 尺寸：S 是默认。高度跟着内容走 */
+.kv-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  box-sizing: border-box;
+  width: 400px;
+  max-width: 100%;
+  max-height: 100%; /* 待定：先不超出屏幕 */
+  padding: var(--spacing-24);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-dialog--s {
+  width: 400px;
+}
+
+.kv-dialog--m {
+  width: 720px;
+}
+
+.kv-dialog--l {
+  width: 1024px;
+}
+
+.kv-dialog--xl {
+  width: 1200px;
+}
+
+/* 待定：宽 100vw，别的没定 */
+.kv-dialog--full {
+  width: 100vw;
+}
+
+/* Dialog 打开时会把焦点给弹窗，不画焦点框 */
+.kv-dialog:focus {
+  outline: none;
+}
+
+/* 标题栏 + 描述：中间间距 8 */
+.kv-dialog__top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.kv-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-16);
+}
+
+.kv-dialog__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-24);
+}
+
+.kv-dialog__header > .kv-icon-button {
+  flex: none;
+}
+
+.kv-dialog__desc {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-22);
+}
+
+/* 内容区：放表单、列表等。待定：内容多了在这里滚动 */
+.kv-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 底栏：按钮靠右，间距 8，上方再留 8 */
+.kv-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+  padding-top: var(--spacing-8);
+}
+
+/* ---------- 遮罩 ---------- */
+
+/* 遮罩 mask（黑 60%），不模糊。默认是打开：遮罩和弹窗一起 300ms ease-out 淡入，弹窗 96% → 100% */
+.kv-dialog__mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: var(--color-bg-fill-mask);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--motion-duration-300) var(--motion-ease-out),
+    visibility 0s;
+}
+
+.kv-dialog__mask > .kv-dialog {
+  transform: scale(1);
+  transition: transform var(--motion-duration-300) var(--motion-ease-out);
+}
+
+/* 关闭：200ms ease-in 淡出，淡完再隐藏 */
+.kv-dialog__mask[aria-hidden="true"] {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-duration-200) var(--motion-ease-in),
+    visibility 0s linear var(--motion-duration-200);
+}
+
+.kv-dialog__mask[aria-hidden="true"] > .kv-dialog {
+  transform: scale(0.96);
+  transition: transform var(--motion-duration-200) var(--motion-ease-in);
+}

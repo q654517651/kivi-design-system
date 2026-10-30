@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "样式用 CSS 变量并带兜底值（如 var(--color-bg-fill-surface, #191A1B)），Less 里几乎没有不在 var() 兜底位置的裸色值",
+      "passed": true,
+      "evidence": "脚本统计 7 个 .less 共 43 处色值，全部在 var() 兜底位置，裸色值 0；tsx 里的 #37FF74、#2B2D31 只在注释中。例：DeleteConfirmDialog .dialog background: var(--color-bg-fill-surface, #191a1b)。"
+    },
+    {
+      "text": "删除确认弹窗：宽 400、底色 surface（#191A1B）、圆角 16、内边距 24；遮罩黑 60% 且不模糊",
+      "passed": true,
+      "evidence": "DeleteConfirmDialog/index.module.less：.dialog width 400px、background var(--color-bg-fill-surface, #191a1b)、border-radius var(--border-radius-lg, 16px)、padding var(--spacing-xl, 24px)；.mask background var(--color-bg-fill-mask, rgba(0,0,0,0.6))，没有 backdrop-filter。"
+    },
+    {
+      "text": "删除确认的确认按钮是危险类型（status/danger 红底），取消是次要按钮（白 8%），底栏按钮高 36",
+      "passed": true,
+      "evidence": "DeleteConfirmDialog/index.tsx：删除 variant=\"danger\" size=\"lg\"，取消 variant=\"secondary\" size=\"lg\"；KiviButton/index.module.less .danger background var(--color-status-danger, #ff4d4f)（红，注释标为占位），.secondary var(--color-bg-fill-container-light-1, rgba(255,255,255,0.08))，.sizeLg height 36px。"
+    },
+    {
+      "text": "图片上的勾选框：没选时黑 40% 底 + 白 50% 描边，选中时品牌绿底 + 黑勾，放在图片右上角",
+      "passed": true,
+      "evidence": "AssetCheckbox/index.module.less：未选 background var(--color-on-media-fill, rgba(0,0,0,0.4)) + border 1px var(--color-border-strong, rgba(255,255,255,0.5))；.checked background var(--color-brand-solid, #2bff75)，对勾 stroke=currentColor=var(--color-text-fill-on-brand, #000000)；position absolute，top/right 8px，圆形 16。"
+    },
+    {
+      "text": "按钮高度只出现 28 / 32 / 36，按钮文字 13 号、字重 500（小号 12）",
+      "passed": true,
+      "evidence": "KiviButton/index.module.less：.sizeSm 28px/12px，.sizeMd 32px/13px，.sizeLg 36px/13px，.button font-weight var(--font-weight-medium, 500)；IconButton 28/32/36。其它 height（勾选框 16、分隔线 16/1、菜单项 36）都不是按钮。"
+    },
+    {
+      "text": "浮层、操作条和弹窗都没有 box-shadow 投影",
+      "passed": true,
+      "evidence": "所有 .less 里唯一的 box-shadow 是 KiviButton .tooltip 的 box-shadow: none；操作条 .bar、菜单 .menu、弹窗 .dialog 都没有投影（菜单用 backdrop-filter blur(16px) 做玻璃，不算投影）。"
+    },
+    {
+      "text": "「批量管理」按钮不是品牌渐变的主要按钮",
+      "passed": true,
+      "evidence": "BatchManageButton/index.tsx：KiviButton variant=\"secondary\" size=\"md\"（白 8% 底，高 32），不是 .primary 品牌渐变。"
+    },
+    {
+      "text": "图标使用 KIVI 图标名（如 Delete、Download、MoveTo、Close）",
+      "passed": true,
+      "evidence": "Icon name 用了 Stacking、Close、MoveTo、Download、Delete、AddSmall、Folder、Loading，都是仓库 Icon 组件（icon-kivi-*）的名字。MoveTo 在 src/components/CustomMenu/index.tsx 已有用法（NOTES 说「代码里还没用过」不准确）。"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

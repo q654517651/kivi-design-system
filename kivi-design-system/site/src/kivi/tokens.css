@@ -1,0 +1,150 @@
+/*
+  KIVI · 变量
+  来源：Figma「KIVI UI KIT V2」变量页（2026-10-27），color、scale 两个集合。
+  命名：Figma 变量名把 / 换成 -，前面加 --。画布连线例外，用 Figma 里设的代码名。
+  这是所有数值唯一的地方。Figma 改了变量，只改这个文件。
+*/
+
+:root {
+  /* 底色 */
+  --color-bg-fill-base: #0F1012;
+  --color-bg-fill-surface: #191A1B;
+  --color-bg-fill-popup: #2C2D2E;
+  --color-bg-fill-mask: rgba(0, 0, 0, 0.6);
+  /* 玻璃浮层：会浮动、会跟着移动、可能盖住画面、面积不大的东西（下拉、右键、节点工具栏、参数面板）。
+     和 --effect-glass-blur、描边 --color-border-subtle 一起用 */
+  --color-bg-fill-glass: rgba(24, 24, 24, 0.7);
+
+  /* 效果：Figma 效果样式「玻璃/背景模糊」 */
+  --effect-glass-blur: 32px;
+
+  /* 填充与状态 */
+  --color-bg-fill-container-light-1: rgba(255, 255, 255, 0.08);
+  --color-bg-fill-container-light-1-hover: rgba(255, 255, 255, 0.12);
+  --color-bg-fill-container-light-1-pressed: rgba(255, 255, 255, 0.16);
+  --color-bg-fill-container-light-2: rgba(255, 255, 255, 0.04);
+  --color-bg-fill-container-light-2-hover: rgba(255, 255, 255, 0.08);
+  --color-bg-fill-container-light-2-pressed: rgba(255, 255, 255, 0.12);
+  --color-bg-fill-container-dark: rgba(0, 0, 0, 0.4);
+  --color-bg-fill-container-dark-hover: rgba(0, 0, 0, 0.3);
+
+  /* 文字与图标 */
+  --color-text-fill-primary: #FFFFFF;
+  --color-text-fill-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-fill-tertiary: rgba(255, 255, 255, 0.4);
+  --color-text-fill-placeholder: rgba(255, 255, 255, 0.3);
+  --color-text-fill-disabled: rgba(255, 255, 255, 0.2);
+  --color-text-fill-on-brand: #000000;
+
+  /* 描边 */
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.5);
+  --color-border-focus: #2BFF75;
+
+  /* 品牌色 */
+  --color-brand-solid: #2BFF75;
+  --color-brand-hover: #5CFF95;
+  --color-brand-pressed: #1FD962;
+  --color-brand-subtle: rgba(43, 255, 117, 0.12);
+  --color-brand-gradient-1: #CEFF5D;
+  --color-brand-gradient-2: #2BFF75;
+
+  /* 功能色（占位） */
+  --color-status-danger: #FF4D4F;
+  --color-status-danger-subtle: rgba(255, 77, 79, 0.12);
+  --color-status-warning: #FFA940;
+  --color-status-warning-subtle: rgba(255, 169, 64, 0.12);
+  --color-status-success: #2BFF75;
+  --color-status-success-subtle: rgba(43, 255, 117, 0.12);
+
+  /* 图片和视频上的控件 */
+  --color-on-media-fill: rgba(0, 0, 0, 0.4);
+  --color-on-media-fill-hover: rgba(0, 0, 0, 0.6);
+  --color-on-media-text: #FFFFFF;
+
+  /* 画布连线 */
+  --g-workflow-line-color-default: #424242;
+  --g-workflow-line-color-drawing: rgba(255, 255, 255, 0.35);
+  --g-workflow-line-color-active: rgba(255, 255, 255, 0.55);
+  --g-workflow-line-color-flowing: rgba(255, 255, 255, 0.9);
+  --g-workflow-line-color-error: rgba(255, 255, 255, 0.6);
+
+  /* 间距 */
+  --spacing-0: 0px;
+  --spacing-2: 2px;
+  --spacing-4: 4px;
+  --spacing-6: 6px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+
+  /* 圆角 */
+  --border-radius-4: 4px;
+  --border-radius-6: 6px;
+  --border-radius-8: 8px;
+  --border-radius-12: 12px;
+  --border-radius-16: 16px;
+  --border-radius-24: 24px;
+  --border-radius-round: 999px;
+
+  /* 描边粗细 */
+  --border-width-1: 1px;
+  --border-width-1-25: 1.25px;
+  --border-width-1-5: 1.5px;
+
+  /* 字号、行高、字重、字体 */
+  --font-size-10: 10px;
+  --font-size-12: 12px;
+  --font-size-13: 13px;
+  --font-size-14: 14px;
+  --font-size-16: 16px;
+  --font-size-20: 20px;
+  --font-size-24: 24px;
+  --font-line-height-16: 16px;
+  --font-line-height-20: 20px;
+  --font-line-height-22: 22px;
+  --font-line-height-24: 24px;
+  --font-line-height-28: 28px;
+  --font-line-height-32: 32px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-family: "PingFang SC";
+
+  /* 透明度 */
+  --opacity-50: 0.5;
+  --opacity-30: 0.3;
+  --opacity-20: 0.2;
+
+  /* 动效：Figma 里时长是数字，代码里带上 ms */
+  --motion-duration-100: 100ms;
+  --motion-duration-150: 150ms;
+  --motion-duration-200: 200ms;
+  --motion-duration-300: 300ms;
+  --motion-duration-400: 400ms;
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  /* 展开、收起一组东西（主站参考区）：起步很快，慢慢停稳。照 BytePlus 参考区，2026-10-29 用户定，Figma 待补 */
+  --motion-ease-expand: cubic-bezier(0, 0.7, 0.22, 1);
+  /* 弹簧：冲过头约 4% 再回来，配 400ms。照线上多图节点的展开（弹簧 stiffness 450 / damping 30）采样，2026-10-29，Figma 待补 */
+  --motion-ease-spring: linear(0, 0.053 4.2%, 0.177 8.3%, 0.332 12.5%, 0.492 16.7%, 0.638 20.8%, 0.762 25%, 0.86 29.2%, 0.933 33.3%, 0.984 37.5%, 1.017 41.7%, 1.035 45.8%, 1.042 50%, 1.043 54.2%, 1.039 58.3%, 1.033 62.5%, 1.026 66.7%, 1.019 70.8%, 1.013 75%, 1.008 79.2%, 1.005 83.3%, 1.002 87.5%, 1 91.7%, 0.999 95.8%, 1);
+
+  /* 阴影：多图节点的卡。叠着时浅，铺开盖在画布上时深。照线上，Figma 没有，待定 */
+  --effect-shadow-stack: 0 2px 10px rgb(0 0 0 / 0.2);
+  --effect-shadow-spread: 0 10px 30px rgb(0 0 0 / 0.5);
+}
+
+/* 系统开了「减少动态效果」：时长归零，直接切换 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-100: 0ms;
+    --motion-duration-150: 0ms;
+    --motion-duration-200: 0ms;
+    --motion-duration-300: 0ms;
+    --motion-duration-400: 0ms;
+  }
+}

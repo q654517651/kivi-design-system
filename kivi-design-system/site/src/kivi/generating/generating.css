@@ -1,0 +1,40 @@
+/*
+  KIVI · 生成中
+  业务动效：点阵拼出类型图标、散开成星点，循环。三个方案：星点闪烁、斜飘、静态扫光。2026-10-29 用户在对话里定的，Figma 里还没有。
+  依赖 tokens.css。点是 canvas 画的，颜色从 tokens.css 的变量读，这里只管盖在父元素上。
+
+  写法（React，见 GeneratingDots.tsx、GeneratingRow.tsx）
+    <div style={{ position: 'relative' }}>   // 父元素要 position: relative，有尺寸
+      <GeneratingDots type="image" />
+    </div>
+  渲染出来的结构
+    <div class="kv-generating kv-generating--dots" aria-hidden="true" data-type="image" data-effect="twinkle">
+      <canvas class="kv-generating__canvas"></canvas>
+    </div>
+
+  状态
+    data-effect   实际用的方案：twinkle 星点闪烁 / drift 斜飘 / sheen 静态扫光（不传 effect 时在前两个里随机，挂载时定；减少动态效果时一律 sheen）
+    data-reduced  系统开了「减少动态效果」。样式不用它，留着方便查看
+    data-paused   暂停（paused 属性）。样式也不用它，留着方便查看
+*/
+
+/* 盖满最近的定位父元素。不挡鼠标，圆角跟父元素；一次多张的圆角由 canvas 按格子画，不在这里裁 */
+.kv-generating {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.kv-generating--dots {
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.kv-generating__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}

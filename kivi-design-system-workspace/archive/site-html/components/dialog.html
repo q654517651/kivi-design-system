@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>弹窗 · KIVI 设计规范</title>
+  <link rel="stylesheet" href="../kivi/tokens.css">
+  <link rel="stylesheet" href="../kivi/base.css">
+  <link rel="stylesheet" href="../kivi/button.css">
+  <link rel="stylesheet" href="../kivi/dialog.css">
+  <link rel="stylesheet" href="../shell/shell.css">
+  <style>
+    /* 这一页的演示用 */
+
+    /* 内容区没放东西时，照 Figma 的 _DialogSlot 画一个虚线占位 */
+    .kv-dialog__body:empty {
+      display: flex; align-items: center; justify-content: center;
+      height: 120px; border: 1px dashed var(--color-border); border-radius: var(--border-radius-sm);
+      color: var(--color-text-fill-tertiary); font-size: var(--font-size-13); line-height: var(--font-line-height-20); text-align: center;
+    }
+    .kv-dialog__body:empty::before { content: "内容区：把内容做成组件，在「内容」属性里替换"; }
+
+    /* 程序打开弹窗时会把焦点给弹窗，不画焦点框 */
+    .kv-dialog:focus { outline: none; }
+
+    /* 属性面板：1200 宽的弹窗放不下时，舞台横向滚动，不缩小 */
+    #pg-dialog .shell-pg-stage { justify-content: flex-start; overflow-x: auto; background: linear-gradient(var(--color-bg-fill-mask) 0 0), var(--color-bg-fill-container-light-2); }
+    #pg-dialog .kv-dialog { flex: none; max-width: none; margin: 0 auto; }
+
+    /* 二级弹窗的静态示意：遮罩铺在这个小舞台里，不铺满屏幕 */
+    .dg-stage { position: relative; width: 100%; height: 380px; overflow: hidden; border-radius: var(--border-radius-md); background: var(--color-bg-fill-base); }
+    .dg-stage .kv-dialog-mask { position: absolute; }
+    .dg-faux { display: grid; gap: var(--spacing-md); padding: var(--spacing-xl); }
+    .dg-faux span { display: block; height: 20px; border-radius: var(--border-radius-xxs); background: var(--color-bg-fill-container-light-1); }
+    .dg-faux span:nth-child(1) { width: 30%; }
+    .dg-faux span:nth-child(2) { width: 70%; }
+    .dg-faux span:nth-child(3) { width: 50%; }
+    .dg-faux span:nth-child(4) { width: 60%; }
+  </style>
+</head>
+<body data-root="../" data-page="dialog">
+<main class="doc">
+
+  <header>
+    <p class="doc-eyebrow">通用组件</p>
+    <h1>弹窗</h1>
+    <p class="doc-lead">模态弹窗：确认、重命名、表单、列表、编辑器都用它。一个组件 Dialog，4 个尺寸只是宽度不同，结构一样。</p>
+    <dl class="doc-meta">
+      <div><dt>Figma</dt><dd><a href="https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2?node-id=92-595" target="_blank" rel="noopener">「弹窗」页</a></dd></div>
+      <div><dt>状态</dt><dd><span class="tag tag--draft">草稿 0.1.0</span></dd></div>
+      <div><dt>代码</dt><dd><code>kivi/dialog.css</code></dd></div>
+    </dl>
+  </header>
+
+  <!-- ==================== Dialog ==================== -->
+
+  <h2 id="dialog">Dialog</h2>
+  <p>在右边面板选尺寸，开关标题栏、描述、内容、底栏，改标题，和 Figma 右侧属性面板一样。下面的代码是弹窗本体；外面包一层 <code>kv-dialog-mask</code> 就是模态，见「用法」。</p>
+  <div id="pg-dialog"></div>
+
+  <h3>用途</h3>
+  <p>模态弹窗：盖住页面，让用户先处理这一件事。确认、重命名、表单、列表、编辑器都用它。</p>
+
+  <h3>结构</h3>
+  <p>从上到下竖排，内边距 24，区块间距 16。</p>
+  <ul>
+    <li><strong>标题栏</strong>（可选）：标题在左，关闭按钮在右，间距 16。可以单独去掉关闭按钮。</li>
+    <li><strong>描述</strong>（可选）：一句话说明要做什么，或者操作的后果。和标题栏同属一组，间距 8。</li>
+    <li><strong>内容区</strong>（可选）：放表单、列表等。只有标题和描述的确认弹窗，不要内容区。Figma 里是「内容」属性，把做好的内容组件换进来。</li>
+    <li><strong>底栏</strong>（可选）：按钮靠右，间距 8，上方再留 8。用大号 Button：取消用次要，确认用主要。</li>
+  </ul>
+  <ul>
+    <li>标题、描述用 <code>&lt;div&gt;</code>，不用 <code>&lt;h2&gt;</code>、<code>&lt;p&gt;</code>，免得被页面里同名标签的样式带跑。</li>
+    <li>弹窗根节点写 <code>role="dialog"</code>、<code>aria-modal="true"</code>，用 <code>aria-labelledby</code> 指向标题。</li>
+    <li>Figma 里改结构时，4 个尺寸的变体要全选一起改。</li>
+  </ul>
+  <script type="text/plain" data-code="html">
+    <div class="kv-dialog-mask">
+      <div class="kv-dialog kv-dialog--s" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header">
+            <div class="kv-dialog__title" id="dlg-title">弹窗标题</div>
+            <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" aria-label="关闭">
+              <i class="kv-icon" data-icon="Close"></i>
+            </button>
+          </div>
+          <div class="kv-dialog__desc">一句话说明这个弹窗要做什么，或者操作的后果。</div>
+        </div>
+        <div class="kv-dialog__body">…内容…</div>
+        <div class="kv-dialog__footer">
+          <button class="kv-button kv-button--lg kv-button--secondary"><span>取消</span></button>
+          <button class="kv-button kv-button--lg kv-button--primary"><span>确定</span></button>
+        </div>
+      </div>
+    </div>
+  </script>
+
+  <h3>属性</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>属性</th><th>选项</th><th>代码</th></tr></thead>
+      <tbody>
+        <tr><td>标题</td><td>标题文字</td><td><code>&lt;div class="kv-dialog__title"&gt;</code></td></tr>
+        <tr><td>显示标题栏</td><td>开 / 关</td><td>放不放 <code>kv-dialog__header</code>（标题 + 关闭）</td></tr>
+        <tr><td>显示关闭</td><td>开 / 关</td><td>标题栏里放不放关闭按钮：<code>kv-icon-button--32 kv-icon-button--text</code>，图标 <code>Close</code>，要写 <code>aria-label="关闭"</code></td></tr>
+        <tr><td>显示描述</td><td>开 / 关</td><td>放不放 <code>kv-dialog__desc</code></td></tr>
+        <tr><td>描述</td><td>说明文字</td><td><code>&lt;div class="kv-dialog__desc"&gt;</code></td></tr>
+        <tr><td>显示内容</td><td>开 / 关</td><td>放不放 <code>kv-dialog__body</code></td></tr>
+        <tr><td>内容</td><td>任意组件（Figma 里换实例）</td><td><code>kv-dialog__body</code> 里放什么都行</td></tr>
+        <tr><td>显示底栏</td><td>开 / 关</td><td>放不放 <code>kv-dialog__footer</code></td></tr>
+        <tr><td>显示次按钮</td><td>开 / 关</td><td>底栏里放不放取消按钮；只有一个按钮时去掉</td></tr>
+        <tr><td>尺寸</td><td>S / M / L / XL</td><td><code>kv-dialog--s</code> / <code>--m</code> / <code>--l</code> / <code>--xl</code>，S 是默认</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>底栏的两个按钮是 Button 大号，类型和文字在 Button 那一层改：<code>kv-button--lg kv-button--secondary</code> + <code>kv-button--primary</code>；删除确认把主要换成 <code>kv-button--danger</code>。</li>
+    <li>全屏（宽 100vw）<span class="tag tag--draft">待定</span>：Figma 的 Dialog 还没有这个尺寸，先写 <code>kv-dialog--full</code>，只定了宽度。</li>
+  </ul>
+
+  <h3>样子</h3>
+  <h4>宽度</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>尺寸</th><th>宽度</th><th>用在哪</th></tr></thead>
+      <tbody>
+        <tr><td>S</td><td>400</td><td>确认、重命名、简单输入</td></tr>
+        <tr><td>M</td><td>720</td><td>表单、上传、设置</td></tr>
+        <tr><td>L</td><td>1024</td><td>列表、市场、详情</td></tr>
+        <tr><td>XL</td><td>1200</td><td>编辑器</td></tr>
+        <tr><td>全屏 <span class="tag tag--draft">待定</span></td><td>100vw</td><td>素材详情</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>4 个尺寸只是宽度不同，结构、内边距、间距都一样。</li>
+    <li>高度跟着内容走。最大高度、内容多时怎么滚 <span class="tag tag--draft">待定</span>：Figma 没定，代码先限制在屏幕里，内容区滚动。</li>
+  </ul>
+
+  <h4>规格</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项</th><th>值</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>内边距</td><td>24</td><td><code>--spacing-xl</code></td></tr>
+        <tr><td>区块间距</td><td>16（标题栏组、内容区、底栏之间）</td><td><code>--spacing-lg</code></td></tr>
+        <tr><td>标题栏和描述间距</td><td>8</td><td><code>--spacing-sm</code></td></tr>
+        <tr><td>标题和关闭按钮间距</td><td>16</td><td><code>--spacing-lg</code></td></tr>
+        <tr><td>圆角</td><td>16</td><td><code>--border-radius-lg</code></td></tr>
+        <tr><td>底色</td><td>surface</td><td><code>--color-bg-fill-surface</code></td></tr>
+        <tr><td>描边、阴影</td><td>都不加</td><td>—</td></tr>
+        <tr><td>标题</td><td>16 / 24，粗，primary</td><td><code>--font-size-16</code> · <code>--font-line-height-24</code> · <code>--font-weight-medium</code> · <code>--color-text-fill-primary</code></td></tr>
+        <tr><td>描述</td><td>14 / 22，常规，secondary</td><td><code>--font-size-14</code> · <code>--font-line-height-22</code> · <code>--color-text-fill-secondary</code></td></tr>
+        <tr><td>关闭按钮</td><td>IconButton 32 · 文字类型，Close 图标</td><td>见「按钮」</td></tr>
+        <tr><td>底栏</td><td>靠右，间距 8，上方多留 8；大号 Button（36）</td><td><code>--spacing-sm</code></td></tr>
+        <tr><td>遮罩</td><td>mask（黑 60%），不模糊</td><td><code>--color-bg-fill-mask</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>打开和关闭的动效</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>动作</th><th>怎么动</th><th>变量</th></tr></thead>
+      <tbody>
+        <tr><td>打开</td><td>遮罩和弹窗一起淡入，弹窗从 96% 放大到 100%</td><td>300ms · <code>--motion-ease-out</code></td></tr>
+        <tr><td>关闭</td><td>遮罩和弹窗一起淡出，弹窗缩回 96%</td><td>200ms · <code>--motion-ease-in</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>遮罩上写 <code>aria-hidden="true"</code> 就是关闭，去掉或改成 <code>"false"</code> 就是打开，动画都在 <code>dialog.css</code> 里。系统开了「减少动态效果」时，时长已归零，直接切换。</p>
+
+  <h4>二级弹窗：再叠一层遮罩</h4>
+  <p>在一级弹窗上再打开一个弹窗，就在后面再放一个 <code>kv-dialog-mask</code>。两层遮罩叠起来，一级弹窗被自动压暗。最多两级。</p>
+  <div data-demo="nocode">
+    <div class="dg-stage">
+      <div class="dg-faux"><span></span><span></span><span></span><span></span></div>
+      <div class="kv-dialog-mask">
+        <div class="kv-dialog kv-dialog--m">
+          <div class="kv-dialog__top">
+            <div class="kv-dialog__header">
+              <div class="kv-dialog__title">编辑作品</div>
+              <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭"><i class="kv-icon" data-icon="Close"></i></button>
+            </div>
+            <div class="kv-dialog__desc">一级弹窗，被第二层遮罩压暗。</div>
+          </div>
+          <div class="kv-dialog__body"></div>
+          <div class="kv-dialog__footer">
+            <button class="kv-button kv-button--lg kv-button--secondary" type="button"><span>取消</span></button>
+            <button class="kv-button kv-button--lg kv-button--primary" type="button"><span>保存</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="kv-dialog-mask">
+        <div class="kv-dialog kv-dialog--s">
+          <div class="kv-dialog__top">
+            <div class="kv-dialog__header">
+              <div class="kv-dialog__title">二级弹窗</div>
+              <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭"><i class="kv-icon" data-icon="Close"></i></button>
+            </div>
+            <div class="kv-dialog__desc">再叠一层遮罩。</div>
+          </div>
+          <div class="kv-dialog__footer">
+            <button class="kv-button kv-button--lg kv-button--secondary" type="button"><span>取消</span></button>
+            <button class="kv-button kv-button--lg kv-button--primary" type="button"><span>确定</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>用法</h3>
+  <ul>
+    <li><strong>S 400</strong>：确认、重命名、简单输入。</li>
+    <li><strong>M 720</strong>：表单、上传、设置。</li>
+    <li><strong>L 1024</strong>：列表、市场、详情。</li>
+    <li><strong>XL 1200</strong>：编辑器。</li>
+    <li><strong>全屏 100vw</strong> <span class="tag tag--draft">待定</span>：素材详情。</li>
+    <li><strong>确认弹窗</strong>：只有标题和描述，关掉内容区。</li>
+    <li><strong>删除这类不能撤销的操作</strong>：把确认按钮从主要换成危险。</li>
+    <li><strong>只有一个按钮</strong>：去掉次按钮。</li>
+  </ul>
+
+  <h4>怎么关</h4>
+  <ul>
+    <li><strong>Esc</strong>：都能关；二级弹窗开着时，先关二级。</li>
+    <li><strong>点遮罩</strong>：只展示内容的弹窗关闭；有表单或没保存内容的不关。</li>
+    <li><strong>关闭按钮、取消</strong>：都能关。</li>
+  </ul>
+  <p>下面的演示都能真的打开和关闭。组件库不带 JS，演示里的脚本只做这几件事：开关、Esc、点遮罩，开了把焦点给弹窗，关了还给按钮。代码里的 <code>data-open</code>、<code>data-close</code>、<code>data-persistent</code>（点遮罩不关）是演示脚本用的，项目里自己绑事件。</p>
+
+  <h4>确认弹窗：S，只有标题和描述</h4>
+  <div data-demo id="demo-confirm">
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-confirm"><span>放弃修改</span></button>
+    <div class="kv-dialog-mask" id="dlg-confirm" aria-hidden="true">
+      <div class="kv-dialog kv-dialog--s" role="dialog" aria-modal="true" aria-labelledby="dlg-confirm-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header">
+            <div class="kv-dialog__title" id="dlg-confirm-title">放弃这次修改？</div>
+            <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close>
+              <i class="kv-icon" data-icon="Close"></i>
+            </button>
+          </div>
+          <div class="kv-dialog__desc">离开后，没保存的修改会丢失。</div>
+        </div>
+        <div class="kv-dialog__footer">
+          <button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button>
+          <button class="kv-button kv-button--lg kv-button--primary" type="button" data-close><span>确定</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>删除确认：确认按钮换成危险</h4>
+  <div data-demo id="demo-danger">
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-danger"><span>删除作品</span></button>
+    <div class="kv-dialog-mask" id="dlg-danger" aria-hidden="true">
+      <div class="kv-dialog kv-dialog--s" role="dialog" aria-modal="true" aria-labelledby="dlg-danger-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header">
+            <div class="kv-dialog__title" id="dlg-danger-title">删除这个作品？</div>
+            <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close>
+              <i class="kv-icon" data-icon="Close"></i>
+            </button>
+          </div>
+          <div class="kv-dialog__desc">删除后不能恢复。</div>
+        </div>
+        <div class="kv-dialog__footer">
+          <button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button>
+          <button class="kv-button kv-button--lg kv-button--danger" type="button" data-close><span>删除</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>表单弹窗：M，点遮罩不关</h4>
+  <p>有表单，用户可能已经填了东西，点遮罩不关，只能点关闭或取消。</p>
+  <div data-demo id="demo-form">
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-form"><span>新建文件夹</span></button>
+    <div class="kv-dialog-mask" id="dlg-form" aria-hidden="true" data-persistent>
+      <div class="kv-dialog kv-dialog--m" role="dialog" aria-modal="true" aria-labelledby="dlg-form-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header">
+            <div class="kv-dialog__title" id="dlg-form-title">新建文件夹</div>
+            <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close>
+              <i class="kv-icon" data-icon="Close"></i>
+            </button>
+          </div>
+          <div class="kv-dialog__desc">给文件夹起个名字。</div>
+        </div>
+        <div class="kv-dialog__body"><!-- 表单 --></div>
+        <div class="kv-dialog__footer">
+          <button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button>
+          <button class="kv-button kv-button--lg kv-button--primary" type="button" data-close><span>创建</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>二级弹窗：在一级里再打开一个</h4>
+  <p>一级是表单，点遮罩不关；二级是删除确认，点遮罩能关。后放的遮罩盖在上面，Esc 先关二级。点「删除」两层一起关。</p>
+  <div data-demo id="demo-stack-live">
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-edit"><span>编辑作品</span></button>
+    <div class="kv-dialog-mask" id="dlg-edit" aria-hidden="true" data-persistent>
+      <div class="kv-dialog kv-dialog--m" role="dialog" aria-modal="true" aria-labelledby="dlg-edit-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header">
+            <div class="kv-dialog__title" id="dlg-edit-title">编辑作品</div>
+            <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close>
+              <i class="kv-icon" data-icon="Close"></i>
+            </button>
+          </div>
+          <div class="kv-dialog__desc">改完点保存；也可以在这里删除。</div>
+        </div>
+        <div class="kv-dialog__body"><!-- 表单 --></div>
+        <div class="kv-dialog__footer">
+          <button class="kv-button kv-button--lg kv-button--secondary" type="button" data-open="#dlg-edit-delete"><span>删除作品</span></button>
+          <button class="kv-button kv-button--lg kv-button--primary" type="button" data-close><span>保存</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="kv-dialog-mask" id="dlg-edit-delete" aria-hidden="true">
+      <div class="kv-dialog kv-dialog--s" role="dialog" aria-modal="true" aria-labelledby="dlg-edit-delete-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header">
+            <div class="kv-dialog__title" id="dlg-edit-delete-title">删除这个作品？</div>
+            <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close>
+              <i class="kv-icon" data-icon="Close"></i>
+            </button>
+          </div>
+          <div class="kv-dialog__desc">删除后不能恢复。</div>
+        </div>
+        <div class="kv-dialog__footer">
+          <button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button>
+          <button class="kv-button kv-button--lg kv-button--danger" type="button" data-close="all"><span>删除</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>各尺寸：真的宽度</h4>
+  <p>屏幕比弹窗窄时，弹窗最宽就是屏幕宽。</p>
+  <div data-demo="nocode">
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-size-s"><span>S · 400</span></button>
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-size-m"><span>M · 720</span></button>
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-size-l"><span>L · 1024</span></button>
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-size-xl"><span>XL · 1200</span></button>
+    <button class="kv-button kv-button--md kv-button--secondary" type="button" data-open="#dlg-size-full"><span>全屏 · 100vw</span></button>
+
+    <div class="kv-dialog-mask" id="dlg-size-s" aria-hidden="true">
+      <div class="kv-dialog kv-dialog--s" role="dialog" aria-modal="true" aria-labelledby="dlg-size-s-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header"><div class="kv-dialog__title" id="dlg-size-s-title">S · 400</div><button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close><i class="kv-icon" data-icon="Close"></i></button></div>
+          <div class="kv-dialog__desc">确认、重命名、简单输入。</div>
+        </div>
+        <div class="kv-dialog__body"></div>
+        <div class="kv-dialog__footer"><button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button><button class="kv-button kv-button--lg kv-button--primary" type="button" data-close><span>确定</span></button></div>
+      </div>
+    </div>
+    <div class="kv-dialog-mask" id="dlg-size-m" aria-hidden="true">
+      <div class="kv-dialog kv-dialog--m" role="dialog" aria-modal="true" aria-labelledby="dlg-size-m-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header"><div class="kv-dialog__title" id="dlg-size-m-title">M · 720</div><button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close><i class="kv-icon" data-icon="Close"></i></button></div>
+          <div class="kv-dialog__desc">表单、上传、设置。</div>
+        </div>
+        <div class="kv-dialog__body"></div>
+        <div class="kv-dialog__footer"><button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button><button class="kv-button kv-button--lg kv-button--primary" type="button" data-close><span>确定</span></button></div>
+      </div>
+    </div>
+    <div class="kv-dialog-mask" id="dlg-size-l" aria-hidden="true">
+      <div class="kv-dialog kv-dialog--l" role="dialog" aria-modal="true" aria-labelledby="dlg-size-l-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header"><div class="kv-dialog__title" id="dlg-size-l-title">L · 1024</div><button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close><i class="kv-icon" data-icon="Close"></i></button></div>
+          <div class="kv-dialog__desc">列表、市场、详情。</div>
+        </div>
+        <div class="kv-dialog__body"></div>
+        <div class="kv-dialog__footer"><button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button><button class="kv-button kv-button--lg kv-button--primary" type="button" data-close><span>确定</span></button></div>
+      </div>
+    </div>
+    <div class="kv-dialog-mask" id="dlg-size-xl" aria-hidden="true">
+      <div class="kv-dialog kv-dialog--xl" role="dialog" aria-modal="true" aria-labelledby="dlg-size-xl-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header"><div class="kv-dialog__title" id="dlg-size-xl-title">XL · 1200</div><button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close><i class="kv-icon" data-icon="Close"></i></button></div>
+          <div class="kv-dialog__desc">编辑器。</div>
+        </div>
+        <div class="kv-dialog__body"></div>
+        <div class="kv-dialog__footer"><button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button><button class="kv-button kv-button--lg kv-button--primary" type="button" data-close><span>确定</span></button></div>
+      </div>
+    </div>
+    <div class="kv-dialog-mask" id="dlg-size-full" aria-hidden="true">
+      <div class="kv-dialog kv-dialog--full" role="dialog" aria-modal="true" aria-labelledby="dlg-size-full-title">
+        <div class="kv-dialog__top">
+          <div class="kv-dialog__header"><div class="kv-dialog__title" id="dlg-size-full-title">全屏 · 100vw（待定）</div><button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" type="button" aria-label="关闭" data-close><i class="kv-icon" data-icon="Close"></i></button></div>
+          <div class="kv-dialog__desc">素材详情。高度、圆角 Figma 还没定。</div>
+        </div>
+        <div class="kv-dialog__body"></div>
+        <div class="kv-dialog__footer"><button class="kv-button kv-button--lg kv-button--secondary" type="button" data-close><span>取消</span></button><button class="kv-button kv-button--lg kv-button--primary" type="button" data-close><span>确定</span></button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 现有弹窗归档 ==================== -->
+
+  <h2 id="existing">现有弹窗归到哪一档</h2>
+  <p>代码里现在的弹窗，按宽度就近归到 S / M / L / XL。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>尺寸</th><th>宽度</th><th>用在哪</th><th>代码里现在的弹窗（宽度）</th></tr></thead>
+      <tbody>
+        <tr><td>S</td><td>400</td><td>确认、重命名、简单输入</td><td>400：ConfirmModal · RenameModal · EditFolderNameModal · CompressModal · BalanceInfo · AppDeployVersionCheck · SkillConfirmModal；500：SkillSyncPublicModal</td></tr>
+        <tr><td>M</td><td>720</td><td>表单、上传、设置</td><td>700：PasteModal · 740：VersionUpdateModal · 800：FeedBack</td></tr>
+        <tr><td>L</td><td>1024</td><td>列表、市场、详情</td><td>898：SkillDetailModal · 1024：SkillMarketModal · 1056：Cropper（裁剪）</td></tr>
+        <tr><td>XL</td><td>1200</td><td>编辑器</td><td>1208：SkillEditorModal · 最小 1200：EditMultiImagModal</td></tr>
+        <tr><td>全屏 <span class="tag tag--draft">待定</span></td><td>100vw</td><td>素材详情</td><td>铺满：CardDetailModal；按屏幕宽：AIToolsModal 75vw（大屏 60vw）· PadImageModal 60vw，待定</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>代码里还没有尺寸档位：弹窗有 BaseModal、antd Modal、HeroUI Modal 三种写法，宽度都是各写各的。</li>
+    <li>要按 S / M / L / XL 走，需要前端给弹窗加一个 size 参数，再把上面这些宽度改过去。</li>
+  </ul>
+
+</main>
+
+<script src="../kivi/icons.js"></script>
+<script src="../shell/shell.js"></script>
+<script>
+  // 属性面板：和 Figma 的 Dialog 属性一一对应
+  (function () {
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+    function dialog(s) {
+      var top = '';
+      if (s.header) {
+        top += '\n    <div class="kv-dialog__header">\n      <div class="kv-dialog__title" id="dlg-title">' + esc(s.title) + '</div>';
+        if (s.close) {
+          top += '\n      <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" aria-label="关闭">\n        <i class="kv-icon" data-icon="Close"></i>\n      </button>';
+        }
+        top += '\n    </div>';
+      }
+      if (s.desc) top += '\n    <div class="kv-dialog__desc">' + esc(s.descText) + '</div>';
+
+      var out = '<div class="kv-dialog kv-dialog--' + s.size + '" role="dialog" aria-modal="true"' + (s.header ? ' aria-labelledby="dlg-title"' : '') + '>';
+      if (top) out += '\n  <div class="kv-dialog__top">' + top + '\n  </div>';
+      if (s.body) out += '\n  <div class="kv-dialog__body"><!-- 内容 --></div>';
+      if (s.footer) {
+        out += '\n  <div class="kv-dialog__footer">';
+        if (s.secondary) out += '\n    <button class="kv-button kv-button--lg kv-button--secondary"><span>取消</span></button>';
+        out += '\n    <button class="kv-button kv-button--lg kv-button--' + s.confirm + '"><span>' + (s.confirm === 'danger' ? '删除' : '确定') + '</span></button>';
+        out += '\n  </div>';
+      }
+      return out + '\n</div>';
+    }
+
+    KiviShell.playground(document.getElementById('pg-dialog'), {
+      controls: [
+        { key: 'size', label: '尺寸', type: 'segment', value: 's', options: [['s', 'S'], ['m', 'M'], ['l', 'L'], ['xl', 'XL']] },
+        { key: 'header', label: '显示标题栏', type: 'toggle', value: true },
+        { key: 'title', label: '标题', type: 'text', value: '弹窗标题' },
+        { key: 'close', label: '显示关闭', type: 'toggle', value: true },
+        { key: 'desc', label: '显示描述', type: 'toggle', value: true },
+        { key: 'descText', label: '描述', type: 'text', value: '一句话说明这个弹窗要做什么，或者操作的后果。' },
+        { key: 'body', label: '显示内容', type: 'toggle', value: true },
+        { key: 'footer', label: '显示底栏', type: 'toggle', value: true },
+        { key: 'secondary', label: '显示次按钮', type: 'toggle', value: true },
+        { key: 'confirm', label: '确认按钮', type: 'segment', value: 'primary', options: [['primary', '主要'], ['danger', '危险']] }
+      ],
+      render: dialog
+    });
+  })();
+
+  // 演示用：打开、关闭、Esc、点遮罩。组件库本身不带 JS
+  (function () {
+    var opened = []; // 打开的遮罩，最后一个在最上面
+
+    function open(mask, from) {
+      if (!mask || opened.indexOf(mask) >= 0) return;
+      mask._from = from;
+      opened.push(mask);
+      mask.setAttribute('aria-hidden', 'false');
+      var box = mask.querySelector('.kv-dialog');
+      box.setAttribute('tabindex', '-1');
+      box.focus({ preventScroll: true });
+    }
+
+    function close(mask) {
+      var i = opened.indexOf(mask);
+      if (i < 0) return;
+      opened.splice(i, 1);
+      if (mask._from) mask._from.focus({ preventScroll: true }); // 先把焦点还回去，再隐藏
+      mask.setAttribute('aria-hidden', 'true');
+    }
+
+    document.addEventListener('click', function (e) {
+      var trigger = e.target.closest('[data-open]');
+      if (trigger) { open(document.querySelector(trigger.getAttribute('data-open')), trigger); return; }
+      var x = e.target.closest('[data-close]');
+      if (x) {
+        if (x.getAttribute('data-close') === 'all') { opened.slice().reverse().forEach(close); } // 删除后两层一起关
+        else close(x.closest('.kv-dialog-mask'));
+        return;
+      }
+      // 只点在遮罩上才算点遮罩；有表单的弹窗不关
+      if (e.target.classList.contains('kv-dialog-mask') && !e.target.hasAttribute('data-persistent')) close(e.target);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && opened.length) close(opened[opened.length - 1]);
+    });
+  })();
+</script>
+</body>
+</html>

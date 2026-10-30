@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>改后对比</title>
+<style>
+  :root { --bg: #0d0e10; --card: #17181b; --line: #2a2b2f; --text: #f2f2f2; --sub: #9a9ba0; --accent: #b6f36a; --warn: #f5c56b; }
+  body { margin: 0; padding: 24px 16px 64px; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, "PingFang SC", sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  .lead { color: var(--sub); margin: 0 0 32px; }
+  section { max-width: 1100px; margin: 0 auto 48px; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  h2 small { color: var(--sub); font-weight: 400; margin-left: 8px; }
+  .pair { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .pair + .pair { margin-top: 16px; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; max-width: 100%; box-sizing: border-box; }
+  figcaption { color: var(--sub); font-size: 12px; margin-bottom: 8px; }
+  figure img { display: block; max-width: 100%; height: auto; }
+  ul { margin: 12px 0 0; padding-left: 20px; color: var(--sub); font-size: 13px; }
+  li b { color: var(--warn); font-weight: 500; }
+</style>
+</head>
+<body>
+<section>
+  <h1>改后对比</h1>
+  <p class="lead">左边是改后的 Figma，右边是网站（有的网站没改，放的是原来的图）。黄字是要你看一眼的地方。</p>
+</section>
+
+<section>
+  <h2>1 · 视频参数面板<small>Figma 照网站改</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma 改后</figcaption><img src="after-figma/a01-video-param-panel.png" width="300"></figure>
+    <figure><figcaption>Figma 改后 · 自动</figcaption><img src="after-figma/a02-video-param-panel-auto.png" width="300"></figure>
+    <figure><figcaption>网站</figcaption><img src="a01-site.png" width="400"></figure>
+  </div>
+  <ul>
+    <li>刻度在模板里手摆（Figma Slider 刻度位置固定），滑块把手只能停 0 / 25 / 50 / 75 / 100，8 秒放在 25 的位置。</li>
+    <li><b>比例、分辨率的分段是普通 frame 改成的样子，不是 TabItem 实例</b>：脚本环境没有苹方，带文字的实例挪不进去。要你在本机换成 TabItem 实例。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>2 · 音频参数面板<small>Figma 照网站改</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma 改后</figcaption><img src="after-figma/a03-audio-param-panel.png" width="365"></figure>
+    <figure><figcaption>网站</figcaption><img src="a03-site.png" width="365"></figure>
+  </div>
+  <ul><li><b>语速 1.0x 的滑块把手在 25%，刻度数字 1.0x 在 33%，有一点错位</b>（同上，把手只能停五档）。</li></ul>
+</section>
+
+<section>
+  <h2>3 · 工具条顺序、画布生成面板</h2>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · 画布生成面板（几个变体）</figcaption><img src="after-figma/a04-canvas-gen-panel.png" width="700"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>网站改后 · 画布生成面板：摘要后面加了生成音频图标，右上全屏换成 IconButton</figcaption><img src="after/a04-canvas-panel.png" width="574"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · 主站输入框：类型 → 模型 → 参考类型 → 参数</figcaption><img src="after-figma/a04-main-agent-prompt-box.png" width="700"></figure>
+  </div>
+  <ul>
+    <li>Figma 画布：顶部参考类型选项卡去掉，挪到底部模型后面的下拉。<b>这个下拉也是普通 frame，不是 Select 实例</b>，同样要你本机替换。</li>
+    <li><b>Figma「视频自动」面板的摘要写成了「720P · 智能比例」</b>，网站没有对应写法，你定。</li>
+    <li><b>主站 Agent 创作区的摘要还是「720P · 1:1 · 8s · 16fps」</b>，比别处多一个 16fps，没动，你定。</li>
+    <li>网站全屏图标 20（IconButton 32 固定图标 20），Figma 是 24；颜色网站略暗。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>4 · 参考浮层<small>一行 5 个、带时长</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · 5 + 4</figcaption><img src="after-figma/a05-reference-preview.png" width="700"></figure>
+    <figure><figcaption>网站改后 · 视频、音频左下补了时长</figcaption><img src="after/a05-popover.png" width="380"></figure>
+  </div>
+</section>
+
+<section>
+  <h2>5 · 生成中：有原素材<small>A06</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · ResultTile 有原素材</figcaption><img src="after-figma/a06-result-tile-with-source.png" width="256"></figure>
+    <figure><figcaption>网站改后 · ResultTile 有原素材</figcaption><img src="after/a06-result-tile.png" width="370"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · NodeCard 有原素材</figcaption><img src="after-figma/a06-node-card-with-source.png" width="256"></figure>
+    <figure><figcaption>网站改后 · NodeCard：左列没素材（无遮罩），右列有素材</figcaption><img src="after/a06-node-card.png" width="380"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · ResultTile 组件集（生成中默认无遮罩）</figcaption><img src="after-figma/a06-result-tile-set.png" width="700"></figure>
+  </div>
+  <ul>
+    <li>Figma 没做成新变体，做成了布尔属性「有原素材」（新变体挪不进组件集，原因同上）。NodeCard 用原来的「底图」开关。</li>
+    <li><b>开启状态的示例实例放在 Section 外面右边</b>（里面没空位），不要可以删。</li>
+    <li>没有原素材的节点生成中，网站去掉了黑色遮罩，比以前略浅。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>6 · 主站首尾帧带互换、参考区间距 24<small>A07 · A12</small></h2>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · 首尾帧加互换按钮</figcaption><img src="after-figma/a07-first-last-frame.png" width="700"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · 参考区到提示词 24</figcaption><img src="after-figma/a12-a04-main-prompt-box.png" width="700"></figure>
+    <figure><figcaption>网站 · 首尾帧（外面换图会跟着变了）</figcaption><img src="after/c01.png" width="360"></figure>
+  </div>
+</section>
+
+<section>
+  <h2>7 · 音量浮层、菜单禁用、Select、播放器面板</h2>
+  <div class="pair">
+    <figure><figcaption>Figma 改后 · 音量：未选轨道白 20%，高 138</figcaption><img src="after-figma/a10-volume-popup.png" width="256"></figure>
+    <figure><figcaption>Figma 改后 · 菜单禁用：箭头白 40%，勾保持绿</figcaption><img src="after-figma/b03-menu-item-disabled.png" width="200"></figure>
+    <figure><figcaption>网站改后 · Select 静态演示图标白 100%</figcaption><img src="after/b02-select.png" width="180"></figure>
+  </div>
+  <div class="pair">
+    <figure><figcaption>网站改后 · 播放器面板去掉比例；悬停立刻播放</figcaption><img src="after/b04-player-panel.png" width="370"></figure>
+  </div>
+  <ul>
+    <li>Figma 播放器本来就没有比例变体，只有大小和状态，不用删。</li>
+    <li>FileCard：网站、Figma 都标了「废弃」。</li>
+  </ul>
+</section>
+</body>
+</html>

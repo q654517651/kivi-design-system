@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>旧版里库没有的</title>
+<style>
+  :root { --bg: #0d0e10; --card: #17181b; --line: #2a2b2f; --text: #f2f2f2; --sub: #9a9ba0; --accent: #b6f36a; }
+  body { margin: 0; padding: 24px 16px 64px; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, "PingFang SC", sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 24px; }
+  section { max-width: 960px; margin: 0 auto 48px; }
+  h2 { font-size: 16px; margin: 0 0 12px; }
+  h2 small { color: var(--sub); font-weight: 400; margin-left: 8px; }
+  .pair { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  figcaption { color: var(--sub); font-size: 12px; margin-bottom: 8px; }
+  figure img { display: block; max-width: 100%; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--sub); font-weight: 400; }
+  td b { color: var(--accent); font-weight: 500; }
+
+  .toc { max-width: 960px; margin: 0 auto 40px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; }
+  .toc h3 { font-size: 13px; color: var(--accent); font-weight: 500; margin: 12px 0 6px; }
+  .toc h3:first-child { margin-top: 0; }
+  .toc a { color: var(--text); text-decoration: none; display: inline-block; margin: 0 14px 4px 0; font-size: 13px; }
+  .toc a:hover { color: var(--accent); }
+  h1.group { font-size: 18px; max-width: 960px; margin: 56px auto 24px; padding-bottom: 8px; border-bottom: 1px solid var(--line); color: var(--accent); }
+  .where { color: var(--sub); margin: 0 0 12px; font-size: 13px; }
+  .imgs { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  .imgs img { display: block; max-width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #000; }
+  .note { margin: 12px 0 0; }
+  .note b { color: var(--accent); font-weight: 500; }
+</style>
+</head>
+<body>
+<h1 style="max-width:960px;margin:0 auto 24px">旧版里库没有的</h1>
+<div class="toc">
+<h3>通用零件（库里没有）</h3>
+<a href="#calendar">日历 / 日期范围</a>
+<a href="#cascade">级联子菜单</a>
+<a href="#two-line-menu">两行菜单项</a>
+<a href="#search">搜索框</a>
+<a href="#upload-zone">拖拽上传区 / 上传格</a>
+<a href="#file-tree">文件树</a>
+<a href="#confirm-bubble">小确认气泡</a>
+<a href="#banner">横幅提示</a>
+<a href="#progress">进度环、状态徽标</a>
+<a href="#batch">批量选择态 + 批量操作条</a>
+<a href="#swatch">色块选择</a>
+<a href="#size-input">尺寸输入</a>
+<a href="#chips">筛选胶囊组</a>
+<a href="#guide">分步引导</a>
+<a href="#canvas-bits">画布零件：缩放条、小地图、框选框</a>
+<a href="#markdown">正文排版</a>
+<h3>业务模板（用零件拼）</h3>
+<a href="#skill-pages">技能面板 / 商城 / 创建技能</a>
+<a href="#assets-page">我的资产页</a>
+<a href="#history">历史资产弹窗</a>
+<a href="#video-package">视频封装</a>
+<a href="#group-toolbar">组工具栏</a>
+<a href="#annotation">标注评论</a>
+<a href="#share">分享 / 预览条</a>
+<a href="#workflow">工作流卡片</a>
+<a href="#model-picker">模型选择</a>
+<a href="#detail">查看详情</a>
+<a href="#left-panel">左侧面板</a>
+<a href="#voice">音色选择</a>
+<h3>不进通用库</h3>
+<a href="#timeline">视频剪辑时间轴</a>
+<a href="#brush">笔刷 / 蒙版</a>
+</div>
+<h1 class="group">通用零件（库里没有）</h1>
+<section id="calendar">
+<h2>日历 / 日期范围</h2>
+<p class="where">用在哪：时间筛选、历史资产、我的资产页</p>
+<div class="imgs"><img src="old/calendar-range-dropdown.png" alt="" style="width:272px"><img src="old/calendar-month.png" alt="" style="width:230px"></div>
+<p class="note">能凑出：Input 做两个日期框，Select 做「全部 / 最近一周…」下拉。缺：月历面板（年月切换、星期行、选中日、日期范围高亮）。</p>
+</section>
+<section id="cascade">
+<h2>级联子菜单</h2>
+<p class="where">用在哪：画布快捷添加节点里的「增长工具 >」；组工具栏的「布局」</p>
+<div class="imgs"><img src="old/cascade-menu.png" alt="" style="width:220px"><img src="old/group-toolbar-layout.png" alt="" style="width:555px"></div>
+<p class="note">能凑出：MenuItem 有右侧子菜单箭头。缺：点了不能展开，没有二级菜单的出现位置、展开时机和关闭规则。</p>
+</section>
+<section id="two-line-menu">
+<h2>两行菜单项（含菜单内分类、底部操作）</h2>
+<p class="where">用在哪：技能面板、斜杠技能菜单</p>
+<div class="imgs"><img src="old/skill-menu.png" alt="" style="width:432px"><img src="old/skill-mine.png" alt="" style="width:436px"></div>
+<p class="note">能凑出：Menu 外壳和单行 MenuItem。缺：标题加描述的两行条目、悬停才出现的右侧「详情」按钮、菜单顶部分类标签、底部固定的「管理 / 创建」。</p>
+</section>
+<section id="search">
+<h2>搜索框</h2>
+<p class="where">用在哪：我的资产页筛选条、素材库、技能</p>
+<div class="imgs"><img src="old/filter-bar.png" alt="" style="width:750px"><img src="old/left-panel-top.png" alt="" style="width:500px"></div>
+<p class="note">能凑出：Input 加一个放大镜图标。缺：专门的搜索框规格（高度、宽度、清除、聚焦态）。</p>
+</section>
+<section id="upload-zone">
+<h2>拖拽上传区 / 上传格</h2>
+<p class="where">用在哪：视频封装、创建技能封面、上传控件</p>
+<div class="imgs"><img src="old/upload-zone.png" alt="" style="width:512px"><img src="old/upload-states.png" alt="" style="width:725px"><img src="old/upload-cover.png" alt="" style="width:260px"></div>
+<p class="note">能凑出：Dialog、Tag、ReferenceItem 的外壳。缺：虚线上传区（拖入高亮、格式提示）、上传后预览格（替换 / 删除）、「上传文件」下拉按钮。</p>
+</section>
+<section id="file-tree">
+<h2>文件树</h2>
+<p class="where">用在哪：技能详情、创建技能</p>
+<div class="imgs"><img src="old/file-tree.png" alt="" style="width:937px"></div>
+<p class="note">能凑出：Menu 的单行条目。缺：树形列表（展开箭头、缩进、文件夹 / 文件图标、选中底色、悬停「…」菜单、滚动条）。</p>
+</section>
+<section id="confirm-bubble">
+<h2>小确认气泡（锚在按钮上）</h2>
+<p class="where">用在哪：画布整理后「是否保留此次整理结果？」</p>
+<div class="imgs"><img src="old/confirm-bubble.png" alt="" style="width:270px"></div>
+<p class="note">能凑出：Dialog 的文案和按钮。缺：不带遮罩、贴在触发元素上方的轻量确认气泡。</p>
+</section>
+<section id="banner">
+<h2>横幅提示（警告）</h2>
+<p class="where">用在哪：视频封装不合规提示</p>
+<div class="imgs"><img src="old/banner-warning.png" alt="" style="width:334px"><img src="old/video-package-warning.png" alt="" style="width:493px"></div>
+<p class="note">能凑出：Toast 的图标加文案。缺：常驻不消失的黄色警告条，可放多行，嵌在面板里。</p>
+</section>
+<section id="progress">
+<h2>进度环、状态徽标</h2>
+<p class="where">用在哪：编辑历史、任务列表</p>
+<div class="imgs"><img src="old/progress-status.png" alt="" style="width:194px"></div>
+<p class="note">能凑出：节点上传中的转圈。缺：列表行里的进度环、完成对勾、警告叹号这套状态徽标，以及行的悬停删除。</p>
+</section>
+<section id="batch">
+<h2>批量选择态 + 批量操作条</h2>
+<p class="where">用在哪：我的资产页「批量编辑」</p>
+<div class="imgs"><img src="old/batch-btn.png" alt="" style="width:220px"><img src="old/assets-page.png" alt="" style="width:960px"></div>
+<p class="note">能凑出：Checkbox、AssetThumb。缺：进入批量后的选中角标、全选、底部或顶部操作条。旧稿里只画了「批量编辑」按钮，选中态是隐藏层，没有画出来。</p>
+</section>
+<section id="swatch">
+<h2>色块选择</h2>
+<p class="where">用在哪：组工具栏的背景色</p>
+<div class="imgs"><img src="old/color-swatches.png" alt="" style="width:208px"><img src="old/group-bg-color.png" alt="" style="width:585px"></div>
+<p class="note">能凑出：Tag、Switch 的圆角小块。缺：一排圆形色块（选中描边、悬停），以及它的弹出位置。</p>
+</section>
+<section id="size-input">
+<h2>尺寸输入（宽 × 高 + 锁比例，带单位后缀）</h2>
+<p class="where">用在哪：图片裁剪、视频导出</p>
+<div class="imgs"><img src="old/size-input.png" alt="" style="width:315px"><img src="old/crop-bar.png" alt="" style="width:520px"><img src="old/crop-panel.png" alt="" style="width:534px"></div>
+<p class="note">能凑出：Input、Slider（只有刻度版）、Checkbox。缺：宽高成对输入、中间的锁比例按钮、数值后缀（PX、S、FPS）、比例下拉和确定按钮连成的裁剪条。</p>
+</section>
+<section id="chips">
+<h2>筛选胶囊组</h2>
+<p class="where">用在哪：工作流分类（全部 / 礼物 / 视觉 …）</p>
+<div class="imgs"><img src="old/filter-chips.png" alt="" style="width:345px"></div>
+<p class="note">能凑出：Tabs 的分段样式。缺：不带底槽、每个胶囊独立悬停 / 选中底色的横排版式。</p>
+</section>
+<section id="guide">
+<h2>分步引导</h2>
+<p class="where">用在哪：画布新手引导</p>
+<div class="imgs"><img src="old/guide.png" alt="" style="width:960px"><img src="old/guide-stepbar.png" alt="" style="width:860px"></div>
+<p class="note">能凑出：Button、Tooltip。缺：整页引导态、步骤条（第 1/2 步 + 跳过 + 下一步）、左下角帮助气泡。</p>
+</section>
+<section id="canvas-bits">
+<h2>画布零件：缩放条、小地图、框选框</h2>
+<p class="where">用在哪：画布左下角、拖拽框选、标注</p>
+<div class="imgs"><img src="old/canvas-zoom-bar.png" alt="" style="width:300px"><img src="old/minimap.png" alt="" style="width:132px"><img src="old/select-box.png" alt="" style="width:710px"></div>
+<p class="note">能凑出：IconButton。缺：缩放条（图标 + 百分比 + 加减，带整理确认）、小地图缩略块、拖拽框选的半透明绿框。</p>
+</section>
+<section id="markdown">
+<h2>正文排版（Markdown）</h2>
+<p class="where">用在哪：技能详情、Agent 回复</p>
+<div class="imgs"><img src="old/skill-detail.png" alt="" style="width:923px"><img src="old/agent-reply.png" alt="" style="width:530px"></div>
+<p class="note">能凑出：普通文字样式。缺：一套正文排版规格（标题、段落、列表、缩进、代码、间距）。</p>
+</section>
+<h1 class="group">业务模板（用零件拼）</h1>
+<section id="skill-pages">
+<h2>技能面板 / 商城 / 创建技能</h2>
+<p class="where">用在哪：输入框里的技能菜单、技能商城、我的技能、创建技能</p>
+<div class="imgs"><img src="old/skill-menu.png" alt="" style="width:432px"><img src="old/skill-shop.png" alt="" style="width:527px"><img src="old/skill-create.png" alt="" style="width:619px"><img src="old/upload-confirm.png" alt="" style="width:425px"></div>
+<p class="note">能凑出：Dialog、Tabs、EmptyState。缺：两行菜单项、文件树、上传区、Markdown 排版（见通用零件）。</p>
+</section>
+<section id="assets-page">
+<h2>我的资产页</h2>
+<p class="where">用在哪：顶部导航「我的资产」</p>
+<div class="imgs"><img src="old/assets-page.png" alt="" style="width:960px"></div>
+<p class="note">能凑出：AssetThumb 网格、Tabs。缺：文件夹卡片、搜索框、时间筛选、批量编辑。</p>
+</section>
+<section id="history">
+<h2>历史资产弹窗</h2>
+<p class="where">用在哪：画布底部「历史」、按时间筛选</p>
+<div class="imgs"><img src="old/history-modal.png" alt="" style="width:700px"></div>
+<p class="note">能凑出：Dialog、Tabs、AssetThumb。缺：按日期分组的标题、时间筛选下拉与月历、「收藏」筛选胶囊。</p>
+</section>
+<section id="video-package">
+<h2>视频封装</h2>
+<p class="where">用在哪：导出为礼物、麦圈、背景封装</p>
+<div class="imgs"><img src="old/video-package-main.png" alt="" style="width:454px"><img src="old/video-package-warning.png" alt="" style="width:493px"><img src="old/upload-zone.png" alt="" style="width:512px"></div>
+<p class="note">能凑出：Dialog、Input。缺：左侧类型列表、上传区、警告横幅、「静态 / 视频」切换。</p>
+</section>
+<section id="group-toolbar">
+<h2>组工具栏</h2>
+<p class="where">用在哪：画布里选中一组节点后的顶部工具栏</p>
+<div class="imgs"><img src="old/group-new.png" alt="" style="width:740px"><img src="old/group-bg-color.png" alt="" style="width:585px"><img src="old/group-toolbar-layout.png" alt="" style="width:555px"></div>
+<p class="note">能凑出：按钮条的外壳。缺：带文字的工具栏按钮、「布局」级联菜单、背景色色块、组的彩色底和标题。</p>
+</section>
+<section id="annotation">
+<h2>标注评论</h2>
+<p class="where">用在哪：图片节点上框选区域添加评论</p>
+<div class="imgs"><img src="old/annotation-toolbar.png" alt="" style="width:705px"><img src="old/annotation-comments.png" alt="" style="width:505px"></div>
+<p class="note">能凑出：Input、Tag。缺：框选标注模式条、框 + 编号气泡、评论输入卡（发送 / 添加到对话 / 更新 / 删除）。</p>
+</section>
+<section id="share">
+<h2>分享 / 预览条</h2>
+<p class="where">用在哪：画布分享、只读预览</p>
+<div class="imgs"><img src="old/share-popover.png" alt="" style="width:965px"><img src="old/preview-bar.png" alt="" style="width:515px"><img src="old/preview-bar-2.png" alt="" style="width:510px"></div>
+<p class="note">能凑出：Toast、Tooltip、Menu。缺：分享链接浮层与复制反馈、预览模式顶栏（头像 + 标题 + 克隆 / 应用到画布 + 关闭）。</p>
+</section>
+<section id="workflow">
+<h2>工作流卡片</h2>
+<p class="where">用在哪：官方工作流、保存为工作流</p>
+<div class="imgs"><img src="old/workflow-card.png" alt="" style="width:433px"><img src="old/workflow-panel.png" alt="" style="width:600px"><img src="old/workflow-save-dialog.png" alt="" style="width:595px"><img src="old/workflow-pick.png" alt="" style="width:595px"></div>
+<p class="note">能凑出：Dialog、Tabs、Input、Button。缺：工作流卡片（悬停出「查看 / 应用 / 删除」）、筛选胶囊组、封面上传。</p>
+</section>
+<section id="model-picker">
+<h2>模型选择</h2>
+<p class="where">用在哪：图片生成选模型、Lora 模型</p>
+<div class="imgs"><img src="old/model-picker-1.png" alt="" style="width:969px"><img src="old/model-picker-2.png" alt="" style="width:998px"></div>
+<p class="note">能凑出：Dialog、Tabs、Select。缺：大图卡网格（选中绿框、右上角收藏星）、「全部类型」下拉。</p>
+</section>
+<section id="detail">
+<h2>查看详情</h2>
+<p class="where">用在哪：结果图放大预览，右侧提示词、模型、参考图</p>
+<div class="imgs"><img src="old/detail-view.png" alt="" style="width:960px"></div>
+<p class="note">能凑出：Dialog、Tag、ReferenceItem。缺：左图右信息的整页布局、缩略图条、模型卡与 Lora 卡。</p>
+</section>
+<section id="left-panel">
+<h2>左侧面板</h2>
+<p class="where">用在哪：画布左侧：素材库、画布资产、Pinterest；全局侧栏</p>
+<div class="imgs"><img src="old/left-panel.png" alt="" style="width:960px"><img src="old/global-sidebar.png" alt="" style="width:338px"></div>
+<p class="note">能凑出：Tabs、AssetThumb。缺：瀑布流素材、侧栏图标条、可收起的全局侧栏。</p>
+</section>
+<section id="voice">
+<h2>音色选择</h2>
+<p class="where">用在哪：音频生成：模型下拉、音色列表</p>
+<div class="imgs"><img src="old/voice-picker.png" alt="" style="width:685px"></div>
+<p class="note">能凑出：Menu、Select。缺：带试听播放键的音色行、滚动条。</p>
+</section>
+<h1 class="group">不进通用库</h1>
+<section id="timeline">
+<h2>视频剪辑时间轴</h2>
+<p class="where">用在哪：视频节点「视频剪辑」</p>
+<div class="imgs"><img src="old/timeline.png" alt="" style="width:960px"></div>
+<p class="note">库里没有，也不建议做进通用库：多轨时间轴、播放头、素材条、吸附、缩放，当业务组件单独做。</p>
+</section>
+<section id="brush">
+<h2>笔刷 / 蒙版</h2>
+<p class="where">用在哪：图片节点「重绘」画笔</p>
+<div class="imgs"><img src="old/brush-area.png" alt="" style="width:962px"></div>
+<p class="note">库里没有，也不建议做进通用库：画笔工具条（大小条等）、蒙版绘制和落笔后的节点生成，当业务组件单独做。</p>
+</section>
+</body>
+</html>
