@@ -1,8 +1,15 @@
-import { forwardRef, type HTMLAttributes } from 'react';
+import { createContext, forwardRef, useContext, type HTMLAttributes } from 'react';
 import { ICONS, ICON_VIEWBOX, type IconName } from './icons';
+import { ICONS_V3 } from './icons-v3';
 import { cx } from './utils';
 
 export type IconSize = 16 | 20 | 24 | 40 | 64;
+
+/** 图标版本：V2 是 Figma「图标」页，V3 是「_图标对照」页第三列。试验，定了只留一个 */
+export type IconSet = 'v2' | 'v3';
+
+/** 这一片用哪版图标，默认 V2。V3 里没有的（Kiwi、Logo）沿用 V2 */
+export const IconSetContext = createContext<IconSet>('v2');
 
 export interface IconProps extends HTMLAttributes<HTMLSpanElement> {
   /** 图标名，和 Figma「图标」页一样，区分大小写 */
@@ -15,6 +22,8 @@ export interface IconProps extends HTMLAttributes<HTMLSpanElement> {
 
 /** 图标，图形和名字都来自 Figma「图标」页 */
 export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon({ name, size, spin, className, ...rest }, ref) {
+  const set = useContext(IconSetContext);
+  const body = (set === 'v3' && ICONS_V3[name]) || ICONS[name];
   return (
     <span
       ref={ref}
@@ -26,7 +35,7 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon({ name,
       <svg
         viewBox={ICON_VIEWBOX[name] ?? '0 0 24 24'}
         fill="currentColor"
-        dangerouslySetInnerHTML={{ __html: ICONS[name] }}
+        dangerouslySetInnerHTML={{ __html: body }}
       />
     </span>
   );

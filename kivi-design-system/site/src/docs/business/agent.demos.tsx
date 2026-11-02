@@ -1,5 +1,5 @@
-import { ActionCard, Button, FileCard, MediaStack, ProcessRow, QuestionOption, QuestionPanel, ReferenceItem, SendButton, UserMessage, type FileCardType, type IconName, type ProcessRowLevel, type ProcessRowStatus } from '@kivi';
-import { useState } from 'react';
+import { ActionCard, Button, Dialog, FileCard, IconButton, MediaStack, ProcessGroup, ProcessRow, QuestionOption, QuestionPanel, ReferenceItem, ResultTile, SendButton, UserMessage, type FileCardType, type IconName, type ProcessRowLevel, type ProcessRowStatus, type ProcessStep, type ResultTileAction } from '@kivi';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Playground } from '@shell';
 
 // Agent 页的属性面板：所有层级、类型、状态都在面板里切。参数表在 agent.mdx
@@ -61,6 +61,166 @@ export function ProcessRowPlayground() {
       })}
       render={renderProcessRow}
     />
+  );
+}
+
+// ---------- ProcessGroup ----------
+
+// 演示用的一串工具：有快有慢，停留超过 0.5 秒的才扫光
+const TOOLS: Omit<ProcessStep, 'status'>[] = [
+  { icon: 'Skill', action: '读取画布操作规范' },
+  { icon: 'UseCanvas', action: '创建节点', object: '「分镜脚本」' },
+  { icon: 'UseCanvas', action: '更新节点', object: '「分镜脚本」' },
+  { icon: 'Skill', action: '读取礼物等级细则' },
+  { icon: 'UseCanvas', action: '创建节点', object: '「视频生成」' },
+  { icon: 'UseCanvas', action: '连接节点', object: '「分镜脚本」→「视频生成」' },
+  { icon: 'UseCanvas', action: '更新参数', object: '「视频生成」' },
+  { icon: 'Skill', action: '检查提示词' },
+];
+// 每个工具调了多久（毫秒）
+const TOOL_MS = [200, 1300, 150, 120, 900, 250, 1600, 400];
+
+/** 模拟 Agent 一个接一个调工具，调完收成汇总行。切换面板设置会整个重新挂上 */
+export function ProcessGroupSim({ count = 8, failed = false, live = true }: { count?: number; failed?: boolean; live?: boolean }) {
+  const [started, setStarted] = useState(live ? 1 : count);
+  const [done, setDone] = useState(!live);
+  const [run, setRun] = useState(0);
+
+  // 一个工具调完开始下一个，最后一个调完就做完了
+  useEffect(() => {
+    if (!live) return;
+    let i = 1;
+    let t = 0;
+    const next = () => {
+      t = window.setTimeout(() => {
+        if (i < count) {
+          i += 1;
+          setStarted(i);
+          next();
+        } else setDone(true);
+      }, TOOL_MS[i - 1]);
+    };
+    next();
+    return () => window.clearTimeout(t);
+  }, [live, count, run]);
+
+  const replay = () => {
+    setStarted(1);
+    setDone(false);
+    setRun((r) => r + 1);
+  };
+
+  const failIndex = count === 1 ? 0 : 2;
+  const steps: ProcessStep[] = TOOLS.slice(0, started).map((tool, i) => ({
+    ...tool,
+    id: String(i),
+    status: !done && i === started - 1 ? 'running' : failed && i === failIndex ? 'failed' : 'done',
+  }));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16, width: 420, maxWidth: '100%' }}>
+      <ProcessGroup key={run} steps={steps} />
+      {live && (
+        <Button size="sm" variant="light" leftIcon="Reset" onClick={replay}>
+          重放
+        </Button>
+      )}
+    </div>
+  );
+}
+
+type ProcessGroupState = { status: string; count: string; failed: boolean; expand: string };
+
+function renderProcessGroup(s: ProcessGroupState) {
+  const n = Number(s.count);
+  const running = s.status === 'running';
+  const k = running ? Math.min(3, n) : n; // 进行中：调到第 3 个
+  const failIndex = n === 1 ? 0 : 2;
+  const steps: ProcessStep[] = TOOLS.slice(0, k).map((tool, i) => {
+    const status = running && i === k - 1 ? 'running' : !running && s.failed && i === failIndex ? 'failed' : undefined;
+    return status ? { ...tool, status } : { ...tool };
+  });
+  return <ProcessGroup steps={steps} expanded={!running && n > 1 ? s.expand === 'yes' : undefined} />;
+}
+
+export function ProcessGroupPlayground() {
+  return (
+    <Playground<ProcessGroupState>
+      controls={[
+        { key: 'status', label: '状态', type: 'segment', value: 'done', options: [['running', '调用中'], ['done', '做完']] },
+        { key: 'count', label: '工具个数', type: 'segment', value: '8', options: [['1', '1'], ['4', '4'], ['8', '8']] },
+        { key: 'failed', label: '有失败', type: 'toggle', value: false },
+        { key: 'expand', label: '展开', type: 'segment', value: 'no', options: [['no', '否'], ['yes', '是']] },
+      ]}
+      // 调用中只有一行、不能展开；只调了 1 个也不能展开
+      rules={(s) => ({
+        ...(s.status === 'running' ? { failed: true, expand: true } : {}),
+        ...(s.count === '1' ? { expand: true } : {}),
+      })}
+      render={renderProcessGroup}
+    />
+  );
+}
+
+// ---------- 示例：主站 Agent ----------
+
+const TEXT: CSSProperties = { color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' };
+const RESULTS = ['ip-gouache-1x1.webp', 'kivi-future-1x1.webp', 'bunny-gouache-1x1.webp', 'ip-kiwi-pile-1x1.webp'];
+const TOP: ResultTileAction[] = [
+  { icon: 'Delete', label: '删除' },
+  { icon: 'Download', label: '下载' },
+];
+const QUICK: ResultTileAction[] = [
+  { icon: 'ImageEditing', label: '图片编辑' },
+  { icon: 'VideoGeneration', label: '图生视频' },
+  { icon: 'ImageToImage', label: '一键垫图' },
+  { icon: 'More', label: '更多' },
+];
+
+/** 主站 Agent：生成的结果直接跟在回复下面，4 张大图；点一张全屏看 */
+export function MainSiteAgentDemo() {
+  const [preview, setPreview] = useState<number | null>(null);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+      <UserMessage assets={<ReferenceItem src={`${IMG}kiwi-light-1x1.webp`} />}>参考这张图，做 4 张科幻宇宙风格的猕猴桃海报</UserMessage>
+      <div style={TEXT}>好的，我先看看参考图的风格。</div>
+      <ProcessGroup
+        steps={[
+          { icon: 'Skill', action: '读取参考图' },
+          { icon: 'Skill', action: '分析画面风格' },
+          { icon: 'Text', action: '整理提示词' },
+        ]}
+      />
+      <div style={TEXT}>参考图是冷色宇宙背景加漂浮的猕猴桃切片，下面按这个风格生成 4 张。</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+        {RESULTS.map((file, i) => (
+          <ResultTile
+            key={file}
+            src={`${IMG}${file}`}
+            topActions={TOP}
+            collect
+            quickActions={QUICK}
+            style={{ cursor: 'zoom-in' }}
+            onClick={(e) => {
+              // 点的是格子里的按钮就不打开预览
+              if ((e.target as HTMLElement).closest('button')) return;
+              setPreview(i);
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: 'flex' }}>
+        <IconButton icon="Copy" label="复制" variant="light" />
+        <IconButton icon="CopyTraceID" label="复制 TraceID" variant="light" />
+        <IconButton icon="ThumbsUp" label="赞" variant="light" />
+        <IconButton icon="ThumbsDown" label="踩" variant="light" />
+      </div>
+      <Dialog size="full" title={preview === null ? undefined : `图片 ${preview + 1}`} open={preview !== null} onOpenChange={(open) => !open && setPreview(null)}>
+        {preview !== null && (
+          <img src={`${IMG}${RESULTS[preview]}`} alt={`图片 ${preview + 1}`} style={{ display: 'block', maxWidth: '100%', maxHeight: '75vh', margin: '0 auto', objectFit: 'contain' }} />
+        )}
+      </Dialog>
+    </div>
   );
 }
 

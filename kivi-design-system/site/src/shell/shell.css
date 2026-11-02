@@ -75,6 +75,19 @@ a {
   flex: 1;
 }
 
+.shell-icon-set {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.shell-icon-set-label {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+  white-space: nowrap;
+}
+
 .shell-menu {
   display: none;
 }
@@ -723,6 +736,152 @@ main.doc {
   white-space: nowrap;
 }
 
+/* ---------- 色卡 ---------- */
+
+.tk-sws {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  gap: var(--spacing-24) var(--spacing-16);
+  margin: var(--spacing-16) 0 var(--spacing-32);
+}
+
+.tk-sw {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tk-sw__chip {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  margin-bottom: var(--spacing-4);
+  border-radius: var(--border-radius-12);
+  background-color: var(--color-bg-fill-base);
+  background-position: center;
+  background-size: cover;
+}
+
+/* 描边盖在色块上面，和页面底色一样的颜色也看得出边 */
+.tk-sw__chip::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  content: '';
+  pointer-events: none;
+}
+
+.tk-sw__fill {
+  position: absolute;
+  inset: 0;
+}
+
+.tk-sw__value {
+  position: absolute;
+  right: var(--spacing-8);
+  bottom: var(--spacing-8);
+  left: var(--spacing-8);
+  padding: 2px var(--spacing-6);
+  overflow: hidden;
+  border-radius: var(--border-radius-6);
+  background: var(--color-bg-fill-popup);
+  color: var(--color-text-fill-primary);
+  font-family: var(--shell-mono);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.tk-sw:hover .tk-sw__value,
+.tk-sw:focus-visible .tk-sw__value,
+.tk-sw__value[data-copied] {
+  opacity: 1;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.tk-sw__name {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+  overflow-wrap: anywhere;
+}
+
+.tk-sw__desc {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}
+
+/* ---------- 折叠块：MDX 里直接写 <details><summary> ---------- */
+
+.doc details {
+  margin: var(--spacing-8) 0;
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.doc details > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+  border-radius: var(--border-radius-12);
+  color: var(--color-text-fill-primary);
+  font-weight: var(--font-weight-medium);
+  list-style: none;
+  cursor: pointer;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.doc details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.doc details > summary::before {
+  width: 6px;
+  height: 6px;
+  border-right: var(--border-width-1-5) solid var(--color-text-fill-tertiary);
+  border-bottom: var(--border-width-1-5) solid var(--color-text-fill-tertiary);
+  content: '';
+  transform: rotate(-45deg);
+  transition: transform var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.doc details[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.doc details > summary:hover {
+  background: var(--color-bg-fill-container-light-2-hover);
+}
+
+.doc details > :not(summary) {
+  margin-right: var(--spacing-16);
+  margin-left: var(--spacing-16);
+}
+
+.doc details > :last-child {
+  padding-bottom: var(--spacing-16);
+}
+
 /* ---------- 首页卡片 ---------- */
 
 .shell-cards {
@@ -816,6 +975,22 @@ a.shell-card:hover {
   .shell-pg-panel {
     border-left: 0;
     border-top: var(--border-width-1) solid var(--color-border-subtle);
+  }
+}
+
+/* 手机宽：顶栏放不下，藏掉版本标签和「图标」两个字 */
+@media (max-width: 560px) {
+  .shell-top {
+    gap: var(--spacing-8);
+  }
+
+  .shell-logo {
+    white-space: nowrap;
+  }
+
+  .shell-badge,
+  .shell-icon-set-label {
+    display: none;
   }
 }
 

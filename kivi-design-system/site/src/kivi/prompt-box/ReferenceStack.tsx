@@ -23,11 +23,11 @@ export interface ReferenceStackItem {
   id: string;
   /** 类型：图片 / 视频 / 音频。视频用封面图当缩略图，音频是渐变底加音符 */
   kind: ReferenceKind;
-  /** 名字，写在卡片底部，比如「图片1」。要和提示词里 @ 引用的名字一致，用 referenceName() 按类型编号 */
+  /** 名字，比如「图片1」：提示词里 @ 引用和读屏用，要和 @ 出来的一致，用 referenceName() 按类型编号。卡片上不写名字，右上角写序号 */
   name: string;
   /** 缩略图地址：图片、视频封面用。音频不用 */
   src?: string;
-  /** 时长文字，视频、音频用，比如「8s」「0:15」。展开时显示在卡片左上角 */
+  /** 时长文字，视频、音频用，比如「8s」「0:15」。展开时显示在卡片左下角 */
   duration?: string;
   /** 上传进度 0–100。不传就是已经上传完；传了卡片盖一层暗色加进度环 */
   progress?: number;
@@ -77,7 +77,7 @@ interface CardLayout {
   scale: number;
   opacity: number;
   z: number;
-  /** 底部名字显示不显示 */
+  /** 右上角序号显示不显示 */
   label: boolean;
   /** 在叠放里是不是看不见的（第 4 张起） */
   hidden: boolean;
@@ -163,8 +163,9 @@ interface Ghost {
 
 /**
  * 主站输入框左上角的参考区：72 见方，里面放参考素材。
- * 空：只有添加格；一个：卡片正放，右下角圆形上传按钮继续添加；多个：按添加顺序叠放，最后加的在最上面，露 3 张，底部写最上面那张的名字；
- * 鼠标移上去向右展开，浮在提示词上面，不把文字往下推，每张 72、间距 6，底部写名字；上传按钮同时变成最前面的添加格。移开马上收回叠放。
+ * 空：只有添加格；一个：卡片正放，右下角圆形上传按钮继续添加；多个：按添加顺序叠放，最后加的在最上面，露 3 张，右上角写最上面那张的序号；
+ * 鼠标移上去向右展开，浮在提示词上面，不把文字往下推，每张 72、间距 6，右上角写序号（和画布一样），鼠标移到哪张，那张的序号换成删除；
+ * 上传按钮同时变成最前面的添加格。移开马上收回叠放。
  * 动画照 BytePlus 参考区：卡片只用 transform 移动、缩放、旋转；400ms 起每多一张加 10ms，最多 700ms，缓动 --motion-ease-expand。
  * 放进 PromptBox 的 references 里用，被盖住的那几行字由输入框藏起来。Figma「模板 · 主站」页「输入框」分区。
  */
@@ -363,10 +364,11 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
             >
               <Icon name="AddSmall" className="kv-reference-stack__trigger-icon" />
             </button>
-            {entries.map(({ item, layout, ghost }) => (
+            {entries.map(({ item, layout, ghost, index }) => (
               <ReferenceStackCard
                 key={item.id}
                 item={item}
+                index={index}
                 layout={layout}
                 ghost={ghost}
                 enter={mounted.current}
@@ -387,6 +389,8 @@ ReferenceStack.displayName = 'ReferenceStack';
 
 interface CardProps {
   item: ReferenceStackItem;
+  /** 第几张，从 0 起，右上角写 index + 1 */
+  index: number;
   layout: CardLayout;
   /** 删掉了，正在播消失动画 */
   ghost: boolean;
@@ -397,7 +401,7 @@ interface CardProps {
   onItemClick?: (item: ReferenceStackItem) => void;
 }
 
-function ReferenceStackCard({ item, layout, ghost, enter, open, onRemove, onItemClick }: CardProps) {
+function ReferenceStackCard({ item, index, layout, ghost, enter, open, onRemove, onItemClick }: CardProps) {
   const [entered, setEntered] = useState(!enter);
   useEffect(() => {
     if (entered) return;
@@ -444,7 +448,7 @@ function ReferenceStackCard({ item, layout, ghost, enter, open, onRemove, onItem
         onItemClick(item);
       }}
     >
-      <ReferenceItem size={72} type={item.kind === 'audio' ? 'audio' : 'image'} src={item.src} weight={item.name} />
+      <ReferenceItem size={72} type={item.kind === 'audio' ? 'audio' : 'image'} src={item.src} badge={String(index + 1)} />
       {item.duration && <span className="kv-reference-stack__duration">{item.duration}</span>}
       {uploading && (
         <div className="kv-reference-stack__upload" role="progressbar" aria-label={`${item.name}上传中`} aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}>

@@ -1,4 +1,4 @@
-import { forwardRef, type HTMLAttributes, type ReactNode, type Ref } from 'react';
+import { forwardRef, useEffect, useState, type HTMLAttributes, type ReactNode, type Ref } from 'react';
 import { Icon } from '../Icon';
 import type { IconName } from '../icons';
 import { Avatar } from '../tabs-tags-avatar';
@@ -16,13 +16,13 @@ export interface ProcessRowProps extends Omit<HTMLAttributes<HTMLElement>, 'chil
   object?: ReactNode;
   /** 层级：一级 / 子项，默认一级。子项是展开列表里的一行，没有头像和箭头，不能点 */
   level?: ProcessRowLevel;
-  /** 状态：进行中（动作文字扫光）/ 完成 / 失败，默认完成 */
+  /** 状态：进行中 / 完成 / 失败，默认完成。进行中停留超过 0.5 秒，动作文字才扫光 */
   status?: ProcessRowStatus;
   /** 图标，常用 UseCanvas、Skill、Message、ImageGeneration。不传就不显示 */
   icon?: IconName;
   /** 头像图片地址（Avatar 24 · 图片）。不传就不显示，子项没有 */
   avatar?: string;
-  /** 显示箭头，默认开。一级带箭头时整行是按钮，点一下展开 / 收起；子项没有 */
+  /** 显示箭头，默认开。一级带箭头时整行是按钮，点一下展开 / 收起；箭头平时不显示，鼠标移上去、键盘聚焦、展开时才出。子项没有 */
   arrow?: boolean;
   /** 展开：受控。没有箭头的行没有展开状态 */
   expanded?: boolean;
@@ -31,6 +31,8 @@ export interface ProcessRowProps extends Omit<HTMLAttributes<HTMLElement>, 'chil
   /** 展开 / 收起时触发 */
   onExpandedChange?: (expanded: boolean) => void;
 }
+
+const SWEEP_DELAY = 500;
 
 /** Agent 过程行：一行显示思考、调工具、询问、生成。ref 给根元素：带箭头是 button，其余是 div。Figma「Agent」页 ProcessRow */
 export const ProcessRow = forwardRef<HTMLElement, ProcessRowProps>(function ProcessRow(
@@ -55,6 +57,16 @@ export const ProcessRow = forwardRef<HTMLElement, ProcessRowProps>(function Proc
   const hasArrow = !sub && arrow;
   const [expanded, setExpanded] = useControllable(expandedProp, defaultExpanded, onExpandedChange);
 
+  // 进行中停留超过 0.5 秒才扫光：快的工具一闪而过，不扫
+  const running = status === 'running';
+  const [sweep, setSweep] = useState(false);
+  useEffect(() => {
+    setSweep(false);
+    if (!running) return;
+    const t = window.setTimeout(() => setSweep(true), SWEEP_DELAY);
+    return () => window.clearTimeout(t);
+  }, [running]);
+
   const content = (
     <>
       {icon && <Icon name={icon} />}
@@ -67,7 +79,8 @@ export const ProcessRow = forwardRef<HTMLElement, ProcessRowProps>(function Proc
 
   const common = {
     className: cx('kv-process-row', sub && 'kv-process-row--sub', className),
-    'aria-busy': status === 'running' || undefined,
+    'aria-busy': running || undefined,
+    'data-sweep': running && sweep ? '' : undefined,
     'aria-invalid': status === 'failed' || undefined,
   };
 

@@ -1,77 +1,86 @@
-import { PageHeader, Tag } from '@shell';
-import { CopyAllTokens, TokenTable } from './tokens.demos';
+import { PageHeader } from '@shell';
+import { ColorCards, CopyAllTokens, TokenChip, TokenTable, TokenValue } from './tokens.demos';
 
 <PageHeader
   eyebrow="基础"
   title="变量"
-  lead="颜色、间距、圆角、字号、透明度、动效都用变量，不写死数值，不用吸管取色。只有深色一套主题。"
+  lead="颜色、间距、圆角、文字、动效都用变量，不写死数值。点变量名复制 var(--…)。"
   figma={['变量', '6:2']}
   code="kivi/tokens.css"
 />
 
-Figma「变量」页有 color、scale 两个集合。
-
-CSS 变量名由 Figma 名字的 `/` 换成 `-`、前面加 `--` 得到：`color/text/fill/secondary` → `--color-text-fill-secondary`。画布连线例外，用 Figma 里设的代码名。
-
-表里的「值」是从 `kivi/tokens.css` 读出来的，这一页不写死数值。点变量名复制 `var(--…)`。
-
-<Tag>新</Tag> v2 新增 &nbsp; <Tag kind="draft">占位</Tag> 取值待视觉确定，可以照用
-
 <CopyAllTokens />
 
-## 颜色
+## 色彩
 
-### 底色
+只有深色一套主题。
 
-界面从下往上分层，每层只用对应的颜色。`popup-raised` 已并入 popup，不要再用。
+### 主色
 
-<TokenTable group="bg" />
+品牌绿。只给主操作、选中、开关打开、进度，不用于大面积背景和正文。主要按钮用品牌渐变，一屏一个。
 
-### 填充与状态
+<ColorCards group="brand" />
+
+### 中性色
+
+界面的大部分。靠明暗分层：底色在最下，填充叠在上面，能点的悬停、按下各升一档。
+
+#### 底色
+
+每层只用对应的颜色。`popup-raised` 已并入 popup，不要再用。
+
+<ColorCards group="bg" />
+
+#### 填充与状态
 
 能点的东西从 8% 起：默认 8%、悬停 12%、按下 16%。4% 只用来区分大面积区域。叠加最多两层。
 
-<TokenTable group="fill" />
+<ColorCards group="fill" />
 
-### 文字与图标
+#### 文字与图标
 
 图标和文字用同一套颜色。由强到弱：primary → secondary → tertiary → placeholder → disabled。
 
-<TokenTable group="text" />
+<ColorCards group="text" />
 
-### 描边
+#### 描边
 
-<TokenTable group="border" />
-
-### 品牌色
-
-<TokenTable group="brand" />
+<ColorCards group="border" />
 
 ### 功能色
 
-文字和图标用实色，提示条和报错底色用对应的 subtle。取值都是占位。
+表示成功、警告、错误。文字和图标用实色，提示条和报错底色用对应的 subtle。取值都是占位。
 
-<TokenTable group="status" />
+<ColorCards group="status" />
 
-### 图片和视频上的控件
+### 遮罩和叠加
 
-画面颜色不可控，白色叠加在亮图上会看不清，所以叠在图片、视频上的按钮和标签用黑色半透明底。
+遮罩垫在模态弹窗下面。叠在图片、视频上的按钮和标签用 on-media：画面颜色不可控，白色叠加在亮图上看不清。
 
-<TokenTable group="on-media" />
+<ColorCards group="overlay" />
 
 ### 画布连线
 
-这组在 Figma 里单独设了代码名，不按命名规则转换。
+代码名是 Figma 里单独设的，不按 `/` 换 `-` 转换。
 
-<TokenTable group="connector" />
+<ColorCards group="connector" />
 
 ## 尺寸
 
 ### 间距
 
-组件内部用 2–12，组件之间用 12–32；面板内边距 16，弹窗内边距 24。
+同一组比组和组之间紧：同一组的并列项 4，一个组件的几部分之间 12，块和块之间 16–24。`--spacing-0` 只用来去掉间距。
 
-<TokenTable group="spacing" />
+| 变量 | CSS 变量 | 值 | padding | gap |
+|---|---|---|---|---|
+| spacing/2 | <TokenChip token="--spacing-2" /> | <TokenValue token="--spacing-2" /> | ButtonGroup 四周 | — |
+| spacing/4 | <TokenChip token="--spacing-4" /> | <TokenValue token="--spacing-4" /> | Menu 四周<br />分段选择四周 | 图标和文字：Button、Tag、Select<br />并列项：菜单条目、分段选项、ButtonGroup 按钮、追问选项、参考图、侧栏组内<br />参数标题和控件 |
+| spacing/6 | <TokenChip token="--spacing-6" /> | <TokenValue token="--spacing-6" /> | Tag 左右<br />Tooltip 上下<br />节点工具栏四周 | 图标和文字：侧栏条目、选项卡<br />工具条左侧控件：输入框、生成面板<br />过程列表各行 |
+| spacing/8 | <TokenChip token="--spacing-8" /> | <TokenValue token="--spacing-8" /> | Button 小左右<br />Toast 上下 | 图标和文字：菜单项、输入框、Toast、勾选框<br />Tooltip 文字和快捷键<br />一排按钮：弹窗底部、确认卡片、节点工具栏、输入框工具条右侧 |
+| spacing/12 | <TokenChip token="--spacing-12" /> | <TokenValue token="--spacing-12" /> | 控件左右：Button 中、Select、菜单项、选项卡、侧栏条目、Tooltip<br />参数面板四周<br />画布工具栏、对话气泡上下<br />侧栏左右 | 一个组件的几部分：输入框、参数面板、追问面板、确认卡片、生成记录 |
+| spacing/16 | <TokenChip token="--spacing-16" /> | <TokenValue token="--spacing-16" /> | 控件左右：Button 大、选项卡大<br />面板四周：输入框、生成面板、确认卡片、追问面板<br />Toast、画布工具栏、对话气泡左右<br />侧栏上下 | 弹窗的标题、正文、底部<br />生成面板各段、画布工具栏分组<br />空状态插图和文字<br />侧栏组和组 |
+| spacing/24 | <TokenChip token="--spacing-24" /> | <TokenValue token="--spacing-24" /> | 弹窗四周<br />节点失败态、引导态四周<br />页面左右 | 生成记录之间<br />空状态文字和按钮 |
+| spacing/32 | <TokenChip token="--spacing-32" /> | <TokenValue token="--spacing-32" /> | — | 页面大分区之间 |
 
 ### 圆角
 

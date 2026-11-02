@@ -1,6 +1,6 @@
 import { useEffect, useInsertionEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Icon, ICON_GROUPS, type IconName } from '@kivi';
-import { copyText, Tag } from '@shell';
+import { copyText } from '@shell';
 
 // 图标页的数据和演示。规范文字在 icons.mdx。
 // 图标本身（160 个）在 kivi/icons.ts，分组 ICON_GROUPS 也在那里；这里只写每个图标的意思和备注。
@@ -230,28 +230,25 @@ const CSS = `
 .doc ol > li + li { margin-top: var(--spacing-8); }
 .doc ol ul { margin: var(--spacing-4) 0 0; }
 
-/* 颜色演示 */
-.ic-colors { display: flex; flex-wrap: wrap; gap: var(--spacing-24); }
-.ic-color { display: grid; justify-items: center; gap: var(--spacing-8); }
-.ic-color small { color: var(--color-text-fill-tertiary); font-size: var(--font-size-12); line-height: var(--font-line-height-20); white-space: nowrap; }
-.ic-on-brand { display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--border-radius-8); background: var(--color-brand-solid); }
-
 /* 图标表 */
 .ic-count { margin-left: var(--spacing-6); color: var(--color-text-fill-tertiary); font-size: var(--font-size-13); font-weight: var(--font-weight-regular); }
-.ic-table th:first-child, .ic-table td:first-child { width: 88px; }
-.ic-table th:nth-child(2), .ic-table td:nth-child(2) { width: 240px; }
-.ic-table th:nth-child(3), .ic-table td:nth-child(3) { width: 200px; }
-.ic-table td:nth-child(2) { white-space: nowrap; }
-.ic-table td:nth-child(4) .shell-tag { margin-right: var(--spacing-6); }
-.ic-name {
-  padding: 2px var(--spacing-6); border: 0; border-radius: var(--border-radius-4);
-  background: var(--color-bg-fill-container-light-1); color: var(--color-text-fill-primary);
-  font: inherit; font-family: var(--shell-mono); font-size: var(--font-size-12); line-height: var(--font-line-height-20);
-  cursor: pointer;
+.ic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--spacing-8); margin: var(--spacing-16) 0 var(--spacing-32); }
+.ic-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-12);
+  min-width: 0; aspect-ratio: 1; padding: var(--spacing-12) var(--spacing-8);
+  border: 0; border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-2); color: var(--color-text-fill-primary);
+  font: inherit; cursor: pointer;
   transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
 }
-.ic-name:hover { background: var(--color-bg-fill-container-light-1-hover); }
-.ic-name.is-copied { background: var(--color-brand-subtle); color: var(--color-brand-solid); }
+.ic-tile:hover { background: var(--color-bg-fill-container-light-2-hover); }
+.ic-tile:active { background: var(--color-bg-fill-container-light-2-pressed); }
+.ic-tile__name {
+  max-width: 100%; overflow: hidden; color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12); line-height: var(--font-line-height-20);
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.ic-tile__name[data-copied] { color: var(--color-brand-solid); }
 .ic-empty { margin: var(--spacing-24) 0; color: var(--color-text-fill-tertiary); }
 `;
 
@@ -343,16 +340,16 @@ export function IconSearch() {
 
 // ---------- 图标表 ----------
 
-/** 点名字复制名字 */
-function NameChip({ name }: { name: string }) {
+/** 一个图标：图标 + 名字。悬停看意思，点击复制名字 */
+function IconTile({ name }: { name: IconName }) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<number>();
   useEffect(() => () => window.clearTimeout(timer.current), []);
   return (
     <button
       type="button"
-      className={copied ? 'ic-name is-copied' : 'ic-name'}
-      title="点击复制名字"
+      className="ic-tile"
+      title={`${ICON_INFO[name].means}。点击复制名字`}
       onClick={() => {
         copyText(name).then(() => {
           setCopied(true);
@@ -361,12 +358,15 @@ function NameChip({ name }: { name: string }) {
         });
       }}
     >
-      {name}
+      <Icon name={name} size={24} />
+      <span className="ic-tile__name" data-copied={copied || undefined}>
+        {copied ? '已复制' : name}
+      </span>
     </button>
   );
 }
 
-/** 全部 160 个图标，按 ICON_GROUPS 分组：图标 | 名字 | 意思 | 备注 */
+/** 全部图标，按 ICON_GROUPS 分组排成网格。意思和备注在 ICON_INFO 里，页面上不显示，用来搜索 */
 export function IconTable() {
   useIconStyles();
   const q = useQuery();
@@ -375,94 +375,22 @@ export function IconTable() {
 
   return (
     <>
-      <div className="ic-table" id="icon-table">
-        {groups.map(({ g, rows }) => {
-          const gi = GROUP_INFO[g.name];
-          return (
-            <section className="ic-group" key={g.name}>
-              <h3 id={gi?.id}>
-                {g.name} <span className="ic-count">{g.icons.length}</span>
-              </h3>
-              {gi && <p>{gi.desc}</p>}
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>图标</th>
-                      <th>名字</th>
-                      <th>意思</th>
-                      <th>备注</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((name) => {
-                      const i = ICON_INFO[name];
-                      return (
-                        <tr key={name}>
-                          <td>
-                            <Icon name={name} size={24} />
-                          </td>
-                          <td>
-                            <NameChip name={name} />
-                          </td>
-                          <td>{i.means}</td>
-                          <td>
-                            {i.tag && <Tag kind="draft">{i.tag}</Tag>}
-                            {i.note}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          );
-        })}
+      <div id="icon-table">
+        {groups.map(({ g, rows }) => (
+          <section className="ic-group" key={g.name}>
+            <h3 id={GROUP_INFO[g.name]?.id}>
+              {g.name} <span className="ic-count">{g.icons.length}</span>
+            </h3>
+            <div className="ic-grid">
+              {rows.map((name) => (
+                <IconTile key={name} name={name} />
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
       {groups.length === 0 && <p className="ic-empty">没有找到。换个词试试，或者按「怎么加新图标」去加。</p>}
     </>
-  );
-}
-
-// ---------- 颜色演示 ----------
-
-const COLORS: { label: string; token: string; onBrand?: boolean }[] = [
-  { label: 'primary', token: '--color-text-fill-primary' },
-  { label: 'secondary', token: '--color-text-fill-secondary' },
-  { label: 'tertiary', token: '--color-text-fill-tertiary' },
-  { label: 'disabled', token: '--color-text-fill-disabled' },
-  { label: 'on-brand', token: '--color-text-fill-on-brand', onBrand: true },
-  { label: 'brand/solid', token: '--color-brand-solid' },
-  { label: 'danger', token: '--color-status-danger' },
-];
-
-/** 图标颜色：跟着文字颜色变量走 */
-export function IconColors() {
-  useIconStyles();
-  return (
-    <figure className="shell-demo">
-      <div className="shell-demo-preview">
-        <div className="ic-colors">
-          {COLORS.map((c) => {
-            const icon = <Icon name="Add" size={24} />;
-            return c.onBrand ? (
-              <div className="ic-color" key={c.label}>
-                <span className="ic-on-brand" style={{ color: `var(${c.token})` }}>
-                  {icon}
-                </span>
-                <small>{c.label}</small>
-              </div>
-            ) : (
-              <div className="ic-color" key={c.label} style={{ color: `var(${c.token})` }}>
-                {icon}
-                <small>{c.label}</small>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </figure>
   );
 }
 
