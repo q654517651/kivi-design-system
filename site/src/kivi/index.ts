@@ -6,6 +6,7 @@ import './tokens.css';
 import './base.css';
 
 export * from './icons';
+export * from './icons-v3';
 export * from './Icon';
 export * from './utils';
 

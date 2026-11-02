@@ -50,7 +50,7 @@
     添加格 trigger
       data-compact    缩成右下角的小圆加号
     卡片 card
-      data-labeled    底部显示名字
+      data-labeled    右上角显示序号
       data-uploading  上传中
       data-leaving    被删掉，正在播消失动画
       data-clickable  传了 onItemClick，鼠标变手型
@@ -381,7 +381,7 @@
   height: 72px;
   overflow: hidden;
   border-radius: var(--border-radius-8);
-  /* 底部名字条带背景模糊，卡片旋转时只靠 overflow 裁不住圆角，再用 clip-path 裁一次 */
+  /* 序号角标、时长带背景模糊，卡片旋转时只靠 overflow 裁不住圆角，再用 clip-path 裁一次 */
   clip-path: inset(0 round var(--border-radius-8));
   transform-origin: 50% 50%;
   transition:
@@ -421,42 +421,56 @@
     opacity var(--motion-duration-150) var(--motion-ease-in);
 }
 
-/* 底部名字：只有最上面那张、单张、展开时才显示。出现 150ms ease-out，消失 100ms ease-in。
-   叠放时卡片缩小了，名字条的高度、字号按比例放大，看上去还是 16 高、12 号字；和卡片缩放同一个节奏变，过程中大小基本不变 */
-.kv-reference-stack__card .kv-reference-item__weight {
+/* 右上角序号：只有最上面那张、单张、展开时才显示，和画布的 ReferenceItem 一样（线上逻辑）。出现 150ms ease-out，消失 100ms ease-in。
+   叠放时卡片缩小了，角标的尺寸、内边距、圆角、字号按比例放大，看上去还是 20 高、12 号字；和卡片缩放同一个节奏变，过程中大小基本不变 */
+.kv-reference-stack__card .kv-reference-item__badge {
   opacity: 0;
   transition:
     opacity var(--motion-duration-100) var(--motion-ease-in),
+    min-width var(--kv-reference-stack-duration) var(--motion-ease-expand),
     height var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    padding var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    border-radius var(--kv-reference-stack-duration) var(--motion-ease-expand),
     font-size var(--kv-reference-stack-duration) var(--motion-ease-expand),
     line-height var(--kv-reference-stack-duration) var(--motion-ease-expand);
 }
 
-.kv-reference-stack__card[data-labeled] .kv-reference-item__weight {
+.kv-reference-stack__card[data-labeled] .kv-reference-item__badge {
   opacity: 1;
   transition:
     opacity var(--motion-duration-150) var(--motion-ease-out),
+    min-width var(--kv-reference-stack-duration) var(--motion-ease-expand),
     height var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    padding var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    border-radius var(--kv-reference-stack-duration) var(--motion-ease-expand),
     font-size var(--kv-reference-stack-duration) var(--motion-ease-expand),
     line-height var(--kv-reference-stack-duration) var(--motion-ease-expand);
 }
 
-.kv-reference-stack__tray[data-stacked] .kv-reference-item__weight {
-  height: calc(16px / var(--kv-reference-stack-scale));
+.kv-reference-stack__tray[data-stacked] .kv-reference-item__badge {
+  min-width: calc(20px / var(--kv-reference-stack-scale));
+  height: calc(20px / var(--kv-reference-stack-scale));
+  padding: 0 calc(var(--spacing-4) / var(--kv-reference-stack-scale));
+  border-radius: 0 calc(var(--border-radius-8) / var(--kv-reference-stack-scale)) 0 calc(var(--border-radius-4) / var(--kv-reference-stack-scale));
   font-size: calc(var(--font-size-12) / var(--kv-reference-stack-scale));
   line-height: calc(14px / var(--kv-reference-stack-scale));
 }
 
-/* 上传中不写名字，Figma 的上传中状态只有暗色和进度环 */
-.kv-reference-stack__card[data-uploading] .kv-reference-item__weight {
+/* 上传中不写序号，Figma 的上传中状态只有暗色和进度环 */
+.kv-reference-stack__card[data-uploading] .kv-reference-item__badge {
   opacity: 0;
 }
 
-/* 视频、音频的时长：展开后显示在左上角（Figma 的 ReferenceItem 把时长放左下，会和底部名字重叠，位置待确认）。
-   展开时等卡片挪开 150ms 再 150ms ease-out 出现 */
+/* 展开后鼠标移到某一张上：序号隐藏，换成删除，两个不同时出现（线上逻辑） */
+.kv-reference-stack__tray[data-open] .kv-reference-stack__card:where(:hover, :focus-within) .kv-reference-item__badge {
+  opacity: 0;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+/* 视频、音频的时长：展开后显示在左下角，和 ReferenceItem 一样。展开时等卡片挪开 150ms 再 150ms ease-out 出现 */
 .kv-reference-stack__duration {
   position: absolute;
-  top: 2px;
+  bottom: 2px;
   left: 2px;
   display: flex;
   align-items: center;
@@ -480,7 +494,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-out) var(--motion-duration-150);
 }
 
-/* 删除：展开后悬停或聚焦到某一张，右上角出现。样子 Figma 没定，待确认 */
+/* 删除：展开后悬停或聚焦到某一张，右上角出现，同时那张的序号隐藏。样子 Figma 没定，待确认 */
 .kv-reference-stack__remove {
   position: absolute;
   top: 4px;

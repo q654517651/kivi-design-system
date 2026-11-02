@@ -1,6 +1,7 @@
 /*
   KIVI · Agent
   Figma「Agent」页：ProcessRow、UserMessage、MediaStack、QuestionPanel（QuestionOption）、ActionCard、SendButton、FileCard。
+  ProcessGroup（一组工具调用滚动成一行）Figma 还没有，交互照 Codex、Claude。
   依赖 tokens.css、base.css、button.css（按钮用 kv-button、kv-icon-button）。
   别的页的组件：头像、角标 Tag 用 tabs-tags-avatar 的 Avatar、Tag；
   用户消息里的素材用 canvas 的 ReferenceItem（里面是 AssetThumb）。
@@ -18,7 +19,8 @@
     </button>
 
   状态
-    ProcessRow     进行中 aria-busy="true"；失败 aria-invalid="true"；完成不用写；展开 aria-expanded="true"
+    ProcessRow     进行中 aria-busy="true"，停留超过 0.5 秒再加 data-sweep 扫光；失败 aria-invalid="true"；完成不用写；展开 aria-expanded="true"
+    ProcessGroup   滚动中 .kv-process-group__line 写 data-rolling；进来的一行 data-enter，出去的 data-leave
     QuestionOption 选中 aria-checked="true"（单选 role="radio"，多选 role="checkbox"）；禁用 disabled（「其他」写 data-disabled）
     QuestionPanel  禁用（提交中）data-disabled + aria-busy="true"；一项都没选时「确认提交」是 disabled
     SendButton     禁用 disabled；生成中 aria-busy="true"，里面换成 kv-send-button__stop
@@ -67,10 +69,12 @@ button.kv-process-row {
   width: 20px;
   height: 20px;
   color: var(--kv-row-icon);
+  transition: color var(--motion-duration-100) var(--motion-ease-in-out);
 }
 
 .kv-process-row__action {
   color: var(--kv-row-action);
+  transition: color var(--motion-duration-100) var(--motion-ease-in-out);
 }
 
 .kv-process-row__object {
@@ -78,27 +82,55 @@ button.kv-process-row {
   overflow: hidden;
   color: var(--kv-row-object);
   text-overflow: ellipsis;
+  transition: color var(--motion-duration-100) var(--motion-ease-in-out);
 }
 
-/* 箭头：固定 16，tertiary。展开朝上；Figma 是 DownArrowSmall / UpArrowSmall 两个图标，代码用旋转 180° 代替 */
+/* 能点的一级行（带箭头）：悬停、键盘聚焦亮一档，图标和动作 secondary → primary，对象 tertiary → secondary，箭头 tertiary → secondary；100ms ease-in-out */
+button.kv-process-row:is(:hover, :focus-visible, .is-hover) {
+  --kv-row-icon: var(--color-text-fill-primary);
+  --kv-row-action: var(--color-text-fill-primary);
+  --kv-row-object: var(--color-text-fill-secondary);
+}
+
+/* 箭头：固定 16，tertiary。展开朝上；Figma 是 DownArrowSmall / UpArrowSmall 两个图标，代码用旋转 180° 代替。
+   平时不显示，鼠标移上去、键盘聚焦、展开时才出（照 Codex、Claude）；位置一直留着，出来时不挤动文字。手机没有悬停，一直显示 */
 .kv-process-row > .kv-process-row__arrow {
   width: 16px;
   height: 16px;
   color: var(--color-text-fill-tertiary);
-  transition: transform var(--motion-duration-150) var(--motion-ease-in-out);
+  opacity: 0;
+  transition:
+    transform var(--motion-duration-150) var(--motion-ease-in-out),
+    opacity var(--motion-duration-150) var(--motion-ease-out),
+    color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__arrow {
+  color: var(--color-text-fill-secondary);
+}
+
+.kv-process-row:is(:hover, :focus-visible, [aria-expanded="true"], .is-hover) > .kv-process-row__arrow {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .kv-process-row > .kv-process-row__arrow {
+    opacity: 1;
+  }
 }
 
 .kv-process-row[aria-expanded="true"] > .kv-process-row__arrow {
   transform: rotate(180deg);
 }
 
-/* 进行中：图标 primary，动作文字扫光，对象 secondary */
+/* 进行中：图标、动作文字 primary，对象 secondary；停留超过 0.5 秒（data-sweep）动作文字才扫光，快的一闪而过不扫 */
 .kv-process-row[aria-busy="true"] {
   --kv-row-icon: var(--color-text-fill-primary);
+  --kv-row-action: var(--color-text-fill-primary);
   --kv-row-object: var(--color-text-fill-secondary);
 }
 
-.kv-process-row[aria-busy="true"] .kv-process-row__action {
+.kv-process-row[aria-busy="true"][data-sweep] .kv-process-row__action {
   background:
     linear-gradient(
       90deg,
@@ -123,8 +155,12 @@ button.kv-process-row {
   }
 }
 
+/* 减少动态效果：不扫光，进行中就是 primary 字 */
 @media (prefers-reduced-motion: reduce) {
-  .kv-process-row[aria-busy="true"] .kv-process-row__action {
+  .kv-process-row[aria-busy="true"][data-sweep] .kv-process-row__action {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--kv-row-action);
     animation: none;
   }
 }
@@ -167,6 +203,95 @@ button.kv-process-row {
   margin-top: -24px;
   background: linear-gradient(transparent, var(--kv-fade-bg, var(--color-bg-fill-base)));
   pointer-events: none;
+}
+
+/* ---------- ProcessGroup：一组工具调用 ----------
+   进行中只占一行，显示当前在调的工具；换下一个时这一行往上滚：新的从下面进来（出现 ease-out），旧的往上出去（消失 ease-in），各 200ms。
+   每个工具最少停 0.3 秒，这期间又来了新的直接跳到最新那个。全部做完换成「调用了 N 个工具」，不自动展开；
+   做完才能点开，展开后列出每个工具，行距 6，超过 6 个底部渐隐。只调了 1 个就直接显示那一个，不能展开。 */
+.kv-process-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+/* 一行：进来和出去的两行叠在同一格里；滚动时才裁掉多出去的部分，平时不裁，聚焦描边不会被切 */
+.kv-process-group__line {
+  display: grid;
+  max-width: 100%;
+}
+
+.kv-process-group__line[data-rolling] {
+  overflow: hidden;
+}
+
+.kv-process-group__slot {
+  display: flex;
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.kv-process-group__slot[data-enter] {
+  animation: kv-process-roll-in var(--motion-duration-200) var(--motion-ease-out) both;
+}
+
+.kv-process-group__slot[data-leave] {
+  animation: kv-process-roll-out var(--motion-duration-200) var(--motion-ease-in) both;
+  pointer-events: none;
+}
+
+@keyframes kv-process-roll-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes kv-process-roll-out {
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+/* 展开收起：列表一直在，高度从 0 推到内容高、把下面的内容往下推，同时淡入；收起倒着走。
+   时长按距离（组件里写 --kv-process-group-duration：100 以内 200ms，再长 300ms），ease-in-out。收起后藏起来，Tab 不进去 */
+.kv-process-group__drawer {
+  display: grid;
+  grid-template-rows: 0fr;
+  align-self: stretch;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--kv-process-group-duration) var(--motion-ease-in-out),
+    opacity var(--kv-process-group-duration) var(--motion-ease-in-out),
+    visibility 0s linear var(--kv-process-group-duration);
+}
+
+.kv-process-group__drawer[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--kv-process-group-duration) var(--motion-ease-in-out),
+    opacity var(--kv-process-group-duration) var(--motion-ease-in-out),
+    visibility 0s linear 0s;
+}
+
+.kv-process-group__drawer-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 列表和汇总行间距 6，放在会被收起的那块里，收起后不留空 */
+.kv-process-group__drawer-inner > .kv-process-list {
+  margin-top: var(--spacing-6);
+}
+
+/* 汇总里的「N 个失败」用危险色 */
+.kv-process-group__failed {
+  color: var(--color-status-danger);
 }
 
 /* ---------- UserMessage：用户消息 ---------- */

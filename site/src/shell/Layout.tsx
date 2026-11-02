@@ -1,9 +1,19 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Button, Icon, IconButton } from '@kivi';
+import { Button, Icon, IconButton, IconSetContext, TabItem, Tabs, type IconSet } from '@kivi';
 import { NAV } from './nav';
 
 const FIGMA = 'https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2';
+
+// 右上角切图标版本（V2 / V3 预览，定了只留一个就删掉），记在本机浏览器里
+const ICON_SET_KEY = 'kivi-icon-set';
+function readIconSet(): IconSet {
+  try {
+    return localStorage.getItem(ICON_SET_KEY) === 'v3' ? 'v3' : 'v2';
+  } catch {
+    return 'v2';
+  }
+}
 
 type Head = { id: string; text: string };
 
@@ -14,6 +24,15 @@ export function Layout() {
   const [heads, setHeads] = useState<Head[]>([]);
   const [current, setCurrent] = useState('');
   const [navOpen, setNavOpen] = useState(false);
+  const [iconSet, setIconSet] = useState<IconSet>(readIconSet);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(ICON_SET_KEY, iconSet);
+    } catch {
+      // 无痕模式之类存不了，刷新后回到 V2
+    }
+  }, [iconSet]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,6 +73,7 @@ export function Layout() {
   }, [heads]);
 
   return (
+    <IconSetContext.Provider value={iconSet}>
     <div className={navOpen ? 'shell-root nav-open' : 'shell-root'}>
       <header className="shell-top">
         <IconButton icon="Sidebar" label="目录" className="shell-menu" onClick={() => setNavOpen(!navOpen)} />
@@ -63,6 +83,13 @@ export function Layout() {
         </NavLink>
         <span className="shell-badge">草稿 0.1</span>
         <span className="shell-spacer" />
+        <span className="shell-icon-set">
+          <span className="shell-icon-set-label">图标</span>
+          <Tabs variant="segment" value={iconSet} onChange={(v) => setIconSet(v as IconSet)} aria-label="图标版本">
+            <TabItem value="v2">V2</TabItem>
+            <TabItem value="v3">V3</TabItem>
+          </Tabs>
+        </span>
         <a href={FIGMA} target="_blank" rel="noopener">
           <Button size="sm" variant="text" tabIndex={-1}>
             Figma 组件库
@@ -130,5 +157,6 @@ export function Layout() {
         </aside>
       </div>
     </div>
+    </IconSetContext.Provider>
   );
 }

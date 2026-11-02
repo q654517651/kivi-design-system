@@ -101,6 +101,7 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 - 状态齐全：悬停、按下、禁用、加载、空、失败。
 - 动效的缓动和时长用变量，没有匀速（循环除外），没有默认 `ease`。
 - 图标是 Figma 图标表里的名字和图形，不是 Lucide 或别的图标库。
+- 模型厂 Logo 用图标表里现有的；缺的从 [LobeHub Icons](https://lobehub.com/icons) 下 Mono 版补，不从别处找、不用图标库里仿的、不自己画。见「图标 · 模型厂 Logo」。
 - 没用旧名。遇到旧变量名、旧组件名、旧图标名，查「旧名对照」，给出新名。
 
 ### 每条问题怎么写
@@ -124,7 +125,7 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 |---|---|---|---|
 | 变量 | `docs/foundations/tokens.mdx` | `kivi/tokens.css` | 要变量名、取值，或核对某个值该用哪个变量 |
 | 动效 | `docs/foundations/motion.mdx`、`motion-generating.mdx` | `kivi/generating/` | 做任何过渡和动画；生成中的点阵动效 |
-| 图标 | `docs/foundations/icons.mdx` | `kivi/Icon.tsx`、`kivi/icons.ts` | 选图标、确认图标名 |
+| 图标 | `docs/foundations/icons.mdx` | `kivi/Icon.tsx`、`kivi/icons.ts` | 选图标、确认图标名、补模型厂 Logo |
 | 占位图 | `docs/foundations/placeholder-images.mdx` | `kivi/placeholder-image/` | 用户作品的位置要放图 |
 | 按钮 | `docs/components/button.mdx` | `kivi/button/` | Button、IconButton、ButtonGroup |
 | 菜单和提示 | `docs/components/menus-tooltip.mdx` | `kivi/menus-tooltip/` | Tooltip、菜单、下拉、右键菜单、侧栏条目 |

@@ -2,7 +2,10 @@ import { Demo, PageHeader, Tag } from '@shell';
 import {
   ActionCardPlayground,
   FileCardPlayground,
+  MainSiteAgentDemo,
   MediaStackPlayground,
+  ProcessGroupPlayground,
+  ProcessGroupSim,
   ProcessRowPlayground,
   QuestionFlowDemo,
   QuestionPanelPlayground,
@@ -34,13 +37,17 @@ import {
 <PageHeader
   eyebrow="业务组件"
   title="Agent"
-  lead="Agent 对话里的业务组件：过程行、用户消息、结果叠放、追问面板、确认卡片、发送按钮、文件卡（废弃）。"
+  lead="Agent 对话里的业务组件：过程行、工具调用组、用户消息、结果叠放、追问面板、确认卡片、发送按钮、文件卡（废弃）。主站 Agent 和画布侧栏 Agent 用同一套。"
   figma={['Agent', '340:658']}
   status="待确认 0.1.0"
   code="kivi/agent"
 />
 
-## 示例：侧栏 Agent
+## 示例：主站 Agent
+
+<MainSiteAgentDemo />
+
+## 示例：画布侧栏 Agent
 
 ### 对话：生成图片
 
@@ -50,7 +57,13 @@ import {
   <div style={{ color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>
     好的，马上为你同时生成 10 张小狗图片！
   </div>
-  <ProcessRow icon="UseCanvas" action="调用了多个工具" />
+  <ProcessGroup
+    steps={[
+      { icon: 'Skill', action: '读取画布操作规范' },
+      { icon: 'UseCanvas', action: '创建节点', object: '「可爱修狗 11-边牧 v2」' },
+      { icon: 'UseCanvas', action: '更新参数', object: '「可爱修狗 11-边牧 v2」' },
+    ]}
+  />
   <div style={{ color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>
     新节点「可爱修狗 11-边牧 v2」已创建，现在发起生成审批。
   </div>
@@ -92,22 +105,13 @@ import {
 
 <ProcessRowPlayground />
 
-### 展开列表
+## ProcessGroup
 
-<Demo code={`
-<div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 420, maxWidth: '100%' }}>
-  <ProcessRow icon="UseCanvas" action="调用了多个工具" defaultExpanded />
-  <div className="kv-process-list kv-process-list--fade">
-    <ProcessRow level="sub" icon="Skill" action="读取画布操作规范" />
-    <ProcessRow level="sub" icon="UseCanvas" action="创建节点" object="「魔法少女分镜脚本」" />
-    <ProcessRow level="sub" icon="UseCanvas" action="更新节点" object="「魔法少女分镜脚本」" />
-    <ProcessRow level="sub" icon="Skill" action="读取画布操作规范" />
-    <ProcessRow level="sub" icon="UseCanvas" action="创建节点" object="「魔法少女视频生成」" />
-    <ProcessRow level="sub" icon="UseCanvas" action="执行节点" object="「魔法少女视频生成」" />
-    <ProcessRow level="sub" status="running" icon="Skill" action="读取礼物等级细则" />
-  </div>
-</div>
-`} />
+<ProcessGroupPlayground />
+
+### 调用过程：一行滚动
+
+<Demo noCode scope={{ ProcessGroupSim }} code={`<ProcessGroupSim count={8} />`} />
 
 ## UserMessage
 
@@ -172,20 +176,43 @@ import {
 
 ### ProcessRow
 
-一行，行高 20，各部分间距 4 `--spacing-4`。其余原生 `<div>` 属性都能传，带箭头的一级整行是 `<button>`。
+一行，行高 20，各部分间距 4 `--spacing-4`。其余原生 `<div>` 属性都能传，带箭头的一级整行是 `<button>`，悬停、键盘聚焦时亮一档：图标和动作 secondary → primary，对象 tertiary → secondary，箭头 tertiary → secondary，100ms ease-in-out。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `action` | `ReactNode` | — | 动作文字，必填。14 / 20 常规 `--font-size-14`、`--font-line-height-20`，比如「创建节点」 |
 | `object` | `ReactNode` | — | 对象文字，比如「活动标题」，比动作淡一档。不传不显示 |
 | `level` | `"main"` `"sub"` | `"main"` | 一级 / 子项。子项是展开列表里的行，没有头像和箭头，不能点 |
-| `status` | `"running"` `"done"` `"failed"` | `"done"` | 进行中：动作文字扫光 / 完成 / 失败：图标和动作文字用 status/danger |
+| `status` | `"running"` `"done"` `"failed"` | `"done"` | 进行中：图标、动作文字 primary，停留超过 0.5 秒动作文字才扫光（1.4s 一圈）/ 完成 / 失败：图标和动作文字用 status/danger |
 | `icon` | `IconName` | — | 图标 20，常用 `UseCanvas` `Skill` `Message` `ImageGeneration`。不传不显示 |
 | `avatar` | `string` | — | 头像地址，Avatar 24 · 图片，圆形。不传不显示，子项没有 |
-| `arrow` | `boolean` | `true` | 箭头 16，tertiary，只放 `DownArrowSmall`，展开时转 180°。子项没有 |
+| `arrow` | `boolean` | `true` | 箭头 16，tertiary，只放 `DownArrowSmall`，展开时转 180°。平时不显示，鼠标移上去、键盘聚焦、展开时才出（150ms ease-out），位置一直留着；手机一直显示。子项没有 |
 | `expanded` | `boolean` | — | 展开：受控。没有箭头的行没有展开状态 |
 | `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+
+### ProcessGroup
+
+Agent 两段话之间连续调的工具算一组。进行中只占一行，显示当前在调的工具；换下一个时往上滚：新的从下面进来、旧的往上出去，各 200ms（出现 ease-out、消失 ease-in）。每个工具最少停 0.3 秒，这期间又来了新的直接跳到最新那个。全部做完换成「调用了 N 个工具」，不自动展开；做完才能点开，展开后列出每个工具，行距 6 `--spacing-6`，最高 160，超过 6 个底部渐隐；展开时列表从 0 推到内容高、把下面的内容往下推，同时淡入，收起倒着走，ease-in-out，列表 100 以内 200ms、再长 300ms。只调了 1 个就直接显示那一个，不能展开。生成、询问、确认不放进组里，各自出自己的块。Agent 的文字回复不折叠。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `steps` | `ProcessStep[]` | — | 这一组调的工具，必填，按调用顺序，最后一个是当前在调的。每项见下表 |
+| `running` | `boolean` | 看最后一个是不是进行中 | 还在调用中。做完了传 `false`，或者最后一个不再是进行中 |
+| `icon` | `IconName` | `"Tool"` | 做完后汇总行的图标 |
+| `expanded` | `boolean` | — | 展开：受控。只有做完、调了 2 个及以上才能展开 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+
+`steps` 每一项：
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `id` | `string` | 下标 | 唯一标识 |
+| `icon` | `IconName` | — | 图标，常用 `UseCanvas` `Skill` `Message` |
+| `action` | `ReactNode` | — | 动作文字，必填，比如「创建节点」 |
+| `object` | `ReactNode` | — | 对象文字，比如「「分镜脚本」」 |
+| `status` | `"running"` `"done"` `"failed"` | `"done"` | 状态。有失败的，汇总写「调用了 N 个工具，M 个失败」，「M 个失败」用 status/danger |
 
 ### UserMessage
 

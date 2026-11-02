@@ -5,6 +5,7 @@ import {
   Bell,
   Bot,
   Braces,
+  Compass,
   Globe,
   House,
   Image,
@@ -46,6 +47,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: '基础',
     items: [
+      { id: 'guidelines', icon: Compass, title: '设计指南', path: '/foundations/guidelines', load: () => import('../docs/foundations/guidelines.mdx') },
       { id: 'tokens', icon: Palette, title: '变量', path: '/foundations/tokens', load: () => import('../docs/foundations/tokens.mdx') },
       { id: 'motion', icon: Sparkles, title: '动效', path: '/foundations/motion', load: () => import('../docs/foundations/motion.mdx') },
       { id: 'icons', icon: Shapes, title: '图标', path: '/foundations/icons', load: () => import('../docs/foundations/icons.mdx') },

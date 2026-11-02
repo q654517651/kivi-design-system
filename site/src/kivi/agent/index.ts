@@ -1,4 +1,5 @@
 export * from './ProcessRow';
+export * from './ProcessGroup';
 export * from './UserMessage';
 export * from './MediaStack';
 export * from './QuestionPanel';
