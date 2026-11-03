@@ -10,8 +10,8 @@ import {
   type ReferenceKind,
   type ReferenceStackItem,
 } from '@kivi';
-import { Playground } from '@shell';
-import { AudioModelControls, CountSelect, ImageModelControls, TaskSelect, VideoModelControls } from './generation';
+import { Playground, type PlaygroundState } from '@shell';
+import { AgentControls, AudioCharCount, AudioModelControls, CountSelect, ImageModelControls, TaskSelect, VideoModelControls } from './generation';
 
 // 主站输入框的属性面板和可操作演示。参数表在 main-site.mdx 最下面
 
@@ -43,6 +43,12 @@ const noop = () => {};
 // 下拉、参数面板都用 generation.tsx 里共用的那一份，和画布生成面板一样：选项、顺序、图标、展开方向都一致
 
 const TOOLBARS: Record<string, () => JSX.Element> = {
+  agent: () => (
+    <>
+      <TaskSelect defaultValue="agent" />
+      <AgentControls />
+    </>
+  ),
   image: () => (
     <>
       <TaskSelect defaultValue="image" />
@@ -72,6 +78,7 @@ type BoxState = { refs: boolean; text: string; mode: string };
 
 const TEXT: Record<string, string> = { empty: '', short: SHORT, long: LONG, huge: HUGE };
 const PLACEHOLDER: Record<string, string> = {
+  agent: '输入想法、剧本或上传参考，支持「/」使用技能，@ 添加主体，和 Agent 一起创作',
   image: '描述你想生成的图片，可以上传参考图',
   video: '描述你想生成的视频，@ 引用参考素材',
   audio: '描述你想生成的声音，或者输入要念的文字',
@@ -83,18 +90,21 @@ export function PromptBoxPlayground() {
       controls={[
         { key: 'refs', label: '参考区', type: 'toggle', value: true },
         { key: 'text', label: '提示词', type: 'segment', value: 'long', options: [['empty', '空'], ['short', '短'], ['long', '长'], ['huge', '超长']] },
-        { key: 'mode', label: '模式', type: 'segment', value: 'video', options: [['image', '图片生成'], ['video', '视频生成'], ['audio', '音频生成']] },
+        { key: 'mode', label: '模式', type: 'segment', value: 'video', options: [['agent', 'Agent'], ['image', '图片生成'], ['video', '视频生成'], ['audio', '音频生成']] },
       ]}
-      render={(s) => (
+      // 打了字写回面板：删空了是「空」，别的字四个都不亮（记在面板上不显示的 custom 里）
+      render={(s, update) => (
         <PromptBox
-          key={`${s.text}-${s.mode}`}
+          key={s.mode}
           placeholder={PLACEHOLDER[s.mode]}
-          defaultValue={TEXT[s.text]}
+          value={s.text === 'custom' ? String((s as Record<string, unknown>).custom ?? '') : TEXT[s.text]}
+          onChange={(v) => update(v ? { text: 'custom', custom: v } : { text: 'empty' })}
           references={s.refs ? <ReferenceStack items={SAMPLE.slice(0, 6)} onAdd={noop} onRemove={noop} /> : undefined}
           toolbar={TOOLBARS[s.mode]()}
           actions={
+            // 音频没有张数，换成字数 / 上限（照线上）
             <>
-              {countSelect}
+              {s.mode === 'audio' ? <AudioCharCount count={(s.text === 'custom' ? String((s as Record<string, unknown>).custom ?? '') : TEXT[s.text]).length} /> : countSelect}
               <GenerateButton cost={s.mode === 'image' ? 4 : s.mode === 'audio' ? 2 : 99} />
             </>
           }

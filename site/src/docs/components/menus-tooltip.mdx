@@ -115,8 +115,8 @@ import {
   const [current, setCurrent] = useState('poster');
   const menu = (
     <Menu width={160}>
-      <MenuItem icon="Pin">置顶</MenuItem>
-      <MenuItem icon="Share">分享</MenuItem>
+      <MenuItem icon="Rename">重命名</MenuItem>
+      <MenuItem icon="StickyOnTop">置顶</MenuItem>
       <MenuDivider />
       <MenuItem icon="Delete" variant="danger">删除</MenuItem>
     </Menu>
@@ -174,15 +174,17 @@ import {
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `content` | `ReactNode` | — | 提示的文字。简单是那一行，说明是标题下面的说明，12 常规，行高 20 |
-| `variant` | `"simple"` `"desc"` | `"simple"` | 简单 / 说明。不写时有 `title` 就是说明。简单：高 32，上下 6、左右 12；说明：最宽 240，内边距 12。圆角 8，底 `--color-bg-fill-popup`，不加阴影 |
+| `content` | `ReactNode` | — | 提示的文字。简单是那一行，说明是标题下面的说明，12 常规，行高 20；长文是一整段，14 常规，行高 22 |
+| `variant` | `"simple"` `"desc"` `"long"` | `"simple"` | 简单 / 说明 / 长文。不写时有 `title` 就是说明。简单：高 32，上下 6、左右 12；说明：最宽 240，内边距 12；长文：给被截断的长文字看全文（比如提示词），能换行，和触发元素一样宽、至少 240，内边距 8 / 12。圆角 8，底 `--color-bg-fill-popup`，不加阴影 |
 | `title` | `ReactNode` | — | 标题，只有说明有。13 粗，和说明间距 4 |
 | `shortcut` | `string` | — | 快捷键，比如 ⌘Z，只有简单有。12，tertiary，和文字间距 8 |
+| `placement` | `"bottom"` `"top"` `"right"` `"left"` | `"bottom"` | 出在目标哪边，离目标 8。上下水平居中，左右上下居中；放不下翻到对面。收起的侧栏用右边 |
 | `children` | `ReactElement` | — | 触发元素，比如 IconButton。不写就只渲染气泡本身（上面面板里就是） |
 | `open` | `boolean` | — | 显示（受控）。不传就悬停、聚焦自己出现 |
 | `defaultOpen` | `boolean` | `false` | 默认是否显示 |
 | `onOpenChange` | `(open: boolean) => void` | — | 显示状态变化 |
-| `delay` | `number` | `500` | 悬停多久后出现，毫秒。出现 150ms ease-out，消失 100ms ease-in；出现在目标下方 8 |
+| `delay` | `number` | `500` | 悬停多久后出现，毫秒。出现 150ms ease-out，消失 100ms ease-in |
+| `disabled` | `boolean` | `false` | 禁用：不出现，触发元素照常。比如提示词没被截断，不用看全文 |
 
 其余原生 HTML 属性都能传。
 
@@ -248,7 +250,7 @@ import {
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `children` | `ReactNode` | — | 文字，13 常规，行高 20 |
-| `variant` | `"nav"` `"list"` | `"nav"` | 导航（新建这类固定入口）/ 列表（对话、画布的历史）。高 36，圆角 8，元素间距 6，左右内边距 12（列表右 8） |
+| `variant` | `"nav"` `"list"` | `"nav"` | 导航（新建这类固定入口）/ 列表（对话、画布的历史）。高 36，圆角 8。左边的图标 / 缩略图放在 36 × 36 的格子正中：导航左右 8、间距 8（图标 20 四周离边 8），列表左右 6、间距 6（缩略图 24 四周离边 6）；两种的图标中心都在左数 18，文字都从 36 开始。「⋯」离右边 6，里面的图标离边 12 |
 | `icon` | `IconName` | — | 导航的左图标，20 |
 | `thumb` | `"icon"` `"image"` | `"icon"` | 列表左边的缩略图（AssetThumb 24）：没封面用图标，有封面用图片。不要放裸图标 |
 | `thumbSrc` | `string` | — | 图片地址，`thumb="image"` 时用 |
@@ -258,6 +260,12 @@ import {
 | `moreLabel` | `string` | `"更多"` | 「更多」的说明，读屏用 |
 | `onMoreClick` | `(e) => void` | — | 点「更多」 |
 | `moreMenu` | `ReactNode` | — | 点「更多」弹出的菜单，一般是 Menu，由 Dropdown 管开关 |
+| `editing` | `boolean` | — | 重命名中（受控），只有列表用。文字换成 Input（高 32，右边「字数/上限」），自动聚焦、全选；「更多」不显示，条目不出悬停、选中底色。照线上：回车提交，点外面取消，Esc 也取消 |
+| `defaultEditing` | `boolean` | `false` | 默认是否在重命名（非受控） |
+| `onEditingChange` | `(editing: boolean) => void` | — | 进入、退出重命名。「⋯」菜单里点「重命名」时传 `true` |
+| `onRename` | `(name: string) => void` | — | 回车提交的新名字，去掉了首尾空格；空的不提交 |
+| `maxNameLength` | `number` | `20` | 名字最多几个字（照线上），超了打不进去 |
+| `collapsed` | `boolean` | `false` | 收起：侧栏收成图标栏（宽 60）时用。只留图标 / 缩略图，文字淡出（100ms ease-in，展开时晚 150ms 淡入 150ms ease-out），「更多」不显示；悬停在右边出 Tooltip 写文字。宽度跟着侧栏，图标栏里 36，正好是左边那个格子，图标、缩略图居中 |
 
 外层是 `<div>`（里面还有按钮），其余原生 `<div>` 属性都能传。
 
@@ -265,13 +273,14 @@ import {
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `children` | `ReactNode` | — | 分组名，比如「对话」。高 28，12 常规，tertiary |
-| `expanded` | `boolean` | — | 展开（受控）。展开箭头朝下 `DownArrowSmall`，收起朝右 `RightArrowSmall`，下面的列表由使用方跟着显示或隐藏 |
+| `children` | `ReactNode` | — | 分组名，比如「对话」。高 28，12 常规，tertiary，悬停这一行变白（箭头一起）。左 8（和导航图标对齐），右 6（新建按钮和「⋯」对齐） |
+| `expanded` | `boolean` | — | 展开（受控）。展开箭头朝下 `DownArrowSmall`，收起朝右 `RightArrowSmall`，下面的列表由使用方跟着显示或隐藏。箭头和新建按钮平时不显示，悬停这一行（或键盘 Tab 进来）才淡入，出现 150ms ease-out、消失 100ms ease-in |
 | `defaultExpanded` | `boolean` | `true` | 默认是否展开（非受控） |
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 点标题展开或收起 |
-| `showNew` | `boolean` | `true` | 右边的新建按钮：IconButton 28 轻，`NewChat` 图标，整体透明度 30%（`--opacity-30`） |
+| `showNew` | `boolean` | `true` | 右边的新建按钮：IconButton 28 轻，`NewChat` 图标，悬停这一行才出现。出现后图标 50% 白，悬停按钮变白、出底色（IconButton 轻自己的样子，外面不再加透明度） |
 | `newLabel` | `string` | `"新建"` | 新建按钮的说明，读屏用 |
 | `onNew` | `() => void` | — | 点新建 |
+| `collapsed` | `boolean` | `false` | 收起：只留新建按钮（一直显示），标题淡出；左右内边距 4，图标栏里（宽 36）按钮居中，悬停在右边出 Tooltip 写 `newLabel`（建议写「新建对话」这类全称） |
 
 其余原生 `<div>` 属性都能传。
 
@@ -279,6 +288,7 @@ import {
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `children` | `ReactNode` | `"更多"` | 文字，12 常规，tertiary。高 36，左内边距 12 |
+| `children` | `ReactNode` | `"更多"` | 文字，12 常规，tertiary。高 36，左内边距 8（和导航图标对齐） |
+| `collapsed` | `boolean` | `false` | 收起：左内边距 6，图标栏里（宽 36）「更多」两个字居中 |
 
 其余原生 `<button>` 属性都能传。

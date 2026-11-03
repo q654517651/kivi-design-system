@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactElement } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactElement } from 'react';
 import {
   AudioWave,
   Button,
@@ -31,7 +31,7 @@ import {
 } from '@kivi';
 import { CodeBlock, Playground, toJsx } from '@shell';
 import { openPreview, VIDEO } from '../components/video-player.demos';
-import { AudioModelControls, CountSelect, ImageModelControls, ModelSelect, RefModeSelect, VideoModelControls } from './generation';
+import { AudioCharCount, AudioModelControls, CountSelect, ImageModelControls, ModelSelect, RefModeSelect, VideoModelControls } from './generation';
 import './canvas.demos.css';
 
 // 画布页的演示：上面的小画布看整体（点、悬停、生成都是真的，生成是假的演示），下面每个拆解一个属性面板。参数表在 canvas.mdx
@@ -313,7 +313,10 @@ function panelOf(def: NodeDef, inputs: NodeDef[], onGenerate: () => void, busy: 
   );
 
   // 下拉、参数面板都用 generation.tsx 里共用的那一份，和主站输入框一样
-  const bar = (left: ReactElement) => <NodePanelBar left={left} right={<>{def.type !== 'text' && <CountSelect />}{generate}</>} />;
+  // 右边：文字只有生成按钮；音频是字数 / 上限（没有张数，照线上）；图片、视频是张数
+  const bar = (left: ReactElement) => (
+    <NodePanelBar left={left} right={<>{def.type === 'audio' ? <AudioCharCount /> : def.type !== 'text' && <CountSelect />}{generate}</>} />
+  );
   switch (def.type) {
     case 'text':
       return (
@@ -370,8 +373,37 @@ const PANEL_GAP = 12;
 /** 画布里所有东西的范围（含连接点、节点名），开场按它缩放到放得下 */
 const BOUNDS = { left: -24, top: -40, right: 780 + 455 + 24, bottom: 340 + 256 + 24 };
 
+/** 画布里的节点：页面模板的 Agent 侧栏点缩略图时用它定位 */
+export type CanvasNodeKey = Key;
+export type CanvasNodePhase = Phase;
+
+export interface MiniCanvasHandle {
+  /** 选中这个节点，画布平移到让它在中间（缩放不变） */
+  focus: (key: Key) => void;
+}
+
+export interface MiniCanvasProps {
+  /** 下面的状态条和代码，默认有；页面模板里不要 */
+  chrome?: boolean;
+  /** 假生成、假上传，默认有；页面模板里只能看，点了不动 */
+  fake?: boolean;
+  /** 一开始各节点的状态，不写的照默认（视频节点待生成，其余完成） */
+  phases?: Partial<Record<Key, Phase>>;
+  className?: string;
+  style?: CSSProperties;
+}
+
+/** 业务组件页的小画布：能点、能拖、能假生成。页面模板也用它（chrome、fake 关掉） */
 export function CanvasPlayground() {
-  const [runs, setRuns] = useState<Record<Key, Run>>(START);
+  return <MiniCanvas />;
+}
+
+export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function MiniCanvas({ chrome = true, fake = true, phases, className, style }, ref) {
+  const [runs, setRuns] = useState<Record<Key, Run>>(() => {
+    const r = { ...START };
+    for (const [k, phase] of Object.entries(phases ?? {}) as [Key, Phase][]) r[k] = { ...r[k], phase };
+    return r;
+  });
   const [edges, setEdges] = useState<Edge[]>(EDGES);
   const [selected, setSelectedRaw] = useState<Key | null>(null);
   /** 文字节点双击进入编辑：出文字工具栏，收起生成面板 */
@@ -386,14 +418,26 @@ export function CanvasPlayground() {
   const timers = useRef<Partial<Record<Key, number>>>({});
   const drag = useRef<{ id: number; x: number; y: number; vx: number; vy: number; moved: boolean } | null>(null);
 
-  // 开场：缩放到整张图放得下，最大 1
+  // 开场：缩放到整张图放得下，最大 1；画布尺寸变了（比如模板切全屏）重新放一次
   useLayoutEffect(() => {
     const el = viewport.current;
     if (!el) return;
-    const w = BOUNDS.right - BOUNDS.left;
-    const h = BOUNDS.bottom - BOUNDS.top;
-    const k = Math.min(1, (el.clientWidth - 96) / w, (el.clientHeight - 160) / h);
-    setView({ k, x: (el.clientWidth - w * k) / 2 - BOUNDS.left * k, y: 72 - BOUNDS.top * k });
+    const fit = () => {
+      const w = BOUNDS.right - BOUNDS.left;
+      const h = BOUNDS.bottom - BOUNDS.top;
+      const k = Math.min(1, (el.clientWidth - 96) / w, (el.clientHeight - 160) / h);
+      setView({ k, x: (el.clientWidth - w * k) / 2 - BOUNDS.left * k, y: 72 - BOUNDS.top * k });
+    };
+    fit();
+    let size = `${el.clientWidth}x${el.clientHeight}`;
+    const ro = new ResizeObserver(() => {
+      const next = `${el.clientWidth}x${el.clientHeight}`;
+      if (next === size) return;
+      size = next;
+      fit();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // 按住 ⌘ / Ctrl 滚轮（触控板捏合）缩放，以鼠标为中心；不按就让页面正常滚动
@@ -417,6 +461,21 @@ export function CanvasPlayground() {
 
   useEffect(() => () => Object.values(timers.current).forEach((t) => window.clearInterval(t)), []);
 
+  // 定位到节点：选中它，画布平移到让它在中间，300ms ease-in-out（距离长）
+  const [gliding, setGliding] = useState(false);
+  useImperativeHandle(ref, () => ({
+    focus: (key: Key) => {
+      const el = viewport.current;
+      if (!el) return;
+      const def = nodeOf(key);
+      const [w, h] = SIZE[def.ratio];
+      setSelected(key);
+      setGliding(true);
+      setView((v) => ({ ...v, x: el.clientWidth / 2 - (def.x + w / 2) * v.k, y: el.clientHeight / 2 - (def.y + h / 2) * v.k }));
+      window.setTimeout(() => setGliding(false), 320);
+    },
+  }));
+
   const patch = (key: Key, p: Partial<Run>) => setRuns((r) => ({ ...r, [key]: { ...r[key], ...p } }));
   const stop = (key: Key) => {
     window.clearInterval(timers.current[key]);
@@ -425,6 +484,7 @@ export function CanvasPlayground() {
 
   // 假生成：进生成中，倒计时走完变完成。原来有结果的，旧图当底图
   const generate = (key: Key) => {
+    if (!fake) return;
     stop(key);
     patch(key, { phase: 'generating', cover: runs[key].phase === 'done', countdown: true, left: FAKE_GENERATE });
     timers.current[key] = window.setInterval(() => {
@@ -439,6 +499,7 @@ export function CanvasPlayground() {
 
   // 假上传：点上传后转两秒圈
   const upload = (key: Key) => {
+    if (!fake) return;
     stop(key);
     patch(key, { phase: 'uploading' });
     timers.current[key] = window.setTimeout(() => {
@@ -530,17 +591,23 @@ export function CanvasPlayground() {
     }
   }
 
-  return (
-    <div className="shell-pg cv-pg">
+  const canvas = (
       <div
         ref={viewport}
-        className={panning ? 'cv-canvas is-panning' : 'cv-canvas'}
+        className={[panning ? 'cv-canvas is-panning' : 'cv-canvas', className].filter(Boolean).join(' ')}
+        style={style}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div className="cv-world" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})` }}>
+        <div
+          className="cv-world"
+          style={{
+            transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})`,
+            transition: gliding ? 'transform var(--motion-duration-300) var(--motion-ease-in-out)' : undefined,
+          }}
+        >
           {edges.map((edge) => {
             const box = edgeBox(nodeOf(edge[0]), nodeOf(edge[1]));
             return (
@@ -571,6 +638,13 @@ export function CanvasPlayground() {
           {panel}
         </div>
       </div>
+  );
+
+  if (!chrome) return canvas;
+
+  return (
+    <div className="shell-pg cv-pg">
+      {canvas}
 
       {/* 选中节点的状态：只放这个状态才有的开关 */}
       <div className="cv-bar">
@@ -634,7 +708,7 @@ export function CanvasPlayground() {
       <CodeBlock code={sel ? toJsx(wrapperOf(sel)) : '// 点一个节点，这里显示它的代码'} bare />
     </div>
   );
-}
+});
 
 // ---------- 拆解：节点 ----------
 

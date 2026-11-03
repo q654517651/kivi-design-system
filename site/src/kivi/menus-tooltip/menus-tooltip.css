@@ -58,7 +58,9 @@
     层级 z-index 默认 1000，用 --kv-popup-z 改。Figma 没定，待定。
 
   Tooltip 弹出
-    悬停 500ms 后 150ms ease-out 淡入，移开 100ms ease-in 淡出。目标下方 8px，水平居中（Figma 没定水平方向，暂时居中）。
+    悬停 500ms 后 150ms ease-out 淡入，移开 100ms ease-in 淡出。默认目标下方 8px，水平居中（Figma 没定水平方向，暂时居中）；
+    placement 可以放上 / 右 / 左，右和左上下居中，放不下翻到对面（收起的侧栏用右边）。
+    长文 kv-tooltip--long 和目标一样宽，外壳加 kv-tooltip__anchor--block。禁用（disabled）时不出现。
     键盘 Tab 到目标（:focus-visible）也会出现，Esc、点击会关掉。包住触发元素的外壳是 kv-tooltip__anchor。
     弹出的气泡 kv-tooltip--floating 也挂在 body 上，position: fixed。不弹出的 kv-tooltip 就是静态的，文档摆样子用。
 
@@ -66,8 +68,17 @@
     SidebarItem   kv-sidebar-item，类型 kv-sidebar-item--nav（默认，导航）/ --list（列表）
                   选中 aria-current="page"；带「更多」时外层用 div，不要把按钮放进 button 或 a
                   「更多」kv-sidebar-item__more，悬停、选中时才显示
-    SidebarLabel  kv-sidebar-label，标题按钮 kv-sidebar-label__title（aria-expanded），新建 kv-sidebar-label__new
+                  外面一直包着 Tooltip（外壳 kv-sidebar-item__tip），收起时才出
+                  重命名中 data-editing，输入框 kv-sidebar-item__input（就是 Input）
+    SidebarLabel  kv-sidebar-label，标题按钮 kv-sidebar-label__title（aria-expanded），新建 kv-sidebar-label__new；
+                  箭头和新建悬停这一行才出现（文档摆静态用 is-hover）
     SidebarMore   kv-sidebar-more
+    对齐          左边的图标 / 缩略图都放在 36 × 36 的格子正中（导航图标 20 四周离边 8，列表缩略图 24 四周离边 6），
+                  中心都在左数 18；文字都从 36 开始；标题、「更多」左 8 和导航图标对齐；
+                  右边「⋯」和新建按钮都离右边 6，按钮里的图标离边 12（11-02 用户定，Figma 待改）
+    收起          三个都是 data-collapsed：只留图标 / 缩略图 / 新建按钮 / 「更多」两个字。宽度不自己定，跟着侧栏：
+                  图标栏 60 减左右 12，正好 36，就是左边那个格子。内边距 300ms ease-in-out（和侧栏一起收），
+                  文字消失 100ms ease-in、出现 150ms ease-out 晚 150ms
 */
 
 /* ---------- Tooltip ---------- */
@@ -119,9 +130,26 @@
   color: var(--color-text-fill-secondary);
 }
 
-/* 包住触发元素的壳，只负责收悬停和焦点 */
+/* 长文：被截断的长文字（比如提示词）看全文。能换行，和触发元素一样宽（脚本写宽度），至少 240；
+   14 / 22，内边距 8 / 12。静态摆样子时宽度跟着外面 */
+.kv-tooltip--long {
+  display: block;
+  min-width: 240px;
+  height: auto;
+  padding: var(--spacing-8) var(--spacing-12);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* 包住触发元素的壳，只负责收悬停和焦点。长文包的是一段文字，壳是块级 */
 .kv-tooltip__anchor {
   display: inline-flex;
+}
+
+.kv-tooltip__anchor--block {
+  display: block;
 }
 
 /* 弹出：挂在 body 上，位置由脚本算（目标下方 8px，水平居中）。淡入 150ms ease-out，淡出 100ms ease-in */
@@ -351,17 +379,19 @@
 
 /* ---------- SidebarItem ---------- */
 
-/* 导航：左图标 20，左右 12。列表：左边缩略图 24，左 12 右 8，文字默认 secondary */
+/* 导航：左图标 20，左右 8、间距 8（图标四周离边 8）。列表：左边缩略图 24，左右 6、间距 6（缩略图四周离边 6），
+   文字默认 secondary。两种的图标中心都在左数 18、文字都从 36 开始，上下对成一列；
+   右边「⋯」按钮 28 离边 6，里面的图标离边 12（11-02 用户定） */
 .kv-sidebar-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-6);
+  gap: var(--spacing-8);
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
   height: 36px;
   margin: 0;
-  padding: 0 var(--spacing-12);
+  padding: 0 var(--spacing-8);
   border: 0;
   border-radius: var(--border-radius-8);
   outline: none;
@@ -379,7 +409,14 @@
   -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--motion-duration-100) var(--motion-ease-in-out),
-    color var(--motion-duration-100) var(--motion-ease-in-out);
+    color var(--motion-duration-100) var(--motion-ease-in-out),
+    padding var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+/* 包着条目的 Tooltip 外壳：块级，条目照常铺满 */
+.kv-sidebar-item__tip {
+  display: block;
+  min-width: 0;
 }
 
 .kv-sidebar-item > .kv-icon {
@@ -393,10 +430,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out) var(--motion-duration-150);
 }
 
 .kv-sidebar-item--list {
-  padding-right: var(--spacing-8);
+  gap: var(--spacing-6);
+  padding: 0 var(--spacing-6);
   color: var(--color-text-fill-secondary);
 }
 
@@ -424,16 +463,40 @@
   display: inline-flex;
 }
 
+/* 收起：宽跟着侧栏（图标栏里 36，正好是左边那个格子，图标、缩略图居中），文字淡出，「更多」不显示 */
+.kv-sidebar-item[data-collapsed] > span:not([class]) {
+  opacity: 0;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.kv-sidebar-item[data-collapsed] > .kv-sidebar-item__more {
+  display: none;
+}
+
+/* 重命名中：文字换成 Input（高 32，右边「字数/上限」），占满缩略图右边剩下的宽；
+   条目不出悬停、选中底色，只看输入框 */
+.kv-sidebar-item[data-editing] {
+  background: transparent;
+  cursor: default;
+}
+
+.kv-sidebar-item > .kv-sidebar-item__input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
 /* ---------- SidebarLabel ---------- */
 
-/* 分组标题：标题 12 tertiary + 展开箭头，右边新建按钮。高 28，左 12 右 4 */
+/* 分组标题：标题 12 tertiary + 展开箭头，右边新建按钮。高 28，左 8（和导航图标对齐）右 6（新建按钮和「⋯」对齐） */
 .kv-sidebar-label {
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
   height: 28px;
-  padding: 0 var(--spacing-4) 0 var(--spacing-12);
+  padding: 0 var(--spacing-6) 0 var(--spacing-8);
+  transition: padding var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
 .kv-sidebar-label__title {
@@ -453,6 +516,17 @@
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    color var(--motion-duration-100) var(--motion-ease-in-out),
+    opacity var(--motion-duration-150) var(--motion-ease-out) var(--motion-duration-150);
+}
+
+/* 悬停这一行、键盘聚焦：标题和箭头从 tertiary 变白（11-02 用户定，和新建按钮一样悬停变亮） */
+.kv-sidebar-label:where(:hover, :has(:focus-visible), .is-hover) .kv-sidebar-label__title {
+  color: var(--color-text-fill-primary);
 }
 
 .kv-sidebar-label__title > .kv-icon {
@@ -460,14 +534,34 @@
   height: 16px;
 }
 
-/* 新建按钮在 Figma 里整体透明度 30%（待确认） */
-.kv-sidebar-label__new {
-  opacity: var(--opacity-30);
+/* 箭头和新建按钮平时藏着，悬停这一行（或键盘 Tab 进来）才出现（11-02 用户定）。
+   出现 150ms ease-out，消失 100ms ease-in。收起成图标栏时新建按钮一直在 */
+.kv-sidebar-label__title > .kv-icon,
+.kv-sidebar-label:not([data-collapsed]) .kv-sidebar-label__new {
+  opacity: 0;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.kv-sidebar-label:where(:hover, :has(:focus-visible), .is-hover) .kv-sidebar-label__title > .kv-icon,
+.kv-sidebar-label:not([data-collapsed]):where(:hover, :has(:focus-visible), .is-hover) .kv-sidebar-label__new {
+  opacity: 1;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 收起：左右 4，图标栏里（宽 36）新建按钮 28 正好居中，侧栏收的时候它贴着右边滑过来；标题淡出 */
+.kv-sidebar-label[data-collapsed] {
+  padding: 0 var(--spacing-4);
+}
+
+.kv-sidebar-label[data-collapsed] > .kv-sidebar-label__title {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
 }
 
 /* ---------- SidebarMore ---------- */
 
-/* 分组底部的「更多」：12 tertiary，高 36，左 12 */
+/* 分组底部的「更多」：12 tertiary，高 36，左 8（和导航图标对齐） */
 .kv-sidebar-more {
   display: flex;
   align-items: center;
@@ -475,7 +569,7 @@
   width: 100%;
   height: 36px;
   margin: 0;
-  padding: 0 var(--spacing-12);
+  padding: 0 var(--spacing-8);
   border: 0;
   outline: none;
   background: transparent;
@@ -488,4 +582,12 @@
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: padding var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+/* 收起：「更多」两个字 24 宽，左边 6，在图标栏里（宽 36）正好居中 */
+.kv-sidebar-more[data-collapsed] {
+  padding-left: var(--spacing-6);
 }

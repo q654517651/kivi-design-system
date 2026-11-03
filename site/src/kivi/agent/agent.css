@@ -1,7 +1,8 @@
 /*
   KIVI · Agent
   Figma「Agent」页：ProcessRow、UserMessage、MediaStack、QuestionPanel（QuestionOption）、ActionCard、SendButton、FileCard。
-  ProcessGroup（一组工具调用滚动成一行）Figma 还没有，交互照 Codex、Claude。
+  SkillCard（技能卡）照旧版 KIVI 3.14 做，Figma V2 还没有。
+  ProcessGroup（一组工具调用滚动成一行）、AskRecord（询问记录，能收起）Figma 还没有，交互照 Codex、Claude；两个都用 ProcessDrawer 收起。
   依赖 tokens.css、base.css、button.css（按钮用 kv-button、kv-icon-button）。
   别的页的组件：头像、角标 Tag 用 tabs-tags-avatar 的 Avatar、Tag；
   用户消息里的素材用 canvas 的 ReferenceItem（里面是 AssetThumb）。
@@ -123,22 +124,21 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   transform: rotate(180deg);
 }
 
-/* 进行中：图标、动作文字 primary，对象 secondary；停留超过 0.5 秒（data-sweep）动作文字才扫光，快的一闪而过不扫 */
-.kv-process-row[aria-busy="true"] {
-  --kv-row-icon: var(--color-text-fill-primary);
-  --kv-row-action: var(--color-text-fill-primary);
-  --kv-row-object: var(--color-text-fill-secondary);
-}
-
+/* 进行中：颜色和完成一样（图标、动作 secondary，对象 tertiary），不变白，只有能点的行悬停才亮一档（11-02 用户定）。
+   停留超过 0.5 秒（data-sweep）动作文字上走一道亮光（primary），快的一闪而过不扫。
+   背景宽 200%、一个周期占一半，每圈移一个周期，首尾接得上 */
 .kv-process-row[aria-busy="true"][data-sweep] .kv-process-row__action {
   background:
     linear-gradient(
       90deg,
-      var(--color-text-fill-primary) 0%,
-      var(--color-text-fill-placeholder) 25%,
-      var(--color-text-fill-primary) 50%,
-      var(--color-text-fill-placeholder) 75%,
-      var(--color-text-fill-primary) 100%
+      var(--kv-row-action) 0%,
+      var(--kv-row-action) 15%,
+      var(--color-text-fill-primary) 25%,
+      var(--kv-row-action) 35%,
+      var(--kv-row-action) 65%,
+      var(--color-text-fill-primary) 75%,
+      var(--kv-row-action) 85%,
+      var(--kv-row-action) 100%
     )
     0 0 / 200% 100%;
   -webkit-background-clip: text;
@@ -155,7 +155,7 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   }
 }
 
-/* 减少动态效果：不扫光，进行中就是 primary 字 */
+/* 减少动态效果：不扫光，进行中和完成一样的字 */
 @media (prefers-reduced-motion: reduce) {
   .kv-process-row[aria-busy="true"][data-sweep] .kv-process-row__action {
     background: none;
@@ -255,43 +255,80 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   }
 }
 
-/* 展开收起：列表一直在，高度从 0 推到内容高、把下面的内容往下推，同时淡入；收起倒着走。
-   时长按距离（组件里写 --kv-process-group-duration：100 以内 200ms，再长 300ms），ease-in-out。收起后藏起来，Tab 不进去 */
-.kv-process-group__drawer {
+/* 汇总里的「N 个失败」用危险色 */
+.kv-process-group__failed {
+  color: var(--color-status-danger);
+}
+
+/* ---------- ProcessDrawer：过程行下面能收起的那一块（组件库内部用） ----------
+   工具调用组的列表、询问的问答都放在里面。展开时高度从 0 推到内容高、把下面的内容往下推，同时淡入；收起倒着走。
+   时长按距离（组件里写 --kv-process-drawer-duration：100 以内 200ms，再长 300ms），ease-in-out。收起后藏起来，Tab 不进去 */
+.kv-process-drawer {
   display: grid;
   grid-template-rows: 0fr;
   align-self: stretch;
   opacity: 0;
   visibility: hidden;
   transition:
-    grid-template-rows var(--kv-process-group-duration) var(--motion-ease-in-out),
-    opacity var(--kv-process-group-duration) var(--motion-ease-in-out),
-    visibility 0s linear var(--kv-process-group-duration);
+    grid-template-rows var(--kv-process-drawer-duration) var(--motion-ease-in-out),
+    opacity var(--kv-process-drawer-duration) var(--motion-ease-in-out),
+    visibility 0s linear var(--kv-process-drawer-duration);
 }
 
-.kv-process-group__drawer[data-open] {
+.kv-process-drawer[data-open] {
   grid-template-rows: 1fr;
   opacity: 1;
   visibility: visible;
   transition:
-    grid-template-rows var(--kv-process-group-duration) var(--motion-ease-in-out),
-    opacity var(--kv-process-group-duration) var(--motion-ease-in-out),
+    grid-template-rows var(--kv-process-drawer-duration) var(--motion-ease-in-out),
+    opacity var(--kv-process-drawer-duration) var(--motion-ease-in-out),
     visibility 0s linear 0s;
 }
 
-.kv-process-group__drawer-inner {
+.kv-process-drawer__inner {
   min-height: 0;
   overflow: hidden;
 }
 
-/* 列表和汇总行间距 6，放在会被收起的那块里，收起后不留空 */
-.kv-process-group__drawer-inner > .kv-process-list {
-  margin-top: var(--spacing-6);
+/* 和上面那行间距 6，放在会被收起的那块里，收起后不留空 */
+.kv-process-drawer__body {
+  padding-top: var(--spacing-6);
 }
 
-/* 汇总里的「N 个失败」用危险色 */
-.kv-process-group__failed {
-  color: var(--color-status-danger);
+/* ---------- AskRecord：询问记录 ----------
+   一行「询问中 / 已询问 / 询问」，下面收起的是问了什么、怎么答的。默认收起，悬停出箭头，点开往下推（ProcessDrawer）。
+   询问中：等用户回答，问题面板在输入框位置，这一行扫光；已询问：回答了；询问：跳过了（交给 AI 决策，或用户直接发了新消息）。
+   问题 14 / 20 secondary，回答和说明 12 / 16 tertiary，一题里间距 4，题和题之间 8 */
+.kv-ask-record {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+.kv-ask-record__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.kv-ask-record__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.kv-ask-record__question {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-20);
+}
+
+.kv-ask-record__answer,
+.kv-ask-record__note {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
 }
 
 /* ---------- UserMessage：用户消息 ---------- */
@@ -597,6 +634,89 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   color: var(--color-text-fill-secondary);
 }
 
+/* ---------- SkillCard：技能卡 ----------
+   外框和 ActionCard 一样：内边距 16，圆角 16，surface 底，描边 border-subtle；上下两块间距 12。
+   上面：封面 100 × 56（圆角 8，里面描一圈 border，用户没设封面用技能专用的占位封面）+ 技能名 14 中等 / 说明 13 tertiary，间距 12，都是一行省略；
+   下面：按钮靠右，间距 8，「编辑」次要、「使用技能」主要，都是 Button 中 */
+.kv-skill-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+  font-family: var(--font-family);
+}
+
+.kv-skill-card__main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  min-width: 0;
+}
+
+.kv-skill-card__cover {
+  position: relative;
+  flex: none;
+  width: 100px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.kv-skill-card__cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.kv-skill-card__cover > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kv-skill-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.kv-skill-card__title,
+.kv-skill-card__desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-skill-card__title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-skill-card__desc {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+.kv-skill-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+}
+
 /* ---------- SendButton：发送按钮 ---------- */
 
 .kv-send-button {
@@ -638,7 +758,9 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   background: currentColor;
 }
 
-/* ---------- FileCard：文件卡 ---------- */
+/* ---------- FileCard：文件卡 ----------
+   外框、字号和技能卡（SkillCard）一样（11-02 用户定）：内边距 16，圆角 16，surface 底，描边 border-subtle，间距 12；
+   文件名 14 中等，信息 13 tertiary */
 
 .kv-file-card {
   display: flex;
@@ -646,15 +768,11 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   gap: var(--spacing-12);
   box-sizing: border-box;
   width: 100%;
-  min-height: 64px;
-  padding: var(--spacing-12);
-  border-radius: var(--border-radius-12);
-  background: var(--color-bg-fill-container-light-1);
-  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
-}
-
-.kv-file-card:where(:hover, :focus-within, .is-hover) {
-  background: var(--color-bg-fill-container-light-1-hover);
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+  font-family: var(--font-family);
 }
 
 /* 左边图标块 40，圆角 8，图标 20 */
@@ -681,7 +799,7 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   min-width: 0;
 }
 
-/* 文件名 14 中等，一行省略；信息 12 tertiary */
+/* 文件名 14 中等，一行省略；信息 13 tertiary */
 .kv-file-card__name {
   overflow: hidden;
   color: var(--color-text-fill-primary);
@@ -695,8 +813,8 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
 .kv-file-card__meta {
   overflow: hidden;
   color: var(--color-text-fill-tertiary);
-  font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -1,0 +1,23 @@
+import { PageHeader } from '@shell';
+import { PreviewHost } from '../components/video-player.demos';
+import { MainSiteTemplate, Sidebar } from './main-site.demos';
+
+<PageHeader
+  eyebrow="页面模板"
+  title="主站"
+  lead="主站的生成页：侧栏、生成记录（自己生成的和主站 Agent 的混在一起）、底部输入框。组件在「业务组件 · 主站」「业务组件 · Agent」。"
+  figma={['模板 · 主站', '389:1509']}
+  status="待确认 0.1.0"
+/>
+
+<PreviewHost />
+
+## 生成页
+
+<MainSiteTemplate />
+
+## 侧栏
+
+<div className="tpl-frame" style={{ aspectRatio: 'auto', width: 'fit-content', height: 640, minHeight: 0 }}>
+  <Sidebar />
+</div>

@@ -1,5 +1,5 @@
 import { AssetThumb, Avatar, Tabs, Tag, TabItem, type AssetThumbSize, type AssetThumbType, type AvatarSize, type IconName, type TagVariant } from '@kivi';
-import { Playground } from '@shell';
+import { Playground, type PlaygroundState } from '@shell';
 
 // 选项卡、标签和头像页的属性面板。参数表在 tabs-tags-avatar.mdx
 
@@ -14,7 +14,13 @@ const RATIO_ICONS: IconName[] = ['AutoAspect', 'Square11', 'Square43'];
 type TabState = { style: string; layout: string; size: string; state: string; left: boolean; text: string };
 
 // 一组三项：第一项按面板，第二项补一个选中，第三项默认
-function renderTabs(s: TabState) {
+const picked = (s: TabState) => {
+  const v = (s as Record<string, unknown>).picked;
+  return typeof v === 'string' && v !== 'a' ? v : undefined;
+};
+
+// 面板「状态」说的是第一项；点了别的项，记在面板上不显示的 picked 里
+function renderTabs(s: TabState, update: (patch: Partial<PlaygroundState>) => void) {
   const segment = s.style === 'segment';
   const vertical = segment && s.layout === 'vertical';
   const icons = vertical ? RATIO_ICONS : TAB_ICONS;
@@ -23,11 +29,12 @@ function renderTabs(s: TabState) {
   const showIcon = vertical || (!segment && s.left);
   return (
     <Tabs
-      key={[s.style, s.layout, s.size, s.state, s.left].join()}
+      key={[s.style, s.layout, s.size, s.left].join()}
       variant={segment ? 'segment' : 'tab'}
       layout={vertical ? 'vertical' : 'horizontal'}
       size={vertical ? undefined : (s.size as 'md' | 'lg')}
-      defaultValue={s.state === 'selected' ? 'a' : 'b'}
+      value={s.state === 'selected' ? 'a' : (picked(s) ?? 'b')}
+      onChange={(v) => update(v === 'a' ? { state: 'selected', picked: v } : { state: s.state === 'selected' ? 'default' : s.state, picked: v })}
       aria-label="选项"
     >
       {values.map((v, i) => (

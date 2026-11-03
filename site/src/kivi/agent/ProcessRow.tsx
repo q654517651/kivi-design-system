@@ -12,7 +12,7 @@ export type ProcessRowStatus = 'running' | 'done' | 'failed';
 export interface ProcessRowProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
   /** 动作文字，比如「创建节点」 */
   action: ReactNode;
-  /** 对象文字，比如「活动标题」，比动作淡一档。不传就不显示 */
+  /** 对象文字，比如「活动标题」，比动作淡一档，不加引号。不传就不显示 */
   object?: ReactNode;
   /** 层级：一级 / 子项，默认一级。子项是展开列表里的一行，没有头像和箭头，不能点 */
   level?: ProcessRowLevel;

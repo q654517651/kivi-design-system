@@ -123,6 +123,7 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 
 | 页 | 规范 | 组件 | 什么时候读 |
 |---|---|---|---|
+| 页面模板 | `docs/templates/main-site.mdx`、`canvas.mdx` | `docs/templates/*.demos.tsx` | 一整页怎么拼：主站生成页（侧栏、生成记录、主站 Agent、输入框）、画布 + Agent 侧栏 |
 | 变量 | `docs/foundations/tokens.mdx` | `kivi/tokens.css` | 要变量名、取值，或核对某个值该用哪个变量 |
 | 动效 | `docs/foundations/motion.mdx`、`motion-generating.mdx` | `kivi/generating/` | 做任何过渡和动画；生成中的点阵动效 |
 | 图标 | `docs/foundations/icons.mdx` | `kivi/Icon.tsx`、`kivi/icons.ts` | 选图标、确认图标名、补模型厂 Logo |
@@ -136,7 +137,8 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 | 选项卡、标签和头像 | `docs/components/tabs-tags-avatar.mdx` | `kivi/tabs-tags-avatar/` | 选项卡、分段、标签、头像、素材缩略图 |
 | 播放器 | `docs/components/video-player.mdx` | `kivi/video-player/` | 卡片里和预览里的视频 |
 | 画布 | `docs/business/canvas.mdx` | `kivi/canvas/` | 节点、连线、节点工具栏、生成面板、参数面板、画布工具栏 |
-| Agent | `docs/business/agent.mdx` | `kivi/agent/` | 对话里的过程行、用户消息、结果、追问、确认卡片、发送按钮 |
+| Agent | `docs/business/agent.mdx` | `kivi/agent/` | 对话里的工具调用组、询问记录、用户消息、结果、追问、确认卡片、技能卡、发送按钮 |
+| Agent 工具 | `docs/business/agent-tools.mdx` | `docs/business/agent-tools.ts` | Agent 调的每个工具出不出一行、用什么图标 |
 | 主站 | `docs/business/main-site.mdx`、`main-site-prompt-box.mdx` | `kivi/main-site/`、`kivi/prompt-box/` | 生成记录、结果格、创作输入框、参考区、生成按钮 |
 | 生成控件 | `docs/business/generation.tsx` | — | 画布和主站共用的类型、模型、参考类型、参数下拉 |
 | 旧名对照 | `docs/legacy-names.mdx` | — | 遇到旧变量名、旧组件名、旧图标名 |

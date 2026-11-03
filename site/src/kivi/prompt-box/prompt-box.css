@@ -61,7 +61,7 @@
 
 /* ---------- PromptBox ---------- */
 
-/* 底白 8%，描边 border-subtle，圆角 24，内边距 16，内容区和工具条间距 12 */
+/* 玻璃（11-02 用户定：浮在生成记录上，下面的内容透出来，不在边缘裁切）：底 glass + 背景模糊 32，描边 border-subtle，圆角 24，内边距 16，内容区和工具条间距 12 */
 .kv-prompt-box {
   display: flex;
   flex-direction: column;
@@ -71,7 +71,9 @@
   padding: var(--spacing-16);
   border: var(--border-width-1) solid var(--color-border-subtle);
   border-radius: var(--border-radius-24);
-  background: var(--color-bg-fill-container-light-1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-text-fill-primary);
   font-family: var(--font-family);
 }

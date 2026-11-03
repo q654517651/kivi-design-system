@@ -1,5 +1,5 @@
 import { GenPrompt, GenPromptRefs, ResultTile, Tag, type GenPromptRefItem, type IconName, type ResultTileAction, type ResultTileType } from '@kivi';
-import { Playground } from '@shell';
+import { Playground, type PlaygroundState } from '@shell';
 import { openPreview, VIDEO } from '../components/video-player.demos';
 
 // 主站页的属性面板：任务、长度、类型、状态都在面板里切。参数表在 main-site.mdx
@@ -53,7 +53,7 @@ function renderGenPrompt(s: GenPromptState) {
     );
   }
   return (
-    <GenPrompt length={s.length === 'long' ? 'long' : undefined} prompt={s.length === 'long' ? LONG : SHORT}>
+    <GenPrompt prompt={s.length === 'long' ? LONG : SHORT}>
       <Tag icon="VideoGeneration">视频生成</Tag>
       <Tag icon="Bytedance">Seedance 2.0 Fast</Tag>
       {s.refs && <GenPromptRefs label={s.refText} items={s.overflow ? REFS : REFS.slice(0, 4)} />}
@@ -117,7 +117,7 @@ const PIC: Record<ResultTileType, { done: string; hover: string }> = {
 
 type ResultTileState = { type: ResultTileType; state: string; source: boolean; collected: boolean };
 
-function renderResultTile(s: ResultTileState) {
+function renderResultTile(s: ResultTileState, update: (patch: Partial<PlaygroundState>) => void) {
   const video = s.type === 'video';
   const type = video ? 'video' : undefined;
   if (s.state === 'loading') {
@@ -135,6 +135,7 @@ function renderResultTile(s: ResultTileState) {
       topActions={TOP}
       collect
       collected={s.collected}
+      onCollectedChange={(v) => update({ collected: v })}
       quickActions={QUICK[s.type]}
       onPreview={video ? (t) => openPreview(VIDEO.wide, t) : undefined}
       className={hover ? 'is-hover' : undefined}

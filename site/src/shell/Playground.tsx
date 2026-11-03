@@ -2,7 +2,7 @@ import { useState, type ReactElement } from 'react';
 import { CodeBlock } from './CodeBlock';
 import { toJsx } from './toJsx';
 
-// 属性面板：和 Figma 右侧的属性一样，选什么，预览和代码跟着变
+// 属性面板：和 Figma 右侧的属性一样，选什么，预览和代码跟着变；预览里手动点了（展开、勾选、打字……），面板也跟着变
 
 export type Control =
   | { key: string; label: string; type: 'segment'; options: [string, string][]; value: string }
@@ -17,8 +17,12 @@ export interface PlaygroundProps<S extends PlaygroundState> {
   rules?: (state: S) => Partial<Record<keyof S, string[] | boolean>>;
   /** 返回 true 时预览换成图片底，「浮层」类型用 */
   media?: (state: S) => boolean;
-  /** 返回这一刻的组件，代码由它自动生成 */
-  render: (state: S) => ReactElement;
+  /**
+   * 返回这一刻的组件，代码由它自动生成。
+   * 第二个参数 update 用来把预览里的手动操作写回面板：组件能自己变的状态（展开、勾选、选中、收藏、输入的字），
+   * 写成受控（value + onChange），onChange 里 update({ 面板的键: 新值 })。也能写面板上没有的键，记一些不显示的状态
+   */
+  render: (state: S, update: (patch: Partial<PlaygroundState>) => void) => ReactElement;
   /** 给预览区加类名，文档里调整摆放用 */
   stageClassName?: string;
 }
@@ -39,7 +43,8 @@ export function Playground<S extends PlaygroundState>({ controls, rules, media, 
   });
 
   const set = (key: string, value: string | boolean) => setRaw((s) => ({ ...s, [key]: value }));
-  const element = render(state as S);
+  const update = (patch: Partial<PlaygroundState>) => setRaw((s) => ({ ...s, ...patch }) as PlaygroundState);
+  const element = render(state as S, update);
 
   return (
     <div className="shell-pg">
