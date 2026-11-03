@@ -63,6 +63,42 @@ import * as Gen from './generation';
 />
 `} />
 
+### 拖文件进输入框
+
+<Demo stage="base" code={`
+() => {
+  const [items, setItems] = useState([]);
+  const drop = (files) =>
+    setItems((list) => {
+      let next = list;
+      files.forEach((f, i) => {
+        const kind = f.type.startsWith('video') ? 'video' : f.type.startsWith('audio') ? 'audio' : 'image';
+        next = [...next, { id: Date.now() + '-' + i, kind, name: referenceName(next, kind), src: kind === 'image' ? URL.createObjectURL(f) : undefined }];
+      });
+      return next;
+    });
+  return (
+    <PromptBox
+      placeholder="把图片、视频、音频拖到这里，拖别的类型会提示不支持"
+      onDropFiles={drop}
+      references={<ReferenceStack items={items} onAdd={() => {}} onRemove={(id) => setItems((list) => list.filter((i) => i.id !== id))} />}
+    />
+  );
+}
+`} />
+
+### 拖入时的提示：松手上传、不支持这种文件
+
+<Demo stage="base" code={`
+<div style={{ display: 'flex', gap: 16, width: '100%' }}>
+  {[false, true].map((rejected) => (
+    <div key={String(rejected)} style={{ position: 'relative', flex: 1, height: 160, borderRadius: 24, background: 'var(--color-bg-fill-surface)' }}>
+      <DropOverlay rejected={rejected} />
+    </div>
+  ))}
+</div>
+`} />
+
 ## ReferenceStack
 
 <ReferenceStackPlayground />

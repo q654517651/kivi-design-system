@@ -3,6 +3,7 @@ export * from './ProcessGroup';
 export * from './AskRecord';
 export * from './UserMessage';
 export * from './MediaStack';
+export * from './MediaGroup';
 export * from './QuestionPanel';
 export * from './QuestionOption';
 export * from './ActionCard';

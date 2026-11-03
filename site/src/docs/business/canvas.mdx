@@ -196,7 +196,7 @@ import { ConnectorPlayground, NodePlayground, NodeStackPlayground, PanelPlaygrou
 | `defaultOpen` | `boolean` | `false` | 非受控时一开始是否展开 |
 | `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发，参数是新的状态 |
 
-面板 `ParamPanel`：玻璃浮层，圆角 16、内边距 12、块间距 12。`ParamField`（`label` + 控件）：标题 14 号 secondary，和控件间距 4。`ParamValue`（`value`、`unit`）：滑块右边的数值框 56 × 46，圆角 6，底白 8%。
+面板 `ParamPanel`：玻璃浮层，宽 368（视频、音频、高级设置都一样），圆角 16、内边距 12、块间距 12。`ParamField`（`label` + 控件）：标题 14 号 secondary，和控件间距 4。`ParamValue`（`value`、`unit`）：滑块右边的数值框 56 × 46，圆角 6，底白 8%。
 
 ### ReferenceItem
 
@@ -209,7 +209,7 @@ import { ConnectorPlayground, NodePlayground, NodeStackPlayground, PanelPlaygrou
 | `src` | `string` | — | 缩略图地址，图片用 |
 | `badge` | `ReactNode` | — | 右上角标 20 × 20，只有左下圆角 4，黑 40% + 模糊 16：序号，或「首帧」「尾帧」 |
 | `duration` | `ReactNode` | — | 左下的视频时长，高 16，比如 `"12s"` |
-| `weight` | `ReactNode` | — | 底部通栏：Lora 权重，或「图片1」这类名字 |
+| `weight` | `ReactNode` | — | 底部通栏：Lora 权重。名字不写在卡片上（序号在右上角，名字只给 @ 引用和读屏用） |
 
 ### ReferenceFramePair
 

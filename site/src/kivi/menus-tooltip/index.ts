@@ -1,4 +1,5 @@
 export * from './Tooltip';
+export * from './Popover';
 export * from './Menu';
 export * from './MenuItem';
 export * from './MenuLabel';

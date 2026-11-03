@@ -12,3 +12,5 @@ export * from './composeHandlers';
 export * from './exclusivePlayback';
 export * from './useScrollLock';
 export * from './useAudioPlayer';
+export * from './useScrollFade';
+export * from './useFileDrop';

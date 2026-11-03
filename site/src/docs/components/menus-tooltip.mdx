@@ -2,6 +2,7 @@ import { Demo, PageHeader } from '@shell';
 import {
   DropdownPlayground,
   MenuPlayground,
+  PopoverPlayground,
   SidebarItemPlayground,
   SidebarLabelPlayground,
   SidebarMorePlayground,
@@ -11,7 +12,7 @@ import {
 <PageHeader
   eyebrow="通用组件"
   title="菜单和提示"
-  lead="Tooltip 是悬停说明，Menu 是点开或右键后选操作的菜单，最后是主站侧栏的三个零件。"
+  lead="Tooltip 是悬停说明，Popover 是带箭头的长说明，Menu 是点开或右键后选操作的菜单，最后是主站侧栏的三个零件。"
   figma={['菜单和提示', '146:607']}
   status="草稿 0.1.0"
   code="kivi/menus-tooltip"
@@ -35,6 +36,28 @@ import {
     <IconButton icon="Configuration" label="参数设置" variant="secondary" />
   </Tooltip>
 </>
+`} />
+
+## Popover
+
+<PopoverPlayground />
+
+### 点击型，带操作
+
+<Demo code={`
+<Popover
+  trigger="click"
+  placement="bottom-start"
+  title="删除这张图片？"
+  content={
+    <>
+      <div>删除后可在回收站找回 30 天。</div>
+      <Button size="sm" variant="danger" style={{ marginTop: 8 }}>删除</Button>
+    </>
+  }
+>
+  <Button variant="secondary" rightIcon="DownArrowSmall">更多</Button>
+</Popover>
 `} />
 
 ## Menu
@@ -187,6 +210,23 @@ import {
 | `disabled` | `boolean` | `false` | 禁用：不出现，触发元素照常。比如提示词没被截断，不用看全文 |
 
 其余原生 HTML 属性都能传。
+
+### Popover
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `content` | `ReactNode` | — | 内容，比一句话长的说明。13 / 20，`--color-text-fill-secondary` |
+| `title` | `ReactNode` | — | 标题，不写就只有内容。13 加粗，`--color-text-fill-primary`，和内容间距 4 |
+| `trigger` | `"hover"` `"click"` | `"hover"` | 悬停：停 `delay` 后出现，鼠标能挪进气泡里，键盘 Tab 聚焦（`:focus-visible`）也出，移开 150ms 后关。点击：点触发元素开关，点外面关；打开后焦点进气泡。两种都按 Esc 关闭、焦点回到触发元素 |
+| `placement` | `"top"` `"bottom"` `"left"` `"right"`，各可加 `-start` `-end` | `"bottom"` | 出在触发元素哪边，默认居中；`-start` / `-end` 对齐上下方向的左右边、左右方向的上下边。放不下自动翻到对面，不出屏幕 |
+| `offset` | `number` | `10` | 离触发元素的距离：箭头 6 + 空 4 |
+| `open` / `defaultOpen` / `onOpenChange` | `boolean` | 关 | 显示。受控时仍按 `trigger` 触发，通过 `onOpenChange` 通知 |
+| `delay` | `number` | `200` | 悬停多久后出现，毫秒，只有悬停型用 |
+| `disabled` | `boolean` | `false` | 禁用：不出现，触发元素照常 |
+| `onInteractOutside` | `(event: PointerEvent) => void` | — | 点击型点了气泡外面时调用，`event.preventDefault()` 拦住这次关闭，比如点的是另一个浮层 |
+| `children` | `ReactElement` | — | 触发元素，比如 Button。悬停型会加 `aria-describedby`，点击型加 `aria-haspopup="dialog"`、`aria-expanded`、`aria-controls` |
+
+气泡底 `--color-bg-fill-popup`（实色，不用玻璃，同 Tooltip），圆角 8，内边距 12，最宽 320，不加阴影。箭头 12 × 6，同色，指着触发元素中心；离气泡圆角至少 8 + 6，不贴到角上。出现 150ms ease-out 淡入，消失 100ms ease-in 淡出（同 Tooltip）。悬停型 `role="tooltip"`，点击型 `role="dialog"`，标题作为 `aria-labelledby`。ref 给包住触发元素的外壳 `<span>`，其余原生 `<span>` 属性都能传。
 
 ### Menu
 

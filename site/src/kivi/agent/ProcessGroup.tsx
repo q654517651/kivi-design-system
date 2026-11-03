@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import type { IconName } from '../icons';
 import { cx } from '../utils';
-import { useControllable } from '../hooks';
+import { useControllable, useScrollFade } from '../hooks';
 import { ProcessDrawer } from './ProcessDrawer';
 import { ProcessRow, type ProcessRowStatus } from './ProcessRow';
 import './agent.css';
@@ -36,7 +36,6 @@ export interface ProcessGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 
 
 const SUMMARY = -1; // 显示汇总行
 const MIN_STAY = 300; // 每个工具最少停 0.3 秒，太快了一行会闪
-const FADE_AFTER = 6; // 展开列表最高 160，超过 6 行底部渐隐
 const ROW = 20; // 一行高
 const GAP = 6; // 行距，也是列表和汇总行的间距
 const LIST_MAX = 160;
@@ -67,6 +66,7 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
   const lastSwitch = useRef(0);
   const [expanded, setExpanded] = useControllable(expandedProp, defaultExpanded, onExpandedChange);
   const listId = useId();
+  const list = useScrollFade<HTMLDivElement>();
 
   useEffect(() => {
     lastSwitch.current = performance.now();
@@ -136,7 +136,7 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
       </div>
       {canExpand && (
         <ProcessDrawer open={expanded} distance={listHeight}>
-          <div id={listId} className={cx('kv-process-list', count > FADE_AFTER && 'kv-process-list--fade')}>
+          <div ref={list.ref} id={listId} className="kv-process-list" data-fade={list.fade} onScroll={list.onScroll}>
             {steps.map((s, i) => (
               <ProcessRow key={s.id ?? i} level="sub" icon={s.icon} action={s.action} object={s.object} status={s.status} />
             ))}

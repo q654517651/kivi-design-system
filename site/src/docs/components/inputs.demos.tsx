@@ -1,4 +1,4 @@
-import { cx, Icon, Input, Menu, MenuItem, NumberInput, Select, Textarea, type IconName, type SelectOption, type SelectProps, type SelectVariant } from '@kivi';
+import { cx, Dropzone, Icon, Input, Menu, MenuItem, NumberInput, Select, Textarea, Toaster, UploadRing, UploadTile, type IconName, type SelectOption, type SelectProps, type SelectVariant, type UploadTileErrorStyle, type UploadTileSize, type UploadTileStatus } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 
 // 输入控件页的四个属性面板：所有样式、状态都在面板里切。参数表在 inputs.mdx
@@ -246,5 +246,108 @@ export function TextareaPlayground() {
         render={renderTextarea}
       />
     </div>
+  );
+}
+
+// ---------- UploadTile ----------
+
+const TILE_PIC = './placeholders/kivi-future-1x1.webp';
+
+type UploadTileState = { status: UploadTileStatus; size: string; errorStyle: UploadTileErrorStyle; state: string; progress: string; disabled: boolean; src: string };
+
+/** 选了文件用本地预览（object URL），没选过用占位图 */
+const previewOf = (files: File[]) => (files[0]?.type.startsWith('image/') ? URL.createObjectURL(files[0]) : '');
+
+function renderUploadTile(s: UploadTileState, update: Update) {
+  const src = s.src || TILE_PIC;
+  return (
+    <UploadTile
+      status={s.status}
+      size={Number(s.size) as UploadTileSize}
+      errorStyle={s.status === 'error' ? s.errorStyle : undefined}
+      src={s.status === 'empty' ? undefined : src}
+      progress={s.status === 'uploading' ? Number(s.progress) : undefined}
+      className={s.state === 'hover' ? 'is-hover' : undefined}
+      dragging={s.state === 'dragover' || undefined}
+      disabled={s.disabled || undefined}
+      accept="image/*"
+      onSelect={(files) => update({ status: 'done', src: previewOf(files) })}
+      onReplace={(files) => update({ src: previewOf(files) })}
+      onRemove={() => update({ status: 'empty', src: '' })}
+      onRetry={() => update({ status: 'uploading', progress: '35' })}
+    />
+  );
+}
+
+export function UploadTilePlayground() {
+  return (
+    <Playground<UploadTileState>
+      controls={[
+        { key: 'status', label: '状态', type: 'segment', value: 'empty', options: [['empty', '空'], ['uploading', '上传中'], ['done', '完成'], ['error', '失败']] },
+        { key: 'size', label: '尺寸', type: 'segment', value: '96', options: [['96', '96'], ['64', '64']] },
+        { key: 'errorStyle', label: '失败样式（待定）', type: 'segment', value: 'outline', options: [['outline', '红描边'], ['dim', '变暗'], ['badge', '角标']] },
+        { key: 'state', label: '交互', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['dragover', '拖入']] },
+        { key: 'progress', label: '进度', type: 'segment', value: '35', options: [['0', '0%'], ['35', '35%'], ['72', '72%'], ['100', '100%']] },
+        { key: 'disabled', label: '禁用', type: 'toggle', value: false },
+      ]}
+      rules={(s) => ({
+        errorStyle: s.status !== 'error',
+        progress: s.status !== 'uploading',
+        state: s.status === 'uploading' ? true : s.status === 'error' ? ['dragover'] : [],
+      })}
+      render={renderUploadTile}
+    />
+  );
+}
+
+// ---------- Dropzone ----------
+
+type DropzoneState = { state: string; accept: string; disabled: boolean };
+
+const ACCEPT: Record<string, string | undefined> = { any: undefined, image: 'image/*', media: 'image/*,video/*' };
+
+function renderDropzone(s: DropzoneState) {
+  return (
+    <Dropzone
+      accept={ACCEPT[s.accept]}
+      maxSize={10 * 1024 * 1024}
+      className={s.state === 'hover' ? 'is-hover' : undefined}
+      dragging={s.state === 'dragover' || s.state === 'rejected' || undefined}
+      rejected={s.state === 'rejected' || undefined}
+      disabled={s.disabled || undefined}
+    />
+  );
+}
+
+/** 拒收时弹 toast，这一页放一个 Toaster 就够 */
+export function DropzonePlayground() {
+  return (
+    <div className="in-pg-dropzone">
+      <DocStyle css=".in-pg-dropzone .shell-pg-stage .kv-dropzone { width: 360px; }" />
+      <Toaster />
+      <Playground<DropzoneState>
+        controls={[
+          { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['dragover', '拖入'], ['rejected', '不收']] },
+          { key: 'accept', label: '格式', type: 'segment', value: 'image', options: [['any', '不限'], ['image', '图片'], ['media', '图片、视频']] },
+          { key: 'disabled', label: '禁用', type: 'toggle', value: false },
+        ]}
+        rules={(s) => (s.disabled ? { state: ['dragover', 'rejected'] } : {})}
+        render={renderDropzone}
+      />
+    </div>
+  );
+}
+
+// ---------- UploadRing ----------
+
+type UploadRingState = { progress: string };
+
+export function UploadRingPlayground() {
+  return (
+    <Playground<UploadRingState>
+      controls={[{ key: 'progress', label: '进度', type: 'segment', value: '40', options: [['0', '0%'], ['40', '40%'], ['75', '75%'], ['100', '100%']] }]}
+      media={() => true}
+      render={(s) => <UploadRing progress={Number(s.progress)} />}
+    />
   );
 }

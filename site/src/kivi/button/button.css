@@ -111,8 +111,8 @@
   --kv-fill-hover: var(--color-on-media-fill-hover);
   --kv-fill-pressed: var(--color-on-media-fill-hover);
   --kv-content: var(--color-on-media-text);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
 }
 
 /* 浮层无底（只有 IconButton）：平时没有底、不模糊，悬停、按下的底同浮层 */
@@ -271,7 +271,7 @@
 /* ---------- ButtonGroup：按钮条 ---------- */
 
 /* 盖在图片、视频上的一排按钮合成一条：高 32（按钮 28 + 四周 2），按钮间距 4。
-   玻璃底 + 描边 border-subtle（描边画在里面，不占位置），圆角 8 = 按钮圆角 6 + 2 */
+   底用 on-media（贴在图片、视频上，11-03 从玻璃改过来），不加描边；圆角 8 = 按钮圆角 6 + 2 */
 .kv-button-group {
   display: inline-flex;
   align-items: center;
@@ -279,9 +279,7 @@
   box-sizing: border-box;
   padding: var(--spacing-2);
   border-radius: var(--border-radius-8);
-  outline: var(--border-width-1) solid var(--color-border-subtle);
-  outline-offset: calc(var(--border-width-1) * -1);
-  background: var(--color-bg-fill-glass);
+  background: var(--color-on-media-fill);
   -webkit-backdrop-filter: blur(var(--effect-glass-blur));
   backdrop-filter: blur(var(--effect-glass-blur));
 }

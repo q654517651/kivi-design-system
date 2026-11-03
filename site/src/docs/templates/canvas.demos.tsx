@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { AskRecord, Button, Icon, IconButton, MediaStack, ProcessGroup, ProcessRow, SendButton, UserMessage, type ProcessStep } from '@kivi';
+import { AskRecord, Button, DropOverlay, Icon, IconButton, MediaStack, ProcessGroup, ProcessRow, SendButton, Toaster, UserMessage, toast, type ProcessStep } from '@kivi';
+import { rejectMessage, useFileDrop } from '../../kivi/hooks';
 import { MiniCanvas, type CanvasNodeKey, type MiniCanvasHandle } from '../business/canvas.demos';
 import { TemplateFrame } from './frame';
 
@@ -24,6 +25,13 @@ const RESULTS: { node: CanvasNodeKey; icon: 'ImageGeneration' | 'VideoGeneration
 function AgentPanel({ onLocate }: { onLocate: (key: CanvasNodeKey) => void }) {
   const [text, setText] = useState('');
   const stream = useRef<HTMLDivElement>(null);
+
+  // 把文件拖到输入框上：盖一层「松手上传」，不收的类型提示不支持。模板只能看，放下只弹一条提示
+  const { dragging, rejected, bind } = useFileDrop({
+    accept: 'image/*,video/*,audio/*',
+    onFiles: (files) => toast.success(`已添加 ${files.length} 个文件`),
+    onReject: (_, reason) => toast.error(rejectMessage(reason)),
+  });
 
   // 进来停在最新一条
   useLayoutEffect(() => {
@@ -69,18 +77,21 @@ function AgentPanel({ onLocate }: { onLocate: (key: CanvasNodeKey) => void }) {
         </div>
       </div>
 
-      <div className="tpl-cv__composer">
+      <div className="tpl-cv__composer" {...bind}>
         <textarea aria-label="和 Agent 对话" placeholder="描述任何你想要生成的内容" value={text} onChange={(e) => setText(e.target.value)} />
         <div className="tpl-cv__tools">
           <div>
             <IconButton icon="Add" label="添加" variant="text" />
-            <IconButton icon="Mdoel" label="模型" variant="text" />
+            <IconButton icon="Mdoel" label="模型偏好" variant="text" />
             <IconButton icon="Skill" label="技能" variant="text" />
             <IconButton icon="Hand" label="手" variant="text" />
+            {/* 切换对话用的大模型（GPT、Claude、千问…）：内部测试用的隐藏功能，图标是当前模型的厂商 Logo */}
+            <IconButton icon="Openai" label="切换对话模型（内部测试）" variant="text" />
           </div>
           {/* 只能看：有字也发不出去 */}
           <SendButton disabled={!text.trim()} />
         </div>
+        <DropOverlay active={dragging} rejected={rejected} />
       </div>
     </aside>
   );
@@ -91,6 +102,7 @@ export function CanvasTemplate() {
   const canvas = useRef<MiniCanvasHandle>(null);
   return (
     <TemplateFrame>
+      <Toaster />
       <div className="tpl-cv">
         <MiniCanvas ref={canvas} chrome={false} fake={false} phases={{ video: 'done' }} className="tpl-cv__canvas" />
         <AgentPanel onLocate={(key) => canvas.current?.focus(key)} />

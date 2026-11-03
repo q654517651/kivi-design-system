@@ -51,7 +51,7 @@ import { DialogPlayground } from './dialog.demos';
       <Dialog
         open={edit}
         onOpenChange={setEdit}
-        size="m"
+        size={560}
         closeOnMaskClick={false}
         title="编辑作品"
         description="改完点保存；也可以在这里删除。"
@@ -90,7 +90,7 @@ import { DialogPlayground } from './dialog.demos';
 | `open` | `boolean` | — | 打开。传了就是受控，在 `onOpenChange` 里改；不想自己管用 `defaultOpen` |
 | `defaultOpen` | `boolean` | `false` | 非受控时一开始是否打开 |
 | `onOpenChange` | `(open: boolean) => void` | — | 按 Esc、点遮罩、点关闭按钮时传 `false`；底栏按钮自己调 `setOpen(false)` |
-| `size` | `"s"` `"m"` `"l"` `"xl"` `"full"` | `"s"` | 宽 400 / 720 / 1024 / 1200 / 100vw，结构、间距一样。全屏待定，只定了宽度 |
+| `size` | `400` `560` `800` `1024` `1200` `"full"` | `400` | 宽度。400 确认、重命名；560 单列表单、分步问答；800 阅读详情、带插图的说明；1024 卡片列表、裁剪；1200 编辑器、多栏；`"full"` 铺满窗口、没有圆角。结构、间距都一样。高度跟着内容走，离窗口边 32，超出时内容区滚动；分步弹窗固定高度 |
 | `title` | `ReactNode` | — | 标题，16 / 24 粗。不传就没有标题栏，关闭按钮也跟着没有 |
 | `showClose` | `boolean` | `true` | 标题栏里的关闭按钮，IconButton 32 · 文字类型 |
 | `description` | `ReactNode` | — | 描述，14 / 22 secondary，和标题栏间距 8 |

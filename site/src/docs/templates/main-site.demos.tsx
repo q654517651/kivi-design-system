@@ -20,6 +20,7 @@ import {
   SidebarLabel,
   SidebarMore,
   Tag,
+  Toaster,
   Tooltip,
   UserMessage,
   placeholderImageSrc,
@@ -27,6 +28,7 @@ import {
   type PlaceholderImageName,
   type PlaceholderImageRatio,
   type ProcessStep,
+  type ReferenceKind,
   type ReferenceStackItem,
   type ResultTileAction,
   type ResultTileStatus,
@@ -343,7 +345,7 @@ export function Sidebar({
           <Icon name="Logo" />
           {/* 展开时在右边；收起时叠在 Logo 上，悬停 Logo 才换成它。轻：平时 50%，悬停变亮 */}
           <Tooltip content={toggle} placement={collapsed ? 'right' : 'bottom'} className="tpl-ms__toggle">
-            <IconButton icon="Sidebar" label={toggle} variant="light" onClick={() => setCollapsed(!collapsed)} />
+            <IconButton icon="Sidebar" label={toggle} variant="light" size={28} onClick={() => setCollapsed(!collapsed)} />
           </Tooltip>
         </div>
         <SidebarItem icon="Create" collapsed={collapsed}>创作</SidebarItem>
@@ -409,10 +411,22 @@ function Composer() {
   const pool: PlaceholderImageName[] = ['ip-peek', 'bunny-gouache', 'monstera-dots', 'kivi-future', 'ip-gouache'];
   const add = () =>
     setItems((list) => [...list, { id: `c${Date.now()}`, kind: 'image', name: referenceName(list, 'image'), src: img(pool[list.length % pool.length], '1:1') }]);
+  // 把文件拖到输入框上：加进参考区（缩略图用占位图，图片用本地预览）
+  const dropFiles = (files: File[]) =>
+    setItems((list) => {
+      let next = list;
+      files.forEach((f, i) => {
+        const kind: ReferenceKind = f.type.startsWith('video') ? 'video' : f.type.startsWith('audio') ? 'audio' : 'image';
+        const src = kind === 'image' ? URL.createObjectURL(f) : kind === 'video' ? img(pool[(next.length + i) % pool.length], '1:1') : undefined;
+        next = [...next, { id: `c${Date.now()}-${i}`, kind, name: referenceName(next, kind), src, duration: kind === 'video' ? '5s' : kind === 'audio' ? '15s' : undefined }];
+      });
+      return next;
+    });
   return (
     <PromptBox
       value={text}
       onChange={setText}
+      onDropFiles={dropFiles}
       placeholder={PLACEHOLDER[task]}
       references={<ReferenceStack items={items} onAdd={add} onRemove={(id) => setItems((list) => list.filter((i) => i.id !== id))} />}
       toolbar={
@@ -487,6 +501,7 @@ export function MainSiteTemplate() {
 
   return (
     <TemplateFrame>
+      <Toaster />
       <div className="tpl-ms">
         <Sidebar />
         <main className="tpl-ms__main" style={{ '--tpl-composer-h': `${composerH}px` } as CSSProperties}>

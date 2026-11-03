@@ -2,14 +2,18 @@ import { useEffect, useRef } from 'react';
 import {
   Button,
   EmptyState,
+  Image,
   Loading,
   Skeleton,
   Toast,
   Toaster,
+  placeholderImageSrc,
   toast,
   type EmptyStateScene,
   type EmptyStateSize,
+  type ImageFit,
   type LoadingSize,
+  type PlaceholderImageRatio,
   type SkeletonShape,
   type ToastType,
 } from '@kivi';
@@ -132,6 +136,39 @@ export function SkeletonPlayground() {
         { key: 'shape', label: '形状', type: 'segment', value: 'rect', options: [['rect', '矩形'], ['circle', '圆形'], ['text', '文字行']] },
       ]}
       render={(s) => <Skeleton shape={s.shape} {...SKELETON_SIZE[s.shape]} />}
+    />
+  );
+}
+
+// ---------- Image ----------
+
+type ImageState = { status: string; ratio: PlaceholderImageRatio; fit: ImageFit; size: string; retry: boolean };
+
+// 面板上的「状态」靠换地址来摆：加载中 = 还没有地址，已加载 = 占位图，失败 = 一个不存在的地址
+const IMAGE_BROKEN = './placeholders/not-found.webp';
+
+export function ImagePlayground() {
+  return (
+    <Playground<ImageState>
+      controls={[
+        { key: 'status', label: '状态', type: 'segment', value: 'loaded', options: [['loading', '加载中'], ['loaded', '已加载'], ['error', '失败']] },
+        { key: 'ratio', label: '比例', type: 'segment', value: '1:1', options: [['1:1', '1:1'], ['3:4', '3:4'], ['16:9', '16:9'], ['9:16', '9:16']] },
+        { key: 'fit', label: '填充', type: 'segment', value: 'cover', options: [['cover', '铺满'], ['contain', '完整显示']] },
+        { key: 'size', label: '宽', type: 'segment', value: '256', options: [['96', '96'], ['256', '256']] },
+        { key: 'retry', label: '可重试', type: 'toggle', value: false },
+      ]}
+      // 只有失败才有重试
+      rules={(s) => (s.status === 'error' ? {} : { retry: true })}
+      render={(s) => (
+        <Image
+          src={s.status === 'loading' ? undefined : s.status === 'error' ? IMAGE_BROKEN : placeholderImageSrc('ip-gouache', s.ratio)}
+          alt="示例图片"
+          ratio={s.ratio}
+          fit={s.fit}
+          onRetry={s.retry ? () => {} : undefined}
+          style={{ width: Number(s.size) }}
+        />
+      )}
     />
   );
 }

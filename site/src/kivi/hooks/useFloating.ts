@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 
-// 浮层定位：Tooltip、Dropdown、播放器音量条都用。浮层自己是 position: fixed，挂在 body 上。
+// 浮层定位：Tooltip、Popover、Dropdown、播放器音量条都用。浮层自己是 position: fixed，挂在 body 上。
 
 export type Placement = 'bottom-start' | 'bottom' | 'bottom-end' | 'top-start' | 'top' | 'top-end';
-/** 再加左右两边：只给 Tooltip 用（收起的侧栏），菜单不往左右出 */
-export type FloatingPlacement = Placement | 'right' | 'left';
+/** 再加左右两边（可以带 -start / -end 对齐上边、下边）：Tooltip（收起的侧栏）、Popover 用，菜单不往左右出 */
+export type FloatingPlacement = Placement | 'right' | 'left' | 'right-start' | 'right-end' | 'left-start' | 'left-end';
 
 /** 锚点：视口里的一个矩形；右键菜单用宽高为 0 的点 */
 export interface AnchorRect {
@@ -33,6 +33,9 @@ const MARGIN = 8;
  *   --kv-popup-room    这一边还剩多高，菜单最高不超过它
  *   --kv-popup-origin  展开动画从哪长出来：锚点那一边、锚点对着的位置（右键就是鼠标点）
  *   --kv-popup-shift   展开时往外移的方向：在下方从上往下，在上方从下往上
+ * 再给带箭头的浮层（Popover）两样：
+ *   data-side          实际出在锚点哪一边（top / bottom / left / right），放不下翻过去之后也是翻后的
+ *   --kv-anchor-x / -y 锚点中心在浮层里的位置（上下出用 x，左右出用 y），箭头照它定位
  */
 export function place(el: HTMLElement, a: AnchorRect, placement: FloatingPlacement, offset: number, matchWidth?: boolean) {
   if (matchWidth) el.style.width = `${a.width}px`;
@@ -42,20 +45,24 @@ export function place(el: HTMLElement, a: AnchorRect, placement: FloatingPlaceme
   const vw = document.documentElement.clientWidth;
   const vh = document.documentElement.clientHeight;
 
-  // 左右两边（收起的侧栏这类竖排的目标）：上下居中，放不下就翻到另一边
-  if (placement === 'right' || placement === 'left') {
+  // 左右两边（收起的侧栏这类竖排的目标）：默认上下居中，-start / -end 对齐上边、下边；放不下就翻到另一边
+  if (placement.startsWith('right') || placement.startsWith('left')) {
     const roomRight = vw - MARGIN - (a.right + offset);
     const roomLeft = a.left - offset - MARGIN;
-    let side = placement;
+    let side = placement.startsWith('right') ? 'right' : 'left';
     if (side === 'right' && roomRight < w && roomLeft > roomRight) side = 'left';
     else if (side === 'left' && roomLeft < w && roomRight > roomLeft) side = 'right';
+    const align = placement.split('-')[1] ?? 'center';
     const anchorY = (a.top + a.bottom) / 2;
-    const top = Math.max(MARGIN, Math.min(anchorY - natural / 2, vh - natural - MARGIN));
+    const wanted = align === 'start' ? a.top : align === 'end' ? a.bottom - natural : anchorY - natural / 2;
+    const top = Math.max(MARGIN, Math.min(wanted, vh - natural - MARGIN));
     const left = side === 'right' ? a.right + offset : a.left - offset - w;
     el.style.left = `${Math.round(left)}px`;
     el.style.top = `${Math.round(top)}px`;
     el.style.setProperty('--kv-popup-origin', `${side === 'right' ? '0' : '100%'} ${Math.round(anchorY - top)}px`);
     el.style.setProperty('--kv-popup-shift', '0px');
+    el.style.setProperty('--kv-anchor-y', `${Math.round(anchorY - top)}px`);
+    el.dataset.side = side;
     const outX = a.bottom < 0 || a.top > vh || a.right < 0 || a.left > vw;
     el.style.visibility = outX ? 'hidden' : '';
     return;
@@ -81,6 +88,8 @@ export function place(el: HTMLElement, a: AnchorRect, placement: FloatingPlaceme
   const originX = Math.max(0, Math.min(w, anchorX - left));
   el.style.setProperty('--kv-popup-origin', `${Math.round(originX)}px ${side === 'bottom' ? '0' : '100%'}`);
   el.style.setProperty('--kv-popup-shift', side === 'bottom' ? '-4px' : '4px');
+  el.style.setProperty('--kv-anchor-x', `${Math.round(a.left + a.width / 2 - left)}px`);
+  el.dataset.side = side;
   // 锚点整个滚出屏幕时先藏起来，免得弹出层卡在屏幕边上盖住内容
   const out = a.bottom < 0 || a.top > vh || a.right < 0 || a.left > vw;
   el.style.visibility = out ? 'hidden' : '';

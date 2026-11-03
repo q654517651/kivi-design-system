@@ -12,6 +12,7 @@ export * from './utils';
 
 // 基础
 export * from './placeholder-image';
+export * from './image';
 
 // 通用组件
 export * from './button';
@@ -22,6 +23,7 @@ export * from './dialog';
 export * from './feedback';
 export * from './tabs-tags-avatar';
 export * from './video-player';
+export * from './scroll-area';
 
 // 业务组件
 export * from './generating';

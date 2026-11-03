@@ -57,7 +57,8 @@ function DialogDoc({ open: _open, onOpenChange: _onOpenChange, showClose, ...pan
 DialogDoc.displayName = 'Dialog';
 
 type DialogState = {
-  size: DialogSize;
+  /** 面板的分段只收字符串，用的时候转成数字 */
+  size: string;
   header: boolean;
   title: string;
   close: boolean;
@@ -87,7 +88,7 @@ function renderDialog(s: DialogState) {
     <DialogDoc
       open
       onOpenChange={() => {}}
-      size={s.size}
+      size={Number(s.size) as DialogSize}
       title={s.header ? s.title : undefined}
       showClose={s.header && !s.close ? false : undefined}
       description={s.desc ? s.descText : undefined}
@@ -102,7 +103,7 @@ export function DialogPlayground() {
   return (
     <Playground<DialogState>
       controls={[
-        { key: 'size', label: '尺寸', type: 'segment', value: 's', options: [['s', 'S'], ['m', 'M'], ['l', 'L'], ['xl', 'XL']] },
+        { key: 'size', label: '宽度', type: 'segment', value: '400', options: [['400', '400'], ['560', '560'], ['800', '800'], ['1024', '1024'], ['1200', '1200']] },
         { key: 'header', label: '显示标题栏', type: 'toggle', value: true },
         { key: 'title', label: '标题', type: 'text', value: '弹窗标题' },
         { key: 'close', label: '显示关闭', type: 'toggle', value: true },

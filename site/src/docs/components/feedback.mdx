@@ -1,6 +1,7 @@
 import { Demo, PageHeader } from '@shell';
 import {
   EmptyStatePlayground,
+  ImagePlayground,
   LoadingPlayground,
   SkeletonPlayground,
   ToastPlayground,
@@ -10,7 +11,7 @@ import {
 <PageHeader
   eyebrow="通用组件"
   title="反馈"
-  lead="操作之后告诉用户发生了什么：Toast 轻提示、Loading 加载、Skeleton 骨架屏、EmptyState 空状态。"
+  lead="操作之后告诉用户发生了什么：Toast 轻提示、Loading 加载、Skeleton 骨架屏、Image 图片、EmptyState 空状态。"
   figma={['反馈', '177:714']}
   status="待确认 0.1.0"
   code="kivi/feedback"
@@ -42,6 +43,20 @@ import {
     <Skeleton shape="text" />
   </div>
   <Skeleton shape="rect" height={160} style={{ gridColumn: '1 / -1' }} />
+</div>
+`} />
+
+## Image
+
+<ImagePlayground />
+
+### 图片网格里的失败和重试
+
+<Demo code={`
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 96px)', gap: 'var(--spacing-8)' }}>
+  <Image src={placeholderImageSrc('ip-gouache', '1:1')} alt="已加载" ratio="1:1" />
+  <Image alt="加载中" ratio="1:1" />
+  <Image src="./placeholders/not-found.webp" alt="失败" ratio="1:1" onRetry={() => {}} />
 </div>
 `} />
 
@@ -103,6 +118,22 @@ import {
 | `height` | `number` `string` | — | 照真实内容。文字行默认 12，不用写 |
 
 底色 `--color-bg-fill-container-light-1`（白 8%）；扫光从左往右，白 12%（`--color-bg-fill-container-light-1-hover`），1.4 秒一轮，匀速；系统开了「减少动态效果」时只留底色。Figma 里的 160×90、32×32、200×12 只是示意，不是默认尺寸。其余原生 `<div>` 属性都能传。
+
+### Image
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `src` | `string` | — | 图片地址。换了地址重新加载。不写（结果还没出来）一直是加载中 |
+| `alt` | `string` | `""` | 替代文字，读屏用；纯装饰的图留空 |
+| `ratio` | `string` `number` | — | 比例，`"1:1"`、`"16:9"` 或宽 / 高的数字。不写就由外面定宽高 |
+| `fit` | `"cover"` `"contain"` | `"cover"` | 铺满、居中裁切 / 完整显示留空 |
+| `onRetry` | `() => void` | — | 传了，失败时整块是一个按钮：点一下重新加载（地址后面加 `retry=次数` 避开缓存），同时调用它；不传就只是静态的失败图。短边 ≥ 160 时插图下面写「重试」，12，`--color-text-fill-secondary`，间距 8；更小的只有插图，靠 `aria-label` 读屏 |
+| `fallback` | `ReactNode` | — | 自定义失败时显示的内容，替换默认的 IP 插图，仍居中 |
+| `onLoad` / `onError` | `(event) => void` | — | 加载完成、失败，和组件自己的状态切换合并，不会被吞掉 |
+
+状态写在根元素 `data-status`：`loading` 是 Skeleton 扫光（盖满）；`loaded` 图片 200ms ease-out 淡入；`error` 底 `--color-bg-fill-container-dark`，居中放 IP 失败插图（`failed.png`，和 EmptyState 失败场景同一张），大小 = 短边的一半，最大 120、最小 32，悬停（可重试时）底换 `--color-bg-fill-container-dark-hover`。圆角默认 8，外层要裁切时在 `className` 里改。系统开了减少动态效果就直接切换，不淡入。
+
+`className`、`style` 给外层；`ref` 和其余 `<img>` 属性（`loading`、`crossOrigin`、`srcSet`…）给里面的 `<img>`。
 
 ### EmptyState
 

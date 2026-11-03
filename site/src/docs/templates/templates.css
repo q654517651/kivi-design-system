@@ -131,12 +131,12 @@
   flex: none;
 }
 
-/* Logo 行：Logo 左 8，收起按钮（IconButton 32）在右边 */
+/* Logo 行：Logo 左 8，收起按钮（IconButton 28）在右边；行高 28（11-03 照 Figma，原来 32） */
 .tpl-ms__brand {
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 32px;
+  min-height: 28px;
   padding: 0 0 var(--spacing-12) var(--spacing-8);
 }
 
@@ -166,7 +166,7 @@
 }
 
 .tpl-ms__side-wrap[data-collapsed] .tpl-ms__toggle {
-  right: var(--spacing-2);
+  right: var(--spacing-4); /* 36 宽的格子里放 28 的按钮，两边各 4 */
   opacity: 0;
   transition:
     right var(--motion-duration-300) var(--motion-ease-in-out),
@@ -219,7 +219,7 @@
   display: flex;
   flex-direction: column;
   gap: 48px; /* Figma 没变量 */
-  padding: 72px var(--spacing-24) var(--spacing-32);
+  padding: 104px var(--spacing-24) var(--spacing-32); /* 第一条内容离顶 104，照即梦 */
 }
 
 /* 输入框浮在记录流上（玻璃），记录从它下面滚过去；记录流底部留出输入框的高度 */
@@ -241,7 +241,7 @@
   padding-bottom: calc(var(--tpl-composer-h, 220px) + var(--spacing-32));
 }
 
-/* 右上角：猕猴桃余额 + 头像 */
+/* 右上角：猕猴桃余额 + 头像。离边 16、内边距 4 / 12、间距 8、头像 24；玻璃（和菜单一样：glass + 模糊 32 + 描边 border-subtle），11-03 用户定 */
 .tpl-ms__wallet {
   position: absolute;
   top: var(--spacing-16);
@@ -253,7 +253,9 @@
   padding: var(--spacing-4) var(--spacing-4) var(--spacing-4) var(--spacing-12);
   border: var(--border-width-1) solid var(--color-border-subtle);
   border-radius: var(--border-radius-12);
-  background: var(--color-bg-fill-surface);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-brand-solid);
   font-size: var(--font-size-13);
   line-height: var(--font-line-height-20);
@@ -310,7 +312,7 @@
 
 .tpl-cv {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-columns: minmax(0, 1fr) 500px; /* 照线上：默认 500，可拖 360–720；网站不做拖动 */
   height: 100%;
 }
 
@@ -363,6 +365,7 @@
 }
 
 .tpl-cv__composer {
+  position: relative; /* DropOverlay 盖在它上面 */
   display: flex;
   flex-direction: column;
   gap: var(--spacing-12);

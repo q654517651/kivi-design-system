@@ -5,14 +5,14 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
-  type DragEvent,
   type HTMLAttributes,
   type ReactNode,
   type Ref,
 } from 'react';
+import { toast } from '../feedback';
 import { cx } from '../utils';
-import { composeHandlers, useControllable, useMergedRef } from '../hooks';
+import { composeDropHandlers, rejectMessage, useControllable, useFileDrop, useMergedRef } from '../hooks';
+import { DropOverlay } from './DropOverlay';
 import { PromptBoxContext } from './context';
 import './prompt-box.css';
 
@@ -33,8 +33,10 @@ export interface PromptBoxProps extends Omit<HTMLAttributes<HTMLDivElement>, 'on
   actions?: ReactNode;
   /** 提示词最高多高，超过就在里面滚动，数字按 px。默认 240。Figma 没定，待定 */
   maxHeight?: number;
-  /** 把文件拖进输入框时触发，参数是文件列表。不传就不接收拖拽。拖进来的样子 Figma 没定，待定 */
+  /** 把文件拖进输入框时触发，参数是通过 `accept` 检查的文件列表：一般是加进参考区（上传、占位进度自己管）。不传就不接收拖拽。拖进来时盖一层 DropOverlay「松手上传」，类型不收的显示「不支持这种文件」、不接收，放下后弹 toast（页面上要放 `<Toaster />`）。样子 Figma 没定，待定 */
   onDropFiles?: (files: File[]) => void;
+  /** 收哪些文件，写法同 `<input accept>`。默认图片、视频、音频 */
+  accept?: string;
   /** 提示词输入框的 ref，聚焦、选中用 */
   inputRef?: Ref<HTMLTextAreaElement>;
   /** 提示词输入框的说明，读屏用，默认「提示词」 */
@@ -43,6 +45,8 @@ export interface PromptBoxProps extends Omit<HTMLAttributes<HTMLDivElement>, 'on
 
 /** 参考区展开时，盖不住的字从盖住的边往右渐隐出来，渐隐这么宽 */
 const FADE = 40;
+
+const DEFAULT_ACCEPT = 'image/*,video/*,audio/*';
 
 /**
  * 主站首页的创作输入框，主站 Agent 专用。上面是内容区（参考区 + 提示词），下面是工具条：左边先选任务类型，后面的控件跟着模式和模型变；右边是张数和生成。
@@ -60,9 +64,11 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
     actions,
     maxHeight = 240,
     onDropFiles,
+    accept = DEFAULT_ACCEPT,
     inputRef,
     inputLabel = '提示词',
     className,
+    onDragEnter,
     onDragOver,
     onDragLeave,
     onDrop,
@@ -73,7 +79,14 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
   const [value, setValue] = useControllable(valueProp, defaultValue, onChange);
   const textRef = useRef<HTMLTextAreaElement | null>(null);
   const setRefs = useMergedRef(textRef, inputRef);
-  const [dragOver, setDragOver] = useState(false);
+  // 拖文件进来：不传 onDropFiles 就不接收
+  const { dragging, rejected, bind } = useFileDrop({
+    accept,
+    disabled: !onDropFiles,
+    onFiles: onDropFiles,
+    onReject: (_, reason) => toast.error(rejectMessage(reason)),
+  });
+  const dropHandlers = composeDropHandlers({ onDragEnter, onDragOver, onDragLeave, onDrop }, bind);
 
   // 随内容长高：先放开高度量一下内容多高，再夹在最低（CSS 里的 120）和最高之间
   const fit = useCallback(() => {
@@ -113,28 +126,14 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
     [],
   );
 
-  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
-    if (!onDropFiles || !Array.from(e.dataTransfer.types).includes('Files')) return;
-    e.preventDefault();
-    setDragOver(true);
-  };
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    if (!onDropFiles) return;
-    e.preventDefault();
-    setDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length) onDropFiles(files);
-  };
-
   return (
     <PromptBoxContext.Provider value={ctx}>
       <div
         ref={ref}
         className={cx('kv-prompt-box', className)}
-        data-dragover={dragOver ? '' : undefined}
-        onDragOver={composeHandlers(onDragOver, handleDragOver)}
-        onDragLeave={composeHandlers(onDragLeave, () => setDragOver(false))}
-        onDrop={composeHandlers(onDrop, handleDrop)}
+        data-dragover={onDropFiles && dragging && !rejected ? '' : undefined}
+        data-rejected={onDropFiles && dragging && rejected ? '' : undefined}
+        {...(onDropFiles ? dropHandlers : { onDragEnter, onDragOver, onDragLeave, onDrop })}
         {...rest}
       >
         <div className="kv-prompt-box__content">
@@ -154,6 +153,7 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
             <div className="kv-prompt-box__toolbar-end">{actions}</div>
           </div>
         )}
+        {onDropFiles && <DropOverlay active={dragging} rejected={rejected} />}
       </div>
     </PromptBoxContext.Provider>
   );

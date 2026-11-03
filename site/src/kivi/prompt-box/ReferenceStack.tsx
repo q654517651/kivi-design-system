@@ -10,6 +10,7 @@ import {
   type HTMLAttributes,
 } from 'react';
 import { Icon } from '../Icon';
+import { UploadRing } from '../inputs/UploadRing';
 import { cx } from '../utils';
 import { useControllable, useMergedRef } from '../hooks';
 import { ReferenceItem } from '../canvas/ReferenceItem';
@@ -112,10 +113,6 @@ const ENTER: CardLayout = {
   label: false,
   hidden: false,
 };
-
-// 上传进度环：直径 28，线宽 3，白 30% 的底圈加白色的弧
-const RING_R = 12.5;
-const RING_LEN = 2 * Math.PI * RING_R;
 
 // ---------- 添加格 ----------
 
@@ -451,20 +448,8 @@ function ReferenceStackCard({ item, index, layout, ghost, enter, open, onRemove,
       <ReferenceItem size={72} type={item.kind === 'audio' ? 'audio' : 'image'} src={item.src} badge={String(index + 1)} />
       {item.duration && <span className="kv-reference-stack__duration">{item.duration}</span>}
       {uploading && (
-        <div className="kv-reference-stack__upload" role="progressbar" aria-label={`${item.name}上传中`} aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}>
-          <svg viewBox="0 0 28 28" aria-hidden="true">
-            <circle className="kv-reference-stack__ring" cx="14" cy="14" r={RING_R} />
-            <circle
-              className="kv-reference-stack__arc"
-              cx="14"
-              cy="14"
-              r={RING_R}
-              strokeDasharray={RING_LEN}
-              strokeDashoffset={RING_LEN * (1 - progress / 100)}
-              transform="rotate(-90 14 14)"
-            />
-          </svg>
-          <span>{Math.round(progress)}%</span>
+        <div className="kv-reference-stack__upload">
+          <UploadRing progress={progress} aria-label={`${item.name}上传中`} />
         </div>
       )}
       <button

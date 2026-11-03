@@ -1,4 +1,4 @@
-import { AskRecord, Icon, ProcessGroup, ProcessRow, SkillCard, type IconName } from '@kivi';
+import { AskRecord, Icon, MediaGroup, ProcessGroup, ProcessRow, SkillCard, type IconName, type MediaGroupItem } from '@kivi';
 import type { CSSProperties, ReactNode } from 'react';
 import { ProcessGroupSim } from './agent.demos';
 import { GEN_TOOLS, HIDDEN_TOOLS, TOOL_FLOW, TOOL_FLOW_MS, TOOL_GROUPS } from './agent-tools';
@@ -88,6 +88,48 @@ export function ToolFlowDemo() {
       <div style={COLUMN}>
         <div style={CAPTION}>做完，点开</div>
         <ProcessGroup steps={TOOL_FLOW} defaultExpanded />
+      </div>
+    </div>
+  );
+}
+
+// ---------- 生成结果：叠放 ↔ 展开 ----------
+
+const IMG = './placeholders/';
+
+/** 中间有失败：封面取第一张成功的，叠放比例跟它 */
+const RESULT_MIXED: MediaGroupItem[] = [
+  { id: 'a1', status: 'failed', ratio: '1:1', name: '卡通小猫1' },
+  { id: 'a2', status: 'failed', ratio: '1:1', name: '卡通小猫2' },
+  { id: 'a3', src: `${IMG}bunny-gouache-3x4.webp`, ratio: '3:4', name: '卡通小猫3·奶油色' },
+  { id: 'a4', src: `${IMG}ip-gouache-1x1.webp`, ratio: '1:1', name: '卡通小猫4·白猫蝴蝶结' },
+  { id: 'a5', status: 'failed', ratio: '1:1', name: '卡通小猫5' },
+];
+
+/** 比例不同：封面取第一张，叠放 16:9 */
+const RESULT_RATIOS: MediaGroupItem[] = [
+  { id: 'b1', src: `${IMG}kiwi-light-16x9.webp`, ratio: '16:9', name: '小狗横版 16:9' },
+  { id: 'b2', src: `${IMG}ip-future-16x9.webp`, ratio: '16:9', name: '小狗横版 16:9 · 2' },
+  { id: 'b3', src: `${IMG}monstera-dots-16x9.webp`, ratio: '16:9', name: '小狗横版 16:9 · 3' },
+  { id: 'b4', src: `${IMG}ip-peek-16x9.webp`, ratio: '16:9', name: '小狗横版 16:9 · 4' },
+  { id: 'b5', src: `${IMG}kiwi-light-9x16.webp`, ratio: '9:16', name: '小狗竖版 9:16' },
+  { id: 'b6', src: `${IMG}kivi-future-9x16.webp`, ratio: '9:16', name: '小狗竖版 9:16 · 2' },
+];
+
+// 画布 Agent 侧栏 500，减去左右内边距大约 420
+const PANEL: CSSProperties = { ...COLUMN, width: 420, maxWidth: '100%' };
+
+/** 点标题行或叠放展开，点标题行收起 */
+export function MediaGroupDemo() {
+  return (
+    <div style={{ ...COLUMNS, gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))' }}>
+      <div style={PANEL}>
+        <div style={CAPTION}>中间有失败：封面取第一张成功的</div>
+        <MediaGroup items={RESULT_MIXED} />
+      </div>
+      <div style={PANEL}>
+        <div style={CAPTION}>比例不同：叠放跟第一张</div>
+        <MediaGroup items={RESULT_RATIOS} />
       </div>
     </div>
   );
