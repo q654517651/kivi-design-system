@@ -2,7 +2,7 @@ import { Checkbox, Slider, Switch, type CheckboxChecked, type CheckboxShape } fr
 import { Playground } from '@shell';
 
 // 选择控件页的三个属性面板：所有形状、选中、状态都在面板里切。参数表在 selection.mdx
-// 预览里的控件能点、能拖：用 defaultChecked / defaultValue，选项一变就换 key 重新来过。
+// 预览里的控件能点、能拖：写成受控（checked / value + onChange），点了、拖了，右边面板跟着变。
 
 const HOVER = { hover: 'is-hover' } as Record<string, string | undefined>;
 
@@ -22,11 +22,11 @@ export function SwitchPlayground() {
         { key: 'on', label: '开关', type: 'segment', value: 'on', options: [['on', '开'], ['off', '关']] },
         { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['disabled', '禁用']] },
       ]}
-      render={(s) => (
+      render={(s, update) => (
         <Switch
-          key={s.on}
           aria-label="生成音频"
-          defaultChecked={s.on === 'on'}
+          checked={s.on === 'on'}
+          onChange={(on) => update({ on: on ? 'on' : 'off' })}
           disabled={s.state === 'disabled' || undefined}
         />
       )}
@@ -51,11 +51,12 @@ export function SliderPlayground() {
           { key: 'marks', label: '刻度', type: 'toggle', value: true },
           { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['disabled', '禁用']] },
         ]}
-        render={(s) => (
+        // 拖到不是 0 / 25 / 50 / 75 / 100 的位置，面板上「进度」一个都不亮
+        render={(s, update) => (
           <Slider
-            key={s.value}
             aria-label="时长"
-            defaultValue={Number(s.value)}
+            value={Number(s.value)}
+            onChange={(v) => update({ value: String(v) })}
             marks={s.marks ? SLIDER_MARKS : undefined}
             disabled={s.state === 'disabled' || undefined}
           />
@@ -83,11 +84,11 @@ export function CheckboxPlayground() {
       ]}
       rules={(s) => (s.label ? {} : { text: true })}
       media={(s) => s.shape === 'round'}
-      render={(s) => (
+      render={(s, update) => (
         <Checkbox
-          key={s.checked}
           shape={s.shape as CheckboxShape}
-          defaultChecked={CHECKED[s.checked]}
+          checked={CHECKED[s.checked]}
+          onChange={(on) => update({ checked: on ? 'yes' : 'no' })}
           className={HOVER[s.state]}
           disabled={s.state === 'disabled' || undefined}
           aria-label={s.label ? undefined : '选项'}

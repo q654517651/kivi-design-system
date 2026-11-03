@@ -3,6 +3,6 @@ export { CodeBlock, CopyButton } from './CodeBlock';
 export { copyText, dedent } from './copy';
 export { Demo } from './Demo';
 export { PageHeader, Tag } from './PageHeader';
-export { Playground, type Control } from './Playground';
+export { Playground, type Control, type PlaygroundState } from './Playground';
 export { StateMatrix } from './StateMatrix';
 export { toJsx } from './toJsx';

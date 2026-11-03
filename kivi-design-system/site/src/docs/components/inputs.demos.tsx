@@ -1,8 +1,9 @@
 import { cx, Icon, Input, Menu, MenuItem, NumberInput, Select, Textarea, type IconName, type SelectOption, type SelectProps, type SelectVariant } from '@kivi';
-import { Playground } from '@shell';
+import { Playground, type PlaygroundState } from '@shell';
 
 // 输入控件页的四个属性面板：所有样式、状态都在面板里切。参数表在 inputs.mdx
-// 预览里的输入框能打字、下拉能点开：用 defaultValue / defaultOpen，选项一变就换 key 重新来过。
+// 预览里的输入框能打字、下拉能点开选：写成受控，打的字、选的项会写回面板（「文字」「数值」「状态」）。
+// 悬停、聚焦这种一碰就变的状态不写回，面板上的悬停、聚焦是摆静态样子用的。
 
 /** 这一页的演示用：预览区里把宽度定下来（组件默认填满） */
 function DocStyle({ css }: { css: string }) {
@@ -11,6 +12,14 @@ function DocStyle({ css }: { css: string }) {
 
 const STATE_CLASS: Record<string, string | undefined> = { hover: 'is-hover', focus: 'is-focus' };
 const hasValue = (state: string) => state === 'focus' || state === 'typed' || state === 'error';
+
+type Update = (patch: Partial<PlaygroundState>) => void;
+
+/** 打字写回面板：空框里打了字算「已输入」，删空了回到「默认」 */
+const typed = (s: { state: string }, update: Update) => (v: string) => {
+  if (v) update({ text: v, state: hasValue(s.state) ? s.state : 'typed' });
+  else update({ text: v, state: s.state === 'typed' ? 'default' : s.state });
+};
 
 const SAMPLE = '一个女生站在樱花树下，镜头从远景慢慢推近，背景是黄昏的城市天际线。';
 
@@ -27,14 +36,14 @@ const STATES: [string, string][] = [
 
 type InputState = { state: string; icon: boolean; count: boolean; placeholder: string; text: string; countText: string };
 
-function renderInput(s: InputState) {
+function renderInput(s: InputState, update: Update) {
   return (
     <Input
-      key={s.state + '|' + s.text}
       className={STATE_CLASS[s.state]}
       leftIcon={s.icon ? 'Search' : undefined}
       placeholder={s.placeholder}
-      defaultValue={hasValue(s.state) ? s.text : undefined}
+      value={hasValue(s.state) ? s.text : ''}
+      onChange={(e) => typed(s, update)(e.target.value)}
       invalid={s.state === 'error' || undefined}
       disabled={s.state === 'disabled' || undefined}
       counter={s.count ? s.countText : undefined}
@@ -67,12 +76,12 @@ export function InputPlayground() {
 
 type NumberState = { state: string; unit: boolean; value: string; unitText: string };
 
-function renderNumberInput(s: NumberState) {
+function renderNumberInput(s: NumberState, update: Update) {
   return (
     <NumberInput
-      key={s.state + '|' + s.value}
       className={STATE_CLASS[s.state]}
-      defaultValue={s.value.replace(/\D/g, '')}
+      value={s.value.replace(/\D/g, '')}
+      onChange={(v) => update({ value: v })}
       unit={s.unit ? s.unitText : undefined}
       disabled={s.state === 'disabled' || undefined}
       aria-label="数值"
@@ -118,7 +127,7 @@ function showsValue(variant: string, state: string) {
  * 文档里摆静态的「展开」：触发器按展开的样子画（底色变、箭头朝上），列表是一个直接摊开的 Menu，当前项是「选中」状态。
  * 真正的列表是挂在 body 上、跟着触发器走的弹出层，一直开着会在页面滚动时盖住别的内容，所以文档里不用它摆静态。
  */
-function StaticSelect({ variant = 'fill', options, value, placeholder, leftIcon, className, style }: SelectProps) {
+function StaticSelect({ variant = 'fill', options, value, placeholder, leftIcon, className, style, onChange }: SelectProps) {
   const selected = options.find((o) => o.value === value);
   const plain = variant === 'plain';
   const icon = selected?.icon ?? leftIcon;
@@ -134,7 +143,7 @@ function StaticSelect({ variant = 'fill', options, value, placeholder, leftIcon,
       </button>
       <Menu role="listbox" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 1, width: plain ? undefined : '100%', minWidth: plain ? '100%' : undefined }}>
         {options.map((o) => (
-          <MenuItem key={o.value} icon={o.icon} selected={o.value === value}>
+          <MenuItem key={o.value} icon={o.icon} selected={o.value === value} onClick={() => onChange?.(o.value)}>
             {o.label}
           </MenuItem>
         ))}
@@ -150,14 +159,20 @@ function DocSelect(props: SelectProps) {
 }
 DocSelect.displayName = 'Select';
 
-function renderSelect(s: SelectState) {
+// 选了哪项记在面板上不显示的 picked 里；选了以后「状态」变成「已选」（无底一直有值，状态不动）。
+// 点开真的下拉不写回「展开」：面板的「展开」是摆静态样子用的
+function renderSelect(s: SelectState, update: Update) {
+  const raw = (s as Record<string, unknown>).picked;
+  const picked = typeof raw === 'string' ? raw : 'a';
+  const show = showsValue(s.variant, s.state) || (s.state === 'open' && typeof raw === 'string');
   return (
     <DocSelect
-      key={s.variant + '|' + s.state}
+      key={s.variant}
       variant={s.variant as SelectVariant}
       className={s.state === 'hover' ? 'is-hover' : undefined}
       options={optionsOf(s.text, s.optIcon)}
-      defaultValue={showsValue(s.variant, s.state) ? 'a' : undefined}
+      value={show ? picked : null}
+      onChange={(v) => update({ picked: v, state: s.variant === 'plain' || s.state === 'disabled' ? s.state : 'selected' })}
       placeholder={s.placeholder}
       leftIcon={s.icon ? 'Add' : undefined}
       disabled={s.state === 'disabled' || undefined}
@@ -200,14 +215,14 @@ export function SelectPlayground() {
 
 type TextareaState = { state: string; count: boolean; placeholder: string; text: string };
 
-function renderTextarea(s: TextareaState) {
+function renderTextarea(s: TextareaState, update: Update) {
   const value = hasValue(s.state) ? s.text : '';
   return (
     <Textarea
-      key={s.state + '|' + s.text}
       className={STATE_CLASS[s.state]}
       placeholder={s.placeholder}
-      defaultValue={value || undefined}
+      value={value}
+      onChange={(e) => typed(s, update)(e.target.value)}
       invalid={s.state === 'error' || undefined}
       disabled={s.state === 'disabled' || undefined}
       counter={s.count ? Array.from(value).length + '/500' : undefined}

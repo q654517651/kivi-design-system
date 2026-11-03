@@ -9,6 +9,7 @@ import {
   Globe,
   House,
   Image,
+  LayoutTemplate,
   MousePointerClick,
   Palette,
   Shapes,
@@ -18,11 +19,12 @@ import {
   Tags,
   TextCursorInput,
   Workflow,
+  Wrench,
   SquarePlay,
   type LucideIcon,
 } from 'lucide-react';
 
-// 左侧目录，和 Figma 的页一一对应。没有 load 的是还没迁过来的页。
+// 左侧目录，和 Figma 的页一一对应（页面模板放最上面，和 Figma 一样）。没有 load 的是还没迁过来的页。
 // 目录图标用 Lucide（网站外壳自己用，不属于组件库；组件库的图标还是 KIVI 自己的）
 
 type Loader = () => Promise<{ default: ComponentType<Record<string, unknown>> }>;
@@ -36,6 +38,13 @@ export interface NavItem {
 }
 
 export const NAV: { group: string; items: NavItem[] }[] = [
+  {
+    group: '页面模板',
+    items: [
+      { id: 'tpl-main-site', icon: LayoutTemplate, title: '主站', path: '/templates/main-site', load: () => import('../docs/templates/main-site.mdx') },
+      { id: 'tpl-canvas', icon: Workflow, title: '画布', path: '/templates/canvas', load: () => import('../docs/templates/canvas.mdx') },
+    ],
+  },
   {
     group: '开始',
     items: [
@@ -72,6 +81,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
     items: [
       { id: 'canvas', icon: Workflow, title: '画布', path: '/business/canvas', load: () => import('../docs/business/canvas.mdx') },
       { id: 'agent', icon: Bot, title: 'Agent', path: '/business/agent', load: () => import('../docs/business/agent.mdx') },
+      { id: 'agent-tools', icon: Wrench, title: 'Agent 工具', path: '/business/agent-tools', load: () => import('../docs/business/agent-tools.mdx') },
       { id: 'main-site', icon: Globe, title: '主站', path: '/business/main-site', load: () => import('../docs/business/main-site.mdx') },
     ],
   },

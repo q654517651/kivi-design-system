@@ -15,17 +15,20 @@ import { cx } from '../utils';
 import { composeHandlers, rectOf, useControllable, useFloating, useMergedRef, usePresence } from '../hooks';
 import './menus-tooltip.css';
 
-export type TooltipVariant = 'simple' | 'desc';
+export type TooltipVariant = 'simple' | 'desc' | 'long';
+export type TooltipPlacement = 'bottom' | 'top' | 'right' | 'left';
 
 export interface TooltipProps extends Omit<HTMLAttributes<HTMLElement>, 'content' | 'title' | 'children'> {
-  /** 提示的文字。简单：一行；说明：标题下面的那段说明 */
+  /** 提示的文字。简单：一行；说明：标题下面的那段说明；长文：一整段 */
   content: ReactNode;
-  /** 类型：简单 / 说明，默认简单。不写时有 title 就是说明 */
+  /** 类型：简单 / 说明 / 长文，默认简单。不写时有 title 就是说明。长文给被截断的长文字看全文，比如提示词：能换行，和触发元素一样宽 */
   variant?: TooltipVariant;
   /** 标题。只有说明型有 */
   title?: ReactNode;
   /** 快捷键，比如 ⌘Z。只有简单型有，放在文字后面 */
   shortcut?: string;
+  /** 出在目标哪边，离目标 8，默认下方；放不下自动翻到对面。竖排的目标（收起的侧栏）用右边 */
+  placement?: TooltipPlacement;
   /** 显示（受控）。不传就按悬停、聚焦自己出现和消失 */
   open?: boolean;
   /** 默认是否显示（非受控） */
@@ -34,6 +37,8 @@ export interface TooltipProps extends Omit<HTMLAttributes<HTMLElement>, 'content
   onOpenChange?: (open: boolean) => void;
   /** 悬停多久后出现，毫秒，默认 500 */
   delay?: number;
+  /** 禁用：不出现，触发元素照常。比如提示词没被截断，不用再看全文 */
+  disabled?: boolean;
   /** 触发元素，比如 IconButton。必须是能接 aria-describedby 的元素。不写就只渲染气泡本身（静态的，文档摆样子用） */
   children?: ReactElement;
 }
@@ -48,10 +53,10 @@ interface BubbleProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title' | 'co
   domRef?: Ref<HTMLDivElement>;
 }
 
-/** 气泡本身：简单一行，说明是标题 + 一段话 */
+/** 气泡本身：简单一行，说明是标题 + 一段话，长文是一整段 */
 function Bubble({ kind, content, title, shortcut, domRef, className, ...rest }: BubbleProps) {
   return (
-    <div ref={domRef} className={cx('kv-tooltip', kind === 'desc' && 'kv-tooltip--desc', className)} role="tooltip" {...rest}>
+    <div ref={domRef} className={cx('kv-tooltip', kind !== 'simple' && `kv-tooltip--${kind}`, className)} role="tooltip" {...rest}>
       {kind === 'desc' ? (
         <>
           <b className="kv-tooltip__title">{title}</b>
@@ -79,10 +84,12 @@ export const Tooltip = forwardRef<HTMLElement, TooltipProps>(function Tooltip(
     variant,
     title,
     shortcut,
+    placement = 'bottom',
     open: openProp,
     defaultOpen = false,
     onOpenChange,
     delay = 500,
+    disabled,
     children,
     className,
     ...rest
@@ -109,10 +116,12 @@ export const Tooltip = forwardRef<HTMLElement, TooltipProps>(function Tooltip(
     <Anchored
       ref={ref as Ref<HTMLSpanElement>}
       bubble={{ kind, content, title, shortcut }}
+      placement={placement}
       open={openProp}
       defaultOpen={defaultOpen}
       onOpenChange={onOpenChange}
       delay={delay}
+      disabled={disabled}
       className={className}
       {...rest}
     >
@@ -124,20 +133,24 @@ Tooltip.displayName = 'Tooltip';
 
 interface AnchoredProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
   bubble: Pick<BubbleProps, 'kind' | 'content' | 'title' | 'shortcut'>;
+  placement: TooltipPlacement;
   open?: boolean;
   defaultOpen: boolean;
   onOpenChange?: (open: boolean) => void;
   delay: number;
+  disabled?: boolean;
   children: ReactElement;
 }
 
 const Anchored = forwardRef<HTMLSpanElement, AnchoredProps>(function Anchored(
   {
     bubble,
+    placement,
     open: openProp,
     defaultOpen,
     onOpenChange,
     delay,
+    disabled,
     children,
     className,
     onMouseEnter,
@@ -149,7 +162,8 @@ const Anchored = forwardRef<HTMLSpanElement, AnchoredProps>(function Anchored(
   },
   ref,
 ) {
-  const [open, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
+  const [openState, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
+  const open = openState && !disabled;
   const { mounted, state } = usePresence(open, EXIT_MS);
   const anchorRef = useRef<HTMLSpanElement>(null);
   const setAnchor = useMergedRef(anchorRef, ref);
@@ -160,6 +174,7 @@ const Anchored = forwardRef<HTMLSpanElement, AnchoredProps>(function Anchored(
   const stop = () => clearTimeout(timer.current);
   const show = () => {
     stop();
+    if (disabled) return;
     timer.current = setTimeout(() => setOpen(true), delay);
   };
   const hide = () => {
@@ -176,13 +191,14 @@ const Anchored = forwardRef<HTMLSpanElement, AnchoredProps>(function Anchored(
     return () => document.removeEventListener('keydown', onKey);
   }, [open, setOpen]);
 
-  // 目标下方 8px（--spacing-8），水平居中
-  useFloating(mounted, bubbleRef, () => (anchorRef.current ? rectOf(anchorRef.current) : null), 'bottom', 8);
+  // 离目标 8px（--spacing-8），默认在下方、水平居中；长文和目标一样宽
+  const long = bubble.kind === 'long';
+  useFloating(mounted, bubbleRef, () => (anchorRef.current ? rectOf(anchorRef.current) : null), placement, 8, long);
 
   return (
     <span
       ref={setAnchor}
-      className={cx('kv-tooltip__anchor', className)}
+      className={cx('kv-tooltip__anchor', long && 'kv-tooltip__anchor--block', className)}
       onMouseEnter={composeHandlers(onMouseEnter, show)}
       onMouseLeave={composeHandlers(onMouseLeave, hide)}
       onFocus={composeHandlers(onFocus, (e: FocusEvent<HTMLSpanElement>) => {

@@ -1,0 +1,403 @@
+/*
+  页面模板的外框和两张整页的布局。只给网站演示用，不属于组件库：
+  组件库里有的零件（侧栏项、记录头、结果格、输入框、过程行…）都直接用组件，这里只管怎么摆。
+*/
+
+/* ---------- 外框：16:9，里面自己滚；能全屏看 ---------- */
+
+.tpl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  margin: 0 0 var(--spacing-24);
+}
+
+.tpl-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}
+
+.tpl-frame {
+  position: relative;
+  min-height: 600px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-base);
+  color: var(--color-text-fill-primary);
+}
+
+/* 全屏：盖住整个网站，Esc 或按钮退出 */
+.tpl[data-full] {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  margin: 0;
+  padding: var(--spacing-12) var(--spacing-16) var(--spacing-16);
+  background: var(--color-bg-fill-base);
+}
+
+.tpl[data-full] .tpl-frame {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+/* ---------- 主站生成页：左侧栏 240，右边记录流 + 底部输入框 ---------- */
+
+/* 左边侧栏的宽度由侧栏自己定（240 / 收起 60），记录流占剩下的，侧栏收起时跟着变宽 */
+.tpl-ms {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+/* 侧栏收起：宽 240 → 60（12 + 条目 36 + 12），屏幕内移动，300ms ease-in-out。
+   里面的条目、标题、「更多」自己同时收到 36（组件的 collapsed），条目变成 36 的正方形 */
+.tpl-ms__side-wrap {
+  box-sizing: content-box; /* 描边另算，里面正好 240 / 60 */
+  width: 240px;
+  min-height: 0;
+  overflow: hidden;
+  border-right: var(--border-width-1) solid var(--color-border-subtle);
+  transition: width var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+.tpl-ms__side-wrap[data-collapsed] {
+  width: 60px;
+}
+
+/* 单独摆的侧栏：外框自己有描边 */
+.tpl-frame > .tpl-ms__side-wrap {
+  height: 100%;
+  border-right: 0;
+}
+
+.tpl-ms__side-wrap > .tpl-ms__side {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-right: 0;
+}
+
+/* 对话 / 画布的列表：展开往下推开、淡入，收起倒着走 */
+.tpl-ms__group {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-300) var(--motion-ease-in-out),
+    visibility 0s linear var(--motion-duration-300);
+}
+
+.tpl-ms__group[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-300) var(--motion-ease-in-out),
+    visibility 0s linear 0s;
+}
+
+.tpl-ms__group-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tpl-ms__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-height: 0;
+  padding: var(--spacing-12);
+  overflow: hidden auto;
+  border-right: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+/* 侧栏内容比框高时整条滚动，条目不被压扁 */
+.tpl-ms__side > * {
+  flex: none;
+}
+
+/* Logo 行：Logo 左 8，收起按钮（IconButton 32）在右边 */
+.tpl-ms__brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 0 var(--spacing-12) var(--spacing-8);
+}
+
+.tpl-ms__brand > .kv-icon {
+  width: 54px;
+  height: 24px;
+  margin-left: 0;
+  transition:
+    margin-left var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.tpl-ms__toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transition:
+    right var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 收起：Logo 在 60 里居中（左右各 3），从左 20 往左挪 17；按钮跟着侧栏右边滑过来，停在 Logo 正中，平时藏着。
+   位移写死，不用百分比：侧栏宽度也在变，按百分比算 Logo 会先往外冲再回来。
+   悬停 Logo（或键盘 Tab 到按钮）时 Logo 淡出、换成「展开侧栏」 */
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand > .kv-icon {
+  margin-left: calc((36px - 54px) / 2 - var(--spacing-8));
+}
+
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__toggle {
+  right: var(--spacing-2);
+  opacity: 0;
+  transition:
+    right var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand:where(:hover, :has(:focus-visible)) > .kv-icon {
+  opacity: 0;
+  transition:
+    margin-left var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand:where(:hover, :has(:focus-visible)) .tpl-ms__toggle {
+  opacity: 1;
+  transition:
+    right var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 导航和「对话」「画布」两段之间空一点 */
+.tpl-ms__gap {
+  height: var(--spacing-12);
+  flex: none;
+}
+
+.tpl-ms__main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tpl-ms__feed {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 记录流和输入框同宽，最宽 1040，居中（照 Figma「主站首页 · 创作」） */
+.tpl-ms__column,
+.tpl-ms__composer > * {
+  box-sizing: border-box;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.tpl-ms__column {
+  display: flex;
+  flex-direction: column;
+  gap: 48px; /* Figma 没变量 */
+  padding: 72px var(--spacing-24) var(--spacing-32);
+}
+
+/* 输入框浮在记录流上（玻璃），记录从它下面滚过去；记录流底部留出输入框的高度 */
+.tpl-ms__composer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: 0 var(--spacing-24) var(--spacing-24);
+  pointer-events: none;
+}
+
+.tpl-ms__composer > * {
+  pointer-events: auto;
+}
+
+.tpl-ms__column {
+  padding-bottom: calc(var(--tpl-composer-h, 220px) + var(--spacing-32));
+}
+
+/* 右上角：猕猴桃余额 + 头像 */
+.tpl-ms__wallet {
+  position: absolute;
+  top: var(--spacing-16);
+  right: var(--spacing-16);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-4) var(--spacing-12);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-surface);
+  color: var(--color-brand-solid);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+/* 一条记录：记录头 + 结果网格 + 底部按钮，间距 12 */
+.tpl-record {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+}
+
+/* 结果网格：4 列，间距 4；格子高按比例，最小 120、最大 474 */
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  align-items: start;
+}
+
+.tpl-grid[data-cols="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tpl-grid > .kv-result-tile {
+  min-height: 120px;
+  max-height: 474px;
+}
+
+.tpl-grid > [data-span="2"] {
+  grid-column: span 2;
+}
+
+.tpl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8);
+}
+
+/* Agent 的回复文字 */
+.tpl-text {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.tpl-turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+}
+
+/* ---------- 画布页：左边画布，右边 Agent 侧栏 ---------- */
+
+.tpl-cv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  height: 100%;
+}
+
+.tpl-cv__canvas {
+  height: 100%;
+}
+
+.tpl-cv__agent {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: var(--border-width-1) solid var(--color-border-subtle);
+  background: var(--color-bg-fill-base);
+}
+
+.tpl-cv__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-12) var(--spacing-12) var(--spacing-16);
+}
+
+.tpl-cv__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-width: 0;
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-20);
+}
+
+.tpl-cv__title > .kv-icon {
+  color: var(--color-text-fill-tertiary);
+}
+
+.tpl-cv__stream {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  flex: 1;
+  min-height: 0;
+  padding: var(--spacing-8) var(--spacing-16) var(--spacing-16);
+  overflow: auto;
+}
+
+/* 点了能定位到节点的结果叠放（MediaStack 本身是按钮） */
+.tpl-cv__locate {
+  align-self: flex-start;
+}
+
+.tpl-cv__composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  margin: 0 var(--spacing-16) var(--spacing-16);
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+}
+
+.tpl-cv__composer textarea {
+  min-height: 68px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: none;
+  color: var(--color-text-fill-primary);
+  font: inherit;
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.tpl-cv__composer textarea::placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+.tpl-cv__tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+}
+
+.tpl-cv__tools > div {
+  display: flex;
+  gap: var(--spacing-4);
+}

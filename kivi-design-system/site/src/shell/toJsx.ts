@@ -3,6 +3,7 @@ import { Fragment, isValidElement, type ReactElement, type ReactNode } from 'rea
 // 把属性面板渲染出来的 React 元素转回 JSX 代码，给前端复制。
 // is-hover、is-active、is-focus 只是文档里摆静态状态用，代码里去掉。
 // 数组、对象写成 JS 字面量；一行太长就拆成多行。
+// 组件上挂了 docFrame = true 的是文档摆样子用的外框（比如代替侧栏宽度的框），代码里只写它里面的东西。
 
 const DOC_ONLY = /\s*\bis-(hover|active|focus)\b/g;
 const MAX_LINE = 72;
@@ -68,6 +69,7 @@ export function toJsx(node: ReactNode, indent = ''): string {
   if (!isValidElement(node)) return '';
 
   const el = node as ReactElement<Record<string, unknown>>;
+  if ((el.type as { docFrame?: boolean }).docFrame) return toJsx(el.props.children as ReactNode, indent);
   const name = typeName(el.type);
   const propIndent = indent + '  ';
   const props = Object.entries(el.props)

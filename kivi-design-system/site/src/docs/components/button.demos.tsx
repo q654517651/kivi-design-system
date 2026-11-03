@@ -1,5 +1,5 @@
 import { Button, ButtonGroup, ButtonGroupDivider, IconButton, type ButtonSize, type ButtonVariant, type IconButtonSize, type IconButtonVariant, type IconName } from '@kivi';
-import { Playground } from '@shell';
+import { Playground, type PlaygroundState } from '@shell';
 
 // 按钮页的三个属性面板：所有尺寸、类型、状态都在面板里切。参数表在 button.mdx
 
@@ -82,7 +82,7 @@ export function IconButtonPlayground() {
 type ButtonGroupState = { content: string; state: string };
 
 /** 按钮条：节点（收藏、全屏、下载 | 4 ⌄）和主站快捷操作两种摆法，盖在图上 */
-function renderButtonGroup(s: ButtonGroupState) {
+function renderButtonGroup(s: ButtonGroupState, update: (patch: Partial<PlaygroundState>) => void) {
   const hover = (i: number) => (s.state === 'hover' && i === 0 ? 'is-hover' : undefined);
   if (s.content === 'quick') {
     return (
@@ -102,6 +102,7 @@ function renderButtonGroup(s: ButtonGroupState) {
         label={collected ? '取消收藏' : '收藏'}
         selected={collected || undefined}
         className={hover(0)}
+        onClick={() => update({ state: collected ? 'default' : 'collected' })}
       />
       <IconButton icon="FullScreen" label="全屏" />
       <IconButton icon="Download" label="下载" />

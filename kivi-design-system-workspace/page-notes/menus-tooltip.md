@@ -540,3 +540,9 @@ Tooltip 是鼠标停留时的说明，移开就消失；菜单是点开或右键
 | ChatTooltip | Tooltip · 说明 | 改值 | 底色 popup-light-2 → popup；最宽 240 |
 | AnchoredDropdown、CommonDropdown 等 | 菜单模板 + MenuItem | 合并 | 样式统一到菜单模板；这几个组件的细节还没逐个核对 |
 | 菜单模板分区：菜单 · 模板（复制这个）、示例 · 右键菜单 / 分组和子菜单 / 单选菜单 / 素材菜单 | 「模板 · 通用」页「菜单」分区 | 移动【待确认】 | 改名、去重在整理模板时做 |
+
+## 侧栏收起和 Tooltip 方向（11-02）
+
+- SidebarItem、SidebarLabel、SidebarMore 加 `collapsed`：侧栏收成 68 宽的图标栏时用，规则在 `main-site.md`「侧栏收起成图标栏」。宽度跟着侧栏，组件自己不定 44；属性面板用一个 216 / 44 的框代替侧栏（`docFrame`，代码里不写它）。
+- SidebarItem 外面一直包着 Tooltip（展开时 disabled），收起、展开时结构不变，不重新挂载。
+- Tooltip 加 `placement`：下（默认）/ 上 / 右 / 左，右和左上下居中，放不下翻到对面。菜单（Dropdown）不开放左右。Figma Tooltip 没有尖角，方向不影响样子，不加变体；位置规则写在 Tooltip 说明里（11-02）。

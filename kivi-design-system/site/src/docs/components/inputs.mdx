@@ -130,7 +130,7 @@ import { InputPlayground, NumberInputPlayground, SelectPlayground, TextareaPlayg
 | `value` | `string` `null` | — | 选中的值，没选传 `null`。传了就是受控，要自己在 `onChange` 里更新 |
 | `defaultValue` | `string` `null` | `null` | 非受控时的初始值 |
 | `onChange` | `(value: string) => void` | — | 选了一项时触发，参数是选项的值 |
-| `placeholder` | `string` | — | 没选时显示的占位文字 |
+| `placeholder` | `string` | — | 没选时显示的占位文字。填充是灰的（`--color-text-fill-placeholder`）；无底放在工具条上当入口名（比如「模型」「技能」），和选了值一样白，左图标也白 |
 | `leftIcon` | `IconName` | — | 左图标，16，tertiary。选中的选项带 `icon` 时用选项的 |
 | `disabled` | `boolean` | `false` | 禁用：占位文字和箭头变灰，不能展开 |
 | `open` | `boolean` | — | 展开。传了就是受控；展开时右箭头从 `DownArrowSmall` 换成 `UpArrowSmall` |

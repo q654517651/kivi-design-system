@@ -1,6 +1,7 @@
-import { ActionCard, Button, Dialog, FileCard, IconButton, MediaStack, ProcessGroup, ProcessRow, QuestionOption, QuestionPanel, ReferenceItem, ResultTile, SendButton, UserMessage, type FileCardType, type IconName, type ProcessRowLevel, type ProcessRowStatus, type ProcessStep, type ResultTileAction } from '@kivi';
+import { ActionCard, AskRecord, Button, Dialog, FileCard, SkillCard, IconButton, MediaStack, ProcessGroup, ProcessRow, QuestionOption, QuestionPanel, ReferenceItem, ResultTile, SendButton, UserMessage, type FileCardType, type IconName, type AskRecordStatus, type ProcessRowLevel, type ProcessRowStatus, type ProcessStep, type ResultTileAction } from '@kivi';
 import { useEffect, useState, type CSSProperties } from 'react';
-import { Playground } from '@shell';
+import { Playground, type PlaygroundState } from '@shell';
+import { TOOL_FLOW, TOOL_FLOW_MS } from './agent-tools';
 
 // Agent 页的属性面板：所有层级、类型、状态都在面板里切。参数表在 agent.mdx
 
@@ -21,7 +22,9 @@ type ProcessRowState = {
   objectText: string;
 };
 
-function renderProcessRow(s: ProcessRowState) {
+type Update = (patch: Partial<PlaygroundState>) => void;
+
+function renderProcessRow(s: ProcessRowState, update: Update) {
   const sub = s.level === 'sub';
   return (
     <ProcessRow
@@ -33,6 +36,7 @@ function renderProcessRow(s: ProcessRowState) {
       object={s.object ? s.objectText : undefined}
       arrow={sub || s.arrow ? undefined : false}
       expanded={!sub && s.arrow ? s.expand === 'yes' : undefined}
+      onExpandedChange={!sub && s.arrow ? (v) => update({ expand: v ? 'yes' : 'no' }) : undefined}
     />
   );
 }
@@ -66,22 +70,25 @@ export function ProcessRowPlayground() {
 
 // ---------- ProcessGroup ----------
 
-// 演示用的一串工具：有快有慢，停留超过 0.5 秒的才扫光
-const TOOLS: Omit<ProcessStep, 'status'>[] = [
-  { icon: 'Skill', action: '读取画布操作规范' },
-  { icon: 'UseCanvas', action: '创建节点', object: '「分镜脚本」' },
-  { icon: 'UseCanvas', action: '更新节点', object: '「分镜脚本」' },
-  { icon: 'Skill', action: '读取礼物等级细则' },
-  { icon: 'UseCanvas', action: '创建节点', object: '「视频生成」' },
-  { icon: 'UseCanvas', action: '连接节点', object: '「分镜脚本」→「视频生成」' },
-  { icon: 'UseCanvas', action: '更新参数', object: '「视频生成」' },
-  { icon: 'Skill', action: '检查提示词' },
-];
-// 每个工具调了多久（毫秒）
-const TOOL_MS = [200, 1300, 150, 120, 900, 250, 1600, 400];
+// 演示用的一串工具：照「Agent 工具」页的定稿，有快有慢，停留超过 0.5 秒的才扫光
+const TOOLS = TOOL_FLOW;
+const TOOL_MS = TOOL_FLOW_MS;
 
-/** 模拟 Agent 一个接一个调工具，调完收成汇总行。切换面板设置会整个重新挂上 */
-export function ProcessGroupSim({ count = 8, failed = false, live = true }: { count?: number; failed?: boolean; live?: boolean }) {
+/** 模拟 Agent 一个接一个调工具，调完收成汇总行。切换面板设置会整个重新挂上。tools、ms 换成别的工具和耗时 */
+export function ProcessGroupSim({
+  count: countProp,
+  failed = false,
+  live = true,
+  tools = TOOLS,
+  ms = TOOL_MS,
+}: {
+  count?: number;
+  failed?: boolean;
+  live?: boolean;
+  tools?: Omit<ProcessStep, 'status'>[];
+  ms?: number[];
+}) {
+  const count = countProp ?? tools.length;
   const [started, setStarted] = useState(live ? 1 : count);
   const [done, setDone] = useState(!live);
   const [run, setRun] = useState(0);
@@ -98,11 +105,11 @@ export function ProcessGroupSim({ count = 8, failed = false, live = true }: { co
           setStarted(i);
           next();
         } else setDone(true);
-      }, TOOL_MS[i - 1]);
+      }, ms[i - 1] ?? 300);
     };
     next();
     return () => window.clearTimeout(t);
-  }, [live, count, run]);
+  }, [live, count, run, ms]);
 
   const replay = () => {
     setStarted(1);
@@ -111,7 +118,7 @@ export function ProcessGroupSim({ count = 8, failed = false, live = true }: { co
   };
 
   const failIndex = count === 1 ? 0 : 2;
-  const steps: ProcessStep[] = TOOLS.slice(0, started).map((tool, i) => ({
+  const steps: ProcessStep[] = tools.slice(0, started).map((tool, i) => ({
     ...tool,
     id: String(i),
     status: !done && i === started - 1 ? 'running' : failed && i === failIndex ? 'failed' : 'done',
@@ -131,7 +138,7 @@ export function ProcessGroupSim({ count = 8, failed = false, live = true }: { co
 
 type ProcessGroupState = { status: string; count: string; failed: boolean; expand: string };
 
-function renderProcessGroup(s: ProcessGroupState) {
+function renderProcessGroup(s: ProcessGroupState, update: Update) {
   const n = Number(s.count);
   const running = s.status === 'running';
   const k = running ? Math.min(3, n) : n; // 进行中：调到第 3 个
@@ -140,7 +147,14 @@ function renderProcessGroup(s: ProcessGroupState) {
     const status = running && i === k - 1 ? 'running' : !running && s.failed && i === failIndex ? 'failed' : undefined;
     return status ? { ...tool, status } : { ...tool };
   });
-  return <ProcessGroup steps={steps} expanded={!running && n > 1 ? s.expand === 'yes' : undefined} />;
+  const canExpand = !running && n > 1;
+  return (
+    <ProcessGroup
+      steps={steps}
+      expanded={canExpand ? s.expand === 'yes' : undefined}
+      onExpandedChange={canExpand ? (v) => update({ expand: v ? 'yes' : 'no' }) : undefined}
+    />
+  );
 }
 
 export function ProcessGroupPlayground() {
@@ -158,6 +172,69 @@ export function ProcessGroupPlayground() {
         ...(s.count === '1' ? { expand: true } : {}),
       })}
       render={renderProcessGroup}
+    />
+  );
+}
+
+// ---------- AskRecord ----------
+
+type AskRecordState = { status: AskRecordStatus; kind: string; skipped: string; expand: string };
+
+function renderAskRecord(s: AskRecordState, update: Update) {
+  const items =
+    s.kind === 'confirm'
+      ? [{ question: '是否生成新节点「可爱修狗 11-边牧 v2」？', answer: '批准生成' }]
+      : [
+          { question: '1. 想要什么风格？', answer: '水彩' },
+          { question: '2. 画面里放几只小狗？', answer: '3 只' },
+        ];
+  return (
+    <AskRecord
+      status={s.status === 'answered' ? undefined : s.status}
+      items={s.status === 'answered' ? items : items.map(({ question }) => ({ question }))}
+      skippedText={s.status === 'skipped' && s.skipped === 'ai' ? '交给 AI 决策' : undefined}
+      expanded={s.expand === 'yes'}
+      onExpandedChange={(v) => update({ expand: v ? 'yes' : 'no' })}
+    />
+  );
+}
+
+export function AskRecordPlayground() {
+  return (
+    <Playground<AskRecordState>
+      controls={[
+        { key: 'status', label: '状态', type: 'segment', value: 'answered', options: [['asking', '询问中'], ['answered', '已询问'], ['skipped', '询问（跳过）']] },
+        { key: 'kind', label: '内容', type: 'segment', value: 'question', options: [['question', '问题卡'], ['confirm', '生成确认']] },
+        { key: 'skipped', label: '怎么跳过的', type: 'segment', value: 'skip', options: [['skip', '直接发了新消息'], ['ai', '交给 AI 决策']] },
+        { key: 'expand', label: '展开', type: 'segment', value: 'yes', options: [['no', '否'], ['yes', '是']] },
+      ]}
+      rules={(s) => (s.status === 'skipped' ? {} : { skipped: true })}
+      render={renderAskRecord}
+    />
+  );
+}
+
+// ---------- SkillCard ----------
+
+type SkillCardState = { cover: string; desc: boolean; title: string; descText: string };
+
+export function SkillCardPlayground() {
+  return (
+    <Playground<SkillCardState>
+      controls={[
+        { key: 'cover', label: '封面', type: 'segment', value: 'default', options: [['default', '默认'], ['image', '图片']] },
+        { key: 'desc', label: '显示说明', type: 'toggle', value: true },
+        { key: 'title', label: '技能名', type: 'text', value: '运营活动主视觉生成' },
+        { key: 'descText', label: '说明', type: 'text', value: '根据主题、风格、主色调和氛围关键词，生成活动主视觉' },
+      ]}
+      rules={(s) => (s.desc ? {} : { descText: true })}
+      render={(s) => (
+        <SkillCard
+          title={s.title}
+          description={s.desc ? s.descText : undefined}
+          cover={s.cover === 'image' ? `${IMG}kivi-future-1x1.webp` : undefined}
+        />
+      )}
     />
   );
 }
@@ -324,15 +401,16 @@ export function QuestionPanelPlayground() {
   );
 }
 
-/** 追问的来回：问的时候面板停在输入框的位置，提交或忽略后面板消失，消息里留一行「已询问」 */
+/** 追问的来回：问的时候面板停在输入框的位置，消息里是「询问中」；提交后面板消失，留「已询问」，忽略了留「询问」 */
 export function QuestionFlowDemo() {
-  const [phase, setPhase] = useState<'asking' | 'sending' | 'done'>('asking');
+  const [phase, setPhase] = useState<'asking' | 'sending' | 'answered' | 'skipped'>('asking');
   const text = { color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' };
+  const question = '1. 你喜欢小猫吗？（2 个选项）';
 
   // 假提交：禁用 600ms 再收起
-  const submit = () => {
+  const finish = (result: 'answered' | 'skipped') => {
     setPhase('sending');
-    window.setTimeout(() => setPhase('done'), 600);
+    window.setTimeout(() => setPhase(result), 600);
   };
 
   return (
@@ -341,21 +419,21 @@ export function QuestionFlowDemo() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: 428, maxWidth: '100%' }}>
           <UserMessage>帮我生成 10 个小狗的图片</UserMessage>
           <div style={text}>好的，马上为你同时生成 10 张小狗图片！</div>
-          {phase === 'done' ? (
+          {phase === 'answered' || phase === 'skipped' ? (
             <>
-              <ProcessRow icon="Message" action="已询问" arrow={false} />
+              <AskRecord status={phase} items={[{ question, answer: '喜欢' }]} />
               <Button onClick={() => setPhase('asking')}>重新演示</Button>
             </>
           ) : (
             <>
-              <ProcessRow icon="Message" action="询问中" arrow={false} />
+              <AskRecord status="asking" items={[{ question }]} />
               <QuestionPanel
-                title="1. 你喜欢小猫吗？（2 个选项）"
+                title={question}
                 pager="1/5"
                 defaultValue={['1']}
                 disabled={phase === 'sending'}
-                onSubmit={submit}
-                onSkip={submit}
+                onSubmit={() => finish('answered')}
+                onSkip={() => finish('skipped')}
               >
                 <QuestionOption value="1">喜欢</QuestionOption>
                 <QuestionOption value="2">不喜欢</QuestionOption>

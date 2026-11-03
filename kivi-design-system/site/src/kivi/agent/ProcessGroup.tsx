@@ -1,7 +1,8 @@
-import { forwardRef, useEffect, useId, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import type { IconName } from '../icons';
 import { cx } from '../utils';
 import { useControllable } from '../hooks';
+import { ProcessDrawer } from './ProcessDrawer';
 import { ProcessRow, type ProcessRowStatus } from './ProcessRow';
 import './agent.css';
 
@@ -12,7 +13,7 @@ export interface ProcessStep {
   icon?: IconName;
   /** 动作文字，比如「创建节点」 */
   action: ReactNode;
-  /** 对象文字，比如「「分镜脚本」」，比动作淡一档 */
+  /** 对象文字，比如「分镜脚本」，比动作淡一档。不加引号，颜色已经分开了 */
   object?: ReactNode;
   /** 状态：进行中 / 完成 / 失败，默认完成 */
   status?: ProcessRowStatus;
@@ -95,9 +96,8 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
 
   const failed = steps.filter((s) => s.status === 'failed').length;
   const canExpand = shown === SUMMARY && count > 1;
-  // 展开收起把下面的内容往下推、往回收：按要走的距离取时长，100 以内 200ms，再长 300ms
+  // 展开收起要走的距离，按它取时长
   const listHeight = GAP + Math.min(LIST_MAX, count * ROW + (count - 1) * GAP);
-  const drawerStyle = { '--kv-process-group-duration': `var(--motion-duration-${listHeight > 100 ? 300 : 200})` } as CSSProperties;
 
   const line = (key: number) => {
     if (key !== SUMMARY) {
@@ -135,15 +135,13 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
         </div>
       </div>
       {canExpand && (
-        <div className="kv-process-group__drawer" data-open={expanded ? '' : undefined} style={drawerStyle} aria-hidden={!expanded || undefined}>
-          <div className="kv-process-group__drawer-inner">
-            <div id={listId} className={cx('kv-process-list', count > FADE_AFTER && 'kv-process-list--fade')}>
-              {steps.map((s, i) => (
-                <ProcessRow key={s.id ?? i} level="sub" icon={s.icon} action={s.action} object={s.object} status={s.status} />
-              ))}
-            </div>
+        <ProcessDrawer open={expanded} distance={listHeight}>
+          <div id={listId} className={cx('kv-process-list', count > FADE_AFTER && 'kv-process-list--fade')}>
+            {steps.map((s, i) => (
+              <ProcessRow key={s.id ?? i} level="sub" icon={s.icon} action={s.action} object={s.object} status={s.status} />
+            ))}
           </div>
-        </div>
+        </ProcessDrawer>
       )}
     </div>
   );

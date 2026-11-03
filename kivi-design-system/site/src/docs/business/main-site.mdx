@@ -43,73 +43,6 @@ import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
 
 <PreviewHost />
 
-## 示例：一条记录
-
-### 4 张 · 同比例 1:1，第 2 张悬停
-
-<Demo code={`
-() => {
-  const top = [
-    { icon: 'Delete', label: '删除' },
-    { icon: 'Download', label: '下载' },
-  ];
-  const quick = [
-    { icon: 'ImageEditing', label: '图片编辑' },
-    { icon: 'VideoGeneration', label: '图生视频' },
-    { icon: 'ImageToImage', label: '一键垫图' },
-    { icon: 'More', label: '更多' },
-  ];
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-      <GenPrompt prompt="生成一张赛博朋克风格的猕猴桃海报">
-        <Tag icon="ImageGeneration">图片生成</Tag>
-        <Tag icon="Bytedance">Seedance 2.0 Fast</Tag>
-        <Tag>2K</Tag>
-        <Tag>1:1</Tag>
-      </GenPrompt>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
-        <ResultTile src="./placeholders/ip-gouache-1x1.webp" />
-        <ResultTile className="is-hover" src="./placeholders/kivi-future-1x1.webp" topActions={top} collect quickActions={quick} />
-        <ResultTile src="./placeholders/bunny-gouache-1x1.webp" />
-        <ResultTile src="./placeholders/ip-kiwi-pile-1x1.webp" />
-      </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <Button variant="light">重新编辑</Button>
-        <Button variant="light">再次生成</Button>
-        <Button variant="light">删除整组</Button>
-      </div>
-    </div>
-  );
-}
-`} />
-
-### 4 张 · 生成中和失败混在一起
-
-<Demo code={`
-<div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-  <GenPrompt
-    length="long"
-    prompt="生成一张赛博朋克风格的猕猴桃海报：霓虹灯下的未来都市街道，雨夜反光的路面，巨大的全息广告牌上写着 KIVI，画面中央是一颗发光的猕猴桃切面，周围漂浮着数据流和粒子，电影级光影，广角镜头，高对比度，细节丰富，8K 质感，整体色调以青色和品红色为主，带一点胶片颗粒。"
-  >
-    <Tag icon="ImageGeneration">图片生成</Tag>
-    <Tag icon="Bytedance">Seedance 2.0 Fast</Tag>
-    <Tag>2K</Tag>
-    <Tag>1:1</Tag>
-  </GenPrompt>
-  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
-    <ResultTile src="./placeholders/kivi-future-1x1.webp" />
-    <ResultTile status="loading" badge="59s 生成中" />
-    <ResultTile status="loading" badge="生成中" src="./placeholders/kivi-future-1x1.webp" />
-    <ResultTile status="failed" />
-  </div>
-  <div style={{ display: 'flex', gap: 8 }}>
-    <Button variant="light">重新编辑</Button>
-    <Button variant="light">再次生成</Button>
-    <Button variant="light">删除整组</Button>
-  </div>
-</div>
-`} />
-
 ## GenPrompt
 
 <GenPromptPlayground />
@@ -128,9 +61,9 @@ import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `length` | `"short"` `"long"` | `"short"` | 短 / 超出两行。超出两行最多 2 行，末尾省略，复制按钮放在第二行行尾，左边 40 的渐变从透明过渡到底色 base 盖住截断的文字（放在别的底色上改 `--kv-gen-prompt-bg`） |
+| `length` | `"short"` `"long"` | 自己量 | 短 / 超出两行。不传就自己量，超过两行就收成两行、末尾省略，复制按钮挪到第二行行尾，左边 40 的渐变从透明过渡到底色 base 盖住截断的文字（放在别的底色上改 `--kv-gen-prompt-bg`）；宽度变了重新量。收起时悬停用 Tooltip 长文看全文，没截断时禁用。传了就固定 |
 | `prompt` | `ReactNode` | — | 提示词，14 / 22 常规，primary。没有提示词就不显示这一行（照线上）；工具类任务（抠图、高清…）不传，只显示参数 |
-| `onCopy` | `() => void` | — | 点复制按钮（IconButton 28 · 轻）。有提示词就固定显示，和文字间距 6 `--spacing-6` |
+| `onCopy` | `() => void` | — | 点复制按钮（IconButton 28 · 轻）。有提示词就固定显示，跟在最后一个字后面，间距 6 `--spacing-6` |
 | `children` | `ReactNode` | — | 参数：一排 Tag（任务类型、模型、清晰度、比例、时长…），间距 6，放不下换行；参考区 `GenPromptRefs` 也放在这里。工具类任务的第一个 Tag 带工具图标（抠图 `Rmbg`、扩图 `Expand`、重绘 `SmartEditing`、高清 `HD`、元素去除 `RemoveEle`、视频拼接 `Connecting`…），参考区写「原图」或「原视频」 |
 
 ### GenPromptRefs
@@ -173,7 +106,7 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 
 ### PromptBox
 
-外框底 container-light-1，描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`，宽度拉满；内容区和工具条间距 12 `--spacing-12`。提示词 14 / 20 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32。其余原生 `<div>` 属性都能传。
+外框是玻璃：底 glass `--color-bg-fill-glass` + 背景模糊 32 `--effect-glass-blur`，浮在生成记录上、下面的内容透出来；描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`，宽度拉满；内容区和工具条间距 12 `--spacing-12`。提示词 14 / 20 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|

@@ -3,7 +3,7 @@ import { Icon, ICON_GROUPS, type IconName } from '@kivi';
 import { copyText } from '@shell';
 
 // 图标页的数据和演示。规范文字在 icons.mdx。
-// 图标本身（160 个）在 kivi/icons.ts，分组 ICON_GROUPS 也在那里；这里只写每个图标的意思和备注。
+// 图标本身（164 个）在 kivi/icons.ts，分组 ICON_GROUPS 也在那里；这里只写每个图标的意思和备注。
 // ICON_INFO 的类型是 Record<IconName, …>：icons.ts 里加了图标，这里不补就过不了 tsc。
 
 export interface IconInfo {
@@ -151,7 +151,7 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   Square41: { means: '4:1', note: '自绘' },
   Square921: { means: '9:21', note: '自绘' },
   OriginalProportions: { means: '原始比例', note: '自绘' },
-  // 对话与反馈（13）
+  // 对话与反馈（17）
   ThumbsUp: { means: '点赞' },
   ThumbsUpFill: { means: '已点赞（实心）' },
   ThumbsDown: { means: '点踩' },
@@ -165,6 +165,10 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   Message: { means: '询问、对话、消息' },
   Send: { means: '发送、提交', note: '上箭头' },
   NewChat: { means: '新对话、新建、编辑', note: '主站侧栏对话、画布分组的新建按钮用；和 Add 区分开', tag: '待确认' },
+  ScanEye: { means: '查看、理解、识别', note: 'Agent 查看类工具（查看画布、节点、链接内容）用；别用眼睛 Preview，它表示显示 / 隐藏' },
+  SquareLibrary: { means: '知识库、资料库', note: 'Agent 搜索知识库用' },
+  Brain: { means: '记忆、长期记忆', note: 'Agent 更新记忆用；思考用 Lightbulb' },
+  Rename: { means: '重命名', note: '侧栏「⋯」菜单用。Lucide pen-line，Figma 还没有；和 NewChat（新建）区分开', tag: '待确认' },
   // 系统（9）
   Home: { means: '首页' },
   Document: { means: '文档、教程' },
@@ -205,7 +209,7 @@ export const GROUP_INFO: Record<string, { id: string; desc: string }> = {
   '画布与视图': { id: 'ic-canvas', desc: '画布导航、缩放、吸附、连线、编组、抓手等。' },
   '文本格式': { id: 'ic-text-format', desc: '文本节点工具栏里的标题、加粗、斜体、字号、列表、分割线。' },
   '比例': { id: 'ic-ratio', desc: '生成参数里的画面比例。名字里的数字就是比例，比如 Square169 = 16:9。' },
-  '对话与反馈': { id: 'ic-chat', desc: 'AI 对话里的点赞点踩、收藏、复制 Trace ID、思考过程、工具调用、反馈。' },
+  '对话与反馈': { id: 'ic-chat', desc: 'AI 对话里的点赞点踩、收藏、复制 Trace ID、思考过程、工具调用（查看、知识库、记忆）、反馈。' },
   '系统': { id: 'ic-system', desc: '首页、文档、语言、日历，主站侧栏导航（创作、探索、AI 工具、收起侧栏），积分（Kiwi）等全局入口。' },
   '模型 Logo': { id: 'ic-models', desc: '模型品牌 Logo，保持原样，不按 Lucide 重画。名字来自后端的模型配置，不要改名（Mdoel 拼错了也先不改，改之前要和后端确认）。' },
   '品牌': { id: 'ic-brand', desc: 'KIVI 字标等品牌图形。不进 Icon 统一组件，单独用；颜色已绑变量。' },

@@ -48,6 +48,7 @@
     展开    触发器上写 aria-expanded="true"（Dropdown 写），右边箭头换成 UpArrowSmall，列表出现
             当前项：role="option" aria-selected="true"，白 8% 底，不打勾（MenuItem 的「选中」）
     已选    文字用 kv-select__text；没选用 kv-select__text--placeholder；左图标（kv-select__lead）写 data-filled，变成和文字一样白
+            无底（工具条）没选时占位就是入口名（模型、技能），文字、左图标也是白的，不灰
     禁用    disabled
     位置    placement，默认在触发器下方 4、左对齐，放不下会自己翻到上方
   is-hover、is-focus 只给文档摆静态的悬停、聚焦用，项目里不用写；
@@ -264,6 +265,13 @@
   --kv-select-fill-open: var(--color-bg-fill-container-light-2-pressed);
   display: inline-flex;
   padding: 0 var(--spacing-8);
+}
+
+/* 无底没选值时：占位就是入口名（比如 Agent 工具条的「模型」「技能」），文字和左图标跟选了值一样白；
+   灰的放在工具条上像禁用（11-02 用户定）。填充（表单）还是灰的占位 */
+.kv-select--plain .kv-select__text--placeholder,
+.kv-select--plain > .kv-select__lead {
+  color: var(--color-text-fill-primary);
 }
 
 /* 悬停、展开。文档摆静态悬停时，is-hover 写在最外层 kv-select__wrap 上 */

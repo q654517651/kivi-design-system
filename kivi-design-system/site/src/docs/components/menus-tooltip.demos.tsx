@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import {
   AssetThumb,
   Button,
@@ -12,7 +13,7 @@ import {
   Tooltip,
   type DropdownPlacement,
 } from '@kivi';
-import { Playground } from '@shell';
+import { Playground, type PlaygroundState } from '@shell';
 
 // 菜单和提示页的属性面板：所有类型、状态都在面板里切。参数表在 menus-tooltip.mdx
 
@@ -21,15 +22,16 @@ const THUMB = './placeholders/kiwi-light-1x1.webp';
 
 // ---------- Tooltip ----------
 
-type TooltipState = { type: string; text: string; title: string; shortcut: boolean; shortcutText: string };
+type TooltipState = { type: string; text: string; longText: string; title: string; shortcut: boolean; shortcutText: string };
 
 // 面板里摆的是静态的气泡（不包触发元素）；真实的悬停出现看下面的示例
 export function TooltipPlayground() {
   return (
     <Playground<TooltipState>
       controls={[
-        { key: 'type', label: '类型', type: 'segment', value: 'simple', options: [['simple', '简单'], ['desc', '说明']] },
+        { key: 'type', label: '类型', type: 'segment', value: 'simple', options: [['simple', '简单'], ['desc', '说明'], ['long', '长文']] },
         { key: 'text', label: '文字', type: 'text', value: '提示文字' },
+        { key: 'longText', label: '文字', type: 'text', value: '生成一张赛博朋克风格的猕猴桃海报：霓虹灯下的未来都市街道，雨夜反光的路面，巨大的全息广告牌上写着 KIVI，画面中央是一颗发光的猕猴桃切面，电影级光影，8K 质感。' },
         { key: 'title', label: '标题', type: 'text', value: '提示标题' },
         { key: 'shortcut', label: '显示快捷键', type: 'toggle', value: false },
         { key: 'shortcutText', label: '快捷键', type: 'text', value: '⌘Z' },
@@ -38,9 +40,13 @@ export function TooltipPlayground() {
       rules={(s) => ({
         ...(s.type === 'desc' ? { shortcut: true, shortcutText: true } : { title: true }),
         ...(s.type === 'simple' && !s.shortcut ? { shortcutText: true } : {}),
+        ...(s.type === 'long' ? { text: true, shortcut: true, shortcutText: true } : { longText: true }),
       })}
       render={(s) =>
-        s.type === 'desc' ? (
+        // 长文平时和触发元素一样宽，这里摆样子给个 400
+        s.type === 'long' ? (
+          <Tooltip variant="long" content={s.longText} style={{ width: 400 }} />
+        ) : s.type === 'desc' ? (
           <Tooltip variant="desc" title={s.title} content={s.text} />
         ) : (
           <Tooltip content={s.text} shortcut={s.shortcut ? s.shortcutText : undefined} />
@@ -123,9 +129,10 @@ export function MenuPlayground() {
 
 type DropdownState = { dir: string; align: string; popup: string; match: boolean; close: boolean };
 
-// 弹出层挂在 body 上：点一下预览里的按钮就能打开
-function renderDropdown(s: DropdownState) {
+// 弹出层挂在 body 上：点一下预览里的按钮就能打开。单选列表点了哪项就选中哪项，记在面板上不显示的 picked 里
+function renderDropdown(s: DropdownState, update: (patch: Partial<PlaygroundState>) => void) {
   const list = s.popup === 'listbox';
+  const picked = typeof (s as Record<string, unknown>).picked === 'string' ? String((s as Record<string, unknown>).picked) : '2K';
   const placement = (s.align === 'center' ? s.dir : `${s.dir}-${s.align}`) as DropdownPlacement;
   return (
     <Dropdown
@@ -135,14 +142,14 @@ function renderDropdown(s: DropdownState) {
       closeOnSelect={s.close ? undefined : false}
       trigger={
         <Button rightIcon="DownArrowSmall" style={s.match ? { width: 160 } : undefined}>
-          {list ? '2K' : '更多操作'}
+          {list ? picked : '更多操作'}
         </Button>
       }
     >
       <Menu width={s.match ? undefined : list ? 120 : 200} role={list ? 'listbox' : undefined}>
         {list
           ? ['1K', '2K', '4K'].map((v) => (
-              <MenuItem key={v} selected={v === '2K'}>
+              <MenuItem key={v} selected={v === picked} onClick={() => update({ picked: v })}>
                 {v}
               </MenuItem>
             ))
@@ -175,9 +182,18 @@ export function DropdownPlayground() {
 
 // ---------- SidebarItem ----------
 
-type SidebarItemState = { type: string; state: string; text: string; left: string; more: boolean };
+type SidebarItemState = { type: string; state: string; text: string; left: string; more: boolean; collapsed: boolean };
 
-function renderSidebarItem(s: SidebarItemState) {
+/** 收起时宽度跟着外面的侧栏：这里用一个 216 / 36 的框代替侧栏，宽度变化 300ms ease-in-out。代码里不写它 */
+function SidebarBox({ collapsed, children }: { collapsed: boolean; children: ReactNode }) {
+  return (
+    <div style={{ width: collapsed ? 36 : 216, transition: 'width var(--motion-duration-300) var(--motion-ease-in-out)' }}>{children}</div>
+  );
+}
+SidebarBox.docFrame = true;
+
+// 预览里改名（回车）会写回面板的「文字」，进出重命名写回「状态」
+function renderSidebarItem(s: SidebarItemState, update: (patch: Partial<SidebarItemState>) => void) {
   const list = s.type === 'list';
   return (
     <SidebarItem
@@ -188,8 +204,11 @@ function renderSidebarItem(s: SidebarItemState) {
       thumbIcon={list && s.left === 'canvas' ? 'Canvas' : undefined}
       selected={s.state === 'selected' || undefined}
       more={s.more || undefined}
+      collapsed={s.collapsed || undefined}
+      editing={list ? s.state === 'editing' : undefined}
+      onEditingChange={list ? (v) => update({ state: v ? 'editing' : 'default' }) : undefined}
+      onRename={list ? (name) => update({ text: name }) : undefined}
       className={STATE_CLASS[s.state]}
-      style={{ width: 216 }}
     >
       {s.text}
     </SidebarItem>
@@ -201,40 +220,52 @@ export function SidebarItemPlayground() {
     <Playground<SidebarItemState>
       controls={[
         { key: 'type', label: '类型', type: 'segment', value: 'nav', options: [['nav', '导航'], ['list', '列表']] },
-        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['selected', '选中']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['selected', '选中'], ['editing', '重命名中']] },
         { key: 'text', label: '文字', type: 'text', value: '侧栏项' },
         { key: 'left', label: '缩略图', type: 'segment', value: 'message', options: [['message', '对话图标'], ['canvas', '画布图标'], ['image', '图片']] },
         { key: 'more', label: '更多（悬停、选中才显示）', type: 'toggle', value: false },
+        { key: 'collapsed', label: '收起', type: 'toggle', value: false },
       ]}
-      // 导航左边固定是图标，没有缩略图
-      rules={(s) => (s.type === 'nav' ? { left: true } : {})}
-      render={renderSidebarItem}
+      // 导航左边固定是图标，没有缩略图，也不能重命名；收起时不显示「更多」、不能重命名
+      rules={(s) => ({
+        ...(s.type === 'nav' ? { left: true, state: ['editing'] } : {}),
+        ...(s.collapsed ? { more: true, state: ['editing'] } : {}),
+      })}
+      render={(s, update) => <SidebarBox collapsed={s.collapsed}>{renderSidebarItem(s, update)}</SidebarBox>}
     />
   );
 }
 
 // ---------- SidebarLabel ----------
 
-type SidebarLabelState = { text: string; expanded: string; showNew: boolean };
+type SidebarLabelState = { state: string; text: string; expanded: string; showNew: boolean; collapsed: boolean };
 
-// 换了「展开」就换 key 重新来过，预览里还能点标题自己展开收起
+// 预览里点标题展开收起，面板「展开」跟着变
 export function SidebarLabelPlayground() {
   return (
     <Playground<SidebarLabelState>
       controls={[
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停']] },
         { key: 'text', label: '文字', type: 'text', value: '对话' },
         { key: 'expanded', label: '展开', type: 'segment', value: 'open', options: [['open', '展开'], ['closed', '收起']] },
         { key: 'showNew', label: '新建按钮', type: 'toggle', value: true },
+        { key: 'collapsed', label: '收起', type: 'toggle', value: false },
       ]}
-      render={(s) => (
-        <SidebarLabel
-          key={s.expanded}
-          defaultExpanded={s.expanded === 'open' ? undefined : false}
-          showNew={s.showNew ? undefined : false}
-          style={{ width: 216 }}
-        >
-          {s.text}
-        </SidebarLabel>
+      // 收起时只剩新建按钮（一直显示），标题、展开状态、悬停都看不出
+      rules={(s) => (s.collapsed ? { state: true, text: true, expanded: true, showNew: true } : {})}
+      render={(s, update) => (
+        <SidebarBox collapsed={s.collapsed}>
+          <SidebarLabel
+            expanded={s.expanded === 'open'}
+            onExpandedChange={(v) => update({ expanded: v ? 'open' : 'closed' })}
+            showNew={s.showNew || s.collapsed ? undefined : false}
+            newLabel={`新建${s.text}`}
+            collapsed={s.collapsed || undefined}
+            className={s.collapsed ? undefined : STATE_CLASS[s.state]}
+          >
+            {s.text}
+          </SidebarLabel>
+        </SidebarBox>
       )}
     />
   );
@@ -242,13 +273,20 @@ export function SidebarLabelPlayground() {
 
 // ---------- SidebarMore ----------
 
-type SidebarMoreState = { text: string };
+type SidebarMoreState = { text: string; collapsed: boolean };
 
 export function SidebarMorePlayground() {
   return (
     <Playground<SidebarMoreState>
-      controls={[{ key: 'text', label: '文字', type: 'text', value: '更多' }]}
-      render={(s) => <SidebarMore style={{ width: 216 }}>{s.text}</SidebarMore>}
+      controls={[
+        { key: 'text', label: '文字', type: 'text', value: '更多' },
+        { key: 'collapsed', label: '收起', type: 'toggle', value: false },
+      ]}
+      render={(s) => (
+        <SidebarBox collapsed={s.collapsed}>
+          <SidebarMore collapsed={s.collapsed || undefined}>{s.text}</SidebarMore>
+        </SidebarBox>
+      )}
     />
   );
 }

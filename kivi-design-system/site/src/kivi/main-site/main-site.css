@@ -55,48 +55,37 @@
   font-family: var(--font-family);
 }
 
-/* 提示词：14 / 22 primary。短的在一行内，复制按钮紧跟在文字后 */
+/* 提示词：14 / 22 primary，照线上是一段行内文字，复制按钮跟在最后一个字后面（间距 6）。
+   按钮 28 比行高 22 高，上下各收 3，不把最后一行撑高 */
 .kv-gen-prompt__prompt {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-6);
   min-width: 0;
-}
-
-.kv-gen-prompt__text {
-  min-width: 0;
-  overflow: hidden;
   color: var(--color-text-fill-primary);
   font-size: var(--font-size-14);
   line-height: var(--font-line-height-22);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .kv-gen-prompt__copy {
-  display: flex;
-  flex: none;
+  display: inline-flex;
+  vertical-align: top;
+  margin: -3px 0 -3px var(--spacing-6);
 }
 
-/* 超出两行：最多 2 行，末尾省略；复制按钮绝对定位在第二行行尾，
+/* 超出两行：最多 2 行，末尾省略；复制按钮挪到第二行行尾，
    左边 40 的渐变从透明过渡到底色，盖住被截断的文字 */
-.kv-gen-prompt--clamp .kv-gen-prompt__prompt {
-  display: block;
-}
-
 .kv-gen-prompt--clamp .kv-gen-prompt__text {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  white-space: normal;
 }
 
 .kv-gen-prompt--clamp .kv-gen-prompt__copy {
   position: absolute;
   right: 0;
   bottom: -3px;
+  margin: 0;
   padding-left: 40px;
   background: linear-gradient(90deg, transparent, var(--kv-gen-prompt-bg) 55%);
 }

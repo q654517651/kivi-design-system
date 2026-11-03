@@ -69,7 +69,7 @@ Figma 的箭头是 `DownArrowSmall`（收起）和 `UpArrowSmall`（展开）两
 
 | 状态 | 图标 | 动作文字 | 对象文字 |
 |---|---|---|---|
-| 进行中 | primary | 扫光：primary 和 placeholder（白 30%）交替的渐变，从左往右扫 | secondary |
+| 进行中 | secondary | secondary，停留超过 0.5 秒走一道 primary 亮光，从左往右（11-02 用户定：进行中不变白，只有悬停才亮；原来是 primary 字 + primary / placeholder 交替扫光） | tertiary |
 | 完成 | secondary | secondary | tertiary |
 | 失败 | status/danger | status/danger | tertiary |
 
@@ -448,3 +448,94 @@ Agent 写出来的文件，比如剧本、分镜说明、字幕、配音。出�
 - 生成会重复出现：同一次生图在 3.13 分支上最多出 4 样东西：工具行「图片生成节点「X」」、确认记录「询问中 / 已询问」、结果卡「图片生成中 x N」、回合结束的「节点创建（N）」标签。用户说的画布「图片生成」同步就是结果卡（workflow_card）。
 - askUser 的结果：回答了（answered，单题可跳过）、全部交给 AI 决策（skipped_all）、用户直接发新消息（被取消，no_result）。没有超时状态。
 - 待定（我的建议，用户还没回）：工具按「进工具组 / 单独一块 / 不显示」三种显示；生成类不出工具行，只出结果块；去掉回合结束的「节点创建（N）」；询问做三种状态、能收起。
+
+## 询问记录 AskRecord（11-02，用户说询问也要能收起）
+
+- 新组件 `AskRecord`：一行「询问中 / 已询问 / 询问」，下面收起的是问答。默认收起，悬停出箭头，点开往下推（和工具调用组共用 `ProcessDrawer`）。不进工具调用组，自己单独一行。
+- 三种状态照用户说的：询问中（等用户回答，扫光）；已询问（回答了，展开有回答）；询问（跳过了，字不带「已」，展开最后写「已跳过」，点了「全部交给 AI 决策」的写「交给 AI 决策」）。后端 askUser 也正好是这三种结果（answered / skipped_all / 被新消息取消）。
+- 生成确认也用它：问题「是否生成新节点「X」？」，回答「批准生成 / 取消生成」。
+- 网站：画布侧栏示例里那块手拼的「已询问」换成 AskRecord；追问示例里提交留「已询问」、忽略留「询问」；加了 AskRecord 属性面板和参数表。
+- Figma 待补：AskRecord 三种状态、收起和展开。
+
+## Agent 输入框底部按钮去底（11-02 用户定）
+
+- 输入框底部那排按钮（添加、模型、技能等）从 IconButton 次要（带底）改成文字（平时无底，悬停才出底），间距 8 → 4。和主站输入框、画布生成面板的工具条一致；发送按钮是工具条里唯一实心的。
+- Figma「Agent」页的输入框如果画的是带底按钮，要跟着改。
+
+## 技能卡 SkillCard，FileCard 跟它对齐（11-02 用户定）
+
+- 技能卡和文件卡不是一个东西。技能卡照旧版 KIVI 3.14「消息气泡」里的技能卡（node 13656:57419）补了 `SkillCard`：封面 100 × 56 + 技能名 + 一行说明，右下「编辑」「使用技能」。后端新版本有 `skill_card` 消息（保存技能后出，分新建 / 更新），和它对应。
+- 跟旧稿不一样的地方（对齐 V2）：外框用确认卡的 surface + border-subtle（旧稿白 4% 底），上下间距 12（旧稿 16），封面和文字间距 12（旧稿 6），封面圆角 8（旧稿 5.25 是缩放留下的零头），说明 13 tertiary（旧稿 13 白 50%），按钮 Button 中 32（旧稿 36）。用户没设封面时用技能专用的占位封面：从旧稿技能卡导出的那张（深绿底、两团模糊光斑加 KIVI Logo，node 13656:57461，4 倍图 399 × 224），放在 `assets/skill-card/default-cover.png`，组件里是 `SKILL_DEFAULT_COVER`（11-02 用户说要用 Figma 里那张，不要自己拼）。
+- FileCard 还是废弃，但外框、字号改成和技能卡一样：内边距 16，圆角 16，surface 底加描边，信息 13 / 20（原来 12 / 16），去掉悬停换底色（悬停仍然出操作）。
+- Figma 待补：SkillCard；FileCard 的新外框。
+- 加号：V3 里大加号、小加号都有，只是 V3 大加号用的 Hugeicons `add-01`（14），比 V2 显小；建议换 `plus-sign`（16），减号一起换 `minus-sign`，小号照旧缩 0.81。还没定。
+
+## 每个工具怎么显示、用什么图标（11-02 整理，建议稿，待用户定）
+
+原则：工具组里的行按「做的事」共用图标；生成类不出行，结果块按产出的媒体类型用 4 个图标；不给每个工具单独画图标。下面用到的图标 V2、V3 都有。
+
+| 工具（后端名） | 显示名 | 怎么显示 | 图标 |
+|---|---|---|---|
+| inputNode、deleteNode、createEdge、deleteEdge（还有不带生成的创建 / 更新节点） | 创建 / 删除节点、节点连线、删除连线 | 工具组一行 | UseCanvas（共用） |
+| get_workflow_schema、get_workflow_nodes、understand_url_content、understand_workflow_node_content | 查看画布、查看节点信息、查看链接内容、查看节点内容 | 工具组一行 | Preview（共用） |
+| search_knowledge（新分支） | 搜索知识库 | 工具组一行 | Search |
+| skill | 加载技能 | 工具组一行 | Skill |
+| write_todos | 更新待办清单 | 先当工具组一行；以后要不要做待办清单另说 | OrderedList |
+| lark_cli | 执行飞书命令 | 工具组一行 | Tool（汇总行也用 Tool） |
+| askUser | 询问用户 | 询问记录 AskRecord（单独一行）+ 问题面板 | Message |
+| imageGenerationNode、videoGenerationNode、textGenerationNode、audioGenerationNode（新）、executeNode | 图片 / 视频 / 文本 / 音频生成节点、执行节点 | 不出行，只出结果块 | 按产出：ImageGeneration / VideoGeneration / Text / Audio |
+| imageRemoveBgNode、imageEnhanceNode、imageCuttingNode、videoSeamlessLoopNode、videoEnhanceNode、videoStitchNode、motionControlNode（新）、lipSyncNode（新） | 抠图、图片高清、裁切、视频循环、视频高清、视频拼接、动作复刻、对口型 | 不出行，只出结果块（标题写工具名） | 按产出：图片 ImageGeneration / 视频 VideoGeneration |
+| save_skill（新分支） | 保存技能 | 不出行，出技能卡 SkillCard | 卡片封面 |
+| read_skill_file、read_lark_cli_skill、load_memory、remember、list_session_turns、read_session_history、用户置顶技能的模拟调用、被取消补上的结果 | — | 不显示 | — |
+| 回合结束的 done.artifacts（「节点创建（N）」） | — | 去掉，和结果块重复 | — |
+
+不是工具、但对话里要有的：思考（Lightbulb）、生成确认（Message，记录用 AskRecord，面板用 ActionCard 确认）、飞书授权（ActionCard 授权）、出错（ActionCard 出错）。
+
+没有图标的：按上面的分法没有。若结果块标题要按工具配图标，视频拼接、动作复刻、对口型三个 V2 没有合适的。后端缺显示名的：audioGenerationNode、motionControlNode、lipSyncNode（研发补）。
+
+还缺的组件 / 状态：
+- 生成结果组（画布）：标题「图片生成中 × N」+ 缩略图，每张有待确认后生成、准备中、生成中（点阵 + 秒数）、已生成、失败、已取消；点了定位节点。现在只有 ProcessRow + MediaStack 拼的。
+- 主站结果格 ResultTile：缺「待确认后生成」「已取消」两种。
+- 思考记录：思考中（扫光）/ 思考完成（收起，能展开看内容），和 AskRecord 同一个写法。
+- 授权卡 ActionCard 授权：缺做完后的状态（授权成功 / 授权失败 / 已跳过）。
+- 技能卡 SkillCard：后端分新建 / 更新，卡上要不要区分，没定。
+- 待办清单：write_todos，先不做。
+
+## 工具图标预览页（11-02，用户要看效果）
+
+- 网站「试验 · Agent 工具图标」（`src/docs/lab/agent-tools.*`）：整体效果（一行滚动 + 做完展开）、分组（进工具组 4 组 + 不出行 4 种）、画布操作对比（共用 / 按动作分）、查看对比（眼睛 / 放大镜 / 按东西分）。定了搬进 Agent 页、删掉这页。
+- 用户 11-02 提：眼睛只表示可见 / 不可见，不是「查看」，没有 AI 看的感觉 → 查看类建议换放大镜 Search（像 Codex 把读、搜合成「探索」），搜索知识库并进「查看」一组。
+- 画布操作不分图标（建议）：行里文字已经写了做了什么；列表里出垃圾桶像能点的删除按钮。
+- write_todos：后端 deep agent 没关（eino 默认带），模型可能会调；前端没做清单。产品不用 → 放「不显示」，也可以让后端关掉（`WithoutWriteTodos`）。新分支的 submitPlan、list_tools 也放不显示。
+- 「执行lark-cli」显示名建议改「执行飞书命令」（研发改后端显示名）。
+
+## 工具图标定稿（11-02 用户定）
+
+| 组 | 工具 | 图标 |
+|---|---|---|
+| 改画布 | 输入节点、节点连线、删除节点、删除节点连线 | UseCanvas（共用，动作靠文字区分） |
+| 查看 | 查看画布、查看画布节点信息、查看节点内容、查看链接内容（链接是图片 / 视频 / 音频地址，后端交给 Gemini 理解） | ScanEye（新加；用户比过 FileView，文档外形像读文字，不用） |
+| 知识库 | 搜索知识库 | SquareLibrary（新加；方框里两本竖书一本斜书。Hugeicons Library、LibraryBig 细节多，不用） |
+| 记忆 | 写入长期记忆（显示「更新记忆」） | Brain（新加；V2 Lucide brain，V3 Hugeicons Brain03） |
+| 技能 | 加载技能 | Skill |
+| 外部工具 | 执行飞书命令 | Tool（不用飞书 Logo：品牌不能改成线条，实心又和线条图标不搭，用户定算了） |
+| 汇总行 | 调用了 N 个工具 | Tool |
+
+- 规则：做的事不同才换图标，对象不同不换。眼睛 Preview 只表示显示 / 隐藏，不用在工具上。
+- 查看画布用 Canvas、查看节点用 VectorSquare 试过，用户觉得不好，查看类都统一成 ScanEye（11-02）。
+- 以上图标 11-02 用户全部确认。
+- 写入长期记忆（11-02 改）：之前归到不显示是错的，后端只在用户明确说「记住」时调（v2 也能改、删记忆）。用户定放进工具组，和别的工具一样一行「更新记忆」+ Brain，不显示记住了什么。
+- 其余不显示的理由：读取技能详情、加载 lark-cli 技能是读说明书，真正做事的那行已经有了；加载长期记忆是后台准备；查看 / 读取会话记录是翻本会话被压缩掉的记录（保存技能前用），结果是技能卡。
+- 新加的图标只在试验页临时挂着（`src/docs/lab/lab-icons.ts`）：ScanEye、SquareLibrary、Brain。V2 照 Lucide（scan-eye、square-library、brain，线宽 1.5），V3 照 Hugeicons（ScanEye、SquareLibrary、Brain03，缩 21、线宽 1.6）。
+- 待做：Figma「图标」页补这几个（V2）、「_图标对照」第三列补 V3，重新导出后删掉 lab-icons.ts，再搬进 Agent 页。
+- 研发：「理解素材」行后面跟素材名，不显示网址；lark-cli 显示名改「执行飞书命令」。
+- 过程行的对象文字不加「」（11-02 用户定）：对象已经比动作淡一档，颜色就分开了。连线写「活动文案 → 主视觉」，箭头两边空格。句子里提到节点名（Agent 回复、询问的问题）照常用「」。网站 Agent 页、试验页的示例和 ProcessRow / ProcessGroup 的注释、参数表都改了；Figma「Agent」页的过程行示例如果带「」要跟改。前端 3.13 分支的工具行本来就不带「」，只有确认问题「是否生成新节点「X」？」是句子，照旧。
+
+- 进行中不变白（11-02 用户定）：过程行进行中和完成一样是 secondary，只有能点的行悬停才亮一档；停留超过 0.5 秒动作文字上走一道 primary 亮光。Figma「Agent」页 ProcessRow 进行中如果画的是白字，要跟改。
+
+## 工具图标转正、页面模板（11-02）
+
+- 试验页转正为「业务组件 · Agent 工具」（`docs/business/agent-tools.mdx`）：一行滚动、分组、对照表（后端名 / 显示 / 图标 / 怎么显示）。工具数据只写一份在 `docs/business/agent-tools.ts`，Agent 页 ProcessGroup 的演示也换成这份（原来是「读取画布操作规范」「创建节点」这些不存在的工具）。
+- ScanEye、SquareLibrary、Brain 补进 Figma：「图标」页对话与反馈分区（1010:4154 / 4177 / 4196，描述写来源 lucide/…、缩到 22/24、线宽 1.5、已转轮廓，分区计数 13 → 16）、「_源文件 · 图标描边」同一分区的描边源、「_图标对照」对话与反馈加了三张卡（V1 没有、V2 实例、V3 Hugeicons scan-eye / square-library / brain-03 缩 21、线宽 1.6）。网站 `icons.ts`、`icons-v3.ts`、图标页说明都加了，临时的 lab-icons.ts 删了。
+- 页面模板组放目录最上面（照 Figma 页的顺序）：主站（主站 Agent + 一条生成记录）、画布 Agent（对话：生成图片、追问）、画布（整块小画布）。画布 Agent 模板里的工具步骤换成真实工具（加载技能、查看画布、查看画布节点信息）。
+- 页面里不写的：研发要改的显示名（`remember` 后端叫「写入长期记忆」→ 显示「更新记忆」；`lark_cli`「执行lark-cli」→「执行飞书命令」；audioGenerationNode、motionControlNode、lipSyncNode 还没有显示名）。

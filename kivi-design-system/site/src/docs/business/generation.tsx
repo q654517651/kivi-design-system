@@ -43,9 +43,8 @@ export const REF_MODES: SelectOption[] = [
 export type ModelKind = 'text' | 'image' | 'video' | 'audio';
 
 /**
- * 模型，左边是模型 logo。
- * 图片、视频照 Figma「模板 · 通用」的「图片模型选择」「视频模型选择」，主站示例里的 GPT Image 2、Seedance 2.5 也放进来；
- * 文字照线上的对话模型列表；音频照 Figma 主站示例（豆包语音合成），其余是示例
+ * 模型，左边是模型 logo。照线上（ai-design-web 的 generation-policy 模型簇、canvas-action-registry 默认模型）：
+ * 线上的清单和显示名是后端按策略下发的，这里照模型 id 写显示名，顺序是示例。文字照线上的对话模型列表
  */
 export const MODELS: Record<ModelKind, SelectOption[]> = {
   text: [
@@ -56,46 +55,81 @@ export const MODELS: Record<ModelKind, SelectOption[]> = {
     { value: 'qwen-3.7-max', label: 'Qwen 3.7 Max', icon: 'Qwen' },
   ],
   image: [
+    { value: 'gpt-image-2', label: 'GPT Image 2', icon: 'Openai' },
     { value: 'nano-banana-2', label: 'Nano Banana 2', icon: 'Gemini' },
     { value: 'nano-banana-pro', label: 'Nano Banana Pro', icon: 'Gemini' },
     { value: 'seedream-5-lite', label: 'Seedream 5 Lite', icon: 'Bytedance' },
-    { value: 'seedream-4.5-lite', label: 'Seedream 4.5 Lite', icon: 'Bytedance' },
-    { value: 'gpt-image-2', label: 'GPT Image 2', icon: 'Openai' },
+    { value: 'seedream-4.5', label: 'Seedream 4.5', icon: 'Bytedance' },
+    { value: 'qwen-image-3.0', label: 'Qwen Image 3.0', icon: 'Qwen' },
   ],
   video: [
-    { value: 'seedance-2.0-fast', label: 'Seedance 2.0 Fast', icon: 'Bytedance' },
+    // 全能参考 + 生成音频
     { value: 'seedance-2.0', label: 'Seedance 2.0', icon: 'Bytedance' },
+    { value: 'seedance-2.0-fast', label: 'Seedance 2.0 Fast', icon: 'Bytedance' },
     { value: 'seedance-2.5', label: 'Seedance 2.5', icon: 'Bytedance' },
+    { value: 'kling-v3-omni', label: 'Kling V3 Omni', icon: 'Kling' },
+    // 全能参考
+    { value: 'gemini-omni-flash', label: 'Gemini Omni Flash', icon: 'Gemini' },
+    { value: 'happyhorse', label: 'HappyHorse', icon: 'HappyHorse' },
+    { value: 'wan-3.0', label: 'Wan 3.0', icon: 'Bytedance' },
+    // 只有首尾帧
     { value: 'veo-3.1-fast', label: 'Veo 3.1 Fast', icon: 'Gemini' },
-    { value: 'hailuo-2.3', label: 'Hailuo 2.3', icon: 'Minimax' },
-    { value: 'kling-2.5-turbo', label: 'Kling 2.5 Turbo', icon: 'Kling' },
+    { value: 'sora-2', label: 'Sora 2', icon: 'Sora' },
+    { value: 'grok-imagine-video-1.5', label: 'Grok Imagine Video 1.5', icon: 'grok' },
     { value: 'vidu-q3-pro', label: 'Vidu Q3 Pro', icon: 'Vidu' },
+    { value: 'seedance-1.5-pro', label: 'Seedance 1.5 Pro', icon: 'Bytedance' },
   ],
+  // 音频生成线上还在分支上（feat/v3.13_gen_audio）。ElevenLabs 的 Logo 图标库还没有，先不放
   audio: [
-    { value: 'doubao-tts', label: '豆包语音合成', icon: 'Bytedance' },
-    { value: 'minimax-speech', label: 'MiniMax Speech', icon: 'Minimax' },
-    { value: 'gemini-tts', label: 'Gemini TTS', icon: 'Gemini' },
+    { value: 'seed-audio-1.0', label: 'Seed Audio 1.0', icon: 'Bytedance' },
+    { value: 'minimax-speech-2.8-hd', label: 'MiniMax Speech 2.8 HD', icon: 'Minimax' },
+    { value: 'eleven-v4', label: 'Eleven V4' },
   ],
 };
+
+/** 视频模型分三类，决定参考方式和参数：只有首尾帧的不出参考方式（线上只有一项就不显示）；Seedance、Kling Omni 多「生成音频」 */
+export const VIDEO_FIRST_LAST_ONLY = ['veo-3.1-fast', 'sora-2', 'grok-imagine-video-1.5', 'vidu-q3-pro', 'seedance-1.5-pro'];
+export const VIDEO_WITH_AUDIO = ['seedance-2.0', 'seedance-2.0-fast', 'seedance-2.5', 'kling-v3-omni'];
 
 /** 模型默认值：线上的默认模型 */
 export const DEFAULT_MODEL: Record<ModelKind, string> = {
   text: 'gemini-3.5-flash',
   image: 'gpt-image-2',
-  video: 'seedance-2.0-fast',
-  audio: 'doubao-tts',
+  video: 'seedance-2.0',
+  audio: 'seed-audio-1.0',
 };
 
 const list = (values: string[]): SelectOption[] => values.map((v) => ({ value: v, label: v }));
 
 export const SIZES = list(['1K', '2K', '4K']);
-export const RATIOS = list(['智能', '1:1', '3:4', '4:3', '16:9', '9:16']);
+/** 图片比例：照线上的固定顺序，带比例图标；模型不支持的线上不显示 */
+export const RATIOS: SelectOption[] = [
+  { value: '智能', label: '智能', icon: 'AutoAspect' },
+  { value: '1:1', label: '1:1', icon: 'Square11' },
+  { value: '1:4', label: '1:4', icon: 'Square14' },
+  { value: '4:1', label: '4:1', icon: 'Square41' },
+  { value: '2:3', label: '2:3', icon: 'Square23' },
+  { value: '3:2', label: '3:2', icon: 'Square32' },
+  { value: '16:9', label: '16:9', icon: 'Square169' },
+  { value: '9:16', label: '9:16', icon: 'Square916' },
+  { value: '3:4', label: '3:4', icon: 'Square34' },
+  { value: '4:3', label: '4:3', icon: 'Square43' },
+  { value: '9:21', label: '9:21', icon: 'Square921' },
+];
 export const BACKGROUNDS: SelectOption[] = [
   { value: 'opaque', label: '不透明背景' },
   { value: 'transparent', label: '透明背景' },
 ];
-export const VOICES = list(['温柔女声', '沉稳男声', '活力少女', '磁性男声']);
-export const COUNTS: SelectOption[] = [1, 2, 3, 4].map((n) => ({ value: String(n), label: `x${n}` }));
+/** 音色：跟着模型变，第一个是默认。线上 Seed 16 个、MiniMax 17 个、Eleven 21 个，这里各放几个 */
+export const VOICES: Record<string, SelectOption[]> = {
+  'seed-audio-1.0': list(['不使用音色', '温柔女声', '沉稳男声', '活力少女', '磁性男声']),
+  'minimax-speech-2.8-hd': list(['知性姐姐', '温暖少女', '沉稳大叔', '播音男声']),
+  'eleven-v4': list(['瑞秋', '亚当', '贝拉', '安东尼']),
+};
+/** 张数：线上是 x1 / x2 / x4 */
+export const COUNTS: SelectOption[] = [1, 2, 4].map((n) => ({ value: String(n), label: `x${n}` }));
+/** 音频字数上限，按模型 */
+export const AUDIO_CHAR_LIMIT: Record<string, number> = { 'seed-audio-1.0': 3000, 'minimax-speech-2.8-hd': 10000, 'eleven-v4': 5000 };
 
 /** 视频参数面板里的比例：竖排分段，带比例图标 */
 const RATIO_ICONS: [string, IconName][] = [
@@ -153,8 +187,9 @@ export function BackgroundSelect(props: PresetProps) {
 }
 BackgroundSelect.displayName = 'BackgroundSelect';
 
-export function VoiceSelect(props: PresetProps) {
-  return <Select {...plain} options={VOICES} defaultValue="温柔女声" aria-label="音色" {...props} />;
+export function VoiceSelect({ model = DEFAULT_MODEL.audio, ...props }: PresetProps & { model?: string }) {
+  const options = VOICES[model] ?? VOICES[DEFAULT_MODEL.audio];
+  return <Select {...plain} options={options} defaultValue={options[0].value} aria-label="音色" {...props} />;
 }
 VoiceSelect.displayName = 'VoiceSelect';
 
@@ -195,7 +230,7 @@ function Segment({ label, value, options, onChange }: { label: string; value: st
  */
 export function VideoParams({ audio = false }: { audio?: boolean }) {
   const [ratio, setRatio] = useState('16:9');
-  const [sec, setSec] = useState(8);
+  const [sec, setSec] = useState(5);
   const [res, setRes] = useState('720P');
   const [sound, setSound] = useState('on');
   return (
@@ -216,7 +251,7 @@ export function VideoParams({ audio = false }: { audio?: boolean }) {
           ))}
         </Tabs>
       </ParamField>
-      <SliderField label="选择视频生成时长" min={0} max={30} value={sec} unit="S" marks={ticks(0, 30, 5, 10)} onChange={(v) => setSec(Math.max(1, v))} />
+      <SliderField label="选择视频生成时长" min={4} max={15} value={sec} unit="S" marks={ticks(5, 15, 5, 5)} onChange={setSec} />
       <Segment label="选择分辨率" value={res} options={list(['720P', '1080P'])} onChange={setRes} />
       {audio && <Segment label="生成音频" value={sound} options={[{ value: 'on', label: '开' }, { value: 'off', label: '关' }]} onChange={setSound} />}
     </ParamPicker>
@@ -224,14 +259,46 @@ export function VideoParams({ audio = false }: { audio?: boolean }) {
 }
 VideoParams.displayName = 'VideoParams';
 
-/** 音频参数：Figma「音频参数调整」（211:1528）。语速、音调 */
-export function AudioParams() {
+/**
+ * 音频高级设置：样子照 Figma「音频参数调整」（211:1528），内容照线上：语速、音高都有；
+ * MiniMax 多情绪，Eleven 多稳定性，Seed 和 Eleven 有生成字幕。触发器写「高级设置」
+ */
+export function AudioParams({ model = DEFAULT_MODEL.audio }: { model?: string }) {
   const [speed, setSpeed] = useState(1);
   const [pitch, setPitch] = useState(0);
+  const [emotion, setEmotion] = useState('auto');
+  const [stability, setStability] = useState('natural');
+  const [subtitle, setSubtitle] = useState('on');
   return (
-    <ParamPicker summary={`${speed.toFixed(1)}x · 音调 ${pitch}`}>
+    <ParamPicker summary="高级设置">
       <SliderField label="语速" min={0.5} max={2} step={0.1} value={speed} unit="x" format={(v) => v.toFixed(1)} marks={ticks(0.5, 2, 0.25, 0.5, (v) => `${v.toFixed(1)}x`)} onChange={(v) => setSpeed(Math.round(v * 10) / 10)} />
-      <SliderField label="音调" min={-12} max={12} value={pitch} marks={ticks(-12, 12, 4, 12)} onChange={setPitch} />
+      <SliderField label="音高" min={-12} max={12} value={pitch} marks={ticks(-12, 12, 4, 12)} onChange={setPitch} />
+      {model === 'minimax-speech-2.8-hd' && (
+        <Segment
+          label="情绪"
+          value={emotion}
+          options={[
+            { value: 'auto', label: '自动' },
+            { value: 'happy', label: '开心' },
+            { value: 'sad', label: '悲伤' },
+            { value: 'angry', label: '愤怒' },
+          ]}
+          onChange={setEmotion}
+        />
+      )}
+      {model === 'eleven-v4' && (
+        <Segment
+          label="稳定性"
+          value={stability}
+          options={[
+            { value: 'lively', label: '活泼' },
+            { value: 'natural', label: '自然' },
+            { value: 'stable', label: '稳定' },
+          ]}
+          onChange={setStability}
+        />
+      )}
+      {model !== 'minimax-speech-2.8-hd' && <Segment label="生成字幕" value={subtitle} options={[{ value: 'on', label: '开' }, { value: 'off', label: '关' }]} onChange={setSubtitle} />}
     </ParamPicker>
   );
 }
@@ -241,7 +308,8 @@ AudioParams.displayName = 'AudioParams';
 
 /**
  * 视频：模型 + 参考方式 + 参数，模型在前、参考方式在后（画布和主站一样）。模型决定参数里有什么、后面跟什么：
- * Seedance 系列参数里多「生成音频」；Seedance 2.5 后面多一个「样片模式」开关，用竖线隔开（Figma 主站「样片模式」示例）
+ * 照线上分三类：Seedance、Kling V3 Omni 参数里多「生成音频」；只有首尾帧的（Veo、Sora、Grok、Vidu、Seedance 1.5）不出参考方式。
+ * Seedance 2.5 后面多一个「样片模式」开关，用竖线隔开（Figma 主站「样片模式」示例）
  * refMode 默认是不受控的 RefModeSelect，要跟着切参考区就自己传一个受控的
  */
 export function VideoModelControls({
@@ -254,12 +322,12 @@ export function VideoModelControls({
   sampleMode?: ReactNode;
 }) {
   const [model, setModel] = useState(defaultModel);
-  const seedance = model.startsWith('seedance');
+  const audio = VIDEO_WITH_AUDIO.includes(model);
   return (
     <>
       <ModelSelect kind="video" value={model} onChange={setModel} />
-      {refMode}
-      <VideoParams key={seedance ? 'seedance' : 'other'} audio={seedance} />
+      {!VIDEO_FIRST_LAST_ONLY.includes(model) && refMode}
+      <VideoParams key={audio ? 'audio' : 'silent'} audio={audio} />
       {model === 'seedance-2.5' && (sampleMode ?? (
         <>
           <ToolbarDivider />
@@ -285,14 +353,76 @@ export function ImageModelControls({ defaultModel = DEFAULT_MODEL.image }: { def
 }
 ImageModelControls.displayName = 'ImageModelControls';
 
-/** 音频：模型 + 音色 + 参数 */
-export function AudioModelControls() {
+/** 音频：模型 + 音色 + 高级设置，跟着模型换（照线上）。没有张数和比例，右边是字数 / 上限 */
+export function AudioModelControls({ model: modelProp, onModelChange }: { model?: string; onModelChange?: (model: string) => void }) {
+  const [inner, setInner] = useState(DEFAULT_MODEL.audio);
+  const model = modelProp ?? inner;
+  const change = (m: string) => {
+    setInner(m);
+    onModelChange?.(m);
+  };
   return (
     <>
-      <ModelSelect kind="audio" />
-      <VoiceSelect />
-      <AudioParams />
+      <ModelSelect kind="audio" value={model} onChange={change} />
+      <VoiceSelect key={`v-${model}`} model={model} />
+      <AudioParams key={`p-${model}`} model={model} />
     </>
   );
 }
 AudioModelControls.displayName = 'AudioModelControls';
+
+// ---------- Agent ----------
+// 照线上 Agent 输入框底栏（ai-chat SenderFooter）：选择模型、技能、模式（手动 / 自动）。主站输入框切到 Agent 时用这一组
+
+/** Agent 模式：手动是每次生成前询问，自动是直接生成 */
+export const AGENT_MODES: SelectOption[] = [
+  { value: 'manual', label: '手动模式', icon: 'Hand' },
+  { value: 'auto', label: '自动生成', icon: 'Auto' },
+];
+
+/** 技能：演示用，线上是技能市场里用户加过的技能 */
+export const SKILLS: SelectOption[] = [
+  { value: 'poster', label: '海报设计', icon: 'Skill' },
+  { value: 'ecommerce', label: '电商主图', icon: 'Skill' },
+  { value: 'storyboard', label: '分镜脚本', icon: 'Skill' },
+  { value: 'short-video', label: '短视频脚本', icon: 'Skill' },
+];
+
+/** Agent 能用的生成模型：线上面板只有图片、视频两组 */
+const GEN_MODELS: SelectOption[] = [...MODELS.image, ...MODELS.video];
+
+export function AgentModeSelect(props: PresetProps) {
+  return <Select {...plain} options={AGENT_MODES} defaultValue="manual" aria-label="Agent 模式" {...props} />;
+}
+AgentModeSelect.displayName = 'AgentModeSelect';
+
+export function SkillSelect(props: PresetProps) {
+  return <Select {...plain} options={SKILLS} placeholder="技能" leftIcon="Skill" aria-label="技能" {...props} />;
+}
+SkillSelect.displayName = 'SkillSelect';
+
+export function GenModelSelect(props: PresetProps) {
+  return <Select {...plain} options={GEN_MODELS} placeholder="模型" leftIcon="Mdoel" aria-label="选择模型" {...props} />;
+}
+GenModelSelect.displayName = 'GenModelSelect';
+
+/** 切到 Agent 时任务类型后面的那一组：模型、技能、模式 */
+export function AgentControls() {
+  return (
+    <>
+      <GenModelSelect />
+      <SkillSelect />
+      <AgentModeSelect />
+    </>
+  );
+}
+
+/** 音频生成按钮左边的「字数 / 上限」（照线上音频面板），代替张数 */
+export function AudioCharCount({ count = 0, model = DEFAULT_MODEL.audio }: { count?: number; model?: string }) {
+  return (
+    <span style={{ color: 'var(--color-text-fill-tertiary)', fontSize: 'var(--font-size-13)', lineHeight: 'var(--font-line-height-20)', fontVariantNumeric: 'tabular-nums' }}>
+      {count}/{AUDIO_CHAR_LIMIT[model] ?? AUDIO_CHAR_LIMIT[DEFAULT_MODEL.audio]}
+    </span>
+  );
+}
+AudioCharCount.displayName = 'AudioCharCount';
