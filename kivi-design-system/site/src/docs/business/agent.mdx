@@ -97,10 +97,10 @@ import {
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
     <div style={{ display: 'flex', gap: 4 }}>
       <IconButton icon="Add" label="添加" variant="text" />
-      <IconButton icon="Mdoel" label="模型" variant="text" />
+      <IconButton icon="Mdoel" label="模型偏好" variant="text" />
       <IconButton icon="Skill" label="技能" variant="text" />
       <IconButton icon="Hand" label="手" variant="text" />
-      <IconButton icon="Openai" label="Openai" variant="text" />
+      <IconButton icon="Openai" label="切换对话模型（内部测试）" variant="text" />
     </div>
     <SendButton disabled />
   </div>
@@ -138,7 +138,7 @@ import {
 
 ### ProcessGroup
 
-Agent 两段话之间连续调的工具算一组。进行中只占一行，显示当前在调的工具；换下一个时往上滚：新的从下面进来、旧的往上出去，各 200ms（出现 ease-out、消失 ease-in）。每个工具最少停 0.3 秒，这期间又来了新的直接跳到最新那个。全部做完换成「调用了 N 个工具」，不自动展开；做完才能点开，展开后列出每个工具，行距 6 `--spacing-6`，最高 160，超过 6 个底部渐隐；展开时列表从 0 推到内容高、把下面的内容往下推，同时淡入，收起倒着走，ease-in-out，列表 100 以内 200ms、再长 300ms。只调了 1 个就直接显示那一个，不能展开。生成、询问、确认不放进组里，各自出自己的块。Agent 的文字回复不折叠。其余原生 `<div>` 属性都能传。
+Agent 两段话之间连续调的工具算一组。进行中只占一行，显示当前在调的工具；换下一个时往上滚：新的从下面进来、旧的往上出去，各 200ms（出现 ease-out、消失 ease-in）。每个工具最少停 0.3 秒，这期间又来了新的直接跳到最新那个。全部做完换成「调用了 N 个工具」，不自动展开；做完才能点开，展开后列出每个工具，行距 6 `--spacing-6`，最高 160，超出能滚，渐隐 24 跟着滑的方向走（往下滑下面渐隐、往上滑上面渐隐，那一边到头就换到另一边，照线上）；展开时列表从 0 推到内容高、把下面的内容往下推，同时淡入，收起倒着走，ease-in-out，列表 100 以内 200ms、再长 300ms。只调了 1 个就直接显示那一个，不能展开。生成、询问、确认不放进组里，各自出自己的块。Agent 的文字回复不折叠。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
@@ -215,7 +215,7 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | `children` | `ReactNode` | — | 选项：QuestionOption，间距 4，最后一个可以是 `type="other"`。没写编号的按顺序补 1、2、3 |
 
 - 单选是 `radiogroup`，组里只有一个 Tab 停点（选中的那项，没选就是第一项）；上、左 / 下、右方向键换到上一项 / 下一项，首尾相接，焦点到哪就选到哪。多选是 `group`，每项各自能 Tab，空格选。
-- 提交或忽略后面板消失，消息里留一行 ProcessRow「已询问」。
+- 提交或忽略后面板消失，消息里留一行 AskRecord「已询问」。
 
 ### QuestionOption
 

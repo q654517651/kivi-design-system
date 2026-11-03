@@ -52,7 +52,7 @@ export const TOKEN_GROUPS = {
       { token: '--color-bg-fill-base', desc: '页面和画布的底', figma: 'color/bg/fill/base', use: '全局底色：外框、画布、各页面的底。不要用于面板卡片（用叠加）、弹窗（surface）、浮层（popup）' },
       { token: '--color-bg-fill-surface', desc: '盖在画布上的不透明面板', figma: 'color/bg/fill/surface', use: '必须不透明的地方：盖在画布上的节点卡片、浮动面板、模态弹窗。不要用于页面里普通的面板和卡片（用 container-light-2）', status: 'new' },
       { token: '--color-bg-fill-popup', desc: 'Tooltip、Toast', figma: 'color/bg/fill/popup', use: '实色的提示浮层：Tooltip、Toast。菜单、下拉用 glass；模态弹窗用 surface + mask' },
-      { token: '--color-bg-fill-glass', desc: '菜单、下拉等玻璃浮层', figma: 'color/bg/fill/glass', use: '玻璃浮层：会浮动、会跟着移动、可能盖住画面、面积不大的东西，比如下拉、右键、节点工具栏、参数面板。配 `--effect-glass-blur` 和描边 `--color-border-subtle`' },
+      { token: '--color-bg-fill-glass', desc: '菜单、下拉等玻璃浮层', figma: 'color/bg/fill/glass', use: '悬浮在页面上的浮层（菜单、下拉、右键、节点工具栏、参数面板、主站输入框），配 effect-glass-blur 和描边 border-subtle。下面是什么都行' },
     ],
   },
   fill: {
@@ -108,7 +108,7 @@ export const TOKEN_GROUPS = {
     kind: 'color',
     rows: [
       { token: '--color-bg-fill-mask', desc: '弹窗遮罩', figma: 'color/bg/fill/mask', use: '模态弹窗下面的遮罩，每一级弹窗一层，不模糊', status: 'new' },
-      { token: '--color-on-media-fill', desc: '图片上的按钮底', figma: 'color/on-media/fill', use: '叠在图片、视频上的按钮、标签、勾选框底色。不要用于普通面板上的按钮', status: 'new' },
+      { token: '--color-on-media-fill', desc: '图片上的按钮底', figma: 'color/on-media/fill', use: '只给贴在图片、视频上的控件：按钮、按钮条、标签、勾选框、播放器控件，不加描边。悬浮在页面上的浮层用 glass', status: 'new' },
       { token: '--color-on-media-fill-hover', desc: '悬停', figma: 'color/on-media/fill-hover', use: 'on-media/fill 的悬停态', status: 'new' },
       { token: '--color-on-media-text', desc: '图片上的文字', figma: 'color/on-media/text', use: '叠在图片、视频上的文字和图标', status: 'new' },
     ],

@@ -1,10 +1,10 @@
 import { Demo, PageHeader } from '@shell';
-import { InputPlayground, NumberInputPlayground, SelectPlayground, TextareaPlayground } from './inputs.demos';
+import { DropzonePlayground, InputPlayground, NumberInputPlayground, SelectPlayground, TextareaPlayground, UploadRingPlayground, UploadTilePlayground } from './inputs.demos';
 
 <PageHeader
   eyebrow="通用组件"
   title="输入控件"
-  lead="输入框、数字输入框、下拉选择、多行输入框：高度 32（多行除外），圆角 8，底色白 8%。"
+  lead="输入框、数字输入框、下拉选择、多行输入框：高度 32（多行除外），圆角 8，底色白 8%。上传用上传格和拖拽上传区。"
   figma={['输入控件', '169:1439']}
   status="草稿 0.1.0"
   code="kivi/inputs"
@@ -89,6 +89,91 @@ import { InputPlayground, NumberInputPlayground, SelectPlayground, TextareaPlayg
 </div>
 `} />
 
+## UploadTile
+
+<UploadTilePlayground />
+
+### 失败样式（待定）
+
+<Demo stage="base" code={`
+<div style={{ display: 'flex', gap: 24 }}>
+  {[['outline', '红描边'], ['dim', '变暗'], ['badge', '角标']].map(([style, name]) => (
+    <div key={style} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <UploadTile status="error" errorStyle={style} src="./placeholders/kivi-future-1x1.webp" errorMessage="网络中断，上传失败" />
+      <span style={{ color: 'var(--color-text-fill-tertiary)', fontSize: 12, lineHeight: '20px' }}>{name}</span>
+    </div>
+  ))}
+</div>
+`} />
+
+### 选文件、上传、完成、失败
+
+<Demo stage="base" code={`
+() => {
+  const [tile, setTile] = useState({ status: 'empty', src: '', progress: 0 });
+  const timer = useRef(0);
+  const last = useRef({ files: [], failed: false });
+  useEffect(() => () => window.clearInterval(timer.current), []);
+
+  // 假上传：2.4 秒走完。第一次走到 60% 失败，重试就成功
+  const run = (files) => {
+    const src = files[0].type.startsWith('image/') ? URL.createObjectURL(files[0]) : '';
+    const t0 = performance.now();
+    last.current.files = files;
+    setTile({ status: 'uploading', src, progress: 0 });
+    window.clearInterval(timer.current);
+    timer.current = window.setInterval(() => {
+      const p = Math.min(100, ((performance.now() - t0) / 2400) * 100);
+      if (!last.current.failed && p > 60) {
+        last.current.failed = true;
+        window.clearInterval(timer.current);
+        setTile((t) => ({ ...t, status: 'error' }));
+      } else if (p >= 100) {
+        window.clearInterval(timer.current);
+        setTile((t) => ({ ...t, status: 'done' }));
+      } else setTile((t) => ({ ...t, progress: p }));
+    }, 50);
+  };
+
+  return (
+    <UploadTile
+      status={tile.status}
+      src={tile.src}
+      progress={tile.progress}
+      accept="image/*"
+      onSelect={run}
+      onReplace={run}
+      onRetry={() => run(last.current.files)}
+      onRemove={() => setTile({ status: 'empty', src: '', progress: 0 })}
+    />
+  );
+}
+`} />
+
+## Dropzone
+
+<DropzonePlayground />
+
+### 只收图片、不超过 2 MB
+
+<Demo stage="base" code={`
+() => {
+  const [names, setNames] = useState([]);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 360 }}>
+      <Dropzone accept="image/*" maxSize={2 * 1024 * 1024} onSelect={(files) => setNames(files.map((f) => f.name))} />
+      <span style={{ color: 'var(--color-text-fill-tertiary)', fontSize: 12, lineHeight: '20px' }}>
+        {names.length ? '已选：' + names.join('、') : '还没选。拖个不是图片的文件，或者超过 2 MB 的图试试'}
+      </span>
+    </div>
+  );
+}
+`} />
+
+## UploadRing
+
+<UploadRingPlayground />
+
 ## 参数
 
 ### Input
@@ -153,3 +238,54 @@ import { InputPlayground, NumberInputPlayground, SelectPlayground, TextareaPlayg
 | `className` | `string` | — | 加在最外层的框上。默认 320 × 104，右下角可以拖着改高度，宽度默认填满；圆角 8，内边距 12，文字 14 / 行高 22 |
 
 `style` 加在最外层的框上，其余原生 `<textarea>` 属性都给里面的 `<textarea>`，`ref` 也指向它。
+
+### UploadTile
+
+方格 96 / 64，圆角 8（`--border-radius-8`，和参考卡片一样），默认底白 4%（`--color-bg-fill-container-light-2`）。拖文件到空格子或完成的格子上：品牌色描边（`--color-border-focus`）+ 品牌色淡底（`--color-brand-subtle`）。上传到哪一步由外面管，组件只管样子。其余原生 `<div>` 属性都能传，`ref` 指向最外层。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `status` | `"empty"` `"uploading"` `"done"` `"error"` | `"empty"` | 空：整格是添加按钮，中间 `AddSmall` 20，悬停底白 8%，点一下选文件。上传中：本地预览变暗（黑 40%）+ 中间 `UploadRing`。完成：原图铺满（cover），没有预览图的显示 `File` 图标；悬停或聚焦出现右上角按钮条（`ButtonGroup`，删除、重新上传，各带 Tooltip，64 的格子里和格子一样宽、贴上边）。失败：见 `errorStyle` |
+| `size` | `96` `64` | `96` | 边长 |
+| `src` | `string` | — | 预览图地址。选了文件后用 `URL.createObjectURL(file)` 生成本地预览传进来，用完自己 `revokeObjectURL` |
+| `progress` | `number` | `0` | 上传进度 0–100，上传中用 |
+| `errorStyle` | `"outline"` `"dim"` `"badge"` | `"outline"` | 失败的样子，**待定**，三种放在一起比：红描边 = `--color-status-danger` 描边 + 中间重试图标（`Reset` 20）+ 12 号字写 `errorMessage`，整格点一下重试，不显示预览；变暗 = 预览变暗（黑 40%）+ 中间 28 的小重试按钮（IconButton · 浮层）；角标 = 保留预览，左上角 20 的 danger 圆 + 感叹号，悬停出 Tooltip 写 `errorMessage`，悬停整格时变暗并出现重试按钮 |
+| `errorMessage` | `string` | `"上传失败"` | 失败原因 |
+| `accept` | `string` | — | 收哪些文件，写法同 `<input accept>`，选文件和拖进来都按它检查。不传不限 |
+| `multiple` | `boolean` | `false` | 空格子能不能多选。完成后的重新上传只收一个 |
+| `maxSize` | `number` | — | 单个文件最大多少字节，超了拒收 |
+| `disabled` | `boolean` | `false` | 禁用：不能点、不能拖，按钮条里的按钮也禁用 |
+| `dragging` | `boolean` | — | 拖拽中。不传由组件自己判断，用 `data-dragover` 表现，不用管；文档里摆静态样子才传 |
+| `label` | `string` | `"上传文件"` | 空格子上按钮的说明，读屏用 |
+| `onSelect` | `(files: File[]) => void` | — | 空格子选好文件（点选或拖进来）后触发，参数是通过检查的文件 |
+| `onReplace` | `(files: File[]) => void` | — | 完成的格子里点「重新上传」选好文件、或把文件拖到格子上后触发 |
+| `onRemove` | `() => void` | — | 点删除 |
+| `onRetry` | `() => void` | — | 失败后点重试 |
+| `onReject` | `(files: File[], reason: FileRejectReason) => void` | — | 文件被拒时触发。`FileRejectReason` 是 `"type"`（类型不对）或 `"size"`（太大） |
+| `toastOnReject` | `boolean` | `true` | 被拒时自动弹 toast：「不支持这种文件」「文件超过 N MB」。页面上要放一个 `<Toaster />` |
+
+### Dropzone
+
+整块拖拽上传区：宽度填满，最矮 160，圆角 12（`--border-radius-12`），内边距 24，白 4% 底 + 1px 虚线描边（`--color-border`）。上面是 `Upload` 24，下面标题 13 / 20（primary）、提示 12 / 20（tertiary），元素间距 8。悬停底白 8%、描边 `--color-border-strong`。拖入：实线品牌色描边（`--color-border-focus`）+ 品牌色淡底，标题换成「松手上传」。不收（拖来的类型不对、或刚放下的文件被拒，描边 `--color-status-danger` + danger 淡底，标题换成「不支持这种文件」或「文件超过 N MB」，放下后保留 1.5 秒）。禁用：描边 `--color-border-subtle`，文字 `--color-text-fill-disabled`，不能点、不能拖。最外层是 `<label>`，里面有看不见的文件输入，键盘可聚焦、Enter 或 Space 选文件。其余原生 `<label>` 属性都能传，`ref` 指向最外层。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `accept` | `string` | — | 收哪些文件，写法同 `<input accept>`，比如 `"image/*,.pdf"`，选文件和拖进来都按它检查。拖的过程中按类型提前判断（只有 `类型/*` 这类规则能提前判断，扩展名要放下才知道） |
+| `maxSize` | `number` | — | 单个文件最大多少字节，超了拒收 |
+| `multiple` | `boolean` | `true` | 一次能选几个。`false` 只收第一个 |
+| `title` | `ReactNode` | `"拖拽文件到这里，或点击上传"` | 标题。拖入、不收时固定用上面写的字 |
+| `hint` | `ReactNode` | 按 `accept`、`maxSize` 写 | 提示行，比如「支持 图片，单个文件不超过 10 MB」。都没有就不显示 |
+| `disabled` | `boolean` | `false` | 禁用 |
+| `dragging` / `rejected` | `boolean` | — | 拖拽中、类型不收。不传由组件自己判断，用 `data-dragover`、`data-rejected` 表现，不用管；文档里摆静态样子才传 |
+| `onSelect` | `(files: File[]) => void` | — | 选好文件（点选或拖进来）后触发，参数是通过检查的文件 |
+| `onReject` | `(files: File[], reason: FileRejectReason) => void` | — | 文件被拒时触发：`"type"` 类型不对，`"size"` 太大 |
+| `toastOnReject` | `boolean` | `true` | 被拒时自动弹 toast。页面上要放一个 `<Toaster />` |
+
+### UploadRing
+
+上传进度环：直径 28，线宽 3，底圈白 30%，弧线白色圆头，中间 9 号字写百分比。盖在暗色遮罩（`--color-bg-fill-container-dark`）上用，UploadTile 的上传中和 ReferenceStack 的上传中卡片是同一个。其余原生 `<span>` 属性都能传，`ref` 指向最外层。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `progress` | `number` | `0` | 进度 0–100，超出的夹住 |
+| `aria-label` | `string` | `"上传中"` | 读屏用，说明是什么在上传，比如「图片1上传中」。最外层有 `role="progressbar"` |

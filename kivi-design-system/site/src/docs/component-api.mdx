@@ -101,6 +101,7 @@ Foo.displayName = 'Foo';
 | `composeHandlers` | 合并组件自己的事件和外面传的事件 |
 | `exclusivePlayback` | 同一时间只播一个视频或音频 |
 | `useScrollLock` | 锁背景滚动：body 不能滚，补滚动条宽度防跳动，多层弹窗最后一个关掉才恢复 |
+| `useFileDrop` | 拖文件进来：数 dragenter / dragleave 次数，里面的子元素之间移动不闪；按 `accept`、`maxSize` 检查，返回 `dragging`、`rejected`、`bind`（四个拖拽事件，铺到根元素上）、`receive`（点选文件走同一套检查）。Dropzone、UploadTile、PromptBox、画布 Agent 输入框都用它；`composeDropHandlers` 把组件的和外面传的合并 |
 
 ## 检查
 

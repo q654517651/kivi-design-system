@@ -118,11 +118,23 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 | `toolbar` | `ReactNode` | — | 工具条左边，间距 6 `--spacing-6`：任务类型、模型、参考方式、参数、其他开关。一般是 `Select variant="plain"`，放不下换行 |
 | `actions` | `ReactNode` | — | 工具条右边，间距 8 `--spacing-8`：张数 + `GenerateButton` |
 | `maxHeight` | `number` | `240` | 提示词最高多高，单位 px，超过就在里面滚动 |
-| `onDropFiles` | `(files: File[]) => void` | — | 把文件拖进输入框时触发，参数是文件列表。不传就不接收拖拽 |
+| `onDropFiles` | `(files: File[]) => void` | — | 把文件拖进输入框、放下后触发，参数是通过 `accept` 检查的文件：一般是加进 `references` 的素材（缩略图、上传进度自己管，输入框不存素材）。不传就不接收拖拽。拖进来时整个输入框盖一层 `DropOverlay`；类型不收的显示「不支持这种文件」，不接收，放下后弹 toast（页面上要放一个 `<Toaster />`） |
+| `accept` | `string` | `"image/*,video/*,audio/*"` | 收哪些文件，写法同 `<input accept>`。拖的过程中按类型提前判断 |
 | `inputRef` | `Ref<HTMLTextAreaElement>` | — | 提示词输入框的 ref，聚焦、选中用 |
 | `inputLabel` | `string` | `"提示词"` | 输入框的说明，读屏用 |
 
 工具条里的 Select 无底：高 32，圆角 8，左右 8，13 号字，左图标 16，右箭头 16 tertiary，悬停白 8%。参数把分辨率、比例、时长合成一个 Select，写「720P · 16:9 · 8s」。
+
+### DropOverlay
+
+文件拖到输入框上时盖住整个框的提示（Figma 没定，待确认）。品牌色描边 1.5（`--color-border-focus`），品牌色淡底（`--color-brand-subtle`）叠在玻璃（`--color-bg-fill-glass`）上，背景模糊 32，下面的字淡出去；中间 `Upload` 24 + 13 / 20 的字，间距 8。类型不收：描边、淡底、字和图标都换 danger（`--color-status-danger`），图标换成 `Close`。出现 150ms ease-out，消失 100ms ease-in。不挡鼠标。圆角继承所在的框，所以放它的框要 `position: relative`。`PromptBox` 自带；画布 Agent 输入框这类自己拼的框，配合 `useFileDrop`（`hooks/`）用，它给 `dragging`、`rejected`。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `active` | `boolean` | `true` | 显示。文件拖到框上时为 `true`，不显示时淡出 |
+| `rejected` | `boolean` | `false` | 拖来的类型不收 |
+| `text` | `ReactNode` | `"松手上传"` | 收的时候的文字 |
+| `rejectedText` | `ReactNode` | `"不支持这种文件"` | 不收的时候的文字 |
 
 ### ReferenceStack
 

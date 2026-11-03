@@ -1,6 +1,6 @@
 /*
   KIVI · 菜单和提示
-  Figma「菜单和提示」页：Tooltip（简单、说明）、MenuItem、MenuLabel、MenuDivider、
+  Figma「菜单和提示」页：Tooltip（简单、说明）、Popover（带箭头的说明气泡，Figma 还没有）、MenuItem、MenuLabel、MenuDivider、
   菜单模板（容器，代码里叫 Menu）、侧栏的 SidebarItem、SidebarLabel、SidebarMore。
   另外有两个代码层面的组件：Dropdown（把菜单弹出来）。依赖 tokens.css、base.css。
   侧栏的「更多」「新建」用 button 页的 IconButton，缩略图用 tabs-tags-avatar 页的 AssetThumb。
@@ -36,6 +36,9 @@
         <div class="kv-menu-divider" role="separator"></div>
         <button class="kv-menu-item kv-menu-item--danger" role="menuitem" type="button">…</button>
       </div>
+    Popover（带箭头的说明气泡，只能包着触发元素用，没有静态的）
+      <Popover title="比例" content="决定画面宽高比。"><Button variant="secondary">比例</Button></Popover>
+      弹出的是挂在 body 上的 <div class="kv-popover" data-side="bottom"> 箭头 kv-popover__arrow、标题 kv-popover__title、正文 kv-popover__text
     Tooltip（静态的气泡）
       <div class="kv-tooltip" role="tooltip">下载</div>
       说明：<div class="kv-tooltip kv-tooltip--desc"><b class="kv-tooltip__title">标题</b><span class="kv-tooltip__text">说明</span></div>
@@ -174,6 +177,99 @@
 @keyframes kv-tooltip-out {
   from { opacity: 1; }
   to { opacity: 0; }
+}
+
+/* ---------- Popover ---------- */
+
+/* 带箭头的说明气泡：底和 Tooltip 一样是实色 popup（不是玻璃），最宽 320，内边距 12，标题 13 加粗 primary，
+   正文 13 / 20 secondary，标题和正文间距 4。挂在 body 上，位置和箭头方向由脚本写：
+   data-side（出在触发元素哪边）、--kv-anchor-x / --kv-anchor-y（触发元素中心在气泡里的位置）。
+   出现、消失和 Tooltip 一样：淡入 150ms ease-out，淡出 100ms ease-in。 */
+.kv-popover__anchor {
+  display: inline-flex;
+}
+
+.kv-popover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--kv-popup-z, 1000);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 320px;
+  margin: 0;
+  padding: var(--spacing-12);
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-popup);
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  overflow-wrap: anywhere;
+  outline: none;
+  animation: kv-tooltip-in var(--motion-duration-150) var(--motion-ease-out) both;
+}
+
+.kv-popover[data-state="closed"] {
+  pointer-events: none;
+  animation: kv-tooltip-out var(--motion-duration-100) var(--motion-ease-in) both;
+}
+
+.kv-popover__title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-semibold);
+}
+
+.kv-popover__text {
+  min-width: 0;
+}
+
+/* 箭头：12 × 6 的三角，同一个底色，指着触发元素中心；离气泡的圆角至少 8 + 6，不贴到角上 */
+.kv-popover__arrow {
+  --kv-arrow-min: calc(var(--border-radius-8) + 6px); /* 圆角 + 箭头半宽，Figma 没变量 */
+  position: absolute;
+  width: 12px; /* Figma 没变量 */
+  height: 6px; /* Figma 没变量 */
+  background: var(--color-bg-fill-popup);
+  pointer-events: none;
+}
+
+.kv-popover[data-side="bottom"] > .kv-popover__arrow,
+.kv-popover:not([data-side]) > .kv-popover__arrow {
+  top: -6px; /* Figma 没变量 */
+  left: clamp(var(--kv-arrow-min), var(--kv-anchor-x, 50%), calc(100% - var(--kv-arrow-min)));
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.kv-popover[data-side="top"] > .kv-popover__arrow {
+  bottom: -6px; /* Figma 没变量 */
+  left: clamp(var(--kv-arrow-min), var(--kv-anchor-x, 50%), calc(100% - var(--kv-arrow-min)));
+  transform: translateX(-50%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.kv-popover[data-side="right"] > .kv-popover__arrow,
+.kv-popover[data-side="left"] > .kv-popover__arrow {
+  width: 6px; /* Figma 没变量 */
+  height: 12px; /* Figma 没变量 */
+  top: clamp(var(--kv-arrow-min), var(--kv-anchor-y, 50%), calc(100% - var(--kv-arrow-min)));
+  transform: translateY(-50%);
+}
+
+.kv-popover[data-side="right"] > .kv-popover__arrow {
+  left: -6px; /* Figma 没变量 */
+  clip-path: polygon(0 50%, 100% 0, 100% 100%);
+}
+
+.kv-popover[data-side="left"] > .kv-popover__arrow {
+  right: -6px; /* Figma 没变量 */
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
 }
 
 /* ---------- 菜单模板（容器） ---------- */

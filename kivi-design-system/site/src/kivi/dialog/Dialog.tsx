@@ -15,7 +15,8 @@ import { cx } from '../utils';
 import { useControllable, useMergedRef, usePresence, useScrollLock } from '../hooks';
 import './dialog.css';
 
-export type DialogSize = 's' | 'm' | 'l' | 'xl' | 'full';
+/** 宽度档位（11-03 照线上弹窗内容定）：400 确认 / 560 表单 / 800 阅读 / 1024 列表 / 1200 编辑器 / full 铺满窗口 */
+export type DialogSize = 400 | 560 | 800 | 1024 | 1200 | 'full';
 
 const has = (node: ReactNode) => node !== undefined && node !== null && node !== false && node !== '';
 
@@ -29,7 +30,7 @@ function cssMs(name: string, fallback: number): number {
 }
 
 export interface DialogPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
-  /** 宽度：S 400 / M 720 / L 1024 / XL 1200 / 全屏 100vw（待定），默认 S。结构、内边距、间距都一样 */
+  /** 宽度，默认 400：400 确认、重命名 · 560 单列表单、分步问答 · 800 阅读详情、带插图的说明 · 1024 卡片列表、裁剪 · 1200 编辑器、多栏 · full 铺满窗口、没有圆角。结构、内边距、间距都一样 */
   size?: DialogSize;
   /** 标题。不传就没有标题栏（关闭按钮也跟着没有） */
   title?: ReactNode;
@@ -53,7 +54,7 @@ export interface DialogPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, '
  */
 export const DialogPanel = forwardRef<HTMLDivElement, DialogPanelProps>(function DialogPanel(
   {
-    size = 's',
+    size = 400,
     title,
     description,
     footer,

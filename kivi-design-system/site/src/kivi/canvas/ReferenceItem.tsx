@@ -14,7 +14,7 @@ export interface ReferenceItemProps extends HTMLAttributes<HTMLDivElement> {
   badge?: ReactNode;
   /** 左下的视频时长，比如「12s」。不传就没有 */
   duration?: ReactNode;
-  /** 底部通栏：Lora 权重，或「图片1」这类名字。不传就没有 */
+  /** 底部通栏：Lora 权重。不传就没有（名字不写在卡片上，序号在右上角） */
   weight?: ReactNode;
 }
 

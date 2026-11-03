@@ -28,7 +28,7 @@ export interface ButtonGroupProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * 按钮条：盖在图片、视频上的一排按钮合成一条。高 32，玻璃底 + 描边，圆角 8，四周 2，按钮间距 4。
+ * 按钮条：盖在图片、视频上的一排按钮合成一条。高 32，on-media 底、不加描边，圆角 8，四周 2，按钮间距 4。
  * Figma「按钮」页 ButtonGroup
  */
 export const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(function ButtonGroup(

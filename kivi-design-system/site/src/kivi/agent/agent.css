@@ -171,8 +171,9 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   --kv-row-action: var(--color-status-danger);
 }
 
-/* 展开后的列表（用法，不是 Figma 组件）：行距 6，最大高 160，右侧细滚动条，
-   超出时加 --fade，底部渐隐盖住最后一行；渐隐终点是底色，放在别的底色上改 --kv-fade-bg */
+/* 展开后的列表（用法，不是 Figma 组件）：行距 6，最大高 160，右侧细滚动条。
+   超出时渐隐跟着滑的方向走：往下滑下面渐隐，往上滑上面渐隐（data-fade="bottom" / "top"，ProcessGroup 自己算）。
+   用 mask 做，渐隐 24，不盖底色，放在什么底上都一样 */
 .kv-process-list {
   display: flex;
   flex-direction: column;
@@ -193,22 +194,20 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   background: var(--color-text-fill-disabled);
 }
 
-.kv-process-list--fade::after {
-  content: "";
-  position: sticky;
-  bottom: 0;
-  flex: none;
-  align-self: stretch;
-  height: 24px;
-  margin-top: -24px;
-  background: linear-gradient(transparent, var(--kv-fade-bg, var(--color-bg-fill-base)));
-  pointer-events: none;
+.kv-process-list[data-fade="bottom"] {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); /* 遮罩只看透明度，Figma 没变量 */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); /* 遮罩只看透明度，Figma 没变量 */
+}
+
+.kv-process-list[data-fade="top"] {
+  -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 24px), transparent); /* 遮罩只看透明度，Figma 没变量 */
+  mask-image: linear-gradient(to top, #000 calc(100% - 24px), transparent); /* 遮罩只看透明度，Figma 没变量 */
 }
 
 /* ---------- ProcessGroup：一组工具调用 ----------
    进行中只占一行，显示当前在调的工具；换下一个时这一行往上滚：新的从下面进来（出现 ease-out），旧的往上出去（消失 ease-in），各 200ms。
    每个工具最少停 0.3 秒，这期间又来了新的直接跳到最新那个。全部做完换成「调用了 N 个工具」，不自动展开；
-   做完才能点开，展开后列出每个工具，行距 6，超过 6 个底部渐隐。只调了 1 个就直接显示那一个，不能展开。 */
+   做完才能点开，展开后列出每个工具，行距 6，超出 160 能滚，渐隐跟着滑的方向。只调了 1 个就直接显示那一个，不能展开。 */
 .kv-process-group {
   display: flex;
   flex-direction: column;
@@ -420,6 +419,199 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   display: flex;
   right: var(--spacing-8);
   bottom: var(--spacing-8);
+}
+
+/* ---------- MediaGroup：生成结果组（叠放 ↔ 瀑布流） ----------
+   时长由 JS 写进 --kv-media-group-duration：展开 400ms 起，每多一张加 10ms，最多 700ms；收起固定 --motion-duration-300。
+   移动、缩放、高度都用 --motion-ease-expand；出现 ease-out，消失 ease-in（曲线只从变量里选，11-03 用户定） */
+
+.kv-media-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-8);
+  width: 100%;
+  min-width: 0;
+}
+
+.kv-media-group__body {
+  position: relative;
+  width: 100%;
+  transition: height var(--kv-media-group-duration) var(--motion-ease-expand);
+}
+
+.kv-media-group__card,
+.kv-media-group__layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* 叠放的后两层：和封面一样大，往右错开、以中心旋转（照 LibTV）。
+   两层同一个白 16%，叠在一起的地方自然更亮：外圈约 #353535、里圈约 #555，和 LibTV 量出来的差不多 */
+.kv-media-group__layer {
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-container-light-1-pressed);
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  transition: opacity var(--kv-media-group-duration) var(--motion-ease-out);
+}
+
+.kv-media-group__layer[data-depth="1"] {
+  z-index: 3;
+}
+
+.kv-media-group__layer[data-depth="2"] {
+  z-index: 2;
+}
+
+.kv-media-group[data-expanded] .kv-media-group__layer {
+  opacity: 0;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+.kv-media-group__card {
+  z-index: 1;
+  display: block;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+  cursor: pointer;
+  transform-origin: 0 0;
+  transition:
+    transform var(--kv-media-group-duration) var(--motion-ease-expand),
+    opacity var(--kv-media-group-duration) var(--motion-ease-out);
+}
+
+.kv-media-group__card[data-cover] {
+  z-index: 4;
+}
+
+/* 描边盖在图上面：直接写 border 会压在卡片的深色底上，边缘看着发黑 */
+.kv-media-group__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* 收起时藏到封面后面：一起飞就开始淡，200ms 淡完（比飞行 300 短），快到封面时已经看不见，不会整张钻进封面。
+   用 ease-out 不用 ease-in：ease-in 开头不淡，看着还是钻进去 */
+.kv-media-group__card[data-hidden] {
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--kv-media-group-duration) var(--motion-ease-expand),
+    opacity var(--motion-duration-200) var(--motion-ease-out);
+}
+
+.kv-media-group__card:focus-visible {
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: -2px;
+}
+
+.kv-media-group__media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+/* 失败：同画布节点，插画 + 文案 */
+.kv-media-group__failed {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-12);
+  background: var(--color-bg-fill-container-light-2);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+  text-align: center;
+}
+
+.kv-media-group__failed > img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+/* 展开后悬停：底部渐变 + 节点名，右上定位 */
+.kv-media-group__overlay {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  height: 48px;
+  padding: var(--spacing-8) var(--spacing-12);
+  background: linear-gradient(180deg, transparent, var(--color-on-media-fill));
+  text-align: start;
+}
+
+.kv-media-group__name {
+  overflow: hidden;
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-20);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.kv-media-group__locate {
+  position: absolute;
+  top: var(--spacing-8);
+  right: var(--spacing-8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--border-radius-8);
+  background: var(--color-on-media-fill);
+  color: var(--color-on-media-text);
+  backdrop-filter: blur(var(--effect-glass-blur));
+}
+
+.kv-media-group__overlay,
+.kv-media-group__locate {
+  opacity: 0;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-media-group[data-expanded] .kv-media-group__card:is(:hover, :focus-visible) :is(.kv-media-group__overlay, .kv-media-group__locate) {
+  opacity: 1;
+}
+
+/* 右下角数量：Tag 覆盖，离边 8；展开时淡掉，收起时和叠层一起出现 */
+.kv-media-group__count {
+  position: absolute;
+  right: var(--spacing-8);
+  bottom: var(--spacing-8);
+  display: flex;
+  transition: opacity var(--kv-media-group-duration) var(--motion-ease-out);
+}
+
+.kv-media-group[data-expanded] .kv-media-group__count {
+  opacity: 0;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
 }
 
 /* ---------- QuestionPanel：追问面板 ---------- */

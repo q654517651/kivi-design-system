@@ -1,13 +1,13 @@
 /*
   KIVI · 弹窗
-  Figma「弹窗」页：Dialog（模态弹窗，尺寸 S / M / L / XL）。依赖 tokens.css、base.css、button.css。
+  Figma「弹窗」页：Dialog（模态弹窗，宽 400 / 560 / 800 / 1024 / 1200 / 铺满）。依赖 tokens.css、base.css、button.css。
   内容区在 Figma 里是「内容」属性（实例替换），代码里就是 children，里面放什么都行。
 
   写法（React，见 Dialog.tsx）
     <Dialog
       open={open}
       onOpenChange={setOpen}
-      size="s"
+      size={400}
       title="弹窗标题"
       description="一句话说明这个弹窗要做什么，或者操作的后果。"
       footer={<><Button size="lg" onClick={() => setOpen(false)}>取消</Button><Button size="lg" variant="primary">确定</Button></>}
@@ -16,7 +16,7 @@
     </Dialog>
   渲染出来的结构（Dialog 用 createPortal 挂到 body）
     <div class="kv-dialog__mask">
-      <div class="kv-dialog kv-dialog--s" role="dialog" aria-modal="true" aria-labelledby="…">
+      <div class="kv-dialog kv-dialog--400" role="dialog" aria-modal="true" aria-labelledby="…">
         <div class="kv-dialog__top">
           <div class="kv-dialog__header">
             <div class="kv-dialog__title">弹窗标题</div>
@@ -40,14 +40,13 @@
     Esc、点遮罩、关闭按钮、焦点进出、Tab 不跑出弹窗，Dialog 都做了。点遮罩不关用 closeOnMaskClick={false}。
 
   待定（Figma 没定）
-    全屏：宽 100vw，高度、圆角没定。
-    最大高度、内容多时怎么滚：先限制在屏幕里，内容区滚动。
+    最大高度、内容多时怎么滚：先限制在屏幕里（离窗口边 32），内容区滚动。
     z-index：Figma 没有层级的概念，先写 1000。
 */
 
 /* ---------- 弹窗本体 ---------- */
 
-/* 尺寸：S 是默认。高度跟着内容走 */
+/* 宽度：400 是默认。高度跟着内容走；每一步内容多少不一样的（分步问答），用 style 固定高度，翻页不跳 */
 .kv-dialog {
   display: flex;
   flex-direction: column;
@@ -65,25 +64,31 @@
   line-height: var(--font-line-height-22);
 }
 
-.kv-dialog--s {
+.kv-dialog--400 {
   width: 400px;
 }
 
-.kv-dialog--m {
-  width: 720px;
+.kv-dialog--560 {
+  width: 560px;
 }
 
-.kv-dialog--l {
+.kv-dialog--800 {
+  width: 800px;
+}
+
+.kv-dialog--1024 {
   width: 1024px;
 }
 
-.kv-dialog--xl {
+.kv-dialog--1200 {
   width: 1200px;
 }
 
-/* 待定：宽 100vw，别的没定 */
+/* 铺满窗口：没有圆角，遮罩不留边 */
 .kv-dialog--full {
-  width: 100vw;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
 }
 
 /* Dialog 打开时会把焦点给弹窗，不画焦点框 */
@@ -151,12 +156,18 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  padding: var(--spacing-32);
   background: var(--color-bg-fill-mask);
   opacity: 1;
   visibility: visible;
   transition:
     opacity var(--motion-duration-300) var(--motion-ease-out),
     visibility 0s;
+}
+
+/* 铺满的弹窗贴着窗口边 */
+.kv-dialog__mask:has(> .kv-dialog--full) {
+  padding: 0;
 }
 
 .kv-dialog__mask > .kv-dialog {

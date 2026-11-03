@@ -798,7 +798,7 @@
   line-height: 14px;
 }
 
-/* 底部通栏：Lora 权重，或「图片1」这类名字。底下两个角跟外框一样圆 8，理由同角标 */
+/* 底部通栏：Lora 权重。底下两个角跟外框一样圆 8，理由同角标 */
 .kv-reference-item__weight {
   position: absolute;
   right: 0;
@@ -915,7 +915,7 @@
   gap: var(--spacing-8);
 }
 
-/* 右上角的全屏按钮：IconButton 32 · 轻（白 50%，悬停 100%）。图标中心和原来 24 的图标一样，离边 16 */
+/* 右上角的全屏按钮：IconButton 32 · 轻（白 50%，悬停 100%）。离边 12（11-03 用户定，Figma 跟改） */
 .kv-node-panel__expand {
   position: absolute;
   top: var(--spacing-12);
@@ -929,14 +929,13 @@
 }
 
 /* 参数面板：点参数摘要弹出来的玻璃浮层，和菜单一样的底、模糊、描边。圆角 16，内边距 12，块间距 12；
-   宽度跟着里面的分段走（Figma 画的是 333，用 V2 的竖排分段放 6 个比例要宽一点） */
+   宽固定 368，视频、音频、高级设置都一样（11-03 用户定，Figma 没变量） */
 .kv-param-panel {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-12);
   box-sizing: border-box;
-  width: max-content;
-  min-width: 333px;
+  width: 368px;
   padding: var(--spacing-12);
   border-radius: var(--border-radius-16);
   outline: var(--border-width-1) solid var(--color-border-subtle);

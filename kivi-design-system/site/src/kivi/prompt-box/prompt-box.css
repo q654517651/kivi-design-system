@@ -56,13 +56,19 @@
       data-clickable  传了 onItemClick，鼠标变手型
       aria-hidden     叠放里看不见的、被删掉的，不响应鼠标
     PromptBox
-      data-dragover   文件拖到输入框上，样子 Figma 没定，待定
+      data-dragover   文件拖到输入框上，盖一层 DropOverlay，样子 Figma 没定，待定
+      data-rejected   拖来的类型不收（DropOverlay 变 danger 色）
+    DropOverlay
+      <div class="kv-drop-overlay" data-active data-rejected>
+        <span class="kv-icon" data-icon="Upload"></span><span class="kv-drop-overlay__text">松手上传</span>
+      </div>
 */
 
 /* ---------- PromptBox ---------- */
 
 /* 玻璃（11-02 用户定：浮在生成记录上，下面的内容透出来，不在边缘裁切）：底 glass + 背景模糊 32，描边 border-subtle，圆角 24，内边距 16，内容区和工具条间距 12 */
 .kv-prompt-box {
+  position: relative; /* DropOverlay 盖在它上面 */
   display: flex;
   flex-direction: column;
   gap: var(--spacing-12);
@@ -302,12 +308,9 @@
    空的、展开时：添加格，72 见方，白 4% 底，圆角 8，中间 AddSmall 20，排在最前。
    有素材又没展开时（data-compact）：小圆加号，24 见方，popup 底，描边 border，AddSmall 16，挂在 72 的右下角，往右、往下各探出 10。
    变形和卡片同一个时长（--kv-reference-stack-duration），都是加减速，不用匀速（2026-10-29 用户定）。
-   带一点点弧度：横、竖分开用两种很接近的缓动。展开时横向用 --motion-ease-expand，竖向用比它起步稍慢一点的
-   --kv-trigger-ease-late，路径微微往左下鼓（偏离直线最多 6–8px）；收起时倒过来。大小、圆角、底色、图标大小跟横向同一个节奏 */
+   位置、大小、圆角、底色都用 --motion-ease-expand（11-03 用户定：曲线只从变量里选，不另写） */
 .kv-reference-stack__trigger {
   --kv-trigger-duration: var(--kv-reference-stack-duration, var(--motion-duration-400));
-  /* 和 --motion-ease-expand 只差起步：0.7 → 0.55，两个方向差一点点，走出一点点弧度 */
-  --kv-trigger-ease-late: cubic-bezier(0, 0.55, 0.22, 1);
 
   position: absolute;
   top: 0;
@@ -329,7 +332,7 @@
   -webkit-tap-highlight-color: transparent;
   transition:
     left var(--kv-trigger-duration) var(--motion-ease-expand),
-    top var(--kv-trigger-duration) var(--kv-trigger-ease-late),
+    top var(--kv-trigger-duration) var(--motion-ease-expand),
     width var(--kv-trigger-duration) var(--motion-ease-expand),
     height var(--kv-trigger-duration) var(--motion-ease-expand),
     border-radius var(--kv-trigger-duration) var(--motion-ease-expand),
@@ -346,10 +349,9 @@
   /* 圆：写 50% 不写 999，才能和圆角 8 之间平滑过渡 */
   border-radius: 50%;
   background: var(--color-bg-fill-popup);
-  /* 收起：竖向先走、横向后走 */
   transition:
     top var(--kv-trigger-duration) var(--motion-ease-expand),
-    left var(--kv-trigger-duration) var(--kv-trigger-ease-late),
+    left var(--kv-trigger-duration) var(--motion-ease-expand),
     width var(--kv-trigger-duration) var(--motion-ease-expand),
     height var(--kv-trigger-duration) var(--motion-ease-expand),
     border-radius var(--kv-trigger-duration) var(--motion-ease-expand),
@@ -531,7 +533,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
-/* 上传中：盖一层黑 40%，中间进度环 28 和百分比，上传完 JS 去掉 */
+/* 上传中：盖一层黑 40%，中间是 UploadRing（进度环 28 和百分比，样式在输入控件页 inputs.css），上传完 JS 去掉 */
 .kv-reference-stack__upload {
   position: absolute;
   inset: 0;
@@ -542,34 +544,49 @@
   color: var(--color-on-media-text);
 }
 
-.kv-reference-stack__upload > svg {
-  grid-area: 1 / 1;
-  width: 28px;
-  height: 28px;
+/* ---------- 拖文件进来：DropOverlay ---------- */
+
+/* 盖住放它的整个框，圆角继承。品牌色描边 1.5 + 品牌色淡底叠在玻璃上（背景模糊，下面的字淡出去），中间 Upload 24 + 13 号字。
+   出现 150ms ease-out，消失 100ms ease-in。不挡鼠标，拖拽事件还是落在下面的输入框上，不会因为它出现而闪 */
+.kv-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  border: var(--border-width-1-5) solid var(--color-border-focus);
+  border-radius: inherit;
+  background: linear-gradient(var(--color-brand-subtle), var(--color-brand-subtle)), var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-duration-100) var(--motion-ease-in),
+    visibility 0s var(--motion-duration-100);
 }
 
-.kv-reference-stack__ring,
-.kv-reference-stack__arc {
-  fill: none;
-  stroke-width: 3;
+.kv-drop-overlay[data-active] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
-.kv-reference-stack__ring {
-  stroke: var(--color-on-media-text);
-  opacity: var(--opacity-30);
+.kv-drop-overlay__text {
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
 }
 
-.kv-reference-stack__arc {
-  stroke: currentColor;
-  stroke-linecap: round;
+/* 不收：danger 描边、淡底、文字和图标 */
+.kv-drop-overlay[data-rejected] {
+  border-color: var(--color-status-danger);
+  background: linear-gradient(var(--color-status-danger-subtle), var(--color-status-danger-subtle)), var(--color-bg-fill-glass);
+  color: var(--color-status-danger);
 }
-
-/* 9 号字：Figma 里是 9 / 粗，变量里没有这一档 */
-.kv-reference-stack__upload > span {
-  grid-area: 1 / 1;
-  font-size: 9px;
-  font-weight: var(--font-weight-medium);
-  line-height: 11px;
-  font-variant-numeric: tabular-nums;
-}
-

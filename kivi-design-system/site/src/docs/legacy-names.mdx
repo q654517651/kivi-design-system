@@ -13,6 +13,8 @@ import { PageHeader } from '@shell';
 | 旧（Figma · 代码） | 新（Figma · 代码） | 说明 |
 |---|---|---|
 | — | `spacing/2` · `--spacing-2` | 新增，按钮条的内边距 |
+| `color/bg/fill/glass` · `--color-bg-fill-glass` = #181818 70% | 同名，黑 50% | 改值（11-03）。只给悬浮在页面上的浮层，配描边 |
+| on-media 按钮背景模糊 24（写死） | `--effect-glass-blur` 32 | 改值（11-03），和玻璃用同一个模糊 |
 | `spacing/none` · `--spacing-none` | `spacing/0` · `--spacing-0` | 改名 |
 | `spacing/xxs` · `--spacing-xxs` | `spacing/4` · `--spacing-4` | 改名 |
 | `spacing/xs` · `--spacing-xs` | `spacing/6` · `--spacing-6` | 改名 |
@@ -42,6 +44,7 @@ import { PageHeader } from '@shell';
 
 | 旧 | 新 | 类型 · 说明 |
 |---|---|---|
+| ButtonGroup 玻璃底 + 描边 border-subtle | ButtonGroup on-media 底（`--color-on-media-fill`），不加描边 | 改样式（11-03）。按钮条只贴在图片、视频上，和旁边的浮层按钮一个底 |
 | 类型 = 弱（`variant="weak"`）：无底，文字和图标 50% | 类型 = 轻（`variant="light"`） | 改名 + 改样式（2026-10-29 Figma）。Button 的轻有底，和次要一样白 8%；IconButton 的轻还是无底 |
 
 ## 菜单和提示
@@ -77,18 +80,27 @@ import { PageHeader } from '@shell';
 
 #### 现有弹窗归到哪一档
 
-代码里现在的弹窗，按宽度就近归到 S / M / L / XL。
+代码里现在的弹窗，按内容归到下面几档（11-03 改：原来的 S / M / L / XL 换成直接写宽度，M 720 拆成 560 和 800）。
 
-| 尺寸 | 宽度 | 用在哪 | 代码里现在的弹窗（宽度） |
-|---|---|---|---|
-| S | 400 | 确认、重命名、简单输入 | 400：ConfirmModal · RenameModal · EditFolderNameModal · CompressModal · BalanceInfo · AppDeployVersionCheck · SkillConfirmModal；500：SkillSyncPublicModal |
-| M | 720 | 表单、上传、设置 | 700：PasteModal · 740：VersionUpdateModal · 800：FeedBack |
-| L | 1024 | 列表、市场、详情 | 898：SkillDetailModal · 1024：SkillMarketModal · 1056：Cropper（裁剪） |
-| XL | 1200 | 编辑器 | 1208：SkillEditorModal · 最小 1200：EditMultiImagModal |
-| 全屏【待定】 | 100vw | 素材详情 | 铺满：CardDetailModal；按屏幕宽：AIToolsModal 75vw（大屏 60vw）· PadImageModal 60vw，待定 |
+| 宽度 | 用在哪 | 代码里现在的弹窗（宽度） |
+|---|---|---|
+| 400（原 S） | 确认、重命名、简单输入 | 400：ConfirmModal · RenameModal · EditFolderNameModal · CompressModal · BalanceInfo · AppDeployVersionCheck · SkillConfirmModal |
+| 560（新） | 单列表单、分步问答 | 500：SkillSyncPublicModal · 560：记忆管理（3.14 新需求） |
+| 800（原 M 720） | 阅读详情、带插图的说明、反馈 | 700：PasteModal · 740：VersionUpdateModal · 800：FeedBack · 898：SkillDetailModal |
+| 1024（原 L） | 卡片列表、市场、裁剪 | 1024：SkillMarketModal · 1056：Cropper（裁剪） |
+| 1200（原 XL） | 编辑器、多栏 | 1208：SkillEditorModal · 最小 1200：EditMultiImagModal、BaseModal |
+| 铺满（`"full"`） | 素材详情、大工具 | 铺满：CardDetailModal；按屏幕宽：AIToolsModal 75vw（大屏 60vw）· PadImageModal 60vw |
+
+| 旧写法 | 新写法 |
+|---|---|
+| `size="s"` | `size={400}` |
+| `size="m"`（720） | `size={560}` 或 `size={800}`，按内容选 |
+| `size="l"` | `size={1024}` |
+| `size="xl"` | `size={1200}` |
+| `size="full"` | 不变，定成铺满窗口、没有圆角 |
 
 - 代码里还没有尺寸档位：弹窗有 BaseModal、antd Modal、HeroUI Modal 三种写法，宽度都是各写各的。
-- 要按 S / M / L / XL 走，需要前端给弹窗加一个 size 参数，再把上面这些宽度改过去。
+- 要按上面几档走，需要前端给弹窗加一个 size 参数，再把上面这些宽度改过去。
 
 ## 反馈
 

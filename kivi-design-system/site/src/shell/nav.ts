@@ -12,6 +12,7 @@ import {
   LayoutTemplate,
   MousePointerClick,
   Palette,
+  ScrollText,
   Shapes,
   Sparkles,
   SquareCheck,
@@ -74,6 +75,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
       { id: 'feedback', icon: Bell, title: '反馈', path: '/components/feedback', load: () => import('../docs/components/feedback.mdx') },
       { id: 'tabs-tags-avatar', icon: Tags, title: '选项卡、标签和头像', path: '/components/tabs-tags-avatar', load: () => import('../docs/components/tabs-tags-avatar.mdx') },
       { id: 'video-player', icon: SquarePlay, title: '播放器', path: '/components/video-player', load: () => import('../docs/components/video-player.mdx') },
+      { id: 'scroll-area', icon: ScrollText, title: '滚动条', path: '/components/scroll-area', load: () => import('../docs/components/scroll-area.mdx') },
     ],
   },
   {

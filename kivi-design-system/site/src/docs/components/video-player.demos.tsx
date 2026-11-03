@@ -29,7 +29,7 @@ export function PreviewHost() {
     };
   }, []);
   return (
-    <Dialog open={open} onOpenChange={setOpen} size="xl" className="vp-preview" aria-label="预览">
+    <Dialog open={open} onOpenChange={setOpen} size={1200} className="vp-preview" aria-label="预览">
       {open && target && (
         <div className={target.tall ? 'vp-preview__stage vp-preview__stage--tall' : 'vp-preview__stage'}>
           <VideoPlayer size="lg" src={target.src} startTime={target.time} />

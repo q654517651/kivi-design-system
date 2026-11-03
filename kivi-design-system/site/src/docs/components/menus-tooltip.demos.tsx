@@ -7,11 +7,13 @@ import {
   MenuDivider,
   MenuItem,
   MenuLabel,
+  Popover,
   SidebarItem,
   SidebarLabel,
   SidebarMore,
   Tooltip,
   type DropdownPlacement,
+  type PopoverPlacement,
 } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 
@@ -52,6 +54,59 @@ export function TooltipPlayground() {
           <Tooltip content={s.text} shortcut={s.shortcut ? s.shortcutText : undefined} />
         )
       }
+    />
+  );
+}
+
+// ---------- Popover ----------
+
+type PopoverState = {
+  trigger: string;
+  side: string;
+  align: string;
+  showTitle: boolean;
+  title: string;
+  text: string;
+  disabled: boolean;
+  open: boolean;
+};
+
+// 展开和面板双向同步：悬停、点击、Esc 关闭都写回「展开」。点面板上的选项不算点了气泡外面（不然一调面板就关了）
+function renderPopover(s: PopoverState, update: (patch: Partial<PlaygroundState>) => void) {
+  const placement = (s.align === 'center' ? s.side : `${s.side}-${s.align}`) as PopoverPlacement;
+  return (
+    <Popover
+      trigger={s.trigger as 'hover' | 'click'}
+      placement={placement}
+      title={s.showTitle ? s.title : undefined}
+      content={s.text}
+      disabled={s.disabled || undefined}
+      open={s.open}
+      onOpenChange={(open) => update({ open })}
+      onInteractOutside={(e) => {
+        if ((e.target as Element).closest('.shell-pg-panel')) e.preventDefault();
+      }}
+    >
+      <Button variant="secondary">比例</Button>
+    </Popover>
+  );
+}
+
+export function PopoverPlayground() {
+  return (
+    <Playground<PopoverState>
+      controls={[
+        { key: 'trigger', label: '出现方式', type: 'segment', value: 'hover', options: [['hover', '悬停'], ['click', '点击']] },
+        { key: 'side', label: '方向', type: 'segment', value: 'bottom', options: [['top', '上'], ['bottom', '下'], ['left', '左'], ['right', '右']] },
+        { key: 'align', label: '对齐', type: 'segment', value: 'center', options: [['start', '起点'], ['center', '居中'], ['end', '终点']] },
+        { key: 'showTitle', label: '显示标题', type: 'toggle', value: true },
+        { key: 'title', label: '标题', type: 'text', value: '画面比例' },
+        { key: 'text', label: '内容', type: 'text', value: '决定生成画面的宽高比。选「自动」时由模型根据提示词和参考图判断。' },
+        { key: 'disabled', label: '禁用', type: 'toggle', value: false },
+        { key: 'open', label: '展开', type: 'toggle', value: true },
+      ]}
+      rules={(s) => (s.showTitle ? {} : { title: true })}
+      render={renderPopover}
     />
   );
 }
