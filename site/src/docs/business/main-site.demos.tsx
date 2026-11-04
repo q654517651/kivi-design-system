@@ -1,6 +1,6 @@
 import { GenPrompt, GenPromptRefs, ResultTile, Tag, type GenPromptRefItem, type IconName, type ResultTileAction, type ResultTileType } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
-import { openPreview, VIDEO } from '../components/video-player.demos';
+import { openPreview, VIDEO } from '../components/media.demos';
 
 // 主站页的属性面板：任务、长度、类型、状态都在面板里切。参数表在 main-site.mdx
 
@@ -120,10 +120,10 @@ type ResultTileState = { type: ResultTileType; state: string; source: boolean; c
 function renderResultTile(s: ResultTileState, update: (patch: Partial<PlaygroundState>) => void) {
   const video = s.type === 'video';
   const type = video ? 'video' : undefined;
-  if (s.state === 'loading') {
+  if (s.state === 'generating') {
     // 有原素材：重新生成，原来的图或视频垫在遮罩下面
     const src = s.source ? (video ? VIDEO.wide : `${IMG}${PIC[s.type].done}-1x1.webp`) : undefined;
-    return <ResultTile type={type} status="loading" src={src} badge="59s 生成中" />;
+    return <ResultTile type={type} status="generating" src={src} badge="59s 生成中" />;
   }
   // 失败的格子还能删除：只有右上「删除」
   if (s.state === 'failed') return <ResultTile type={type} status="failed" topActions={TOP.slice(0, 1)} />;
@@ -148,11 +148,11 @@ export function ResultTilePlayground() {
     <Playground<ResultTileState>
       controls={[
         { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频']] },
-        { key: 'state', label: '状态', type: 'segment', value: 'done', options: [['loading', '生成中'], ['done', '完成'], ['hover', '悬停'], ['failed', '失败']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'done', options: [['generating', '生成中'], ['done', '完成'], ['hover', '悬停'], ['failed', '失败']] },
         { key: 'source', label: '有原素材（重新生成）', type: 'toggle', value: false },
         { key: 'collected', label: '已收藏', type: 'toggle', value: false },
       ]}
-      rules={(s) => ({ source: s.state !== 'loading', collected: s.state === 'loading' || s.state === 'failed' })}
+      rules={(s) => ({ source: s.state !== 'generating', collected: s.state === 'generating' || s.state === 'failed' })}
       render={renderResultTile}
     />
   );

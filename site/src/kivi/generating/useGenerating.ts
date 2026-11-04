@@ -20,6 +20,9 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
+/** 整页共用的方案：页面加载时在方案一、二里随机选一个，所有实例一起用 */
+const PAGE_EFFECT: GeneratingEffect = Math.random() < 0.5 ? 'twinkle' : 'drift';
+
 /** useId 变成数字：同一个实例每次渲染都一样，不同实例不一样，点的轨迹各不相同 */
 function hashId(id: string): number {
   let h = 2166136261;
@@ -30,7 +33,7 @@ function hashId(id: string): number {
 export interface GeneratingCommon {
   /**
    * 方案一 星点闪烁 / 方案二 斜飘 / 方案三 静态扫光：图标拼好不动，只有扫光循环。
-   * 不传：每个实例挂载时在前两个里随机选一个，之后不变。系统开了减少动态效果时一律用方案三，盖过这里传的值
+   * 不传：页面加载时在前两个里随机选一个，整页所有实例共用，动画节奏也共用一个时钟，同一排的几张同步。系统开了减少动态效果时一律用方案三，盖过这里传的值
    */
   effect?: GeneratingEffect;
   /** 速度倍数，1 是一轮 5.8 秒，默认 0.5 */
@@ -61,8 +64,8 @@ export function useGenerating(config: UseGeneratingConfig) {
   const player = useRef<Player | null>(null);
   const reduced = usePrefersReducedMotion();
   const autoSeed = hashId(useId());
-  // 不传 effect 时，挂载那一刻在方案一、二里随机选一个，重渲染不换
-  const [autoEffect] = useState<GeneratingEffect>(() => (Math.random() < 0.5 ? 'twinkle' : 'drift'));
+  // 不传 effect 时用整页共用的那个，同一排、同一页的几张方案一致
+  const autoEffect = PAGE_EFFECT;
 
   const paused = Boolean(config.paused);
   // 系统开了减少动态效果：一律用方案三静态扫光

@@ -1,12 +1,11 @@
 /*
-  KIVI · 输入控件
-  Figma「输入控件」页：Input（输入框）、NumberInput（数字输入框）、Select（下拉选择）、Textarea（多行输入框）。
-  依赖 tokens.css、base.css。Select 展开的列表用菜单和提示页的 Dropdown + Menu + MenuItem（kv-popup、kv-menu、kv-menu-item）。
+  KIVI · 输入框
+  Figma「输入控件」页：Input（输入框）、NumberInput（数字输入框）、Textarea（多行输入框）。
+  依赖 tokens.css、base.css。下拉选择（Select）在 selection 文件夹，上传（AddTile、UploadRing）在 upload 文件夹。
 
-  写法（React，见 Input.tsx、NumberInput.tsx、Select.tsx、Textarea.tsx）
+  写法（React，见 Input.tsx、NumberInput.tsx、Textarea.tsx）
     <Input leftIcon="Search" placeholder="搜索" aria-label="搜索" counter="0/50" />
     <NumberInput value="12" unit="秒" aria-label="时长（秒）" />
-    <Select variant="fill" placeholder="请选择" options={[{ value: 'png', label: 'PNG' }]} />
     <Textarea placeholder="请输入描述" counter="0/500" aria-label="描述" />
   渲染出来的结构
     <label class="kv-input">
@@ -20,19 +19,6 @@
       <span class="kv-number-input__unit">秒</span>
     </label>
 
-    <span class="kv-dropdown kv-select__wrap">
-      <button class="kv-select kv-select--fill" aria-haspopup="menu" aria-expanded="false">
-        <span class="kv-select__text kv-select__text--placeholder">请选择</span>
-        <span class="kv-icon" data-icon="DownArrowSmall"></span>
-      </button>
-    </span>
-    展开后，Dropdown 把列表挂在 body 上（出现 200ms ease-out，消失 150ms ease-in）：
-    <div class="kv-popup kv-popup--match">
-      <div class="kv-menu" role="listbox">
-        <button class="kv-menu-item" role="option" aria-selected="false"><span>选项一</span></button>
-      </div>
-    </div>
-
     <label class="kv-textarea">
       <textarea class="kv-textarea__field" placeholder="请输入描述"></textarea>
       <span class="kv-textarea__counter">0/500</span>
@@ -44,50 +30,11 @@
     已输入  有内容，文字 primary
     错误    <input> 上写 aria-invalid="true"（invalid 属性），加 1px danger 描边（数字输入框没有错误）
     禁用    <input> 上写 disabled
-  下拉选择
-    展开    触发器上写 aria-expanded="true"（Dropdown 写），右边箭头换成 UpArrowSmall，列表出现
-            当前项：role="option" aria-selected="true"，白 8% 底，不打勾（MenuItem 的「选中」）
-    已选    文字用 kv-select__text；没选用 kv-select__text--placeholder；左图标（kv-select__lead）写 data-filled，变成和文字一样白
-            无底（工具条）没选时占位就是入口名（模型、技能），文字、左图标也是白的，不灰
-    禁用    disabled
-    位置    placement，默认在触发器下方 4、左对齐，放不下会自己翻到上方
   is-hover、is-focus 只给文档摆静态的悬停、聚焦用，项目里不用写；
-  Select 的静态悬停写在最外层的 kv-select__wrap 上
-  打字、字数、展开收起、选中、点外面和 Esc 关闭、键盘都在组件里，受控、非受控都支持
-
-  上传：UploadRing（上传进度环）、UploadTile（上传格）、Dropzone（拖拽上传区）。写法见 UploadRing.tsx、UploadTile.tsx、Dropzone.tsx
-    <UploadTile status="empty" onSelect={(files) => …} />
-    <UploadTile status="uploading" src={预览图} progress={40} />
-    <UploadTile status="done" src={图} onRemove={…} onReplace={(files) => …} />
-    <UploadTile status="error" errorStyle="outline" onRetry={…} />
-    <Dropzone accept="image/*" maxSize={10 * 1024 * 1024} onSelect={(files) => …} />
-  渲染出来的结构
-    <div class="kv-upload-tile kv-upload-tile--96" data-status="done">
-      <img class="kv-upload-tile__image">
-      <button class="kv-upload-tile__trigger">                     空：整格都是添加按钮
-      <div class="kv-upload-tile__shade"><span class="kv-upload-ring">…</span></div>   上传中、失败（dim）
-      <div class="kv-button-group kv-upload-tile__actions">…</div> 完成：悬停出现的删除、重新上传
-      <button class="kv-upload-tile__retry">                        失败（outline）
-      <span class="kv-upload-tile__badge">                          失败（badge）
-    </div>
-    <label class="kv-dropzone">
-      <input class="kv-dropzone__input" type="file">
-      <span class="kv-icon" data-icon="Upload"></span>
-      <span class="kv-dropzone__title">拖拽文件到这里，或点击上传</span>
-      <span class="kv-dropzone__hint">支持 图片，单个文件不超过 10 MB</span>
-    </label>
-  状态（写在元素上，有就是开）
-    UploadTile  data-status    empty / uploading / done / error
-                data-error-style  outline / dim / badge，只在 error 时有
-                data-dragover  文件拖到格子上（空、完成可以拖）
-                aria-disabled  禁用
-    Dropzone    data-dragover  文件拖到上面
-                data-rejected  拖来的类型不收，或刚放下的文件被拒
-                aria-disabled  禁用
+  打字、字数、键盘都在组件里，受控、非受控都支持
 */
 
 /* ---------- 共用：输入框、数字输入框、多行输入框的外框 ---------- */
-
 .kv-input,
 .kv-number-input,
 .kv-textarea {
@@ -129,12 +76,12 @@
   opacity: 1;
 }
 
-/* 悬停：白 12% */
+/* 悬停：白 14% */
 :is(.kv-input, .kv-number-input, .kv-textarea):where(:hover, .is-hover):not(:has(:disabled)) {
   background: var(--color-bg-fill-container-light-1-hover);
 }
 
-/* 聚焦：底色回到白 8%，不加描边 */
+/* 聚焦：底色回到白 10%，不加描边 */
 :is(.kv-input, .kv-number-input, .kv-textarea):where(:focus-within, .is-focus):not(:has(:disabled)) {
   background: var(--color-bg-fill-container-light-1);
 }
@@ -144,7 +91,7 @@
   border-color: var(--color-status-danger);
 }
 
-/* 禁用：底色白 4%，文字 disabled */
+/* 禁用：底色白 6%，文字 disabled */
 :is(.kv-input, .kv-number-input, .kv-textarea):has(:disabled) {
   background: var(--color-bg-fill-container-light-2);
   color: var(--color-text-fill-disabled);
@@ -160,7 +107,6 @@
 }
 
 /* ---------- Input ---------- */
-
 /* 高 32，左右 12，元素间距 8。宽度在使用时设成填满 */
 .kv-input {
   align-items: center;
@@ -194,8 +140,35 @@
   color: var(--color-text-fill-disabled);
 }
 
-/* ---------- NumberInput ---------- */
+/* 清空：有字才出现，16 图标 tertiary，悬停回到 primary。按钮 20 × 20 留点好点的范围 */
+.kv-input__clear {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin: 0 calc(var(--spacing-2) * -1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-4);
+  background: transparent;
+  color: var(--color-text-fill-tertiary);
+  cursor: pointer;
+  transition: color var(--motion-duration-100) var(--motion-ease-in-out);
+}
 
+.kv-input__clear:where(:hover, :focus-visible) {
+  outline: none;
+  color: var(--color-text-fill-primary);
+}
+
+.kv-input__clear > .kv-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------- NumberInput ---------- */
 /* 高 32，最小宽 64，宽度跟着内容走；左右 8，数值和单位间距 4 */
 .kv-number-input {
   display: inline-flex;
@@ -231,122 +204,7 @@
   color: var(--color-text-fill-disabled);
 }
 
-/* ---------- Select ---------- */
-
-/* 触发器：高 32，13 号字，左图标 16、右箭头 16，元素间距 4 */
-.kv-select {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-4);
-  box-sizing: border-box;
-  height: 32px;
-  margin: 0;
-  border: 0;
-  border-radius: var(--border-radius-8);
-  background: var(--kv-select-fill);
-  color: var(--color-text-fill-primary);
-  font-family: var(--font-family);
-  font-size: var(--font-size-13);
-  font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
-  text-align: left;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
-}
-
-.kv-select > .kv-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--color-text-fill-tertiary);
-}
-
-/* 左图标：选了值以后和文字一样白（Figma Select「已选」），没选时 tertiary */
-.kv-select > .kv-select__lead[data-filled] {
-  color: var(--color-text-fill-primary);
-}
-
-.kv-select__text {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 没选时的占位文字 */
-.kv-select__text--placeholder {
-  color: var(--color-text-fill-placeholder);
-}
-
-/* 填充：表单、面板里用。底白 8%，左右 12，宽度拉伸 */
-.kv-select--fill {
-  --kv-select-fill: var(--color-bg-fill-container-light-1);
-  --kv-select-fill-hover: var(--color-bg-fill-container-light-1-hover);
-  --kv-select-fill-open: var(--color-bg-fill-container-light-1);
-  width: 100%;
-  padding: 0 var(--spacing-12);
-}
-
-/* 无底：工具条上用，比如输入框里的模型选择。左右 8，宽度跟着内容走 */
-.kv-select--plain {
-  --kv-select-fill: transparent;
-  --kv-select-fill-hover: var(--color-bg-fill-container-light-2-hover);
-  --kv-select-fill-open: var(--color-bg-fill-container-light-2-pressed);
-  display: inline-flex;
-  padding: 0 var(--spacing-8);
-}
-
-/* 无底没选值时：占位就是入口名（比如 Agent 工具条的「模型」「技能」），文字和左图标跟选了值一样白；
-   灰的放在工具条上像禁用（11-02 用户定）。填充（表单）还是灰的占位 */
-.kv-select--plain .kv-select__text--placeholder,
-.kv-select--plain > .kv-select__lead {
-  color: var(--color-text-fill-primary);
-}
-
-/* 悬停、展开。文档摆静态悬停时，is-hover 写在最外层 kv-select__wrap 上 */
-.kv-select:where(:hover, .is-hover):not(:disabled),
-:where(.kv-select__wrap.is-hover) > .kv-select:not(:disabled) {
-  background: var(--kv-select-fill-hover);
-}
-
-.kv-select[aria-expanded="true"] {
-  background: var(--kv-select-fill-open);
-}
-
-/* 禁用：填充底白 4%；无底不加底。文字和箭头 disabled */
-.kv-select:disabled {
-  color: var(--color-text-fill-disabled);
-  cursor: not-allowed;
-}
-
-.kv-select--fill:disabled {
-  background: var(--color-bg-fill-container-light-2);
-}
-
-.kv-select:disabled > .kv-icon,
-.kv-select:disabled .kv-select__text--placeholder {
-  color: var(--color-text-fill-disabled);
-}
-
-/* 最外层的壳：就是 Dropdown 的壳（kv-dropdown），Dropdown 用它量触发器的位置。
-   填充撑满，无底跟着内容走。
-   展开的列表由 Dropdown 挂在 body 上：出现 200ms ease-out、消失 150ms ease-in；
-   填充的列表和触发器一样宽；无底的列表按内容撑宽，但不比触发器窄（Figma 没定，待定）；
-   列表和触发器的间距 Figma 没定，暂用 4 */
-.kv-dropdown.kv-select__wrap {
-  display: flex;
-  width: 100%;
-}
-
-.kv-dropdown.kv-select__wrap--plain {
-  display: inline-flex;
-  width: auto;
-  vertical-align: top;
-}
-
 /* ---------- Textarea ---------- */
-
 /* 默认 320×104，可以拉伸；内边距 12，14/22 号字，右下角字数。宽度在使用时设成填满 */
 .kv-textarea {
   flex-direction: column;
@@ -379,328 +237,5 @@
 }
 
 .kv-textarea:has(:disabled) .kv-textarea__counter {
-  color: var(--color-text-fill-disabled);
-}
-
-/* ---------- UploadRing ---------- */
-
-/* 进度环 28：盖在暗色遮罩上，颜色跟文字走（白）。底圈白 30%，弧线圆头 */
-.kv-upload-ring {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  color: var(--color-on-media-text);
-}
-
-.kv-upload-ring > svg {
-  grid-area: 1 / 1;
-  width: 28px;
-  height: 28px;
-}
-
-.kv-upload-ring__ring,
-.kv-upload-ring__arc {
-  fill: none;
-  stroke-width: 3;
-}
-
-.kv-upload-ring__ring {
-  stroke: var(--color-on-media-text);
-  opacity: var(--opacity-30);
-}
-
-.kv-upload-ring__arc {
-  stroke: currentColor;
-  stroke-linecap: round;
-}
-
-/* 9 号字：Figma 里是 9 / 粗，变量里没有这一档 */
-.kv-upload-ring__text {
-  grid-area: 1 / 1;
-  font-size: 9px;
-  font-weight: var(--font-weight-medium);
-  line-height: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------- UploadTile ---------- */
-
-/* 方格 96 或 64，圆角 8（和参考卡片一样），默认白 4% 底。拖文件上来：品牌色描边 + 品牌色淡底（画在 ::after 里，盖在图片上面） */
-.kv-upload-tile {
-  position: relative;
-  display: inline-block;
-  flex: none;
-  box-sizing: border-box;
-  width: 96px;
-  height: 96px;
-  overflow: hidden;
-  border-radius: var(--border-radius-8);
-  background: var(--color-bg-fill-container-light-2);
-  color: var(--color-text-fill-primary);
-  font-family: var(--font-family);
-  vertical-align: top;
-  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
-}
-
-.kv-upload-tile--64 {
-  width: 64px;
-  height: 64px;
-}
-
-.kv-upload-tile::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  border: var(--border-width-1) solid transparent;
-  border-radius: inherit;
-  pointer-events: none;
-  transition:
-    border-color var(--motion-duration-100) var(--motion-ease-in-out),
-    background-color var(--motion-duration-100) var(--motion-ease-in-out);
-}
-
-.kv-upload-tile[data-dragover] {
-  background: var(--color-bg-fill-container-light-1);
-}
-
-.kv-upload-tile[data-dragover]::after {
-  border-color: var(--color-border-focus);
-  background: var(--color-brand-subtle);
-}
-
-/* 失败（outline）：danger 描边 */
-.kv-upload-tile[data-error-style="outline"]::after {
-  border-color: var(--color-status-danger);
-}
-
-.kv-upload-tile__image {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  user-select: none;
-}
-
-/* 完成但没有预览图（比如视频、音频）：中间放文件图标 */
-.kv-upload-tile__file {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  color: var(--color-text-fill-tertiary);
-  transform: translate(-50%, -50%);
-}
-
-/* 空：整格是一个按钮，中间 AddSmall 20，和参考区的添加格一个样子 */
-.kv-upload-tile__trigger,
-.kv-upload-tile__retry {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-4);
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-text-fill-primary);
-  font: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
-}
-
-.kv-upload-tile:where(:hover, .is-hover) > :where(.kv-upload-tile__trigger, .kv-upload-tile__retry) {
-  background: var(--color-bg-fill-container-light-2-hover);
-}
-
-.kv-upload-tile__trigger:focus-visible,
-.kv-upload-tile__retry:focus-visible,
-.kv-upload-tile__badge:focus-visible {
-  outline: var(--border-width-1-5) solid var(--color-border-strong);
-  outline-offset: -2px;
-}
-
-/* 失败（outline）：重试图标 + 12 号文字 */
-.kv-upload-tile__retry {
-  color: var(--color-text-fill-secondary);
-}
-
-.kv-upload-tile__retry > span {
-  color: var(--color-status-danger);
-  font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
-}
-
-/* 遮罩：黑 40%，中间放进度环或重试按钮。上传中、失败（dim）一直在；失败（badge）只在悬停时出现 */
-.kv-upload-tile__shade {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: var(--color-bg-fill-container-dark);
-  color: var(--color-on-media-text);
-}
-
-.kv-upload-tile__shade--hover {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
-}
-
-.kv-upload-tile:where(:hover, .is-hover, :focus-within) > .kv-upload-tile__shade--hover {
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
-}
-
-/* 完成：悬停或聚焦时右上角出现按钮条（64 的格子里和格子一样宽，贴上边） */
-.kv-upload-tile__actions {
-  position: absolute;
-  top: var(--spacing-4);
-  right: var(--spacing-4);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
-}
-
-.kv-upload-tile--64 > .kv-upload-tile__actions {
-  top: 0;
-  right: 0;
-}
-
-.kv-upload-tile:where(:hover, .is-hover, :focus-within) > .kv-upload-tile__actions {
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
-}
-
-/* 失败（badge）：左上角 20 的 danger 圆 + 感叹号。符号和 Toast 警告里的是同一个，镂空成弹层底色 */
-.kv-upload-tile__badge {
-  position: absolute;
-  top: var(--spacing-4);
-  left: var(--spacing-4);
-  z-index: 1;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--border-radius-round);
-  background: var(--color-status-danger);
-}
-
-.kv-upload-tile__badge::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--color-bg-fill-popup);
-  -webkit-mask: var(--kv-upload-tile-glyph) center / 16px 16px no-repeat;
-  mask: var(--kv-upload-tile-glyph) center / 16px 16px no-repeat;
-  --kv-upload-tile-glyph: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='11.1' r='1'/><path d='M8 4.6V8.6' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/></svg>");
-}
-
-/* 禁用：底和图标变灰，不能点、不能拖 */
-.kv-upload-tile[aria-disabled="true"] {
-  cursor: not-allowed;
-}
-
-.kv-upload-tile[aria-disabled="true"] .kv-upload-tile__trigger {
-  color: var(--color-text-fill-disabled);
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* ---------- Dropzone ---------- */
-
-/* 整块拖拽上传区：宽度填满，最矮 160，圆角 12，白 4% 底 + 虚线描边。点一下选文件，拖文件进来换成品牌色 */
-.kv-dropzone {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-8);
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 160px;
-  padding: var(--spacing-24);
-  border: var(--border-width-1) dashed var(--color-border);
-  border-radius: var(--border-radius-12);
-  background: var(--color-bg-fill-container-light-2);
-  color: var(--color-text-fill-secondary);
-  font-family: var(--font-family);
-  text-align: center;
-  cursor: pointer;
-  transition:
-    background-color var(--motion-duration-100) var(--motion-ease-in-out),
-    border-color var(--motion-duration-100) var(--motion-ease-in-out);
-}
-
-.kv-dropzone:where(:hover, .is-hover) {
-  background: var(--color-bg-fill-container-light-2-hover);
-  border-color: var(--color-border-strong);
-}
-
-.kv-dropzone:has(.kv-dropzone__input:focus-visible) {
-  outline: var(--border-width-1-5) solid var(--color-border-strong);
-  outline-offset: 2px;
-}
-
-/* 真正的文件输入：看不见，但能用键盘聚焦、读屏能读到 */
-.kv-dropzone__input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.kv-dropzone__title {
-  color: var(--color-text-fill-primary);
-  font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
-}
-
-.kv-dropzone__hint {
-  color: var(--color-text-fill-tertiary);
-  font-size: var(--font-size-12);
-  line-height: var(--font-line-height-20);
-}
-
-/* 拖入：品牌色描边（实线）+ 品牌色淡底 */
-.kv-dropzone[data-dragover] {
-  border-style: solid;
-  border-color: var(--color-border-focus);
-  background: var(--color-brand-subtle);
-}
-
-/* 不收：danger 描边 + danger 淡底，标题也是 danger */
-.kv-dropzone[data-rejected] {
-  border-style: solid;
-  border-color: var(--color-status-danger);
-  background: var(--color-status-danger-subtle);
-}
-
-.kv-dropzone[data-rejected] .kv-dropzone__title,
-.kv-dropzone[data-rejected] > .kv-icon {
-  color: var(--color-status-danger);
-}
-
-.kv-dropzone[aria-disabled="true"] {
-  border-color: var(--color-border-subtle);
-  color: var(--color-text-fill-disabled);
-  cursor: not-allowed;
-}
-
-.kv-dropzone[aria-disabled="true"] :where(.kv-dropzone__title, .kv-dropzone__hint) {
   color: var(--color-text-fill-disabled);
 }

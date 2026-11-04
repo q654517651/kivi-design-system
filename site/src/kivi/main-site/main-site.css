@@ -3,13 +3,13 @@
   Figma「主站」页：GenPrompt（记录头）、ResultTile（结果格）。参考区是 GenPrompt 里的一块，代码里单独成 GenPromptRefs。
   依赖 tokens.css、base.css、button.css（按钮用 kv-icon-button、kv-button）。
   别的页的组件：
-    tabs-tags-avatar  Tag（参数标签、角标）、AssetThumb（参考区缩略图）
-    canvas            ReferenceItem（悬停浮层里的参考图）
-    video-player      VideoPlayer（视频格子里的播放器，小号）
+    tags-avatar       Tag（参数标签、角标）、AssetThumb（参考区缩略图）
+    generation        ReferenceItem（悬停浮层里的参考图）
+    media             VideoPlayer（视频格子里的播放器，卡片）
     feedback          EmptyState（失败）
     generating        GeneratingDots（生成中动效）
   整条记录（GenPrompt + 结果网格 + 底部按钮）、输入框、首页分段都是模板，不在这里。
-  主站输入框是正式组件 PromptBox，在 prompt-box 里。
+  主站输入框是正式组件 PromptBox，在 generation 里。
 
   写法（React，见 GenPrompt.tsx、ResultTile.tsx）
     <GenPrompt prompt="生成一张赛博朋克风格的猕猴桃海报" onCopy={…}>
@@ -177,6 +177,8 @@
 /* 默认 256 方，宽跟着格子走，高按比例（默认方形）。画面默认铺满（居中裁切），和 Figma 里 PlaceholderImage 填充=铺满一致 */
 .kv-result-tile {
   position: relative;
+  /* 自己成一层：里面按钮条、收藏星的 z-index 只在卡片里比，不会盖到卡片外面浮着的东西（比如主站输入框） */
+  isolation: isolate;
   display: block;
   box-sizing: border-box;
   width: 100%;
@@ -247,7 +249,7 @@
   transition-timing-function: var(--motion-ease-in);
 }
 
-/* 视频：里面是 VideoPlayer 小号（时长、控制条它自己管）。操作盖在播放器上面；
+/* 视频：里面是 VideoPlayer 卡片（时长、控制条它自己管）。操作盖在播放器上面；
    左下快捷操作抬到控制条上面：控制行 28 + 下边距 8 + 间距 10 */
 .kv-result-tile > .kv-result-tile__actions {
   z-index: 3;

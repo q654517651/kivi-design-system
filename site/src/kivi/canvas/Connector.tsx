@@ -4,11 +4,11 @@ import { cx } from '../utils';
 import { ConnectorRemove } from './ConnectorRemove';
 import './canvas.css';
 
-export type ConnectorState = 'default' | 'active' | 'drawing' | 'flowing';
+export type ConnectorStatus = 'default' | 'active' | 'drawing' | 'flowing';
 
 export interface ConnectorProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
   /** 状态：默认 / 激活 / 拖拽中 / 执行中，默认是默认 */
-  state?: ConnectorState;
+  status?: ConnectorStatus;
   /** 宽，默认 240。实际按两个连接点的水平距离拉伸，粗细不跟着变 */
   width?: number;
   /** 高，默认 48。实际按两个连接点的垂直距离拉伸 */
@@ -65,7 +65,7 @@ function closestOnPath(path: SVGPathElement, p: Point): Point | null {
 /** 节点之间的连线，4 种状态。Figma「画布」页 Connector */
 export const Connector = forwardRef<HTMLDivElement, ConnectorProps>(function Connector(
   {
-    state = 'default',
+    status = 'default',
     width = 240,
     height = 48,
     direction = 'up',
@@ -129,7 +129,7 @@ export const Connector = forwardRef<HTMLDivElement, ConnectorProps>(function Con
   return (
     <div
       ref={ref}
-      className={cx('kv-connector', state !== 'default' && `kv-connector--${state}`, className)}
+      className={cx('kv-connector', status !== 'default' && `kv-connector--${status}`, className)}
       style={{ width, height, ...style } as CSSProperties}
       onMouseEnter={composeHandlers(onMouseEnter, remove ? enter : undefined)}
       onMouseLeave={composeHandlers(onMouseLeave, remove ? leave : undefined)}
@@ -138,7 +138,7 @@ export const Connector = forwardRef<HTMLDivElement, ConnectorProps>(function Con
     >
       <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
         <path ref={lineRef} d={d} />
-        {state === 'flowing' && <path className="kv-connector__flow" d={d} />}
+        {status === 'flowing' && <path className="kv-connector__flow" d={d} />}
       </svg>
       {remove && (
         <ConnectorRemove

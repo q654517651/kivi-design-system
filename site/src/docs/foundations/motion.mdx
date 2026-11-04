@@ -6,7 +6,6 @@ import { DialogDemo, DurationDemo, EaseDemo, LoadingDemo, MenuDemo, SkeletonDemo
   title="动效"
   lead="动效只用来交代「东西从哪来、到哪去、变成了什么」，不做装饰。先看「怎么动」选缓动，再看「动多远」选时长。"
   figma={['变量', '6:2']}
-  status="草稿 2026-10-29"
   code="kivi/tokens.css"
 />
 
@@ -74,12 +73,13 @@ import { DialogDemo, DurationDemo, EaseDemo, LoadingDemo, MenuDemo, SkeletonDemo
 | Tooltip | 延迟 500ms，再 150ms ease-out 淡入 | 100ms ease-in 淡出 |
 | 菜单、下拉列表、右键、双击快捷添加 | 200ms ease-out：淡入 + 从锚点那一边 96% 放大、移 4 | 150ms ease-in 倒着播 |
 | Toast | 200ms ease-out，从上方移入 | 150ms ease-in 淡出 |
+| 通知 Notification | 200ms ease-out，从右边移入；叠放和展开、收起 300ms ease-in-out（只动 transform 和高度） | 150ms ease-in 淡出，后面的补上来 |
 | 模态弹窗 | 遮罩和弹窗一起 300ms ease-out 淡入，弹窗从 96% 放大到 100% | 200ms ease-in 淡出 |
 | 开关 | 滑块 150ms ease-in-out | 同左 |
 | 主站输入框参考区 | 照 BytePlus：`--motion-ease-expand`，400ms 起每多一张加 10ms，最多 700ms；盖字的遮罩同步 | 同一条缓动收回叠放 |
 | 画布多图节点 | `--motion-ease-spring`，400ms 起每多一张加 10ms，最多 700ms；卡片一起动 | 同一条缓动收回叠放 |
 
-下面都能点。菜单、Tooltip、Toast、弹窗的正式组件在通用组件各页里，这里只示意动效。
+下面都能点。菜单、Tooltip、Toast、弹窗的正式组件在各组件页里，这里只示意动效。
 
 ### Tooltip
 
@@ -109,7 +109,7 @@ Loading 图标 1 秒一圈，匀速。和按钮「加载中」用的是同一个
 
 <LoadingDemo />
 
-骨架屏：底色白 8%，高光白 12% 从左往右扫，1.4 秒一轮，匀速。
+骨架屏：底色白 10%，高光白 14% 从左往右扫，1.4 秒一轮，匀速。
 
 <SkeletonDemo />
 

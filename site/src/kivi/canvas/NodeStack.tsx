@@ -4,15 +4,11 @@ import { cx } from '../utils';
 import './canvas.css';
 
 export interface NodeStackProps extends HTMLAttributes<HTMLDivElement> {
-  /** 展开：后面的卡铺成格子，间距 8。主图不动，其余依次放右、上、右上，再往右每列两张 */
+  /** 展开：后面的卡铺成格子，间距 8。主图不动，其余依次放右、上、右上，再往右每列两张。收起时后面只露两层底（样子同 MediaGroup）：往右错开 4 / 8，以中心旋转 2° / 4°，白 18% */
   expanded?: boolean;
   /** 卡片：第一张是主图，其余按顺序叠在主图后面。每张放一个 NodeCard */
   children?: ReactNode;
 }
-
-// 收起时后面每张的旋转，照线上：第 1 张 -4°，第 2 张 4°，第 3 张 -2°，再往后 ±2° 交替
-const ROTATE = [-4, 4, -2];
-const rotateOf = (i: number) => ROTATE[i] ?? (i % 2 === 0 ? -2 : 2);
 
 // 展开时第 i 张（不算主图）在第几格：x 往右，y 往上为负
 function spreadOf(i: number) {
@@ -52,6 +48,7 @@ export const NodeStack = forwardRef<HTMLDivElement, NodeStackProps>(function Nod
           <div
             key={i}
             className="kv-node-stack__card"
+            data-extra={i >= 2 ? '' : undefined}
             aria-hidden={!expanded || undefined}
             // 收起时后面的卡点不到、Tab 也进不去
             ref={(el) => {
@@ -60,7 +57,6 @@ export const NodeStack = forwardRef<HTMLDivElement, NodeStackProps>(function Nod
             style={
               {
                 '--kv-i': i + 1,
-                '--kv-rotate': `${rotateOf(i)}deg`,
                 '--kv-x': x,
                 '--kv-y': y,
                 zIndex: total - i - 1,

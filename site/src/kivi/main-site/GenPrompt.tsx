@@ -1,13 +1,13 @@
 import { forwardRef, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { IconButton } from '../button';
-import { Tooltip } from '../menus-tooltip';
+import { Popover } from '../tooltip';
 import { cx } from '../utils';
 import './main-site.css';
 
 export type GenPromptLength = 'short' | 'long';
 
 export interface GenPromptProps extends HTMLAttributes<HTMLDivElement> {
-  /** 长度：短 / 超出两行（long）。不传就自己量（照线上）：超过两行就收成两行，复制按钮挪到第二行行尾，左边渐变盖住截断的字，悬停用 Tooltip 长文看全文。传了就固定，文档摆静态用 */
+  /** 长度：短 / 超出两行（long）。不传就自己量（照线上）：超过两行就收成两行，复制按钮挪到第二行行尾，左边渐变盖住截断的字，悬停用 Popover 长文看全文。传了就固定，文档摆静态用 */
   length?: GenPromptLength;
   /** 提示词。没有提示词就不显示这一行（照线上）；有的话复制按钮固定跟在最后一个字后面。工具类任务（抠图、高清…）不传，只显示参数 */
   prompt?: ReactNode;
@@ -53,8 +53,8 @@ export const GenPrompt = forwardRef<HTMLDivElement, GenPromptProps>(function Gen
   return (
     <div ref={ref} className={cx('kv-gen-prompt', clamp && 'kv-gen-prompt--clamp', className)} {...rest}>
       {prompt != null && (
-        // 收成两行时，悬停看全文：Tooltip 长文；没截断就禁用
-        <Tooltip variant="long" content={prompt} disabled={!clamp}>
+        // 收成两行时，悬停看全文：Popover 长文；没截断就禁用
+        <Popover variant="long" content={prompt} disabled={!clamp}>
           <div className="kv-gen-prompt__prompt">
             <span ref={textRef} className="kv-gen-prompt__text">
               {prompt}
@@ -63,7 +63,7 @@ export const GenPrompt = forwardRef<HTMLDivElement, GenPromptProps>(function Gen
               <IconButton icon="Copy" label="复制提示词" size={28} variant="light" onClick={onCopy} />
             </span>
           </div>
-        </Tooltip>
+        </Popover>
       )}
       <div className="kv-gen-prompt__params">{children}</div>
     </div>

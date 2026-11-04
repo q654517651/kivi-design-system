@@ -1,6 +1,6 @@
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cx } from '../utils';
-import { ConnectorDot, type ConnectorDotState } from './ConnectorDot';
+import { ConnectorDot, type ConnectorDotStatus } from './ConnectorDot';
 import './canvas.css';
 
 export type NodeWrapperRatio = '1:1' | '3:4' | '16:9' | '4:3' | '9:16';
@@ -11,9 +11,9 @@ export interface NodeWrapperProps extends HTMLAttributes<HTMLDivElement> {
   /** 节点名，在节点上方。不传就没有 */
   name?: ReactNode;
   /** 左侧连接点的状态。Figma 里默认开，代码里传了才显示 */
-  leftDot?: ConnectorDotState;
+  leftDot?: ConnectorDotStatus;
   /** 右侧连接点的状态。Figma 里默认开，代码里传了才显示 */
-  rightDot?: ConnectorDotState;
+  rightDot?: ConnectorDotStatus;
   /** 选中：节点外面盖一圈描边。悬停时也有这圈描边，由 CSS 管 */
   selected?: boolean;
   /** 里面固定放一个 NodeCard */
@@ -34,8 +34,8 @@ export const NodeWrapper = forwardRef<HTMLDivElement, NodeWrapperProps>(function
     >
       {name && <span className="kv-node-wrapper__name">{name}</span>}
       {children}
-      {leftDot && <ConnectorDot state={leftDot} className="kv-node-wrapper__dot kv-node-wrapper__dot--left" />}
-      {rightDot && <ConnectorDot state={rightDot} className="kv-node-wrapper__dot kv-node-wrapper__dot--right" />}
+      {leftDot && <ConnectorDot status={leftDot} className="kv-node-wrapper__dot kv-node-wrapper__dot--left" />}
+      {rightDot && <ConnectorDot status={rightDot} className="kv-node-wrapper__dot kv-node-wrapper__dot--right" />}
     </div>
   );
 });

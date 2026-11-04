@@ -1,0 +1,99 @@
+/*
+  KIVI · 上传
+  AddTile（添加格）、UploadRing（上传进度环）。依赖 tokens.css、base.css。拖文件进输入框的提示是 DropOverlay（generation 文件夹）。
+  写法见 AddTile.tsx、UploadRing.tsx
+    <AddTile aria-label="添加参考素材" onClick={…} />
+    <AddTile icon="LoraModel" label="Lora" onClick={…} />
+  渲染出来的结构
+    <button class="kv-add-tile" data-labeled>
+      <span class="kv-icon" data-icon="AddSmall"></span><span class="kv-add-tile__label">Lora</span>   文字可省
+    </button>
+  状态（写在元素上，有就是开）
+    AddTile     disabled       禁用；data-labeled 有文字（图标和文字 tertiary，没有文字时图标是 primary）
+*/
+
+/* ---------- AddTile ---------- */
+/* 方格 56（只有这一档），白 10% 底（深底用 Light 1），圆角 8；图标 20 在正中，有文字时图标在上、12 号字在下，间距 2。悬停、按下底变亮 */
+.kv-add-tile {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font: inherit;
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 带文字的（Lora）：图标和文字都是 tertiary */
+.kv-add-tile[data-labeled] {
+  color: var(--color-text-fill-tertiary);
+}
+
+.kv-add-tile:where(:hover, .is-hover):not(:disabled) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-add-tile:active:not(:disabled) {
+  background: var(--color-bg-fill-container-light-1-pressed);
+}
+
+.kv-add-tile:disabled {
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+/* ---------- UploadRing ---------- */
+/* 进度环 28：盖在暗色遮罩上，颜色跟文字走（白）。底圈白 30%，弧线圆头 */
+.kv-upload-ring {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--color-on-media-text);
+}
+
+.kv-upload-ring > svg {
+  grid-area: 1 / 1;
+  width: 28px;
+  height: 28px;
+}
+
+.kv-upload-ring__ring,
+.kv-upload-ring__arc {
+  fill: none;
+  stroke-width: 3;
+}
+
+.kv-upload-ring__ring {
+  stroke: var(--color-on-media-text);
+  opacity: var(--opacity-30);
+}
+
+.kv-upload-ring__arc {
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+
+/* 9 号字：Figma 里是 9 / 粗，变量里没有这一档 */
+.kv-upload-ring__text {
+  grid-area: 1 / 1;
+  font-size: 9px;
+  font-weight: var(--font-weight-medium);
+  line-height: 11px;
+  font-variant-numeric: tabular-nums;
+}

@@ -33,7 +33,7 @@ import { ColorCards, CopyAllTokens, TokenChip, TokenTable, TokenValue } from './
 
 #### 填充与状态
 
-能点的东西从 8% 起：默认 8%、悬停 12%、按下 16%。4% 只用来区分大面积区域。叠加最多两层。
+Light 1 和 Light 2 按背景亮度选：背景相对亮度低于 0.015 是深底，用 Light 1（默认 10%、悬停 14%、按下 18%）；0.015 及以上是浅底（叠在一层 Light 1 上、popup），用 Light 2（默认 6%、悬停 10%、按下 14%）。相邻两层对比度不低于 1.12。细则见「设计规则 · 颜色和底色」。叠加最多两层。
 
 <ColorCards group="fill" />
 
@@ -136,6 +136,6 @@ Figma 文字样式按「文字/字号 字重」命名：`文字/13 常规`、`�
 
 ### 效果
 
-没有投影样式：所有浮层都不加阴影。玻璃浮层的背景模糊是 32，和底色 glass、描边 border-subtle 一起用。
+浮层都不加阴影，只有多图节点的卡片用叠放、展开两个阴影。玻璃浮层的背景模糊是 32，和底色 glass、描边 border-subtle 一起用。
 
 <TokenTable group="effect" />

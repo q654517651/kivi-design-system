@@ -221,7 +221,7 @@ export function EaseDemo() {
         ))}
       </div>
       <div className="mo-controls">
-        <Button size="sm" onClick={() => setEnd(!end)}>
+        <Button size={28} onClick={() => setEnd(!end)}>
           播放
         </Button>
       </div>
@@ -262,7 +262,7 @@ export function DurationDemo() {
         ))}
       </div>
       <div className="mo-controls">
-        <Button size="sm" onClick={() => setEnd(!end)}>
+        <Button size={28} onClick={() => setEnd(!end)}>
           播放
         </Button>
       </div>
@@ -426,10 +426,10 @@ export function DialogDemo() {
             </div>
             <p>删除后不能恢复。</p>
             <div className="mo-dialog-foot">
-              <Button size="lg" onClick={() => setOpen(false)}>
+              <Button size={36} onClick={() => setOpen(false)}>
                 取消
               </Button>
-              <Button size="lg" variant="danger" onClick={() => setOpen(false)}>
+              <Button size={36} variant="danger" onClick={() => setOpen(false)}>
                 删除
               </Button>
             </div>
@@ -443,7 +443,7 @@ export function DialogDemo() {
 
 // ---------- 开关 ----------
 
-/** 滑块 150ms ease-in-out，样式用网站外壳里的 shell-switch，正式组件见选择控件 */
+/** 滑块 150ms ease-in-out，样式用网站外壳里的 shell-switch，正式组件见选择页 */
 export function SwitchDemo() {
   const [on, setOn] = useState(true);
   return (
@@ -475,7 +475,7 @@ export function LoadingDemo() {
   );
 }
 
-/** 骨架屏：底色白 8%，高光白 12% 从左往右扫，1.4 秒一轮，匀速 */
+/** 骨架屏：底色白 10%，高光白 14% 从左往右扫，1.4 秒一轮，匀速 */
 export function SkeletonDemo() {
   return (
     <Frame>

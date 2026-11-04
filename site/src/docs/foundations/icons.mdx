@@ -1,12 +1,11 @@
 import { PageHeader, Tag } from '@shell';
-import { AliasTable, IconSearch, IconTable } from './icons.demos';
+import { IconSearch, IconTable } from './icons.demos';
 
 <PageHeader
   eyebrow="基础"
   title="图标"
   lead="24×24 线性图标。悬停看意思，点击复制名字。"
   figma={['图标', '44:2']}
-  status="草稿 0.1.0"
   code="kivi/icons.ts"
 />
 
@@ -18,14 +17,14 @@ import { AliasTable, IconSearch, IconTable } from './icons.demos';
 
 ## 规格
 
-画在 24 的框里，图形 22，线宽 1.5，整体缩放。颜色跟文字走。
+[Hugeicons](https://hugeicons.com/icons) 免费版（圆角描边，MIT）：画在 24 的框里，图形缩到 21，线宽 1.6，整体缩放。是描边不是轮廓，颜色跟文字走。模型厂 Logo、KIVI 自家 Logo、猕猴桃不缩，照原样。
 
 | 尺寸 | 线宽 | 用在哪 |
 |---|---|---|
-| 16（默认） | 1 | 按钮、菜单、输入框 |
-| 20 | 1.25 | 工具栏、面板标题、弹窗关闭 |
-| 24 | 1.5 | 大入口、竖向工具栏 |
-| 40 / 64 | 2.5 / 4 | 空状态、插图位 |
+| 16（默认） | 1.07 | 按钮、菜单、输入框 |
+| 20 | 1.33 | 工具栏、面板标题、弹窗关闭 |
+| 24 | 1.6 | 大入口、竖向工具栏 |
+| 40 / 64 | 2.67 / 4.27 | 空状态、插图位 |
 
 <details>
 <summary>设计怎么用</summary>
@@ -59,17 +58,17 @@ import { Icon } from '@kivi';
 
 | 阶段 | 怎么做 |
 |---|---|
-| 原型 | 从 [Lucide](https://lucide.dev/icons/) 下载直接用，标「待确认」 |
+| 原型 | 从 [Hugeicons](https://hugeicons.com/icons) 免费版（Stroke Rounded）下载直接用 |
 | 开发 | 先找设计师，加进组件库再用 |
 | 设计 | 按下面的步骤加进 Figma |
 
-1. 在 [Lucide](https://lucide.dev/icons/) 找，按 24px、线宽 1.5 下载 SVG。
-2. 等比缩到 22，居中放进 24 的框，线宽改回 1.5。
+1. 在 [Hugeicons](https://hugeicons.com/icons) 免费版找（npm 包 `@hugeicons/core-free-icons` 是同一批；`@hugeicons/static` 协议不许改图形，不能用），下载 24 的 SVG。同族有 -01、-02 几个变体的，挑框少、装饰少、意思最直白的。
+2. 等比缩到 21，居中放进 24 的框，线宽改成 1.6。
 3. 描边版放「_源文件 · 图标描边」页；转轮廓、合并后做成组件，放进「图标」页对应分组，加进 Icon 组件的首选值。
 4. 组件描述写「状态：待确认（用在哪）」，设计师确认后转正式。
 5. 在 `icons.demos.tsx` 的 `ICON_INFO` 里补名字和意思，重新导出 `kivi/icons.ts`。
 
-Lucide 里也没有的，由设计师照 Lucide 的画法自己画：线端圆头、转折圆角、只描边；分开的部分之间至少留 2。小四角星只加给同一件事有普通版和 AI 版、要并排区分的图标（像 SmartEditing）；节点类型图标（文字、图片、视频、音频）不加。
+Hugeicons 里也没有的，由设计师照 Hugeicons 的画法自己画：线端圆头、转折圆角、只描边；方的 19、横竖长边 20、圆的 20；分开的部分之间至少留 2。小四角星只加给同一件事有普通版和 AI 版、要并排区分的图标（像 SmartEditing）；节点类型图标（文字、图片、视频、音频）不加。
 
 </details>
 
@@ -85,28 +84,3 @@ Lucide 里也没有的，由设计师照 Lucide 的画法自己画：线端圆�
 
 </details>
 
-<details>
-<summary>旧名对照</summary>
-
-<AliasTable>
-
-| 旧名 | 新名 | 类型 | 说明 · 代码影响 | 状态 |
-|---|---|---|---|---|
-| `upload` | `Upload` | 改名 | 统一首字母大写。代码 8 处：ai-chat 技能弹窗 3 处、media-node-renderer、create-tab-content 2 处、node-list、left-toolbar | <Tag kind="off">草稿</Tag> |
-| `text` | `Text` | 改名 | 统一首字母大写，图形改成带框的 T。代码 2 处：left-toolbar、文本节点空状态（custom-component）。另外 node-list 的「文本生成」误用了 FontSize，也要改成 Text | <Tag kind="draft">待确认</Tag> |
-| `TextBlod` | `TextBold` | 改名 | 拼写错误。代码 1 处：文本节点工具栏 topbar-content | <Tag kind="off">草稿</Tag> |
-| `DivdingLine` | `DividingLine` | 改名 | 拼写错误。代码 1 处：文本节点工具栏 topbar-content | <Tag kind="draft">待确认</Tag> |
-| `Light` | `Lightbulb` | 改名 | 容易和「亮色模式」混淆。代码 1 处：AI 对话 ReasonContent | <Tag kind="draft">待确认</Tag> |
-| `icon` | `Tool` | 改名 | 名字没有含义，按图形（扳手）改名。代码 2 处：SkillSelectorPopover、SkillMentionPopup | <Tag kind="off">草稿</Tag> |
-| `calendar` | `Calendar` | 改名 | 统一首字母大写。代码 1 处：TimeRangeFilter / DateField | <Tag kind="off">草稿</Tag> |
-| `Cutting1` | `Cutting` | 合并 | 和 Cutting 重复。代码 1 处：添加节点面板 node-list | <Tag kind="off">草稿</Tag> |
-| `Snap1` | `Snap` | 合并 | 和 Snap 重复。代码 1 处：画布底部工具栏 bottom-toolbar（吸附开关） | <Tag kind="off">草稿</Tag> |
-| `ShowConnections-1` | `ShowConnections` | 合并 | 和 ShowConnections 重复。代码 1 处：画布底部工具栏 bottom-toolbar | <Tag kind="off">草稿</Tag> |
-| `VolumeFull` `VolumeHalf` `VolumeOff` | 不变 | 改图形 | 名字不变，实心改成描边（lucide/volume-2、volume-1、volume-x）。代码不用改，Iconfont 换上新图形就行。播放、暂停还是实心 | <Tag kind="off">草稿</Tag> |
-
-</AliasTable>
-
-- **状态**：草稿 = 图标库里已经改好，代码还没改；待确认 = 新图标的图形还要再看一下；稳定 = 前端改完、iconfont 也换好了。目前没有稳定的。
-- **上线顺序**：先在 iconfont 里上传新名字的图标，旧名字的先别删；等前端把代码里的旧名都换完并发版，再删 iconfont 里的旧名。这样中间任何时候都不会出现图标显示不出来。
-
-</details>

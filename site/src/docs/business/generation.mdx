@@ -1,0 +1,392 @@
+import { Demo, PageHeader } from '@shell';
+import { Toaster } from '@kivi';
+import {
+  GenerateButtonPlayground,
+  LoraCardPlayground,
+  LoraFieldPlayground,
+  LoraPickerPlayground,
+  LoraSettingsPlayground,
+  PromptBoxLab,
+  PromptBoxPlayground,
+  PromptInputDemo,
+} from './generation.demos';
+
+<PageHeader
+  eyebrow="业务组件"
+  title="生成"
+  figma={['生成', '1083:7797']}
+  code="kivi/generation"
+/>
+
+<Toaster />
+
+## PromptBox
+
+创作输入框：写提示词、加参考、选参数、生成，主站用。
+
+<PromptBoxLab />
+
+<PromptBoxPlayground />
+
+### 首尾帧：两格 + 中间互换
+
+<Demo stage="base" code={`
+<PromptBox
+  placeholder="描述画面怎么从首帧变到尾帧"
+  references={
+    <ReferenceFramePair
+      size={72}
+      first={{ src: './placeholders/kivi-future-1x1.webp' }}
+      last={{ src: './placeholders/monstera-dots-1x1.webp' }}
+    />
+  }
+  toolbar={
+    <>
+      <TaskSelect defaultValue="video" />
+      <VideoModelControls refMode={<RefModeSelect defaultValue="frames" />} />
+    </>
+  }
+  actions={
+    <>
+      <CountSelect />
+      <GenerateButton cost={60} />
+    </>
+  }
+/>
+`} />
+
+### 拖文件进输入框
+
+<Demo stage="base" code={`
+() => {
+  const [items, setItems] = useState([]);
+  const drop = (files) =>
+    setItems((list) => {
+      let next = list;
+      files.forEach((f, i) => {
+        const type = f.type.startsWith('video') ? 'video' : f.type.startsWith('audio') ? 'audio' : 'image';
+        next = [...next, { id: Date.now() + '-' + i, type, name: referenceName(next, type), src: type === 'image' ? URL.createObjectURL(f) : undefined }];
+      });
+      return next;
+    });
+  return (
+    <PromptBox
+      placeholder="把图片、视频、音频拖到这里，拖别的类型会提示不支持"
+      onDropFiles={drop}
+      references={<ReferenceStack items={items} onAdd={() => {}} onRemove={(id) => setItems((list) => list.filter((i) => i.id !== id))} />}
+    />
+  );
+}
+`} />
+
+### 拖入时的提示：松手上传、不支持这种文件
+
+<Demo stage="base" code={`
+<div style={{ display: 'flex', gap: 16, width: '100%' }}>
+  {[false, true].map((rejected) => (
+    <div key={String(rejected)} style={{ position: 'relative', flex: 1, height: 160, borderRadius: 24, background: 'var(--color-bg-fill-surface)' }}>
+      <DropOverlay rejected={rejected} />
+    </div>
+  ))}
+</div>
+`} />
+
+## GenerateButton
+
+生成按钮：开始生成，显示要花多少猕猴桃。
+
+<GenerateButtonPlayground />
+
+## PromptInput
+
+提示词输入：写提示词，可以夹 @ 引用胶囊，用在画布生成面板。
+
+<PromptInputDemo />
+
+## LoraField
+
+Lora 栏：生成面板里放已选的 Lora。
+
+<LoraFieldPlayground />
+
+## LoraSettings
+
+Lora 设置：调一个 Lora 的权重、看触发词。
+
+<LoraSettingsPlayground />
+
+## LoraCard
+
+Lora 卡：选 Lora 时的一张卡。
+
+<LoraCardPlayground />
+
+## LoraPicker
+
+选 Lora 弹窗：挑 Lora。
+
+<LoraPickerPlayground />
+
+## 参数
+
+### PromptBox
+
+外框是玻璃：底 glass `--color-bg-fill-glass` + 背景模糊 32 `--effect-glass-blur`，浮在生成记录上、下面的内容透出来；描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`；内容区和工具条间距 12 `--spacing-12`。宽度跟着外面走，最宽 1040；最窄是工具条所有控件按原宽排成一行时的宽度，工具条不折行、控件不压缩，再窄就不缩了，由外面的页面横向滚动。提示词 14 / 20 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32，左右两组间距至少 8。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `value` | `string` | — | 提示词。传了就是受控，要在 `onChange` 里更新 |
+| `defaultValue` | `string` | — | 非受控的初始提示词 |
+| `onChange` | `(value: string) => void` | — | 提示词变了触发，参数是新的文字 |
+| `placeholder` | `string` | — | 没输入时的占位文字，随模式变，比如「描述你想生成的视频，@ 引用参考素材」 |
+| `references` | `ReactNode` | — | 参考区，在提示词左边，间距 24 `--spacing-24`，从顶端对齐：`ReferenceStack`，或首尾帧 `ReferenceFramePair`。不传没有参考区，提示词从最左边开始。展开时浮在提示词上面，被盖住的字由输入框藏起来 |
+| `toolbar` | `ReactNode` | — | 工具条左边，间距 6 `--spacing-6`：任务类型、模型、参考方式、参数、其他开关。一般是 `Select variant="plain"`，放不下换行 |
+| `actions` | `ReactNode` | — | 工具条右边，间距 8 `--spacing-8`：张数 + `GenerateButton` |
+| `maxHeight` | `number` | `240` | 提示词最高多高，单位 px，超过就在里面滚动 |
+| `onDropFiles` | `(files: File[]) => void` | — | 把文件拖进输入框、放下后触发，参数是通过 `accept` 检查的文件：一般是加进 `references` 的素材（缩略图、上传进度自己管，输入框不存素材）。不传就不接收拖拽。拖进来时整个输入框盖一层 `DropOverlay`；类型不收的显示「不支持这种文件」，不接收，放下后弹 toast（页面上要放一个 `<Toaster />`） |
+| `accept` | `string` | `"image/*,video/*,audio/*"` | 收哪些文件，写法同 `<input accept>`。拖的过程中按类型提前判断 |
+| `inputRef` | `Ref<HTMLTextAreaElement>` | — | 提示词输入框的 ref，聚焦、选中用 |
+| `inputLabel` | `string` | `"提示词"` | 输入框的说明，读屏用 |
+
+工具条里的 Select 无底：高 32，圆角 8，左右 8，13 号字，左图标 16，右箭头 16 tertiary，悬停白 14%（Light 1 hover），展开白 10%。参数把分辨率、比例、时长合成一个 Select，写「720P · 16:9 · 8s」。
+
+### DropOverlay
+
+文件拖到输入框上时的提示：框本身加一圈 1.5 描边（`--color-border-strong`），里面铺遮罩（`--color-bg-fill-mask`，黑 60%），不模糊；正中浮一张 popup 实色小卡（`--color-bg-fill-popup`，圆角 16，内边距 16 / 24），三个 24 的图标（`Image`、`Files`、`Folder`）+ 13 / 20 的字，都是品牌绿（`--color-brand-solid`），间距 12。出现：整层 150ms ease-out 淡入，小卡从 96% 放大；三个图标从中间叠在一起展开，左右两个往外、各歪 12°，中间的往上浮 6，弹簧 400ms（`--motion-ease-spring`），依次晚 40ms。消失：100ms ease-in，图标收回中间。类型不收：描边、图标和字换 danger（`--color-status-danger`）。不挡鼠标。圆角继承所在的框，所以放它的框要 `position: relative`。`PromptBox` 自带；画布 Agent 输入框这类自己拼的框，配合 `useFileDrop`（`hooks/`）用，它给 `dragging`、`rejected`。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `active` | `boolean` | `true` | 显示。文件拖到框上时为 `true`，不显示时淡出 |
+| `rejected` | `boolean` | `false` | 拖来的类型不收 |
+| `text` | `ReactNode` | `"松手上传"` | 收的时候的文字 |
+| `rejectedText` | `ReactNode` | `"不支持这种文件"` | 不收的时候的文字 |
+
+### GenerateButton
+
+就是主要类型的 Button：品牌渐变底，on-brand 字，左图标固定 `Kiwi` 20，文字固定是消耗数，间距 4。宽度跟着数字走，最小 64。其余 Button 属性都能传（`variant`、图标除外）。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `cost` | `number` `string` | — | 这次生成消耗的猕猴桃数，必填，写在图标右边 |
+| `size` | `28` `32` `36` | `32` | 同按钮：高 28 / 32 / 36。Figma 里是 32，圆角 8，左右 12，文字 13 |
+| `loading` | `boolean` | `false` | 点了等结果时用：猕猴桃换成转圈，数字和宽度不变，不能点 |
+| `disabled` | `boolean` | `false` | 参数不全或正在生成时用 |
+| `aria-label` | `string` | `"生成，消耗 N 个猕猴桃"` | 读屏用，N 是 `cost` |
+
+### PromptInput
+
+提示词输入。无底、无内边距，14 号；空的时候高 68，占位文字 `--color-text-fill-placeholder`；最高 120，超出滚动。表单里的多行输入用 Textarea。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `placeholder` | `string` | — | 没输入时的占位文字 |
+| `children` | `ReactNode` | — | 开头的内容：文字，中间可以插 MentionChip。只在第一次渲染时用，之后由用户编辑 |
+
+### ParamPicker
+
+参数选择：长得和无底的 Select 一样，点开是参数面板。画布生成面板和主站输入框共用。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `summary` | `ReactNode` | — | 触发器上的参数摘要，比如「720P · 16:9 · 8s」 |
+| `children` | `ReactNode` | — | 面板里一块块 `ParamField` |
+| `placement` | `DropdownPlacement` | `"bottom-start"` | 面板位置，放不下自己翻到另一边 |
+| `open` | `boolean` | — | 面板展开。传了就是受控 |
+| `defaultOpen` | `boolean` | `false` | 非受控时一开始是否展开 |
+| `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发，参数是新的状态 |
+
+面板 `ParamPanel`：玻璃浮层，宽 368（视频、音频、高级设置都一样），圆角 16、内边距 12、块间距 12。`ParamField`（`label` + 控件）：标题 14 号 secondary，和控件间距 4。滑块右边是 `NumberInput`（带单位，和滑块双向同步，和 LoraSettings 的「Slider + NumberInput」一样；音高这种有负数的 `min` 写负数就能打负号），和滑块间距 12，对齐轨道（高 20）的中线。
+
+
+### LoraField
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `value` / `defaultValue` / `onChange` | `LoraFieldItem[]` | `[]` | 已选的 Lora。`LoraFieldItem` 是 `{ id, name, cover, weight, triggerWords?, template? }`。改权重、删除时 `onChange` 给新列表；添加不走这里，走 `onAdd` |
+| `max` | `number` | `4` | 最多几个。已选满了，添加格隐藏 |
+| `onAdd` | `() => void` | — | 点添加格。外面打开 `LoraPicker`，选好后把结果放回 `value` |
+
+一排间距 4（`--spacing-4`）。已选的是 56 见方的 `ReferenceItem`，底部通栏写权重（一位小数）。悬停已选格，延迟 200ms 在上方（`top-start`）弹出 `LoraSettings`（`Popover variant="panel"`），鼠标能挪进去，键盘聚焦也出；悬停或聚焦格子，右上角出删除（右上角离边 4 的 18 小圆，黑 40% + 模糊，同参考区的删除）。添加格是 `AddTile size={56} icon="LoraModel" label="Lora"`（见「上传」页）。其余原生 `<div>` 属性都能传。
+
+### LoraSettings
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `name` | `string` | — | Lora 名字，14 / 22，`--color-text-fill-primary`，一行省略 |
+| `triggerWords` | `string` | — | 触发词。不传就不显示这一块。框里一行省略，右边复制按钮，点了复制并弹 Toast「复制成功」（页面上要放一个 `<Toaster />`） |
+| `template` | `string` | — | 提示词模版。不传就不显示这一块。框最高 60，多了在里面滚动，复制按钮同上 |
+| `weight` / `defaultWeight` / `onWeightChange` | `number` | `1` | 权重 0–2，步长 0.1。滑块和数字框同步；数字框输入时最多一位小数，失焦时夹进 0–2 并补成「1.0」 |
+
+宽 234，块间距 12，要放进 `Popover variant="panel"`（内边距 12 由它给）。「触发词」「提示词模版」小标题 12、`--color-text-fill-tertiary`，和下面的框间距 4；框底 `--color-bg-fill-container-light-2`，圆角 6，内边距 6，文字 12 / 16、`--color-text-fill-secondary`，复制按钮是 28 的 `IconButton`。权重一行：标签「权重」13 / 20 secondary，`Slider`（不带刻度）撑满，`NumberInput`（`precision={1}`）宽 56，间距 8。其余原生 `<div>` 属性都能传。
+
+### LoraCard
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `name` | `string` | — | 名字。平时在底部（14 加粗），悬停后在信息条里；也是读屏的名字 |
+| `description` | `string` | — | 描述，悬停信息条里 12 / 16 secondary，最多两行 |
+| `cover` | `string` | — | 封面地址，铺满（cover） |
+| `base` | `string` | — | 底模名，左上角 `Tag variant="on-media"`，比如 `SDXL`、`FLUX` |
+| `isNew` | `boolean` | `false` | 底模标签旁多一个 `Tag variant="brand"`「New」 |
+| `selected` | `boolean` | `false` | 选中：2px `--color-brand-solid` 描边，画在里面。由外面管，点卡片时 `onClick` 通知 |
+| `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 收藏。右上角 `ButtonGroup` 里一个收藏 `IconButton`（`Collect` / `CollectSolid`，收藏了绿色）；平时隐藏，悬停、聚焦或已收藏时显示 |
+| `onClick` | `MouseEventHandler` | — | 点卡片（切换选中）。点收藏按钮不会触发 |
+
+宽跟着网格，比例 3:4，圆角 12，封面裁切铺满。整张卡是 `role="checkbox"` + `aria-checked`，`tabIndex=0`，Space、Enter 切换。悬停：封面 1.05 放大，名字淡出，底部浮出信息条（名字 + 描述，`--color-bg-fill-glass` 底，模糊 `--effect-glass-blur`，内边距 12，从下 8px 往上淡入）；出现 200ms ease-out，收回 150ms ease-in。底部名字渐变：从下往上，黑 60% 到透明。其余原生 `<div>` 属性都能传。
+
+### LoraPicker
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `open` / `defaultOpen` / `onOpenChange` | `boolean` | 关 | 同 `Dialog` |
+| `items` | `LoraPickerItem[]` | — | 全部 Lora。`LoraPickerItem` 是 `{ id, name, description?, cover, base, isNew?, collected? }` |
+| `value` / `defaultValue` / `onChange` | `string[]` | `[]` | 选中的 id。点卡片切换，点已选的取消 |
+| `max` | `number` | `4` | 最多选几个。满了再选，弹 Toast「最多只能添加 N 个 Lora 模型」（警告） |
+| `collectedIds` / `defaultCollectedIds` / `onCollectedIdsChange` | `string[]` | 取 `items[].collected` | 收藏的 id。取消收藏时「收藏」页里的卡片当场消失 |
+
+`Dialog size={1024}`，标题「Lora 模型」。标题下一行：左 `Tabs`（全部 / 收藏），右 `Select`（底模：全部类型 / SDXL / FLUX / SD1.5，宽 160）。下面网格 `repeat(auto-fill, minmax(180px, 1fr))`，间距 12，在里面滚动，高度 `min(560px, 100vh - 240px)`，切「全部 / 收藏」弹窗不跳。收藏页没有内容用 `EmptyState scene="favorite"`，筛选后没有结果用默认的空。其余 `Dialog` 属性（`closeOnMaskClick`、`closeOnEsc` 等）都能传。
+
+### 生成下拉
+
+下面这些是填好选项的生成控件，画布生成面板、主站输入框、Agent 输入框共用，放进 `PromptBox` 的 `toolbar` 和 `actions`。选项（任务、模型、比例、尺寸、背景、音色、张数、Agent 模式、模型分组、字数上限）都在 `kivi/generation/options.ts`，只写这一份；线上的清单是后端下发的，接入时整体换掉。组件都是 Figma 还没有的，待确认。
+
+`TaskSelect`、`RefModeSelect`、`ModelSelect`、`SizeSelect`、`RatioSelect`、`BackgroundSelect`、`VoiceSelect`、`CountSelect`、`AgentModeSelect` 都是填好选项的无底 `Select`（`variant="plain"`）。展开位置不写，默认往下、放不下自己翻上去。`Select` 的属性（`value`、`defaultValue`、`onChange`、`placement`、`disabled`、`aria-label` 等）都能传，传了盖过默认；选项和样式固定，不能传 `options`、`variant`。
+
+| 组件 | 选项 | 默认 |
+|---|---|---|
+| `TaskSelect` | Agent / 图片生成 / 视频生成 / 音频生成（`TASKS`） | `image` |
+| `RefModeSelect` | 全能参考 / 首尾帧 / 视频编辑 / 视频延长（`REF_MODES`） | `omni` |
+| `SizeSelect` | 1K / 2K / 4K（`SIZES`） | `2K` |
+| `RatioSelect` | 智能 / 1:1 / 1:4 / 4:1 / 2:3 / 3:2 / 16:9 / 9:16 / 3:4 / 4:3 / 9:21，带比例图标（`RATIOS`） | `1:1` |
+| `BackgroundSelect` | 不透明背景 / 透明背景（`BACKGROUNDS`） | `opaque` |
+| `CountSelect` | x1 / x2 / x4（`COUNTS`） | `1` |
+| `AgentModeSelect` | 手动模式（Agent 在每次生成前询问）/ 自动生成（`AGENT_MODES`），两行菜单项 | `manual` |
+
+### ModelSelect
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"text"` `"image"` `"video"` `"audio"` | — | 必填。模型的类型，决定选项（`MODELS[type]`）和默认模型（`DEFAULT_MODEL[type]`）。左边是模型 Logo |
+| 其余 | `SelectProps` | — | 同上，`value`、`onChange` 等透传给 `Select` |
+
+### VoiceSelect
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `model` | `string` | `"seed-audio-1.0"` | 音频模型的值，音色列表跟着它变（`VOICES[model]`），默认选第一个。每个音色左边带试听，「不使用音色」没有试听 |
+| 其余 | `SelectProps` | — | 同上，`value`、`onChange` 等透传给 `Select` |
+
+### VideoParams
+
+视频参数：一个 `ParamPicker`，摘要「分辨率 · 比例 · 时长」，面板里是比例（竖排分段，带比例图标）、时长（刻度滑块 4–15 秒，右边 `NumberInput` 带单位 S）、分辨率（720P / 1080P），有 `audio` 时多一个「生成音频」分段。面板里选的值组件自己管。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `audio` | `boolean` | `false` | 有「生成音频」：Seedance、Kling V3 Omni 有。开着时摘要后面跟一个音量图标 |
+| 其余 | `ParamPickerProps` | — | 去掉 `summary`、`children`；`placement`、`open` 一套等都能传 |
+
+### AudioParams
+
+音频高级设置：一个 `ParamPicker`，触发器写「高级设置」，面板里是语速（0.5–2x）、音高（−12–12），其余跟着模型变。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `model` | `string` | `"seed-audio-1.0"` | 音频模型的值：`minimax-speech-2.8-hd` 多「情绪」、没有「生成字幕」；`eleven-v4` 多「稳定性」；Seed 和 Eleven 有「生成字幕」 |
+| 其余 | `ParamPickerProps` | — | 去掉 `summary`、`children` |
+
+### VideoModelControls
+
+视频：模型 + 参考方式 + 参数，模型在前、参考方式在后（画布和主站一样）。只有首尾帧的模型（Veo、Sora、Grok、Vidu、Seedance 1.5，`VIDEO_FIRST_LAST_ONLY`）不出参考方式；Seedance、Kling V3 Omni（`VIDEO_WITH_AUDIO`）参数里多「生成音频」。返回一串并排的控件，没有外壳，`ref` 和其余属性给模型下拉。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `defaultModel` | `string` | `"seedance-2.0"` | 一开始选哪个视频模型 |
+| `refMode` | `ReactNode` | `<RefModeSelect />` | 参考方式那一格。要跟着切参考区就自己传一个受控的 |
+
+### ImageModelControls
+
+图片：模型 + 分辨率 + 比例；GPT Image 多一个背景。返回一串并排的控件，`ref` 和其余属性给模型下拉。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `defaultModel` | `string` | `"gpt-image-2"` | 一开始选哪个图片模型 |
+
+### AudioModelControls
+
+音频：模型 + 音色 + 高级设置，音色和高级设置跟着模型换。没有张数和比例，右边放 `AudioCharCount`。返回一串并排的控件，`ref` 和其余属性给模型下拉。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `model` | `string` | — | 音频模型的值。传了就是受控；外面要拿它算字数上限就传 |
+| `onModelChange` | `(model: string) => void` | — | 换了模型时触发，参数是新的模型值 |
+
+### AudioCharCount
+
+音频生成按钮左边的「字数 / 上限」，代替张数。13 / 20，`--color-text-fill-tertiary`，等宽数字。其余原生 `<span>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `count` | `number` | `0` | 现在的字数 |
+| `model` | `string` | `"seed-audio-1.0"` | 音频模型的值，上限跟着它变（`AUDIO_CHAR_LIMIT`：Seed 3000、MiniMax 10000、Eleven 5000） |
+
+### GenModelPicker
+
+选择模型（模型偏好）：头部「选择模型」+ 分段「图片 / 视频」，点分段平滑滚到那一组，滚动时分段跟着变；行是两行菜单项（Logo 24 + 名字 + 说明），不标选中。宽 320，列表最高 320 自己滚。点一行把模型插进输入框、关面板；同一组已经选了 4 个（`GEN_MODEL_MAX`）时，没选过的行变灰，悬停提示「最多同时选择 4 个图片模型」。模型分组在 `GEN_MODEL_GROUPS`。`ref` 给包住触发器的外壳（同 `Dropdown`）。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `picked` | `string[]` | `[]` | 已经插进输入框的模型（值），用来算每组选满没有 |
+| `onPick` | `(model: SelectOption, type: "image" \| "video") => void` | — | 点了一个模型：插进输入框，面板关上 |
+| `trigger` | `ReactElement` | 方块图标按钮 `Mdoel` | 触发器。画布 Agent 用默认的，主站 Agent 工具条传一个无底按钮 |
+| `placement` | `DropdownPlacement` | `"top-start"` | 面板位置 |
+| 其余 | `DropdownProps` | — | 去掉 `open` 一套、`closeOnSelect`、`haspopup` 等面板自己管的 |
+
+### SkillPicker
+
+技能按钮 + 技能面板：向上弹、左对齐，每次打开回到「推荐」、清空搜索。主站 Agent、画布 Agent 共用。组件里不带任何技能，由外面传进来。`ref` 给包住触发器的外壳（同 `Dropdown`）。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `items` | `SkillItem[]` | — | 技能，传给面板 |
+| `categories` | `string[]` | — | 分类，传给面板 |
+| `onPick` | `(skill: SkillItem) => void` | — | 点了一个技能：插进输入框，面板关上 |
+| `trigger` | `ReactElement` | 图标按钮 `Skill` | 触发器。主站 Agent 工具条传一个无底按钮 |
+| `placement` | `DropdownPlacement` | `"top-start"` | 面板位置 |
+| 其余 | `DropdownProps` | — | 同 `GenModelPicker` |
+
+### SkillPanel
+
+技能面板本体（不带触发器），模板里直接摆出来看。玻璃浮层，宽 400、高 440，内边距 8，圆角 16，竖排间距 8。头部「技能」+「创建」下拉 +「全部技能」；下面是分类页签（推荐 / 各分类 / 我的）和搜索（搜索时页签换成搜索框，Esc 只关搜索）；列表是两行菜单项，悬停出「详情」，左边出预览卡（`Popover variant="panel"`）；技能没有不能点的状态。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `status` | `"ready"` `"loading"` `"failed"` | `"ready"` | 列表的状态：正常 / 加载中 / 加载失败（「点击重试」）。模板摆状态用 |
+| `items` | `SkillItem[]` | `[]` | 技能。「推荐」页签显示 `recommended` 的，「我的」显示 `mine` 的，其余按 `category` 分。没有就显示「暂无技能」 |
+| `categories` | `string[]` | `[]` | 分类，排在「推荐」后面、「我的」前面 |
+| `defaultTab` | `string` | `"recommend"` | 一开始在哪个页签：`recommend`、分类名或 `mine` |
+| `defaultSearch` | `string` | — | 一开始就是搜索、搜的字 |
+| `onPick` | `(skill: SkillItem) => void` | — | 点了一个技能 |
+
+`items` 每一项（`SkillItem`）：
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `id` | `string` | — | 唯一标识 |
+| `title` | `string` | — | 名字 |
+| `description` | `string` | — | 一句话说明，列表里一行省略，悬停预览里看全文 |
+| `category` | `string` | — | 分类，要在 `categories` 里 |
+| `cover` | `PlaceholderImageName` | `"kiwi-glass"` | 悬停预览的封面（16:9），没有就用占位图 |
+| `recommended` | `boolean` | `false` | 推荐的，出现在「推荐」页签 |
+| `mine` | `boolean` | `false` | 我创建的，出现在「我的」页签 |
+| `public` | `boolean` | `false` | 公开的，只在「我的」里标「公共技能」 |
+
+### AgentControls
+
+切到 Agent 时任务类型后面的那一组：选择模型（`GenModelPicker`，无底按钮「模型」）、技能（`SkillPicker`，无底按钮「技能」）、模式（`AgentModeSelect`）。返回一串并排的控件，`ref` 和其余属性给选择模型。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `skills` | `SkillItem[]` | — | 技能面板里的技能 |
+| `skillCategories` | `string[]` | — | 技能面板里的分类 |
+| `onPickSkill` | `(skill: SkillItem) => void` | — | 点了一个技能 |
+| 其余 | `GenModelPickerProps` | — | 去掉 `trigger`：`picked`、`onPick` 等给选择模型 |

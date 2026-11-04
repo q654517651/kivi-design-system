@@ -3,7 +3,7 @@ import { cx } from '../utils';
 import './feedback.css';
 
 export type EmptyStateScene = 'empty' | 'favorite' | 'offline' | 'failed';
-export type EmptyStateSize = 'lg' | 'sm';
+export type EmptyStateSize = 160 | 96;
 
 /**
  * 4 个场景各一张 IP 图（从 Figma 反馈页导出，320×320）：暂无内容 / 暂无收藏 / 无网络 / 生成失败。
@@ -19,13 +19,13 @@ export const EMPTY_STATE_IMAGES: Record<EmptyStateScene, string> = {
 export interface EmptyStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   /** 场景：暂无内容 / 暂无收藏 / 无网络 / 生成失败，决定用哪张 IP 图，默认暂无内容。样式一样 */
   scene?: EmptyStateScene;
-  /** 尺寸：大（页面、大面板，插图 160）/ 小（下拉、侧栏，插图 96），默认大 */
+  /** 尺寸（插图边长）：160（页面、大面板）/ 96（下拉、侧栏），默认 160 */
   size?: EmptyStateSize;
   /** 标题：一句话说清楚现在是什么情况 */
   title: ReactNode;
   /** 说明：写清楚下一步做什么。下拉里不要说明 */
   description?: ReactNode;
-  /** 引导操作：放一个中号次要 Button，离文字 24 */
+  /** 引导操作：放一个 32 的轻 Button（占位处的按钮都减弱一档，文字灰），离文字 24 */
   action?: ReactNode;
   /** 换一张插图的地址（比如项目里图放在别处）；不传就按 scene 用 EMPTY_STATE_IMAGES */
   image?: string;
@@ -35,7 +35,7 @@ const has = (node: ReactNode) => node !== undefined && node !== null && node !==
 
 /** 页面、面板、下拉里没有东西可看时，用 IP 插图告诉用户为什么是空的、下一步做什么。Figma「反馈」页 EmptyState */
 export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(function EmptyState(
-  { scene = 'empty', size = 'lg', title, description, action, image, className, ...rest },
+  { scene = 'empty', size = 160, title, description, action, image, className, ...rest },
   ref,
 ) {
   return (

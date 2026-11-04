@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import {
+  AssetThumb,
   Avatar,
   Button,
   Dialog,
@@ -9,16 +10,22 @@ import {
   Icon,
   IconButton,
   Menu,
-  MenuDivider,
+  Divider,
   MenuItem,
+  MenuLabel,
   ProcessGroup,
   PromptBox,
   ReferenceItem,
+  AgentControls,
+  AudioCharCount,
+  AudioModelControls,
+  CountSelect,
+  DEFAULT_MODEL,
+  ImageModelControls,
+  TaskSelect,
+  VideoModelControls,
   ReferenceStack,
   ResultTile,
-  SidebarItem,
-  SidebarLabel,
-  SidebarMore,
   Tag,
   Toaster,
   Tooltip,
@@ -28,12 +35,12 @@ import {
   type PlaceholderImageName,
   type PlaceholderImageRatio,
   type ProcessStep,
-  type ReferenceKind,
+  type ReferenceType,
   type ReferenceStackItem,
   type ResultTileAction,
   type ResultTileStatus,
 } from '@kivi';
-import { AgentControls, AudioCharCount, AudioModelControls, CountSelect, DEFAULT_MODEL, ImageModelControls, TaskSelect, VideoModelControls } from '../business/generation';
+import { SKILL_CATEGORIES, SKILL_ITEMS } from '../business/skill-data';
 import { useControllable } from '../../kivi/hooks';
 import { TemplateFrame } from './frame';
 
@@ -157,7 +164,7 @@ const RECORDS: (GenRecord | AgentTurn)[] = [
         <Tag>5s</Tag>
       </>
     ),
-    tiles: [{ status: 'loading', badge: '59s 生成中' }],
+    tiles: [{ status: 'generating', badge: '59s 生成中' }],
   },
   {
     kind: 'gen',
@@ -173,10 +180,10 @@ const RECORDS: (GenRecord | AgentTurn)[] = [
       </>
     ),
     tiles: [
-      { status: 'loading', badge: '32s 生成中' },
-      { status: 'loading', badge: '生成中' },
-      { status: 'loading', badge: '生成中' },
-      { status: 'loading', badge: '生成中' },
+      { status: 'generating', badge: '32s 生成中' },
+      { status: 'generating', badge: '生成中' },
+      { status: 'generating', badge: '生成中' },
+      { status: 'generating', badge: '生成中' },
     ],
   },
 ];
@@ -218,7 +225,7 @@ const CANVASES: HistoryItem[] = [
   { id: 'canvas-3', text: '品牌 IP 设定' },
 ];
 
-/** 侧栏的一段（对话 / 画布）：标题点了展开收起，列表往下推开、淡入，收起倒着走（ease-in-out，列表长过 100 用 300ms） */
+/** 侧栏的一段（对话 / 画布）：MenuLabel 带 items，标题点了展开收起，列表往下推开、淡入，收起倒着走（Collapse，300ms ease-in-out） */
 function HistoryGroup({
   title,
   items,
@@ -245,36 +252,36 @@ function HistoryGroup({
   const [open, setOpen] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   return (
-    <>
-      <SidebarLabel
-        collapsed={collapsed}
-        newLabel={`新建${title}`}
-        expanded={open}
-        onExpandedChange={setOpen}
-        onNew={() => {
-          setOpen(true);
-          onNew();
-        }}
-      >
-        {title}
-      </SidebarLabel>
-      <div className="tpl-ms__group" data-open={open ? '' : undefined} aria-hidden={!open || undefined}>
-        <div className="tpl-ms__group-inner">
+    <MenuLabel
+      collapsible
+      collapsed={collapsed}
+      expanded={open}
+      onExpandedChange={setOpen}
+      action={
+        <IconButton
+          icon="NewChat"
+          label={`新建${title}`}
+          size={28}
+          variant="light"
+          onClick={() => {
+            setOpen(true);
+            onNew();
+          }}
+        />
+      }
+      items={
+        <>
           {items.map((c) => (
-            <SidebarItem
+            <MenuItem
               key={c.id}
-              variant="list"
-              thumb={c.thumb ? 'image' : 'icon'}
-              thumbSrc={c.thumb}
-              thumbIcon={icon}
+              thumb={c.thumb ? <AssetThumb size={24} type="image" src={c.thumb} /> : <AssetThumb size={24} type="icon" icon={icon} />}
               collapsed={collapsed}
               selected={selected === c.id || undefined}
               onClick={() => onSelect(c.id)}
               editing={editing === c.id}
               onEditingChange={(v) => setEditing(v ? c.id : null)}
               onRename={(name) => onRename(c.id, name)}
-              more
-              moreMenu={
+              more={
                 // 重命名（在原地改名）、置顶（新版要加，置顶后变「取消置顶」，照线上资产文件夹）、删除
                 <Menu>
                   <MenuItem icon="Rename" onClick={() => setEditing(c.id)}>
@@ -283,7 +290,7 @@ function HistoryGroup({
                   <MenuItem icon="StickyOnTop" onClick={() => onPin(c.id)}>
                     {c.pinned ? '取消置顶' : '置顶'}
                   </MenuItem>
-                  <MenuDivider />
+                  <Divider />
                   <MenuItem variant="danger" icon="Delete" onClick={() => onRemove(c.id)}>
                     删除
                   </MenuItem>
@@ -291,12 +298,14 @@ function HistoryGroup({
               }
             >
               {c.text}
-            </SidebarItem>
+            </MenuItem>
           ))}
-          <SidebarMore collapsed={collapsed}>更多</SidebarMore>
-        </div>
-      </div>
-    </>
+          <MenuItem collapsed={collapsed}>更多</MenuItem>
+        </>
+      }
+    >
+      {title}
+    </MenuLabel>
   );
 }
 
@@ -309,15 +318,21 @@ export function Sidebar({
   collapsed: collapsedProp,
   defaultCollapsed = false,
   onCollapsedChange,
+  page,
+  defaultSelected = 'chat-1',
 }: {
   collapsed?: boolean;
   defaultCollapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
+  /** 当前在哪个导航页（资产管理模板传 assets），那一项用选中底色 */
+  page?: 'assets';
+  /** 一开始选中哪条对话 / 画布，不选传空 */
+  defaultSelected?: string;
 }) {
   const [collapsed, setCollapsed] = useControllable(collapsedProp, defaultCollapsed, onCollapsedChange);
   const [chats, setChats] = useState(CHATS);
   const [canvases, setCanvases] = useState(CANVASES);
-  const [selected, setSelected] = useState('chat-1');
+  const [selected, setSelected] = useState(defaultSelected);
   // 新建的排在置顶的后面
   const add = (set: typeof setChats, text: string) => {
     const id = `new-${Date.now()}`;
@@ -348,36 +363,38 @@ export function Sidebar({
             <IconButton icon="Sidebar" label={toggle} variant="light" size={28} onClick={() => setCollapsed(!collapsed)} />
           </Tooltip>
         </div>
-        <SidebarItem icon="Create" collapsed={collapsed}>创作</SidebarItem>
-        <SidebarItem icon="Explore" collapsed={collapsed}>探索</SidebarItem>
-        <SidebarItem icon="AITools" collapsed={collapsed}>AI 工具</SidebarItem>
-        <SidebarItem icon="Pack" collapsed={collapsed}>我的资产</SidebarItem>
-        <div className="tpl-ms__gap" />
-        <HistoryGroup
-          title="对话"
-          icon="Message"
-          items={chats}
-          selected={selected}
-          collapsed={collapsed}
-          onSelect={setSelected}
-          onNew={() => add(setChats, '新对话')}
-          onRemove={(id) => setChats((list) => list.filter((c) => c.id !== id))}
-          onRename={(id, name) => setChats((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
-          onPin={(id) => pin(setChats, id)}
-        />
-        <div className="tpl-ms__gap" />
-        <HistoryGroup
-          title="画布"
-          icon="Canvas"
-          items={canvases}
-          selected={selected}
-          collapsed={collapsed}
-          onSelect={setSelected}
-          onNew={() => add(setCanvases, '未命名画布')}
-          onRemove={(id) => setCanvases((list) => list.filter((c) => c.id !== id))}
-          onRename={(id, name) => setCanvases((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
-          onPin={(id) => pin(setCanvases, id)}
-        />
+        <Menu variant="plain" aria-label="主站导航">
+          <MenuItem icon="Create" collapsed={collapsed}>创作</MenuItem>
+          <MenuItem icon="Explore" collapsed={collapsed}>探索</MenuItem>
+          <MenuItem icon="AITools" collapsed={collapsed}>AI 工具</MenuItem>
+          <MenuItem icon="Pack" collapsed={collapsed} selected={page === 'assets' || undefined}>我的资产</MenuItem>
+          <div className="tpl-ms__gap" />
+          <HistoryGroup
+            title="对话"
+            icon="Message"
+            items={chats}
+            selected={selected}
+            collapsed={collapsed}
+            onSelect={setSelected}
+            onNew={() => add(setChats, '新对话')}
+            onRemove={(id) => setChats((list) => list.filter((c) => c.id !== id))}
+            onRename={(id, name) => setChats((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
+            onPin={(id) => pin(setChats, id)}
+          />
+          <div className="tpl-ms__gap" />
+          <HistoryGroup
+            title="画布"
+            icon="Canvas"
+            items={canvases}
+            selected={selected}
+            collapsed={collapsed}
+            onSelect={setSelected}
+            onNew={() => add(setCanvases, '未命名画布')}
+            onRemove={(id) => setCanvases((list) => list.filter((c) => c.id !== id))}
+            onRename={(id, name) => setCanvases((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
+            onPin={(id) => pin(setCanvases, id)}
+          />
+        </Menu>
       </aside>
     </div>
   );
@@ -392,9 +409,9 @@ const PLACEHOLDER: Record<string, string> = {
   audio: '描述你想生成的声音，或者输入要念的文字',
 };
 
-/** 任务类型后面那一组：Agent 是模型、技能、模式；图片、视频、音频是各自的模型和参数（generation.tsx 那一份） */
+/** 任务类型后面那一组：Agent 是模型、技能、模式；图片、视频、音频是各自的模型和参数（kivi/generation 那一份） */
 const TOOLBAR: Record<string, () => JSX.Element> = {
-  agent: () => <AgentControls />,
+  agent: () => <AgentControls skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />,
   image: () => <ImageModelControls />,
   video: () => <VideoModelControls />,
   audio: () => <AudioModelControls />,
@@ -405,20 +422,20 @@ function Composer() {
   const [text, setText] = useState('');
   const [audioModel, setAudioModel] = useState(DEFAULT_MODEL.audio);
   const [items, setItems] = useState<ReferenceStackItem[]>([
-    { id: 'c1', kind: 'image', name: '图片1', src: img('kiwi-glass', '1:1') },
-    { id: 'c2', kind: 'image', name: '图片2', src: img('kiwi-light', '1:1') },
+    { id: 'c1', type: 'image', name: '图片1', src: img('kiwi-glass', '1:1') },
+    { id: 'c2', type: 'image', name: '图片2', src: img('kiwi-light', '1:1') },
   ]);
   const pool: PlaceholderImageName[] = ['ip-peek', 'bunny-gouache', 'monstera-dots', 'kivi-future', 'ip-gouache'];
   const add = () =>
-    setItems((list) => [...list, { id: `c${Date.now()}`, kind: 'image', name: referenceName(list, 'image'), src: img(pool[list.length % pool.length], '1:1') }]);
+    setItems((list) => [...list, { id: `c${Date.now()}`, type: 'image', name: referenceName(list, 'image'), src: img(pool[list.length % pool.length], '1:1') }]);
   // 把文件拖到输入框上：加进参考区（缩略图用占位图，图片用本地预览）
   const dropFiles = (files: File[]) =>
     setItems((list) => {
       let next = list;
       files.forEach((f, i) => {
-        const kind: ReferenceKind = f.type.startsWith('video') ? 'video' : f.type.startsWith('audio') ? 'audio' : 'image';
-        const src = kind === 'image' ? URL.createObjectURL(f) : kind === 'video' ? img(pool[(next.length + i) % pool.length], '1:1') : undefined;
-        next = [...next, { id: `c${Date.now()}-${i}`, kind, name: referenceName(next, kind), src, duration: kind === 'video' ? '5s' : kind === 'audio' ? '15s' : undefined }];
+        const type: ReferenceType = f.type.startsWith('video') ? 'video' : f.type.startsWith('audio') ? 'audio' : 'image';
+        const src = type === 'image' ? URL.createObjectURL(f) : type === 'video' ? img(pool[(next.length + i) % pool.length], '1:1') : undefined;
+        next = [...next, { id: `c${Date.now()}-${i}`, type, name: referenceName(next, type), src, duration: type === 'video' ? '5s' : type === 'audio' ? '15s' : undefined }];
       });
       return next;
     });

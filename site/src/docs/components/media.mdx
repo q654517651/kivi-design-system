@@ -1,0 +1,72 @@
+import { Demo, PageHeader } from '@shell';
+import { ImagePlayground, PreviewHost, VideoPlayerPlayground } from './media.demos';
+
+<PageHeader
+  eyebrow="展示"
+  title="图片和视频"
+  figma={['图片和视频', '624:3246']}
+  code="kivi/media"
+/>
+
+<PreviewHost />
+
+## Image
+
+图片：展示用户作品图。
+
+<ImagePlayground />
+
+### 图片网格里的失败和重试
+
+<Demo code={`
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 96px)', gap: 'var(--spacing-8)' }}>
+  <Image src={placeholderImageSrc('ip-gouache', '1:1')} alt="已加载" ratio="1:1" />
+  <Image alt="加载中" ratio="1:1" />
+  <Image src="./placeholders/not-found.webp" alt="失败" ratio="1:1" onRetry={() => {}} />
+</div>
+`} />
+
+## VideoPlayer
+
+视频播放器：播放视频，比如画布节点、生成结果、预览弹窗。
+
+<VideoPlayerPlayground />
+
+## 参数
+
+### Image
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `src` | `string` | — | 图片地址。换了地址重新加载。不写（结果还没出来）一直是加载中 |
+| `alt` | `string` | `""` | 替代文字，读屏用；纯装饰的图留空 |
+| `ratio` | `string` `number` | — | 比例，`"1:1"`、`"16:9"` 或宽 / 高的数字。不写就由外面定宽高 |
+| `fit` | `"cover"` `"contain"` | `"cover"` | 铺满、居中裁切 / 完整显示留空 |
+| `onRetry` | `() => void` | — | 传了，失败时整块是一个按钮：点一下重新加载（地址后面加 `retry=次数` 避开缓存），同时调用它；不传就只是静态的失败图。短边 ≥ 160 时插图下面写「重试」，12，`--color-text-fill-secondary`，间距 8；更小的只有插图，靠 `aria-label` 读屏 |
+| `fallback` | `ReactNode` | — | 自定义失败时显示的内容，替换默认的 IP 插图，仍居中 |
+| `onLoad` / `onError` | `(event) => void` | — | 加载完成、失败，和组件自己的状态切换合并，不会被吞掉 |
+
+状态写在根元素 `data-status`：`loading` 是 Skeleton 扫光（盖满）；`loaded` 图片 200ms ease-out 淡入；`error` 底 `--color-bg-fill-container-dark`，居中放 IP 失败插图（`failed.png`，和 EmptyState 失败场景同一张），大小 = 短边的一半，最大 120、最小 32，悬停（可重试时）底换 `--color-bg-fill-container-dark-hover`。圆角默认 8，外层要裁切时在 `className` 里改。系统开了减少动态效果就直接切换，不淡入。
+
+`className`、`style` 给外层；`ref` 和其余 `<img>` 属性（`loading`、`crossOrigin`、`srcSet`…）给里面的 `<img>`。
+
+### VideoPlayer
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `src` | `string` | — | 视频地址，必填 |
+| `poster` | `string` | — | 封面，没播时显示；不传是首帧 |
+| `variant` | `"card"` `"preview"` | `"card"` | 样子。卡片（放卡片里）：不悬停左下是时长 Tag；悬停出 64 渐变和一行控制，按钮 28（图标 16），时间 12。预览（放预览弹窗）：渐变 96，按钮 32（图标 20），时间 14；播放中 2 秒不动控制条和光标都藏起来。进度在控制行下面，2 高，指上去、拖动时变 4：卡片贴底边整宽，没有拖拽点；预览浮着，左右留 16、离底 8，带 10 的拖拽点 |
+| `fit` | `boolean` | 卡片 `false`，预览 `true` | 画面完整显示，留黑边；关掉是铺满、居中裁切 |
+| `hoverPlay` | `boolean` | 卡片 `true`，预览 `false` | 鼠标进来立刻静音播放，移开暂停，停在原地 |
+| `autoPlay` | `boolean` | 卡片 `false`，预览 `true` | 打开就播 |
+| `loop` | `boolean` | `true` | 循环 |
+| `startTime` | `number` | — | 从第几秒开始，从卡片打开预览时接着放 |
+| `muted` / `defaultMuted` / `onMutedChange` | `boolean` | 静音 | 静音。悬停自动播放不能出声，所以默认静音；点音量按钮切换 |
+| `volume` / `defaultVolume` / `onVolumeChange` | `number` 0–100 | `50` | 音量。拖到 0 就是静音；从静音点开时音量是 0 就回到 50 |
+| `onPlay` / `onPause` | `(event) => void` | — | 开始播放、暂停 |
+| `onError` | `(event) => void` | — | 视频加载失败、或 `play()` 因格式不支持等被拒时触发。进失败态：盖住画面，没有控制条 |
+| `errorText` | `ReactNode` | `"加载失败"` | 失败态的文字，插图是 EmptyState 小 · 生成失败 |
+| `onFullscreen` | `(currentTime) => void` | — | 卡片：打开预览，不传就没有这个按钮。预览：不传就是浏览器全屏，按钮换成退出全屏 |
+
+时间 `00:03 / 00:15`，总时长 50%，超过一小时 `1:02:03`。按钮是 IconButton 浮层无底，平时没有底，悬停出黑 40% 底，按下 60%；播放、暂停用实心图标，音量、全屏用描边。音量点按钮静音，悬停在上方弹出竖条（玻璃，宽 40，圆角 12），上面写 0–100；默认静音。同一时间只播一个。缓冲（`waiting` / `stalled`）时画面正中转圈（Loading，卡片 24、预览 40）；`play()` 被浏览器拦下（不让自动播放）或被暂停打断，回到暂停，不算失败。卡片的控制条平时是透明的，键盘 Tab 到进度条、按钮时（`:focus-visible`）显示出来。预览键盘：空格 / K 播放暂停，M 静音，F 全屏，← → 跳 5 秒。

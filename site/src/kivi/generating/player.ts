@@ -39,9 +39,8 @@ export class Player {
   private raf = 0;
   private lastDraw = 0;
   private resizeTimer = 0;
-  // 时钟：base 是锚点那一刻的时间线秒，anchor 是锚点的墙上时间，暂停时是 null
-  private base = 0;
-  private anchor: number | null = performance.now();
+  // 时钟：所有实例共用页面时间（performance.now），同一排的几张节奏一致；暂停时停在 frozen
+  private frozen: number | null = null;
   private speed = 1;
   private ro: ResizeObserver;
   private io: IntersectionObserver;
@@ -60,16 +59,16 @@ export class Player {
 
   /** 当前这一刻，时间线秒 */
   now(): number {
-    return this.anchor === null ? this.base : this.base + ((performance.now() - this.anchor) / 1000) * this.speed;
+    return this.frozen ?? (performance.now() / 1000) * this.speed;
   }
 
   update(opts: PlayerOptions) {
     const prev = this.opts;
     this.opts = opts;
     if (!prev || prev.speed !== opts.speed || prev.paused !== opts.paused) {
-      this.base = this.now();
       this.speed = opts.speed;
-      this.anchor = opts.paused ? null : performance.now();
+      // 暂停停在当前画面；继续时直接回到共用时钟，和别的实例重新对齐
+      this.frozen = opts.paused ? (performance.now() / 1000) * opts.speed : null;
     }
     // effect 不进这里：它每帧读，换方案不用重算
     const key = [opts.type, opts.count, opts.gap, opts.radius, opts.spacing, opts.seed].join('|');

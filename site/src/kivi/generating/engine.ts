@@ -159,7 +159,7 @@ export interface Palette {
   to: Rgb;
   /** 白色，--color-text-fill-primary */
   white: Rgb;
-  /** 底层网点，--color-bg-fill-container-light-1（白 8%） */
+  /** 底层网点，--color-bg-fill-container-light-1（白 10%） */
   lattice: string;
 }
 

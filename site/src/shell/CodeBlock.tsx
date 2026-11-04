@@ -20,7 +20,7 @@ export function CopyButton({ text, label = '复制' }: { text: string | (() => s
   const [done, setDone] = useState(false);
   return (
     <Button
-      size="sm"
+      size={28}
       variant="light"
       leftIcon={done ? 'CheckSmall' : 'Copy'}
       className="shell-copy"
@@ -65,7 +65,7 @@ export function CodeBlock({ code, lang = 'tsx', bare, collapse }: { code: string
       <CopyButton text={src} />
       {long && (
         <div className="shell-code-more">
-          <Button size="sm" variant="light" rightIcon={open ? 'UpArrowSmall' : 'DownArrowSmall'} onClick={() => setOpen(!open)}>
+          <Button size={28} variant="light" rightIcon={open ? 'UpArrowSmall' : 'DownArrowSmall'} onClick={() => setOpen(!open)}>
             {open ? '收起代码' : '展开代码'}
           </Button>
         </div>

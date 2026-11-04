@@ -1,19 +1,21 @@
 import { useEffect, useRef } from 'react';
 import {
+  Banner,
   Button,
   EmptyState,
-  Image,
   Loading,
+  Notification,
+  Notifier,
   Skeleton,
   Toast,
   Toaster,
-  placeholderImageSrc,
+  notify,
   toast,
+  type BannerType,
   type EmptyStateScene,
   type EmptyStateSize,
-  type ImageFit,
   type LoadingSize,
-  type PlaceholderImageRatio,
+  type NotificationType,
   type SkeletonShape,
   type ToastType,
 } from '@kivi';
@@ -100,20 +102,108 @@ export function ToastStage() {
   );
 }
 
+// ---------- Notification ----------
+
+type NotificationState = { type: NotificationType | 'none'; title: string; description: string; showDescription: boolean; closable: boolean };
+
+export function NotificationPlayground() {
+  return (
+    <Playground<NotificationState>
+      controls={[
+        { key: 'type', label: '类型', type: 'segment', value: 'error', options: [['none', '无图标'], ['info', '信息'], ['success', '成功'], ['warning', '警告'], ['error', '错误']] },
+        { key: 'title', label: '标题', type: 'text', value: '生成失败' },
+        { key: 'showDescription', label: '显示说明', type: 'toggle', value: true },
+        { key: 'description', label: '说明', type: 'text', value: '网络中断，请检查网络后重试。已消耗的猕猴桃会退回。' },
+        { key: 'closable', label: '显示关闭', type: 'toggle', value: true },
+      ]}
+      rules={(s) => (s.showDescription ? {} : { description: true })}
+      render={(s) => (
+        <Notification
+          type={s.type === 'none' ? undefined : s.type}
+          title={s.title}
+          description={s.showDescription ? s.description : undefined}
+          onClose={s.closable ? () => {} : undefined}
+        />
+      )}
+    />
+  );
+}
+
+const LONG_TEXT =
+  '任务「春日花园」生成失败：模型服务暂时不可用，已自动重试 3 次仍未成功。已消耗的猕猴桃已全部退回到你的账户，可以在「我的资产」里查看明细。你可以稍后再试，或者换一个模型。如果多次失败，请把任务编号发给我们，我们会尽快排查并给你回复。';
+
+/**
+ * 点出来试试：多点几下，通知会叠成一叠，鼠标停上去展开、挪开又收起。
+ * 项目里 Notifier 放在应用根上就是屏幕右上角，这里把它框在舞台里（position: absolute）。
+ */
+export function NotificationStage() {
+  useEffect(() => () => notify.clear(), []);
+  return (
+    <figure className="shell-demo">
+      <div
+        className="shell-demo-preview"
+        style={{
+          position: 'relative',
+          isolation: 'isolate',
+          alignItems: 'flex-end',
+          height: 420,
+          overflow: 'hidden',
+          background: 'var(--color-bg-fill-base)',
+        }}
+      >
+        <Notifier style={{ position: 'absolute', top: 16, right: 16, maxHeight: 'calc(100% - 32px)' }} />
+        <Button onClick={() => notify.info('已加入队列', { description: '前面还有 2 个任务，预计 1 分钟后开始' })}>信息</Button>
+        <Button onClick={() => notify.success('生成完成', { description: '4 张图片已保存到我的作品' })}>成功</Button>
+        <Button onClick={() => notify.warning('余额不足', { description: '本次生成需要 20 个猕猴桃，当前余额 12 个' })}>警告</Button>
+        <Button onClick={() => notify.error('生成失败', { description: '网络中断，请检查网络后重试' })}>错误</Button>
+        <Button onClick={() => notify.show({ title: '版本更新：新增画布分组功能' })}>无图标</Button>
+        <Button onClick={() => notify.error('生成失败：模型服务暂时不可用，已自动重试 3 次', { description: LONG_TEXT })}>很长的文字</Button>
+        <Button onClick={() => notify.info('3 秒后消失', { duration: 3000 })}>自己消失</Button>
+        <Button onClick={() => notify.clear()}>全部关掉</Button>
+      </div>
+    </figure>
+  );
+}
+
+// ---------- Banner ----------
+
+type BannerState = { type: BannerType; text: string; multiline: boolean; closable: boolean };
+
+export function BannerPlayground() {
+  return (
+    <Playground<BannerState>
+      controls={[
+        { key: 'type', label: '类型', type: 'segment', value: 'warning', options: [['info', '信息'], ['success', '成功'], ['warning', '警告'], ['error', '错误']] },
+        { key: 'text', label: '文字', type: 'text', value: '请上传符合规格的图片' },
+        { key: 'multiline', label: '多行', type: 'toggle', value: false },
+        { key: 'closable', label: '显示关闭', type: 'toggle', value: false },
+      ]}
+      render={(s) => (
+        <div style={{ width: 360 }}>
+          <Banner type={s.type} onClose={s.closable ? () => {} : undefined}>
+            {s.text}
+            {s.multiline ? '。图片尺寸需为 168 × 168，格式为 PNG 或 JPG，大小不超过 2 MB；不符合规格的图片会被自动裁剪，可能影响效果。' : ''}
+          </Banner>
+        </div>
+      )}
+    />
+  );
+}
+
 // ---------- Loading ----------
 
-type LoadingState = { size: LoadingSize; showText: boolean; text: string };
+type LoadingState = { size: string; showText: boolean; text: string };
 
 export function LoadingPlayground() {
   return (
     <Playground<LoadingState>
       controls={[
-        { key: 'size', label: '尺寸', type: 'segment', value: 'sm', options: [['sm', '小'], ['md', '中'], ['lg', '大']] },
+        { key: 'size', label: '尺寸', type: 'segment', value: '16', options: [['16', '小'], ['24', '中'], ['40', '大']] },
         { key: 'showText', label: '显示文字', type: 'toggle', value: true },
         { key: 'text', label: '文字', type: 'text', value: '加载中…' },
       ]}
       rules={(s) => (s.showText ? {} : { text: true })}
-      render={(s) => <Loading size={s.size}>{s.showText ? s.text : undefined}</Loading>}
+      render={(s) => <Loading size={Number(s.size) as LoadingSize}>{s.showText ? s.text : undefined}</Loading>}
     />
   );
 }
@@ -140,42 +230,9 @@ export function SkeletonPlayground() {
   );
 }
 
-// ---------- Image ----------
-
-type ImageState = { status: string; ratio: PlaceholderImageRatio; fit: ImageFit; size: string; retry: boolean };
-
-// 面板上的「状态」靠换地址来摆：加载中 = 还没有地址，已加载 = 占位图，失败 = 一个不存在的地址
-const IMAGE_BROKEN = './placeholders/not-found.webp';
-
-export function ImagePlayground() {
-  return (
-    <Playground<ImageState>
-      controls={[
-        { key: 'status', label: '状态', type: 'segment', value: 'loaded', options: [['loading', '加载中'], ['loaded', '已加载'], ['error', '失败']] },
-        { key: 'ratio', label: '比例', type: 'segment', value: '1:1', options: [['1:1', '1:1'], ['3:4', '3:4'], ['16:9', '16:9'], ['9:16', '9:16']] },
-        { key: 'fit', label: '填充', type: 'segment', value: 'cover', options: [['cover', '铺满'], ['contain', '完整显示']] },
-        { key: 'size', label: '宽', type: 'segment', value: '256', options: [['96', '96'], ['256', '256']] },
-        { key: 'retry', label: '可重试', type: 'toggle', value: false },
-      ]}
-      // 只有失败才有重试
-      rules={(s) => (s.status === 'error' ? {} : { retry: true })}
-      render={(s) => (
-        <Image
-          src={s.status === 'loading' ? undefined : s.status === 'error' ? IMAGE_BROKEN : placeholderImageSrc('ip-gouache', s.ratio)}
-          alt="示例图片"
-          ratio={s.ratio}
-          fit={s.fit}
-          onRetry={s.retry ? () => {} : undefined}
-          style={{ width: Number(s.size) }}
-        />
-      )}
-    />
-  );
-}
-
 // ---------- EmptyState ----------
 
-type EmptyStateState = { scene: EmptyStateScene; size: EmptyStateSize; title: string; showDesc: boolean; desc: string; action: boolean };
+type EmptyStateState = { scene: EmptyStateScene; size: string; title: string; showDesc: boolean; desc: string; action: boolean };
 
 const SCENES: [EmptyStateScene, string][] = [['empty', '暂无内容'], ['favorite', '暂无收藏'], ['offline', '无网络'], ['failed', '生成失败']];
 
@@ -184,7 +241,7 @@ export function EmptyStatePlayground() {
     <Playground<EmptyStateState>
       controls={[
         { key: 'scene', label: '场景', type: 'segment', value: 'empty', options: SCENES },
-        { key: 'size', label: '尺寸', type: 'segment', value: 'lg', options: [['lg', '大'], ['sm', '小']] },
+        { key: 'size', label: '尺寸', type: 'segment', value: '160', options: [['160', '大'], ['96', '小']] },
         { key: 'title', label: '标题', type: 'text', value: '标题文字' },
         { key: 'showDesc', label: '显示描述', type: 'toggle', value: true },
         { key: 'desc', label: '描述', type: 'text', value: '一句话说清楚下一步做什么' },
@@ -194,10 +251,10 @@ export function EmptyStatePlayground() {
       render={(s) => (
         <EmptyState
           scene={s.scene}
-          size={s.size}
+          size={Number(s.size) as EmptyStateSize}
           title={s.title}
           description={s.showDesc ? s.desc : undefined}
-          action={s.action ? <Button>去画布</Button> : undefined}
+          action={s.action ? <Button variant="light">去画布</Button> : undefined}
         />
       )}
     />

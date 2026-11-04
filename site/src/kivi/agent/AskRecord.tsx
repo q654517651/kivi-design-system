@@ -1,8 +1,8 @@
 import { forwardRef, useId, type HTMLAttributes, type ReactNode } from 'react';
 import { cx } from '../utils';
 import { useControllable } from '../hooks';
-import { ProcessDrawer } from './ProcessDrawer';
-import { ProcessRow } from './ProcessRow';
+import { Collapse } from '../collapse';
+import { ProcessRow } from '../agent-process/ProcessRow';
 import './agent.css';
 
 export type AskRecordStatus = 'asking' | 'answered' | 'skipped';
@@ -57,7 +57,7 @@ export const AskRecord = forwardRef<HTMLDivElement, AskRecordProps>(function Ask
         onExpandedChange={setExpanded}
         aria-controls={bodyId}
       />
-      <ProcessDrawer id={bodyId} open={expanded} distance={distance}>
+      <Collapse id={bodyId} open={expanded} distance={distance} gap={6}>
         <div className="kv-ask-record__list">
           {items.map((item, i) => (
             <div key={i} className="kv-ask-record__item">
@@ -67,7 +67,7 @@ export const AskRecord = forwardRef<HTMLDivElement, AskRecordProps>(function Ask
           ))}
           {skipped && <div className="kv-ask-record__note">{skippedText}</div>}
         </div>
-      </ProcessDrawer>
+      </Collapse>
     </div>
   );
 });

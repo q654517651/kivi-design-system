@@ -75,17 +75,19 @@ a {
   flex: 1;
 }
 
-.shell-icon-set {
-  display: flex;
-  flex: none;
+/* 顶栏外链按钮里的品牌 Logo：16 高，和按钮里的图标一样大。
+   Button 把子元素包在一个 span 里，这个 span 要排成一行，Logo 和字间距 4（同按钮里图标和字） */
+.shell-top .kv-button > span:has(> .shell-brand-logo) {
+  display: inline-flex;
   align-items: center;
-  gap: var(--spacing-8);
+  gap: var(--spacing-4);
 }
 
-.shell-icon-set-label {
-  color: var(--color-text-fill-secondary);
-  font-size: var(--font-size-13);
-  white-space: nowrap;
+.shell-brand-logo {
+  display: block;
+  flex: none;
+  width: auto;
+  height: 16px;
 }
 
 .shell-menu {
@@ -254,6 +256,11 @@ main.doc {
   font-size: 22px;
   font-weight: var(--font-weight-medium);
   line-height: var(--font-line-height-32);
+}
+
+/* 组件标题下面那句描述：紧贴标题，间距 4（11-04 用户定） */
+.doc h2:not(:where(.shell-demo, .shell-pg) *):has(+ p) {
+  margin-bottom: var(--spacing-4);
 }
 
 .doc h3:not(:where(.shell-demo, .shell-pg) *) {
@@ -539,6 +546,29 @@ main.doc {
 
 .shell-pg .shell-code {
   grid-column: 1 / -1;
+}
+
+/* 有最窄宽度的组件（比如 PromptBox）：预览区比它窄时横向滚动，不盖到右边的面板上；靠左对齐，左边不被裁掉 */
+.shell-pg-stage--scroll {
+  justify-content: safe center;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+/* 真面板和影子面板叠在同一格：格子高度取两者里高的那个，也就是全部开关都摆出来的高度 */
+.shell-pg-stage {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.shell-pg-panel {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.shell-pg-panel--ghost {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .shell-pg-row {
@@ -922,6 +952,21 @@ a.shell-card:hover {
   color: var(--color-text-fill-disabled);
 }
 
+/* 首页：不要右侧「本页」目录，正文铺开居中 */
+@media (min-width: 861px) {
+  .shell-frame.is-home {
+    grid-template-columns: 232px minmax(0, 1fr);
+  }
+
+  .shell-frame.is-home .shell-toc {
+    display: none;
+  }
+}
+
+.shell-frame.is-home main.doc {
+  padding-top: 56px;
+}
+
 /* ---------- 窄屏 ---------- */
 
 @media (max-width: 1200px) {
@@ -973,8 +1018,14 @@ a.shell-card:hover {
   }
 
   .shell-pg-panel {
+    grid-row: 2;
+    grid-column: 1;
     border-left: 0;
     border-top: var(--border-width-1) solid var(--color-border-subtle);
+  }
+
+  .shell-pg-panel--ghost {
+    display: none;
   }
 }
 
@@ -988,8 +1039,7 @@ a.shell-card:hover {
     white-space: nowrap;
   }
 
-  .shell-badge,
-  .shell-icon-set-label {
+  .shell-badge {
     display: none;
   }
 }

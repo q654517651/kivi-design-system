@@ -58,14 +58,7 @@ Figma 稿：
 - 颜色、间距、圆角、字号都绑了变量或文字样式。
 - 用户作品的位置是 PlaceholderImage 实例。
 
-规范的硬规则（不符合就是「不一致」）：
-- 底色分层：页面底 base → 区域 container-light-2 → 可点的 container-light-1；凹下去的 container-dark；盖在画布上的 surface；贴在图片、视频上的控件（按钮、按钮条、标签、播放器控件）用 on-media，不加描边，只限图片、视频。
-- 浮层三种：悬浮在页面上的（菜单、下拉、右键、工具栏、参数面板、主站输入框）用玻璃 + 描边；模态弹窗用 surface + 遮罩；Tooltip、Toast 用 popup 实色。浮层不加投影。
-- 字号：界面 13，阅读 14。
-- 一屏只有一个主要按钮（品牌渐变）。
-- 单选列表当前项用「选中」底色，不打勾；勾选只给多选。
-- 只有图标的按钮都有 Tooltip。
-- 图标是 Figma 图标表里的，不是 Lucide 或别的图标库；模型厂 Logo 用图标表里现有的，缺的从 LobeHub Icons 下 Mono 版补。
+规范的硬规则（不符合就是「不一致」）：网站「设计规则」页 `site/src/docs/foundations/rules.mdx` 的每一条都过一遍，逐条对照，不在这里另写一份。
 
 ### 状态
 

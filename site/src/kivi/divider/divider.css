@@ -1,0 +1,30 @@
+/*
+  KIVI · 分割线
+  Figma 还没有，待确认。依赖 tokens.css。
+
+  写法（React，见 Divider.tsx）
+    <Divider />                         横向，宽撑满、高 1
+    <Divider orientation="vertical" />  竖向，宽 1，高度取 --kv-divider-size（默认 16）
+  渲染出来的结构
+    <div class="kv-divider kv-divider--vertical" role="separator" aria-orientation="vertical"></div>
+
+  颜色默认 --color-border，所在的容器可以写 --kv-divider-color 换（菜单里是 border-subtle）。
+  竖向高度跟着所在的条走：条上写 --kv-divider-size（ButtonGroup 按 size 写：32 → 16，44、56 → 20），分割线不加尺寸属性。
+*/
+
+.kv-divider {
+  flex: none;
+  box-sizing: border-box;
+  margin: 0;
+  background: var(--kv-divider-color, var(--color-border));
+}
+
+.kv-divider--horizontal {
+  width: 100%;
+  height: var(--border-width-1);
+}
+
+.kv-divider--vertical {
+  width: var(--border-width-1);
+  height: var(--kv-divider-size, var(--spacing-16));
+}

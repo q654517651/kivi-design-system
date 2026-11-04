@@ -3,10 +3,7 @@ import {
   ActionCardPlayground,
   AskRecordPlayground,
   FileCardPlayground,
-  MediaStackPlayground,
-  ProcessGroupPlayground,
-  ProcessGroupSim,
-  ProcessRowPlayground,
+  MessageFeedbackPlayground,
   QuestionPanelPlayground,
   SendButtonPlayground,
   SkillCardPlayground,
@@ -31,46 +28,44 @@ import {
 
 <PageHeader
   eyebrow="业务组件"
-  title="Agent"
-  lead="Agent 对话里的业务组件：过程行、工具调用组、询问记录、用户消息、结果叠放、追问面板、确认卡片、技能卡、发送按钮、文件卡（废弃）。主站 Agent 和画布侧栏 Agent 用同一套。"
-  figma={['Agent', '340:658']}
-  status="待确认 0.1.0"
+  title="Agent 对话"
+  figma={['Agent 对话', '340:658']}
   code="kivi/agent"
 />
 
-## ProcessRow
-
-<ProcessRowPlayground />
-
-## ProcessGroup
-
-<ProcessGroupPlayground />
-
-### 调用过程：一行滚动
-
-<Demo noCode scope={{ ProcessGroupSim }} code={`<ProcessGroupSim />`} />
-
 ## AskRecord
+
+询问记录：Agent 问过用户的问题留在对话里，点开看问答。
 
 <AskRecordPlayground />
 
 ## UserMessage
 
+用户消息：用户在对话里发的话。
+
 <UserMessagePlayground />
 
-## MediaStack
+## MessageFeedback
 
-<MediaStackPlayground />
+回复反馈：Agent 回复下面的复制、赞、踩。
+
+<MessageFeedbackPlayground />
 
 ## QuestionPanel
+
+追问面板：Agent 追问时让用户选答案。
 
 <QuestionPanelPlayground />
 
 ## ActionCard
 
+确认卡：Agent 动手前要用户确认、授权，或告诉用户出错了。
+
 <ActionCardPlayground />
 
 ## SendButton
+
+发送按钮：发送消息，生成中变成停止。
 
 <SendButtonPlayground />
 
@@ -109,55 +104,19 @@ import {
 
 ## SkillCard
 
+技能卡：Agent 新建或更新技能后给用户看，能编辑、使用。
+
 <SkillCardPlayground />
 
 ## FileCard
+
+文件卡：Agent 写出的文件，比如剧本、字幕。
 
 <Tag kind="danger">废弃</Tag> 平台没有文件卡，不要用。组件先留着。
 
 <FileCardPlayground />
 
 ## 参数
-
-### ProcessRow
-
-一行，行高 20，各部分间距 4 `--spacing-4`。其余原生 `<div>` 属性都能传，带箭头的一级整行是 `<button>`，悬停、键盘聚焦时亮一档：图标和动作 secondary → primary，对象 tertiary → secondary，箭头 tertiary → secondary，100ms ease-in-out。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `action` | `ReactNode` | — | 动作文字，必填。14 / 20 常规 `--font-size-14`、`--font-line-height-20`，比如「创建节点」 |
-| `object` | `ReactNode` | — | 对象文字，比如「活动标题」，比动作淡一档，不加引号。不传不显示 |
-| `level` | `"main"` `"sub"` | `"main"` | 一级 / 子项。子项是展开列表里的行，没有头像和箭头，不能点 |
-| `status` | `"running"` `"done"` `"failed"` | `"done"` | 进行中：颜色和完成一样（不变白），停留超过 0.5 秒动作文字上走一道 primary 亮光（1.4s 一圈）/ 完成 / 失败：图标和动作文字用 status/danger |
-| `icon` | `IconName` | — | 图标 20，常用 `UseCanvas` `Skill` `Message` `ImageGeneration`。不传不显示 |
-| `avatar` | `string` | — | 头像地址，Avatar 24 · 图片，圆形。不传不显示，子项没有 |
-| `arrow` | `boolean` | `true` | 箭头 16，tertiary，只放 `DownArrowSmall`，展开时转 180°。平时不显示，鼠标移上去、键盘聚焦、展开时才出（150ms ease-out），位置一直留着；手机一直显示。子项没有 |
-| `expanded` | `boolean` | — | 展开：受控。没有箭头的行没有展开状态 |
-| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
-| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
-
-### ProcessGroup
-
-Agent 两段话之间连续调的工具算一组。进行中只占一行，显示当前在调的工具；换下一个时往上滚：新的从下面进来、旧的往上出去，各 200ms（出现 ease-out、消失 ease-in）。每个工具最少停 0.3 秒，这期间又来了新的直接跳到最新那个。全部做完换成「调用了 N 个工具」，不自动展开；做完才能点开，展开后列出每个工具，行距 6 `--spacing-6`，最高 160，超出能滚，渐隐 24 跟着滑的方向走（往下滑下面渐隐、往上滑上面渐隐，那一边到头就换到另一边，照线上）；展开时列表从 0 推到内容高、把下面的内容往下推，同时淡入，收起倒着走，ease-in-out，列表 100 以内 200ms、再长 300ms。只调了 1 个就直接显示那一个，不能展开。生成、询问、确认不放进组里，各自出自己的块。Agent 的文字回复不折叠。其余原生 `<div>` 属性都能传。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `steps` | `ProcessStep[]` | — | 这一组调的工具，必填，按调用顺序，最后一个是当前在调的。每项见下表 |
-| `running` | `boolean` | 看最后一个是不是进行中 | 还在调用中。做完了传 `false`，或者最后一个不再是进行中 |
-| `icon` | `IconName` | `"Tool"` | 做完后汇总行的图标 |
-| `expanded` | `boolean` | — | 展开：受控。只有做完、调了 2 个及以上才能展开 |
-| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
-| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
-
-`steps` 每一项：
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `id` | `string` | 下标 | 唯一标识 |
-| `icon` | `IconName` | — | 图标，常用 `UseCanvas` `Skill` `Message` |
-| `action` | `ReactNode` | — | 动作文字，必填，比如「创建节点」 |
-| `object` | `ReactNode` | — | 对象文字，比如「分镜脚本」，不加引号 |
-| `status` | `"running"` `"done"` `"failed"` | `"done"` | 状态。有失败的，汇总写「调用了 N 个工具，M 个失败」，「M 个失败」用 status/danger |
 
 ### AskRecord
 
@@ -180,17 +139,26 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `assets` | `ReactNode` | — | 素材行：一排 ReferenceItem 56（缩略图 AssetThumb 56），间距 8，图片、带时长的视频、音频都放这里。不传没有素材行 |
-| `children` | `ReactNode` | — | 气泡里的字：14 / 22 常规，primary，最宽 340，超出换行。气泡底 container-light-1（白 8%），圆角 12 `--border-radius-12`，内边距 12 / 16 `--spacing-12`、`--spacing-16`，和素材间距 8 `--spacing-8` |
+| `children` | `ReactNode` | — | 气泡里的字：14 / 22 常规，primary，最宽 340，超出换行。里面可以夹 `MentionChip`（技能、图片、视频、音乐、节点引用），和输入框里是同一个。气泡底 container-light-1（白 10%），圆角 12 `--border-radius-12`，内边距 12 / 16 `--spacing-12`、`--spacing-16`，和素材间距 8 `--spacing-8` |
+| `maxLines` | `number` | `12` | 最多显示几行，超过的折叠，气泡底部出「显示更多」（Button 文字 sm + `DownArrowSmall`），点了往下推展开，300ms ease-in-out，按钮变「收起」、箭头转 180°。没超过不出按钮 |
+| `expanded` | `boolean` | — | 展开：受控 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
 
-### MediaStack
+### MessageFeedback
 
-整个是一个 `<button>`，要自己写 `aria-label`，比如「展开 5 个结果」。其余原生 `<button>` 属性都能传。
+助手消息底部的反馈条。生成中不显示（调用方控制）。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `src` | `string` | — | 第一张图的地址，必填。每层 174，圆角 16 `--border-radius-16`，整体 182；后两层底 container-light-2（白 4%），描边 border（白 12%）1，往右下错开 4、8 |
-| `count` | `ReactNode` | — | 右下角数量，比如 `"+4"`，渲染成 Tag · 浮层，离边 8。不传没有角标 |
-| `expanded` | `boolean` | `false` | 展开状态：展开收起由页面决定，组件只管收起的样子，这里只是写进 `aria-expanded` |
+| `text` | `string` | — | 复制按钮要复制的回复内容。不传没有复制按钮 |
+| `traceId` | `string` | — | 复制 TraceID 按钮要复制的 ID。不传没有这个按钮 |
+| `value` | `'like' \| 'dislike' \| null` | — | 赞 / 踩：受控，`null` 是都没选。赞、踩互斥，再点一次取消，选中换实心图标（`ThumbsUpFill`、`ThumbsDownFill`） |
+| `defaultValue` | `'like' \| 'dislike' \| null` | `null` | 赞 / 踩：非受控的初始值 |
+| `onValueChange` | `(value) => void` | — | 点了赞、踩、取消时触发 |
+| `reason` | `boolean` | `true` | 踩了之后下面往下推出一行原因输入：Input + 提交（主要 sm，没写字不可点）+ 关闭（IconButton 28）。回车提交、Esc 关闭；点赞、再点踩、提交、关闭都收起 |
+| `onSubmitReason` | `(reason: string) => void` | — | 提交了踩的原因 |
+| `onCopied` | `(text: string) => void` | — | 复制成功后触发。复制成功图标换 `CheckSmall`、提示变「已复制」，1.5 秒后换回 |
 
 ### QuestionPanel
 
@@ -250,12 +218,12 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `generating` | `boolean` | `false` | 生成中：图标换成停止方块 12 × 12，圆角 4 `--border-radius-4`，点了停止生成 |
-| `disabled` | `boolean` | `false` | 禁用，还没输入内容。底 container-light-1（白 8%），图标 disabled（白 20%） |
+| `disabled` | `boolean` | `false` | 禁用，还没输入内容。底 container-light-1（白 10%），图标 disabled（白 20%） |
 | `aria-label` | `string` | `"发送"` | 只有图标，读屏靠它。生成中默认「停止生成」 |
 
 ### SkillCard
 
-<Tag kind="draft">待确认</Tag> Agent 帮用户新建或更新了一个技能后出的卡，照旧版 KIVI 3.14「消息气泡」里的技能卡，Figma V2 还没有。外框和确认卡一样：宽度拉满消息，内边距 16，圆角 16 `--border-radius-16`，surface 底，描边 border-subtle，上下两块间距 12 `--spacing-12`。封面 100 × 56，圆角 8，里面描一圈 border；封面和文字间距 12。按钮靠右，间距 8，都是 Button 中。其余原生 `<div>` 属性都能传。
+Agent 帮用户新建或更新了一个技能后出的卡，照旧版 KIVI 3.14「消息气泡」里的技能卡。外框和确认卡一样：宽度拉满消息，内边距 16，圆角 16 `--border-radius-16`，surface 底，描边 border-subtle，上下两块间距 12 `--spacing-12`。封面 100 × 56，圆角 8，里面描一圈 border；封面和文字间距 12。按钮靠右，间距 8，都是 Button 中。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|

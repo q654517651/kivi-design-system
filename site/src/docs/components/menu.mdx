@@ -1,0 +1,167 @@
+import { Demo, PageHeader } from '@shell';
+import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlayground } from './menu.demos';
+
+<PageHeader
+  eyebrow="导航"
+  title="菜单"
+  figma={['菜单', '1083:7636']}
+  code="kivi/menu"
+/>
+
+## Menu
+
+菜单：一列选项，比如右键菜单、下拉列表；平铺款是主站侧栏。
+
+<MenuPlayground />
+
+## MenuItem
+
+菜单项：菜单里的一条，比如「复制」「删除」，侧栏里的一条对话。
+
+<MenuItemPlayground />
+
+### 单选：当前项用选中
+
+<Demo code={`
+() => {
+  const [count, setCount] = useState('x4');
+  return (
+    <Menu role="listbox" width={120}>
+      {['x4', 'x2', 'x1'].map((v) => (
+        <MenuItem key={v} selected={count === v} onClick={() => setCount(v)}>{v}</MenuItem>
+      ))}
+    </Menu>
+  );
+}
+`} />
+
+### 多选：勾选
+
+<Demo code={`
+() => {
+  const [on, setOn] = useState(['图片', '视频']);
+  const toggle = (v) => setOn(on.includes(v) ? on.filter((x) => x !== v) : [...on, v]);
+  return (
+    <Menu width={160}>
+      {['图片', '视频', '音频', '文字'].map((v) => (
+        <MenuItem key={v} checked={on.includes(v)} onClick={() => toggle(v)}>{v}</MenuItem>
+      ))}
+    </Menu>
+  );
+}
+`} />
+
+## Dropdown
+
+下拉：从按钮或右键位置弹出菜单，比如「更多」「创建」。
+
+<DropdownPlayground />
+
+### 右键菜单
+
+<Demo code={`
+() => {
+  const [open, setOpen] = useState(false);
+  const [point, setPoint] = useState({ x: 0, y: 0 });
+  return (
+    <div
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setPoint({ x: e.clientX, y: e.clientY });
+        setOpen(true);
+      }}
+      style={{ display: 'grid', placeItems: 'center', width: '100%', height: 220, color: 'var(--color-text-fill-tertiary)', fontSize: 'var(--font-size-13)' }}
+    >
+      在这里点右键
+      <Dropdown open={open} onOpenChange={setOpen} anchorPoint={point}>
+        <Menu width={220}>
+          <MenuItem>上传</MenuItem>
+          <MenuItem shortcut="⌘Z">撤销</MenuItem>
+          <MenuItem shortcut="⌘V" disabled>粘贴</MenuItem>
+        </Menu>
+      </Dropdown>
+    </div>
+  );
+}
+`} />
+
+## 平铺（侧栏）
+
+<PlainMenuPlayground />
+
+## 参数
+
+### Menu
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `variant` | `"default"` `"plain"` | `"default"` | 默认（玻璃浮层）/ 平铺。平铺不带玻璃底、描边、内边距、圆角，条目间距 2，撑满外面，不限宽高、不滚动，给侧栏这种直接铺在页面上的地方用；条目、分组标题的尺寸和选中写法跟着变，见 MenuItem、MenuLabel |
+| `width` | `number` `string` | — | 宽 120–240，最高 7.5 项（302），多了滚动，最后露半条提示能滚。数字按 px，不写就跟着内容（平铺的撑满外面） |
+| `role` | `"menu"` `"listbox"` | `"menu"` | 菜单 / 单选列表。单选列表的每项传 `selected`。平铺的不写 `role` |
+
+默认款是玻璃浮层：`--color-bg-fill-glass`，模糊 `--effect-glass-blur`（32），描边 `--color-border-subtle`，圆角 12，内边距 4，条目间距 4，不加阴影。其余原生 `<div>` 属性都能传。
+
+### MenuItem
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 文字，13 常规，行高 20。高 36，圆角 8，左右内边距 12，元素间距 8 |
+| `variant` | `"default"` `"danger"` | `"default"` | 普通 / 危险。危险没有选中，放菜单最后，用 `Divider` 隔开 |
+| `icon` | `IconName` | — | 左图标，16。和 `thumb` 二选一 |
+| `thumb` | `ReactNode` | — | 缩略图：`<AssetThumb size={24} />`，可以是图片、音频，或图标（对话、画布没封面时用 `type="icon"`）。和 `icon` 二选一 |
+| `description` | `ReactNode` | — | 说明：写了就是两行，第二行 12，secondary，一行省略。两行时左图标 24，选中不加底、在右边打勾 |
+| `shortcut` | `string` | — | 快捷键文字，比如 ⌘C，12，tertiary。和 `submenu`、`checked` 三选一 |
+| `submenu` | `boolean` | `false` | 子菜单箭头 `RightArrowSmall`，16，tertiary；同时加 `aria-haspopup="menu"` |
+| `selected` | `boolean` | — | 选中：白 10% 底（常驻底色，Light 1 默认；悬停 12%），不打勾，单选标当前项。自动是 `role="option"`，外层 Menu 要写 `role="listbox"`；非当前项传 `false` |
+| `checked` | `boolean` | — | 勾选：右边 `CheckSmall`，16，`--color-brand-solid`，只给多选。自动是 `role="menuitemcheckbox"`；没勾的传 `false` |
+| `disabled` | `boolean` | `false` | 禁用，文字、图标、快捷键 disabled，不响应悬停和点击 |
+| `more` | `ReactNode` | — | 右边悬停、选中、菜单开着时才出现的「⋯」（IconButton 28 轻，`More` 图标）：写了就出，点开弹出这里的菜单，一般是一个 Menu，由 Dropdown 管开关。写了之后外层改用 `<div>`（里面有按钮）。「⋯」离右边 6，里面的图标离边 12 |
+| `moreLabel` | `string` | `"更多"` | 「⋯」的说明，读屏用 |
+| `collapsed` | `boolean` | — | 收起：侧栏收成图标栏（宽 60）时用。只留图标 / 缩略图，文字淡出（100ms ease-in，展开时晚 150ms 淡入 150ms ease-out），「⋯」不显示；悬停在右边出 Tooltip 写文字。宽度跟着侧栏，图标栏里 36，正好是左边那个格子，图标、缩略图居中。不带图标的条目（「更多」）收起后文字换成向下的箭头 `DownArrow`（和导航图标一样大），悬停出 Tooltip「更多」（照即梦）。不传就不包 Tooltip，要在收起、展开之间切换的写 `true` / `false`，结构不变 |
+| `editing` | `boolean` | — | 重命名中（受控）。文字换成 Input（高 32，右边「字数/上限」），自动聚焦、全选；「⋯」不显示，条目不出悬停、选中底色。照线上：回车提交，点外面取消，Esc 也取消。`children` 要是字符串 |
+| `defaultEditing` | `boolean` | `false` | 默认是否在重命名（非受控） |
+| `onEditingChange` | `(editing: boolean) => void` | — | 进入、退出重命名。「⋯」菜单里点「重命名」时传 `true` |
+| `onRename` | `(name: string) => void` | — | 回车提交的新名字，去掉了首尾空格；空的不提交，留在输入框里 |
+| `maxNameLength` | `number` | `20` | 名字最多几个字（照线上），超了打不进去 |
+
+放进平铺的 Menu（`variant="plain"`）里：
+
+- 带图标的是导航：图标 20，左右内边距 8、间距 8（图标四周离边 8）；带缩略图的是列表：缩略图 24，左右 6、间距 6（四周离边 6），文字默认 secondary，悬停、选中变 primary。两种的图标中心都在左数 18，文字都从 36 开始。
+- `selected` 写 `aria-current="page"`，底白 10%（`--color-bg-fill-container-light-1`，常驻底色），悬停白 14%；不是 `role="option"`。同一时间只有一项。
+- 不带图标也不带缩略图的条目就是「更多」：12，tertiary，高 36，左 8，没有悬停底色（键盘聚焦才出），点了看这一组剩下的。收起后文字淡出，换成向下的箭头 `DownArrow`（和导航图标一样大），在图标栏格子正中。
+- 收起时内边距跟着侧栏一起变，300ms ease-in-out。
+
+其余原生 `<button>` 属性都能传；写了 `more` 或 `editing` 时外层是 `<div>`，传原生 `<div>` 属性。
+
+### MenuLabel
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 分组标题，不能点（写了 `collapsible` 才能点）。高 28，左右内边距 12，12 常规，tertiary。平铺里左 8（和导航图标对齐）、右 6（按钮和「⋯」对齐） |
+| `collapsible` | `boolean` | `false` | 能展开收起：标题变成按钮（`aria-expanded`），右边带箭头，展开朝下 `DownArrowSmall`，收起朝右 `RightArrowSmall`；悬停这一行变白（箭头一起），箭头平时不显示，悬停这一行（或键盘 Tab 进来）才淡入 |
+| `expanded` | `boolean` | — | 展开（受控），要写 `collapsible` |
+| `defaultExpanded` | `boolean` | `true` | 默认是否展开（非受控） |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 点标题展开或收起 |
+| `items` | `ReactNode` | — | 跟着标题展开收起的条目，一般是一组 MenuItem。写了，标题和条目就包成一组：条目放在 `Collapse` 里，展开时高度从 0 推到内容高、把下面的内容往下推，同时淡入，收起倒着走，300ms ease-in-out；组里的间距和 Menu 一样。不写，条目自己写在 Menu 里，由使用方跟着显示或隐藏 |
+| `action` | `ReactElement` | — | 右边的按钮，比如新建：传一个 IconButton 28 轻（`<IconButton icon="NewChat" label="新建对话" size={28} variant="light" />`）。平时不显示，悬停这一行（或键盘 Tab 进来）才出现，出现 150ms ease-out、消失 100ms ease-in；图标 50% 白，悬停变白、出底色（IconButton 轻自己的样子，外面不再加透明度）。收起时一直显示 |
+| `collapsed` | `boolean` | `false` | 收起：侧栏收成图标栏（宽 60）时用。标题和箭头淡出，只留 `action`（图标栏里宽 36，左右内边距 4，按钮居中），悬停在右边出 Tooltip，文字取 `action` 的 `label`（建议写「新建对话」这类全称） |
+
+其余原生 `<div>` 属性都能传。
+
+### Dropdown
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `trigger` | `ReactElement` | — | 触发器，点它开关菜单，比如 Button、IconButton。自动加 `aria-haspopup`、`aria-expanded`、`aria-controls`。右键菜单不写，用 `anchorPoint` |
+| `children` | `ReactNode` | — | 弹出的内容，一般是一个 Menu。挂在 body 上；出现 200ms ease-out，消失 150ms ease-in |
+| `open` | `boolean` | — | 展开（受控） |
+| `defaultOpen` | `boolean` | `false` | 默认是否展开 |
+| `onOpenChange` | `(open: boolean) => void` | — | 点外面、按 Esc、点菜单项关闭时都以 `false` 调用 |
+| `placement` | `"bottom-start"` `"bottom"` `"bottom-end"` `"top-start"` `"top"` `"top-end"` | `"bottom-start"` | 方向和对齐。放不下翻到另一边，左右不超出屏幕 |
+| `offset` | `number` | `4` | 离触发器的距离 |
+| `matchTriggerWidth` | `boolean` | `false` | 菜单和触发器一样宽，下拉选择的列表用 |
+| `anchorPoint` | `{ x: number; y: number }` | — | 右键菜单：出现在这个屏幕坐标（`clientX`、`clientY`），自己控制 `open` |
+| `closeOnSelect` | `boolean` | `true` | 点菜单项后关闭。多选菜单要保持展开时关掉 |
+| `haspopup` | `"menu"` `"listbox"` | `"menu"` | 触发器的 `aria-haspopup`，下拉选择用 `"listbox"` |
+
+其余原生 `<span>` 属性都能传。

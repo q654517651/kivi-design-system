@@ -54,7 +54,7 @@
   transform: scale(1.3125); /* 336 / 256，Figma 没变量 */
 }
 
-/* 遮罩：glass 本身已带 70% 透明度，不再叠透明度；背景模糊 24 */
+/* 遮罩：glass 本身已带 50% 透明度，不再叠透明度；背景模糊 24 */
 .kv-placeholder-image__mask {
   position: absolute;
   inset: 0;

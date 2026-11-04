@@ -12,19 +12,21 @@
   --color-bg-fill-popup: #2C2D2E;
   --color-bg-fill-mask: rgba(0, 0, 0, 0.6);
   /* 玻璃：悬浮在页面上的东西（菜单、下拉、右键、节点工具栏、参数面板、主站输入框），下面是什么都行。
-     和 --effect-glass-blur、描边 --color-border-subtle 一起用。贴在图片、视频上的控件用 on-media（11-03 用户定：从 #181818 70% 改成黑 50%） */
-  --color-bg-fill-glass: rgba(0, 0, 0, 0.5);
+     和 --effect-glass-blur、描边 --color-border-subtle 一起用。贴在图片、视频上的控件用 on-media。
+     11-03 从 #181818 70% 改成黑 50%；11-04 改成 #181818 50%（黑 50% 太暗，上面的 Container 看不清；压亮图和黑 50% 差不多） */
+  --color-bg-fill-glass: rgba(24, 24, 24, 0.5);
 
   /* 效果：Figma 效果样式「玻璃/背景模糊」 */
   --effect-glass-blur: 32px;
 
-  /* 填充与状态 */
-  --color-bg-fill-container-light-1: rgba(255, 255, 255, 0.08);
-  --color-bg-fill-container-light-1-hover: rgba(255, 255, 255, 0.12);
-  --color-bg-fill-container-light-1-pressed: rgba(255, 255, 255, 0.16);
-  --color-bg-fill-container-light-2: rgba(255, 255, 255, 0.04);
-  --color-bg-fill-container-light-2-hover: rgba(255, 255, 255, 0.08);
-  --color-bg-fill-container-light-2-pressed: rgba(255, 255, 255, 0.12);
+  /* 填充与状态：只有两档。深底（相对亮度 < 0.015）用 Light 1，浅底用 Light 2；默认、悬停、按下各管各的，不跨语义借用。
+     11-04 每档加 2%（原来 Light 1 是 8 / 12 / 16，Light 2 是 4 / 8 / 12），让深底和玻璃上的容器看得清 */
+  --color-bg-fill-container-light-1: rgba(255, 255, 255, 0.1);
+  --color-bg-fill-container-light-1-hover: rgba(255, 255, 255, 0.14);
+  --color-bg-fill-container-light-1-pressed: rgba(255, 255, 255, 0.18);
+  --color-bg-fill-container-light-2: rgba(255, 255, 255, 0.06);
+  --color-bg-fill-container-light-2-hover: rgba(255, 255, 255, 0.1);
+  --color-bg-fill-container-light-2-pressed: rgba(255, 255, 255, 0.14);
   --color-bg-fill-container-dark: rgba(0, 0, 0, 0.4);
   --color-bg-fill-container-dark-hover: rgba(0, 0, 0, 0.3);
 

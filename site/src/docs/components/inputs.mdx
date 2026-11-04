@@ -1,16 +1,16 @@
 import { Demo, PageHeader } from '@shell';
-import { DropzonePlayground, InputPlayground, NumberInputPlayground, SelectPlayground, TextareaPlayground, UploadRingPlayground, UploadTilePlayground } from './inputs.demos';
+import { InputPlayground, NumberInputPlayground, TextareaPlayground } from './inputs.demos';
 
 <PageHeader
-  eyebrow="通用组件"
-  title="输入控件"
-  lead="输入框、数字输入框、下拉选择、多行输入框：高度 32（多行除外），圆角 8，底色白 8%。上传用上传格和拖拽上传区。"
-  figma={['输入控件', '169:1439']}
-  status="草稿 0.1.0"
+  eyebrow="录入"
+  title="输入框"
+  figma={['输入框', '169:1439']}
   code="kivi/inputs"
 />
 
 ## Input
+
+输入框：输入一行文字，比如搜索、重命名。
 
 <InputPlayground />
 
@@ -35,13 +35,13 @@ import { DropzonePlayground, InputPlayground, NumberInputPlayground, SelectPlayg
 
 ## NumberInput
 
+数字输入框：输入参数数值，比如时长、Lora 权重。
+
 <NumberInputPlayground />
 
-## Select
-
-<SelectPlayground />
-
 ## Textarea
+
+多行输入框：输入大段文字，比如表单里的描述。
 
 <TextareaPlayground />
 
@@ -89,91 +89,6 @@ import { DropzonePlayground, InputPlayground, NumberInputPlayground, SelectPlayg
 </div>
 `} />
 
-## UploadTile
-
-<UploadTilePlayground />
-
-### 失败样式（待定）
-
-<Demo stage="base" code={`
-<div style={{ display: 'flex', gap: 24 }}>
-  {[['outline', '红描边'], ['dim', '变暗'], ['badge', '角标']].map(([style, name]) => (
-    <div key={style} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-      <UploadTile status="error" errorStyle={style} src="./placeholders/kivi-future-1x1.webp" errorMessage="网络中断，上传失败" />
-      <span style={{ color: 'var(--color-text-fill-tertiary)', fontSize: 12, lineHeight: '20px' }}>{name}</span>
-    </div>
-  ))}
-</div>
-`} />
-
-### 选文件、上传、完成、失败
-
-<Demo stage="base" code={`
-() => {
-  const [tile, setTile] = useState({ status: 'empty', src: '', progress: 0 });
-  const timer = useRef(0);
-  const last = useRef({ files: [], failed: false });
-  useEffect(() => () => window.clearInterval(timer.current), []);
-
-  // 假上传：2.4 秒走完。第一次走到 60% 失败，重试就成功
-  const run = (files) => {
-    const src = files[0].type.startsWith('image/') ? URL.createObjectURL(files[0]) : '';
-    const t0 = performance.now();
-    last.current.files = files;
-    setTile({ status: 'uploading', src, progress: 0 });
-    window.clearInterval(timer.current);
-    timer.current = window.setInterval(() => {
-      const p = Math.min(100, ((performance.now() - t0) / 2400) * 100);
-      if (!last.current.failed && p > 60) {
-        last.current.failed = true;
-        window.clearInterval(timer.current);
-        setTile((t) => ({ ...t, status: 'error' }));
-      } else if (p >= 100) {
-        window.clearInterval(timer.current);
-        setTile((t) => ({ ...t, status: 'done' }));
-      } else setTile((t) => ({ ...t, progress: p }));
-    }, 50);
-  };
-
-  return (
-    <UploadTile
-      status={tile.status}
-      src={tile.src}
-      progress={tile.progress}
-      accept="image/*"
-      onSelect={run}
-      onReplace={run}
-      onRetry={() => run(last.current.files)}
-      onRemove={() => setTile({ status: 'empty', src: '', progress: 0 })}
-    />
-  );
-}
-`} />
-
-## Dropzone
-
-<DropzonePlayground />
-
-### 只收图片、不超过 2 MB
-
-<Demo stage="base" code={`
-() => {
-  const [names, setNames] = useState([]);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 360 }}>
-      <Dropzone accept="image/*" maxSize={2 * 1024 * 1024} onSelect={(files) => setNames(files.map((f) => f.name))} />
-      <span style={{ color: 'var(--color-text-fill-tertiary)', fontSize: 12, lineHeight: '20px' }}>
-        {names.length ? '已选：' + names.join('、') : '还没选。拖个不是图片的文件，或者超过 2 MB 的图试试'}
-      </span>
-    </div>
-  );
-}
-`} />
-
-## UploadRing
-
-<UploadRingPlayground />
-
 ## 参数
 
 ### Input
@@ -182,11 +97,13 @@ import { DropzonePlayground, InputPlayground, NumberInputPlayground, SelectPlayg
 |---|---|---|---|
 | `leftIcon` | `IconName` | — | 左图标，16，`--color-text-fill-tertiary`。搜索框用 `Search` |
 | `counter` | `ReactNode` | — | 字数，框内右侧，12 号 tertiary，比如 `"0/50"`。传什么显示什么，超没超限自己算 |
+| `clearable` | `boolean` | `false` | 可清空：有字时右边出清空按钮（`CloseSmall` 16，tertiary，悬停 primary），点了清空、焦点回到输入框，照常触发 `onChange`（值是空）。禁用、只读时不出。搜索框用：`leftIcon="Search" clearable`。|
+| `onClear` | `() => void` | — | 点了清空按钮 |
 | `invalid` | `boolean` | `false` | 错误：1px `--color-status-danger` 描边，向里画，框大小不变。等于写 `aria-invalid` |
 | `placeholder` | `string` | — | 占位文字，`--color-text-fill-placeholder` |
-| `disabled` | `boolean` | `false` | 禁用：底白 4%（`--color-bg-fill-container-light-2`），文字、图标、字数 `--color-text-fill-disabled` |
+| `disabled` | `boolean` | `false` | 禁用：底白 6%（`--color-bg-fill-container-light-2`），文字、图标、字数 `--color-text-fill-disabled` |
 | `aria-label` | `string` | — | 没有可见文字标签时必须写 |
-| `className` | `string` | — | 加在最外层的框上。高 32，圆角 8（`--border-radius-8`），左右内边距 12，元素间距 8，文字 13 / 行高 20；底白 8%，悬停白 12%，聚焦只出现光标；宽度默认填满，要固定自己设 |
+| `className` | `string` | — | 加在最外层的框上。高 32，圆角 8（`--border-radius-8`），左右内边距 12，元素间距 8，文字 13 / 行高 20；底白 10%，悬停白 14%，聚焦只出现光标；宽度默认填满，要固定自己设 |
 
 `style` 加在最外层的框上，其余原生 `<input>` 属性（`value`、`defaultValue`、`onChange`……）都给里面的 `<input>`，`ref` 也指向它。
 
@@ -196,8 +113,9 @@ import { DropzonePlayground, InputPlayground, NumberInputPlayground, SelectPlayg
 |---|---|---|---|
 | `value` | `string` `number` | — | 数值，空是 `""`。传了就是受控，要自己在 `onChange` 里更新 |
 | `defaultValue` | `string` `number` | `""` | 非受控时的初始值 |
-| `onChange` | `(value: string) => void` | — | 输入时触发，参数是只剩数字的新值。自动去掉非数字，**只支持非负整数**：小数、负数、科学计数法都不支持（待定）。失焦被 `min` / `max` 夹住时也触发 |
-| `min` | `number` `string` | — | 最小值。失焦时小于它就改成它；输入过程中不夹，空着也不夹 |
+| `onChange` | `(value: string) => void` | — | 输入时触发，参数是只剩数字的新值。自动去掉非数字，默认只支持非负数，`min` 小于 0 时开头可以打一个负号；科学计数法不支持。失焦被 `min` / `max` 夹住、按小数位补齐时也触发 |
+| `precision` | `number` | `0` | 小数位：0 只能输整数；比如 Lora 权重写 1，输入时最多留 1 位，失焦补齐成「1.0」。|
+| `min` | `number` `string` | — | 最小值。失焦时小于它就改成它；输入过程中不夹，空着也不夹。小于 0 时允许打负号 |
 | `max` | `number` `string` | — | 最大值。失焦时大于它就改成它 |
 | `unit` | `ReactNode` | — | 单位，12 号 tertiary，和数值间距 4，比如 `"秒"` |
 | `disabled` | `boolean` | `false` | 禁用：数值和单位都是 `--color-text-fill-disabled` |
@@ -206,26 +124,6 @@ import { DropzonePlayground, InputPlayground, NumberInputPlayground, SelectPlayg
 
 `style` 加在最外层的框上，其余原生 `<input>` 属性都给里面的 `<input>`，`ref` 也指向它。
 
-### Select
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `options` | `SelectOption[]` | — | 选项 `{ value, label, icon?, disabled? }`。`icon` 是这一项的左图标（比如模型 logo），选中后触发器的左图标跟着换；`disabled` 灰色，选不了。列表是 Menu + MenuItem，当前项是 MenuItem 的「选中」状态：白 8% 底，不打勾 |
-| `variant` | `"fill"` `"plain"` | `"fill"` | 填充 / 无底。填充用在表单和面板，宽度拉伸，内边距 12，底白 8%，悬停白 12%；无底用在工具条，宽度跟着内容走，内边距 8，底透明，悬停白 8%，展开白 12%。高 32，圆角 8（`--border-radius-8`） |
-| `value` | `string` `null` | — | 选中的值，没选传 `null`。传了就是受控，要自己在 `onChange` 里更新 |
-| `defaultValue` | `string` `null` | `null` | 非受控时的初始值 |
-| `onChange` | `(value: string) => void` | — | 选了一项时触发，参数是选项的值 |
-| `placeholder` | `string` | — | 没选时显示的占位文字。填充是灰的（`--color-text-fill-placeholder`）；无底放在工具条上当入口名（比如「模型」「技能」），和选了值一样白，左图标也白 |
-| `leftIcon` | `IconName` | — | 左图标，16，tertiary。选中的选项带 `icon` 时用选项的 |
-| `disabled` | `boolean` | `false` | 禁用：占位文字和箭头变灰，不能展开 |
-| `open` | `boolean` | — | 展开。传了就是受控；展开时右箭头从 `DownArrowSmall` 换成 `UpArrowSmall` |
-| `defaultOpen` | `boolean` | `false` | 非受控时一开始是不是展开 |
-| `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发 |
-| `placement` | `DropdownPlacement` | `"bottom-start"` | 列表出现的位置，放不下会自己翻到另一边。工具条贴着屏幕底部时写 `"top-start"` |
-| `aria-label` | `string` | — | 触发器上的说明，没有可见标签时必须写 |
-
-`className`、`style`、`ref` 和其余原生 `<span>` 属性加在最外层的壳上，填充的宽度在这里设。列表挂在 body 上，和触发器一样宽（无底的按内容撑宽，但不比触发器窄）。
-
 ### Textarea
 
 | 属性 | 类型 | 默认 | 说明 |
@@ -233,59 +131,8 @@ import { DropzonePlayground, InputPlayground, NumberInputPlayground, SelectPlayg
 | `counter` | `ReactNode` | — | 字数，右下角，12 号 tertiary，和正文间距 8，比如 `"0/500"`。传什么显示什么，超没超限自己算 |
 | `invalid` | `boolean` | `false` | 错误：1px `--color-status-danger` 描边，字数也变 danger。等于写 `aria-invalid` |
 | `placeholder` | `string` | — | 占位文字 |
-| `disabled` | `boolean` | `false` | 禁用：底白 4%，字数 `--color-text-fill-disabled` |
+| `disabled` | `boolean` | `false` | 禁用：底白 6%，字数 `--color-text-fill-disabled` |
 | `aria-label` | `string` | — | 没有可见标签时必须写 |
 | `className` | `string` | — | 加在最外层的框上。默认 320 × 104，右下角可以拖着改高度，宽度默认填满；圆角 8，内边距 12，文字 14 / 行高 22 |
 
 `style` 加在最外层的框上，其余原生 `<textarea>` 属性都给里面的 `<textarea>`，`ref` 也指向它。
-
-### UploadTile
-
-方格 96 / 64，圆角 8（`--border-radius-8`，和参考卡片一样），默认底白 4%（`--color-bg-fill-container-light-2`）。拖文件到空格子或完成的格子上：品牌色描边（`--color-border-focus`）+ 品牌色淡底（`--color-brand-subtle`）。上传到哪一步由外面管，组件只管样子。其余原生 `<div>` 属性都能传，`ref` 指向最外层。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `status` | `"empty"` `"uploading"` `"done"` `"error"` | `"empty"` | 空：整格是添加按钮，中间 `AddSmall` 20，悬停底白 8%，点一下选文件。上传中：本地预览变暗（黑 40%）+ 中间 `UploadRing`。完成：原图铺满（cover），没有预览图的显示 `File` 图标；悬停或聚焦出现右上角按钮条（`ButtonGroup`，删除、重新上传，各带 Tooltip，64 的格子里和格子一样宽、贴上边）。失败：见 `errorStyle` |
-| `size` | `96` `64` | `96` | 边长 |
-| `src` | `string` | — | 预览图地址。选了文件后用 `URL.createObjectURL(file)` 生成本地预览传进来，用完自己 `revokeObjectURL` |
-| `progress` | `number` | `0` | 上传进度 0–100，上传中用 |
-| `errorStyle` | `"outline"` `"dim"` `"badge"` | `"outline"` | 失败的样子，**待定**，三种放在一起比：红描边 = `--color-status-danger` 描边 + 中间重试图标（`Reset` 20）+ 12 号字写 `errorMessage`，整格点一下重试，不显示预览；变暗 = 预览变暗（黑 40%）+ 中间 28 的小重试按钮（IconButton · 浮层）；角标 = 保留预览，左上角 20 的 danger 圆 + 感叹号，悬停出 Tooltip 写 `errorMessage`，悬停整格时变暗并出现重试按钮 |
-| `errorMessage` | `string` | `"上传失败"` | 失败原因 |
-| `accept` | `string` | — | 收哪些文件，写法同 `<input accept>`，选文件和拖进来都按它检查。不传不限 |
-| `multiple` | `boolean` | `false` | 空格子能不能多选。完成后的重新上传只收一个 |
-| `maxSize` | `number` | — | 单个文件最大多少字节，超了拒收 |
-| `disabled` | `boolean` | `false` | 禁用：不能点、不能拖，按钮条里的按钮也禁用 |
-| `dragging` | `boolean` | — | 拖拽中。不传由组件自己判断，用 `data-dragover` 表现，不用管；文档里摆静态样子才传 |
-| `label` | `string` | `"上传文件"` | 空格子上按钮的说明，读屏用 |
-| `onSelect` | `(files: File[]) => void` | — | 空格子选好文件（点选或拖进来）后触发，参数是通过检查的文件 |
-| `onReplace` | `(files: File[]) => void` | — | 完成的格子里点「重新上传」选好文件、或把文件拖到格子上后触发 |
-| `onRemove` | `() => void` | — | 点删除 |
-| `onRetry` | `() => void` | — | 失败后点重试 |
-| `onReject` | `(files: File[], reason: FileRejectReason) => void` | — | 文件被拒时触发。`FileRejectReason` 是 `"type"`（类型不对）或 `"size"`（太大） |
-| `toastOnReject` | `boolean` | `true` | 被拒时自动弹 toast：「不支持这种文件」「文件超过 N MB」。页面上要放一个 `<Toaster />` |
-
-### Dropzone
-
-整块拖拽上传区：宽度填满，最矮 160，圆角 12（`--border-radius-12`），内边距 24，白 4% 底 + 1px 虚线描边（`--color-border`）。上面是 `Upload` 24，下面标题 13 / 20（primary）、提示 12 / 20（tertiary），元素间距 8。悬停底白 8%、描边 `--color-border-strong`。拖入：实线品牌色描边（`--color-border-focus`）+ 品牌色淡底，标题换成「松手上传」。不收（拖来的类型不对、或刚放下的文件被拒，描边 `--color-status-danger` + danger 淡底，标题换成「不支持这种文件」或「文件超过 N MB」，放下后保留 1.5 秒）。禁用：描边 `--color-border-subtle`，文字 `--color-text-fill-disabled`，不能点、不能拖。最外层是 `<label>`，里面有看不见的文件输入，键盘可聚焦、Enter 或 Space 选文件。其余原生 `<label>` 属性都能传，`ref` 指向最外层。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `accept` | `string` | — | 收哪些文件，写法同 `<input accept>`，比如 `"image/*,.pdf"`，选文件和拖进来都按它检查。拖的过程中按类型提前判断（只有 `类型/*` 这类规则能提前判断，扩展名要放下才知道） |
-| `maxSize` | `number` | — | 单个文件最大多少字节，超了拒收 |
-| `multiple` | `boolean` | `true` | 一次能选几个。`false` 只收第一个 |
-| `title` | `ReactNode` | `"拖拽文件到这里，或点击上传"` | 标题。拖入、不收时固定用上面写的字 |
-| `hint` | `ReactNode` | 按 `accept`、`maxSize` 写 | 提示行，比如「支持 图片，单个文件不超过 10 MB」。都没有就不显示 |
-| `disabled` | `boolean` | `false` | 禁用 |
-| `dragging` / `rejected` | `boolean` | — | 拖拽中、类型不收。不传由组件自己判断，用 `data-dragover`、`data-rejected` 表现，不用管；文档里摆静态样子才传 |
-| `onSelect` | `(files: File[]) => void` | — | 选好文件（点选或拖进来）后触发，参数是通过检查的文件 |
-| `onReject` | `(files: File[], reason: FileRejectReason) => void` | — | 文件被拒时触发：`"type"` 类型不对，`"size"` 太大 |
-| `toastOnReject` | `boolean` | `true` | 被拒时自动弹 toast。页面上要放一个 `<Toaster />` |
-
-### UploadRing
-
-上传进度环：直径 28，线宽 3，底圈白 30%，弧线白色圆头，中间 9 号字写百分比。盖在暗色遮罩（`--color-bg-fill-container-dark`）上用，UploadTile 的上传中和 ReferenceStack 的上传中卡片是同一个。其余原生 `<span>` 属性都能传，`ref` 指向最外层。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `progress` | `number` | `0` | 进度 0–100，超出的夹住 |
-| `aria-label` | `string` | `"上传中"` | 读屏用，说明是什么在上传，比如「图片1上传中」。最外层有 `role="progressbar"` |
