@@ -15,10 +15,10 @@
 - `kivi-design-system/workflows/`：子技能（11-03 起）。`build-page.md` 搭页面和原型，`acceptance.md` 验收（给 UI 设计师验开发稿：对照 Figma、前端代码、交互、需求，分「阻塞 / 不一致 / 体验 / 建议」出单文件 HTML 报告）；加图标子技能还没做。所有功能都在这一个技能包里，不放外部目录，用户只装一个包。
 - `kivi-design-system/site/`：规范网站兼组件库，React 18 + TypeScript + Vite + MDX。规范的正文就写在这里。
   - 本地看：在 `site/` 下 `npm install`、`npm run dev`，打开 `http://localhost:4173/`（内网用本机内网地址 `:4173`）。
-  - `src/kivi/`：组件库本体。`tokens.css` 是所有数值唯一的地方；`Icon.tsx` + `icons.ts` 是从 Figma 导出的图标；每个 Figma 页一个文件夹：组件 `.tsx` + 这一页的 `.css` + `index.ts`。
-  - `src/docs/`：规范页面（`.mdx`，规范文字）+ 旁边的 `.demos.tsx`（属性面板、状态矩阵），按 Figma 的页分。
+  - `src/kivi/`：组件库本体。`tokens.css` 是所有数值唯一的地方；`Icon.tsx` + `icons.ts` 是从 Figma 导出的图标；按组件类型分文件夹（11-04 重排：menu、navigation、inputs、selection、upload、tags-avatar、media、tooltip、generation、reference、agent-process 等，旧页到新页的对应见网站「旧名对照」的「页面改名」）：组件 `.tsx` + 这一类的 `.css` + `index.ts`。
+  - `src/docs/`：规范页面（`.mdx`，规范文字）+ 旁边的 `.demos.tsx`（属性面板、状态矩阵），文件夹和目录分组跟 `src/kivi/` 一致。
   - `src/docs/templates/`：页面模板（整页怎么拼，只能看），对应 Figma 的「模板 · …」页，目录里放最上面（11-02 用户定）。外框 `frame.tsx`、布局 `templates.css`。业务页上面不再放整体演示。
-  - `src/shell/`：网站自己的外壳（目录、演示、属性面板），不属于组件库。页面清单在 `src/shell/nav.ts`。
+  - `src/shell/`：网站自己的外壳（目录、演示、属性面板），不属于组件库。页面清单在 `src/shell/nav.ts`。全局搜索在 `src/shell/search/`，索引由 `scripts/search-index.mjs` 构建时从 nav.ts、MDX、`tokens.demos.tsx`、`icons.ts` 生成，新页进了 nav.ts 就自动能搜。
   - `assets/`（skill 根目录）是网站的静态目录，页面里用 `./placeholders/…`、`./empty-state/…`。
 - `kivi-design-system/references/`：旧的 md 规范，正在往网站迁，迁完删掉，别再往里加。
 - `kivi-design-system-workspace/`：旧版备份（skill-snapshot-v0.1）、存档（纯 HTML 版网站在 `archive/site-html/`，别的对话做的演示在 `archive/demos/`）、测试结果，不进 skill。
@@ -26,26 +26,28 @@
 
 ## 写规范的规矩
 
+- **现在的样式都是定好的（11-04 用户强调，非常重要）：用户没说要改的，一律不动**，包括顺手「统一」「优化」、按规矩推出来的改动。拿不准就先问，不自己改，也不让子代理改。
+- **设计规则只写进技能（11-04 用户强调）**：设计规范本身的硬规则（变量、底色、浮层、按钮、提示、状态、动效、图标、组件命名）只写在网站「设计规则」页 `kivi-design-system/site/src/docs/foundations/rules.mdx`，SKILL.md 和验收清单都指向它。用户说了新的设计规则，就写进那一页对应分节，再在对应组件页、组件里落地；不能只记在这个文件或记忆里。这个文件只记这个项目怎么干活。
+- **严禁脑补多余的尺寸、变体（11-04 用户发火）**：组件只做线上和模板里真用到的尺寸、类型，用户没要求的不加，「以后可能用」「凑一套」都不算理由。功能一样的不拆成两个组件（比如从别处添加和从电脑上传都是「添加素材」）。发现没人用的尺寸、重复的组件，先报给用户。
 - 以 Figma 为准，Figma 里没定的不写。Figma 和 skill 的同步由用户负责。
+- 先网站、后 Figma（11-04 用户定）：组件先在网站设计好，Figma 不追着改；要改 Figma 的记进 `kivi-design-system-workspace/page-notes/figma-sync-pending.md`，用户说同步时一批做。
 - 不参考代码。前端代码是按 UI 发挥的，不是设计稿。代码库 `ai-design-web` 只读，不改、不提交。
 - 网站是唯一来源，不再另写 md。skill 直接读 `src/docs/` 的 MDX 和 `src/kivi/` 的组件源码。
-- 文件按 Figma 的页分。Figma 改了哪一页，就改对应的文档页和 `src/kivi/` 里那一页的文件夹。
+- 文件按页分，网站和 Figma 用同一套分页（11-04 用户定按组件类型重排：操作 / 导航 / 录入 / 展示 / 浮层 / 反馈 + 业务组件按产品，Figma 要跟着重新分页）。哪一页改了，就改对应的文档页和 `src/kivi/` 里那一页的文件夹。
 - 页面照 HeroUI 的写法（10-29 用户定，样板是 `src/docs/components/button.mdx`、`button.demos.tsx`）：
-  - 页头一句话；每个组件一个 `##` + 属性面板，所有尺寸、类型、状态都在面板里切；整屏 / 整块的演示放「页面模板」组，不放业务页上面（11-02 改）。
+  - 组件页、业务页页头不写描述（11-04 用户定：「页面上所有能点的按钮」这种是废话）；每个组件一个 `##`，标题下一句只写两件事「中文名：用处」，比如「标签：展示参数和状态，比如模型名、比例、生成中。」不写废话、不写样子和数值、不写「XX 的外壳 / 里的一项」这种同义反复（11-04 用户定）。再放属性面板，所有尺寸、类型、状态都在面板里切；整屏 / 整块的演示放「页面模板」组，不放业务页上面（11-02 改）。
   - 额外示例只放面板演示不了的，小标题 + 演示，不写字。
   - 最下面 `## 参数`：每个组件一张「属性 / 类型 / 默认 / 说明」表，关键数值写进说明。
-  - 不写用途、结构、样子、用法，不放状态矩阵；待定、讨论、Figma 和线上的对比、为什么这么定，都不进页面，放 `kivi-design-system-workspace/page-notes/<页>.md`。
+  - 除了组件标题下那一句，不写用途、结构、样子、用法，不放状态矩阵；待定、讨论、Figma 和线上的对比、为什么这么定，都不进页面，放 `kivi-design-system-workspace/page-notes/<页>.md`。
   - 属性面板里用不上的开关直接不显示（`rules` 返回 true）；代码超过 8 行默认收起。
   - 属性面板和预览双向同步（11-02 用户定）：组件自己能变的状态（展开、勾选、开关、选中、收藏、输入的字、选的项）写成受控，onChange 里用 `render` 的第二个参数 `update` 写回面板；面板上没有的状态（比如点了第几个选项卡）也记进 `update`。悬停、聚焦这种一碰就变的不写回，面板上的悬停、聚焦是摆静态样子用的。
-- 样子、变量、组件以 Figma V2 为准；交互（点哪出什么、什么时候出）照线上产品。两边不一致的写进页面的「待定」。
+- 样子、变量、组件以 Figma V2 为准；交互（点哪出什么、什么时候出）照线上产品。两边不一致的记进 `page-notes/`，不写进页面。
 - 组件用 React（2026-10-29 用户定：前端是 React，纯 HTML 是「毛坯房」）。不引任何 UI 库、定位库、动画库，交互自己写进组件。组件名就是 Figma 组件名，props 英文、和 Figma 属性一一对应、带中文注释，设 `displayName`。样式用普通 CSS：类名 `kv-组件名`，修饰 `--`，部件 `__`，状态用 `disabled`、`aria-*`，没有对应的用 `data-*`，不用 `is-*`。
 - 组件写法照 HeroUI、Radix 这类成熟组件库（10-29 用户定，不能做得垃圾）：细则在网站「组件写法」页（`src/docs/component-api.mdx`）：forwardRef、属性透传、受控三件套、事件合并，公用逻辑放 `src/kivi/hooks/`，组件里不再各写一份。改完在 `site/` 下跑 `npm run check`。和前端怎么协作（抄代码还是装包）还没定。
-- 数值变量（间距、圆角、描边粗细、字号、行高、透明度、时长）直接用数字命名，不用 xs、sm、xxl 这类（10-29 用户定）；只有 `border/radius/round` 例外。Figma 变量名不能带点，小数写成横杠：`border/width/1-25` ↔ `--border-width-1-25`。
-- 样式只用 `tokens.css` 里的变量，不写死颜色。规范文字写进 MDX，别用 JS 生成，AI 要能直接读。
-- 动效都用加减速（tokens 里的缓动），不用匀速；只有循环动画（转圈、扫光、流光）例外（10-29 用户定）。曲线只从变量里选，不另写 cubic-bezier；接近的就修正变量，修不了就从变量里选（11-03 用户定）。
-- 演示要组件化：同一个东西在几页出现（比如生成用的下拉、参数面板），先抽成通用组件，再往里填内容，只写一份。生成控件在 `src/docs/business/generation.tsx`，画布和主站都用它（10-29 用户定）。
-- 图标用 Figma 的名字和图形，不用 Lucide 代替。
-- 改名必须有映射表：Figma 各页的「迁移映射」，网站里统一放在「旧名对照」一页（`src/docs/legacy-names.mdx`），不放在各组件页。
+- 页面不写状态（11-04 用户定）：页头、正文、图标备注里不写「草稿」「待确认」「提议」「Figma 还没有」这类，改东西不用跟着改状态；全站只有顶栏一个总版本号（`v0.1.0`）。「废弃」是用法不是状态，保留。
+- 规范文字写进 MDX，别用 JS 生成，AI 要能直接读。
+- 演示要组件化：同一个东西在几页出现（比如生成用的下拉、参数面板），先抽成通用组件，再往里填内容，只写一份。生成控件在 `src/kivi/generation/`（11-04 从 docs 挪进组件库），画布和主站都用它（10-29 用户定）。
+- 改名必须有映射表，只放网站「旧名对照」一页（`src/docs/legacy-names.mdx`，变量和组件都在这，11-04 用户定），不放各组件页；Figma 各页的「迁移映射」11-04 已删，只留一句话 + 网站链接，别再加回去。
 - 写法：中文、短句；图片这类素材放 `assets/`；路径小写加连字符。
 - 改 Figma 组件库本身时，先读 `references/figma-kit.md`。
 
@@ -91,6 +93,12 @@
 - Agent 统一（11-02 用户定）：主站 Agent 和画布侧栏 Agent 一套对话组件，只有产出不同（主站 4 张大图跟在回复下、点了全屏；画布结果在节点里，聊天里同步缩略图、点了定位节点）。不整体折叠，工具调用改成 `ProcessGroup` 一行滚动（停 0.5 秒才扫光、最少停 0.3 秒、做完「调用了 N 个工具」不自动展开、箭头悬停才出），记在 `page-notes/agent.md`。询问也做成能收起的 `AskRecord`（询问中 / 已询问 / 询问三种状态）。Figma 还没有 ProcessGroup、AskRecord。业务组件拆页（生成 / 对话 / 画布 / 主站 + 页面模板）还没定。
 - Tooltip 加「长文」类型和「禁用」（11-02，用户定：不能搞特例，缺什么就给组件加类型和状态）：长文给被截断的长文字看全文，14 / 22、能换行、和触发元素一样宽（至少 240）、内边距 8 / 12；`disabled` 时不出现。GenPrompt 照线上改成复制按钮跟在最后一个字后面、自己量行数超两行收起，看全文用 Tooltip 长文。Figma Tooltip 加了「类型=长文」，文字是 Noto 14 / 22，要改回苹方并套「文字/14 常规」。
 - 待拍板清单：`kivi-design-system-workspace/decisions-2026-10-29.md`。
+- 目录重排（11-04，用户定）：通用组件分操作（按钮）、导航（菜单、导航）、录入（输入框、选择、日期、上传）、展示（标签和头像、图片和视频、正文排版、滚动条）、浮层（提示、弹窗）、反馈六组；业务组件分生成（PromptBox、参考区、附件条、MentionChip、参数面板、Lora）、画布、标注、Agent 对话、Agent 过程（工具调用、思考块、生成结果）、主站，资产待加。`src/kivi/` 文件夹跟着拆：menu、navigation、upload、tags-avatar、media、tooltip、generation、agent-process；组件名不变，页名映射在「旧名对照 · 页面改名」。Figma 还没跟着分页。
+- Figma 模板页整理和重新分页（11-03、11-04）：「模板 · 画布」四个分区照样板排好（分组 + 小标题 + 示例标签，一行最多 3 个，组间距 120）；`_doc/section-bg` 改成 #2A2B2D；Figma 按网站新目录分页：新建菜单、导航、日期、上传、正文排版、滚动条、提示、生成、标注、Agent 过程、资产和三个模板页，改名输入框、选择、标签和头像、图片和视频、Agent 对话，分区照组件挪好，迁移映射写了页面来源，网站页头 Figma 链接已换。脚本挪不动带苹方的东西，挪过的都换成 Noto。还要用户手动：拖两页顺序、把 ProcessGroup 剪到「Agent 过程」、点头后删「菜单和提示」；「模板 · 主站 / Agent / 通用」还没整理，整页稿还没挪到「页面 · …」。记录在 `page-notes/figma-sync-2026-11-02.md` 末尾。
+- 映射表收成一处（11-04，用户定）：网站「旧名对照」补全成唯一的表：变量 146 行（Figma 三张 53 行 + 11-03 + 新增 50 + 线上有、V2 不收 32）、图标、组件补了 56 行，按新页名分节；图标页里重复的那份删了；变量页补了 spring、两个阴影、完整 Figma 路径。Figma 各页的迁移映射已删，换成一句话 + 网页和 Git 链接；`popup-raised` 变量删了。tailwind 新键名和 safelist 是代写的，要前端确认。
+- 11-04 用户定（别再忘）：Agent 回复下的推荐按钮用 Button 类型 = 轻（`light`）；生成中点阵整页同步：不传 `effect` 时整页共用一个方案、共用一个时钟（`useGenerating`、`player.ts`），同一排几张节奏一致；结果叠放只有 MediaGroup 一个，MediaStack 删了，画布模板改用 MediaGroup（点开、点图定位节点）。
+- 组件收敛（11-04，用户定，盘点在 `page-notes/component-convergence-2026-11-04.md`）：侧栏三件并进 Menu（`variant="plain"`，MenuItem 加 collapsed / editing / more，MenuLabel 加 collapsible / action / items）；ProcessDrawer 改名 Collapse 放通用；四条分割线合成 Divider；NodeToolbar 改成 ButtonGroup glass `size={44}`，CanvasToolbar 改成 ButtonGroup `variant="surface" size={56}`（实色，用户定不改玻璃）；左侧栏「更多」悬停没底色、文字变亮；样片模式从组件库删了；ParamValue → NumberInput；ToolbarSwitch → Switch 带文字；添加格合成 AddTile；NodePanelRefs → AttachmentStrip；拖入高亮和叠层各统一一份。Tooltip 只写工具名（加快捷键），带说明和长文的用 Popover（`variant="long"`）。SendButton、ResultTile / NodeCard 不合。映射都在旧名对照「组件合并（11-04）」。Figma 都没跟。
+- 新旧组件总表（11-04）：`kivi-design-system-workspace/page-notes/component-inventory.md`，线上功能分「舍弃 / 转换 / 新做」，用户定过的结论都记这里，补组件、算覆盖、派活都以它为准，改了结论就改它。
 - 外部审查逐条过完并改了（10-30）：记录在 `kivi-design-system-workspace/review-2026-10-30.md`，对比图、改后对比、旧版里库没有的配图都在同名文件夹（发用户的是内嵌图片的单文件 html）。定的：参数面板、音频参数、工具条顺序（类型 → 模型 → 参考类型 → 参数）、画布参考类型在底部、MenuItem 禁用、音量浮层都以网站为准，Figma 已跟改；参考浮层一行 5 个、视频音频带时长；生成中分「没素材无遮罩」和「有原素材 + 遮罩 + 模糊 + 点阵」两种（ResultTile 用 `src`、NodeCard 用 `cover`）；FileCard 废弃；播放器悬停立刻播、属性面板去掉比例；首尾帧外部换图会更新。Figma 里仿的分段 / 下拉要换实例、换成 Noto 的文字要改回苹方，清单在记录里。网站截图脚本在 scratchpad（临时）。
 - 旧版（KIVI 3.5-3.14，fileKey `jF1VC4ldJtDK9ysA8h2K4c`）里库没有的：16 类通用零件（日历、级联子菜单、两行菜单项、搜索框、上传区、文件树、确认气泡、横幅、进度环、批量条、色块、尺寸输入、筛选胶囊、分步引导、画布缩放条 / 小地图 / 框选、正文排版）+ 约 12 个业务模板，配图在 `review-2026-10-30/旧版里库没有的.html`，还没排期。
 - 空状态 IP 插图从 Figma 导出到 `assets/empty-state/`（4 张，画布失败态也用 failed.png）。
@@ -109,7 +117,13 @@
 - 11-03 技能拆成子技能：SKILL.md 只管分任务和路由，原来的「原型」「没有设计稿时」挪到 `workflows/build-page.md`，「审查」并进新写的 `workflows/acceptance.md`（验收），「规范没覆盖时」的结论档改成和验收分级一致（不一致 / 建议）。用户还没看过验收那份。
 - 生成结果组 `MediaGroup`（11-03，先做效果，放在「Agent 工具」页「生成结果」）：标题行 + 叠放 ↔ 两列瀑布流，封面取第一张成功的、叠放比例跟封面，展开收起只动 transform、缓动 ease-expand，展开 400 起每张 +10 最多 700、收起固定 300；叠层照 LibTV（右错 4 / 8、旋转 2° / 4°、两层都白 16% `container-light-1-pressed`）。11-03 用户定曲线不能有例外：参考区和这里自写的竖向缓动删了，不走弧线。还没换掉画布模板里的 MediaStack，Figma 没跟改，参数表没写。
 - 11-03 Dialog 宽度按线上弹窗内容改成 400 / 560 / 800 / 1024 / 1200 / full（`size` 直接写数字，原 S / M / L / XL 停用，旧名对照有映射；full 铺满、圆角 0；遮罩离边 32），理由在 `page-notes/dialog.md`；Figma Dialog 的尺寸和内容区换 Slot 还没改。线上已定要改的记在 `kivi-design-system-workspace/acceptance/live-frontend.md`（验收待改清单），之后统一交前端。
-- 11-03 P0 第一批（网站先做，Figma 都还没有，标待确认）：Popover（提示类，带箭头、popup 实色底，悬停 / 点击，在「菜单和提示」页）、ScrollArea（新页「滚动条」，照 Radix：原生滚动 + 自画滑块，滚动时出现、停 0.6 秒淡出、悬停 6→8、可拖、触底回调、渐隐）、Image（「反馈」页，加载中骨架 / 淡入 / 失败用 IP 插图 + 重试）、UploadTile + Dropzone + UploadRing（「输入控件」页，失败样式 outline / dim / badge 三种待定，记在 `page-notes/inputs.md`）、DropOverlay（主站 PromptBox 和画布 Agent 输入框拖文件「松手上传」，`hooks/useFileDrop`）。还没做：通知 Notification、IconButton `loading`、下拉打开时按钮保持按下、「文字」改名「无底」，等用户定。
+- 11-03 P0 第一批（网站先做，Figma 都还没有，标待确认）：Popover（提示类，带箭头、popup 实色底，悬停 / 点击，在「菜单和提示」页）、ScrollArea（新页「滚动条」，照 Radix：原生滚动 + 自画滑块，滚动时出现、停 0.6 秒淡出、悬停 6→8、可拖、触底回调、渐隐）、Image（「反馈」页，加载中骨架 / 淡入 / 失败用 IP 插图 + 重试）、UploadTile + Dropzone + UploadRing（「输入控件」页，失败样式 outline / dim / badge 三种待定，记在 `page-notes/inputs.md`）、DropOverlay（主站 PromptBox 和画布 Agent 输入框拖文件「松手上传」，`hooks/useFileDrop`）。通知 Notification 已做（「反馈」页）。还没做：IconButton `loading`、下拉打开时按钮保持按下、「文字」改名「无底」，等用户定。
+- 11-03 P1 选择类（网站先做，Figma 都还没有，标待确认；讨论和用户定的在 `page-notes/selection-p1.md`，线上现状复刻 `selection-p1-live-2026-11-03.html`）：用户定选项卡片格、工具箱控件、模型卡和模型浮层、提示词助手都不做（模型选择废弃，工具箱以后映射到已有组件），视频高清面板、裁剪栏、技能面板、资产页做模板。已做：新页「日期」DateRangeFilter + Calendar（照旧版 14637:17589 和线上：浮层玻璃，日历是浮在日期框下面的第二层；11-04 从「在面板里换掉预设」改回来，触发器去掉尺寸）；Input 加 `clearable`（搜索框）；NumberInput 加 `precision`；新页「业务组件 · Lora」LoraField / LoraSettings / LoraCard / LoraPicker，Popover 加 `variant="panel"`（玻璃、无箭头）。两行菜单：MenuItem 加 `description`（图标 24，两行选中打勾、单行用底色，11-03 用户定），Select 选项加 `description` 和 `preview`（音色试听）；生成模式、模型偏好、音色已换上。菜单项图标 16 / 20 / 24 列为低优先级、以后讨论（11-03 用户定）。11-04：模型偏好 `GenModelPicker`、技能面板 `SkillPicker`（docs/business，主站和画布 Agent 共用，旧的 GenModelSelect、SkillSelect 删了）；新模板「技能面板」「画布工具」（工具面板、裁剪 / 扩图条、视频封装弹窗），「资产管理」只有顶栏（收藏筛选勾选框 / 胶囊两种，等用户挑）；资产组件：11-04 做了 CoverGrid、FolderCard、ProjectCard、CreateCard（`kivi/asset/`，「业务组件 · 资产」页，按建议先做：分开做、新建卡统一实线、空文件夹用 Folder 图标、「⋯」悬停才出）；AssetCard（和 ResultTile 合不合待定）、BatchBar 还没做。资产管理模板照用户交互原型（本机 kivi-prototype 的 assets-home，记录在 `page-notes/asset.md`）做了总览：我的素材（文件夹）/ 我的画布 / 生成历史（按天分组，来源、类型、收藏胶囊、搜索筛选），FolderCard 数量照线上「名字 (数量)」，日期分组不带作品数；历史格先用 ResultTile。差别记在 `page-notes/skill-panel.md`、`canvas-tools.md`，总表 `page-notes/component-inventory.md`。
+- 11-04 缺口对话补了 6 项（网站，Figma 没跟，明细在总表「已做」）：思考块 `ThinkingBlock`、`UserMessage` 超 12 行折叠、`MessageFeedback`（含点踩原因）、`AttachmentStrip` + `PreviewCard`（ReferenceItem 加视频 / 文件）、`Minimap` + 缩放条（`ButtonGroup variant="glass"`）、新页「标注」（`AnnotationBox`、`AnnotationMarker`、`AnnotationComment`，`MentionChip type="annotation"`）。公用复制逻辑进 `hooks/useCopy`；IconButton 轻选中不换色。
+- 归类和命名统一（11-04，照两份外部审查，用户定）：网站新加「基础 · 设计规则」页（`docs/foundations/rules.mdx`，所有设计硬规则只写这里，SKILL.md、验收清单指向它）和「展示 · 布局」页（Divider、Collapse）；生成控件（各种 Select、参数面板、GenModelPicker、SkillPanel / SkillPicker）挪进 `src/kivi/generation/`，选项在 `options.ts`，演示技能列表在 `docs/business/skill-data.ts`；属性统一 `variant` / `type` / `status`、尺寸写数字（Button 28/32/36、Tabs 32/36、Loading 16/24/40、EmptyState 160/96、VideoPlayer 改 `variant="card" | "preview"`），映射在旧名对照「属性统一（11-04）」；页头和正文的状态全删，顶栏只留 `v0.1.0`；画布、标注、Agent 过程页小标题改组件名，节点工具栏、画布工具栏挪到模板「画布工具」。四条全局规则已落地：技能没有不能点的状态、IconButton 选中一档白底不变绿、占位按钮用轻、按钮下拉箭头 tertiary。Figma 都没跟（记在 figma-sync-pending.md）。
+- Container 底色对比度（11-04，用户定）：相邻两层对比度不低于 1.12；深浅按背景相对亮度分，< 0.015 深底用 Light 1，≥ 0.015 浅底用 Light 2，写在「设计规则 · 颜色和底色」；全站按这个改完，重跑盘点 316 处全合规。容器给里面的组件传 `--kv-nested-fill`。盘点和改动在 `page-notes/container-contrast-2026-11-04.md`。 后来又定：只有 Light 1 / Light 2 两档，默认、hover、pressed 各管各的，不跨语义借用、不在背景上叠色；常驻底色（选中、展开、当前页）用默认，悬停一律 hover；玻璃改 #181818 50%，Container 每档加 2%（Light 1 10/14/18，Light 2 6/10/14），重跑 344 处全合规。
+- 参考和引用单开一页（11-04，用户定）：「业务组件 · 参考和引用」（`docs/business/reference.mdx`，代码 `kivi/reference/`），放主站 PromptBox 的参考区和参考格、画布生成面板的附件条和首尾帧、所有 @ 引用胶囊（MentionChip，标注页那份也挪来）、悬停预览。纯搬家，样式没改（搬前搬后 177 个元素逐个比过）。三家共用的删除角标规则还在 generation.css。 之后又定：MentionChip 加了 7 种类型的属性面板，图标类（音乐、技能、节点、模型）直接放 16 白色图标；ReferenceItem 加了属性面板，音频和文件一个样子（图标占位底），文件按扩展名换图标（新加 8 个 Hugeicons 文件图标）；附件条只留 56、间距 4；缩略图删除改回右上 18 的小圆。 11-04 又定：UploadTile 并进 AddTile（添加素材从素材库还是电脑都是它），AddTile 去掉 `size` 只留 56，格子自己的拖入不要；角标和删除、悬停浮层换一个时不交叉淡化（旧的立刻没、新的直接出）。 Dropzone 删了，拖文件只用 DropOverlay，照 Claude 桌面端改：框加 border-strong 描边、不铺底不模糊，正中 popup 小卡、三个图标（新加 Image、Files，Hugeicons）弹簧展开、中间上浮。 拖入提示加 mask 遮罩、图标和字用品牌绿；规则页品牌色改成「省着用，不大面积铺底」+ 举例。PromptBox 宽度照即梦：最宽 1040，最窄是工具条一行排开的宽度（不折行、控件不压缩）。 图标定用 V3（11-04 用户定）：网站默认 V3，去掉 V2 / V3 切换（V2 数据 icons.ts 留着），顶栏右上角加「Hugeicons 图标库」链接；「图标」页规格和「设计规则 · 图标」改成 Hugeicons 缩 21、线宽 1.6，补图标从 Hugeicons 找。 图标改用蒙版渲染（Icon.tsx 生成 `--kv-icon-mask`，底色 currentColor），颜色带透明度时线段交叠处不再叠色；V3 的 Tool 换成 Hugeicons wrench-01。
+- 网站全局搜索（11-04，用户要的，不改现有样式）：顶栏「搜索 ⌘K」（也认 Ctrl K、`/`），弹窗用 Dialog 560 + Input + Button 轻。能搜页面、标题、正文、表格行（参数表、旧名对照）、变量、图标；模糊（缩写 pb → PromptBox、隔字 生面 → 生成面板、拼错 Mdoel / buton、空格横线大小写不分）、多个词是「且」。排序：匹配分 + 类型加分（页面 > 二级标题 > 三级标题 > 图标 > 变量 > 表格行 = 正文），最近打开的加分，旧名对照的行扣分。建议三种：没输入时是「最近打开」+ 全部页面；输入时顶上一排补全（Tab 接受第一个）；一条都没有时「你是不是想搜」。点中后切页，滚到对应的标题 / 段落 / 表格行 / 变量 / 图标，闪一下品牌浅底（`[data-search-hit]`，1.6 秒，减少动态效果时不闪）。新样式只在 `src/shell/search/search.css`（新类名、只用 tokens），没改任何已有的类；`.shell-top` 原样没动，手机宽（≤560）不放入口，免得挤掉 Figma 按钮。开发时改了文档要刷新页面索引才更新。新依赖（devDependencies，原来就在 node_modules 里）：unified、remark-parse、remark-mdx、mdast-util-to-string、github-slugger。没做：拼音搜索。
 - 发布时把网站编译打进 skill（双击能看需单文件打包，或 `npm run preview`），10-29 讨论，没定。
 
 ## 协作方式
@@ -117,3 +131,9 @@
 - 用中文回复，先给结论，说话简短。
 - 先回答再动手：消息里有问题就先回答、给方案，用户点头再改。新东西先列关键决定让用户拍板。
 - 用户是 UI 设计师，有代码库权限不等于能改代码，前端改动要交给前端。
+- 子代理只照方案做，不许自己改定好的样子和规矩（11-04 用户发火：子代理把画布底部工具栏从实色改成玻璃、去掉开关内边距）。派活时写明「样子不能变；和规矩冲突就停下汇报，别自己改」，收到汇报里的「样子有变化」要先问用户，不能直接当做完。
+- 派子代理按活选模型（11-03 用户定，别浪费）。派的时候用 `model` 参数写明，不写就会继承 Opus：
+  - 只读的活（读线上代码、读 Figma、查文件、浏览器逐页核对）：Haiku 5.5（`haiku`）。
+  - 已经定好、照着做的执行（照方案写组件、批量改、照清单改 Figma）：Sonnet 5.5（`sonnet`）。
+  - 真正难的（要拿主意的设计、交互和动效算法、说不清交接的）：自己做，实在要派才用 Opus。
+  - 开子对话也一样：只读的、照着做的用便宜的模型。

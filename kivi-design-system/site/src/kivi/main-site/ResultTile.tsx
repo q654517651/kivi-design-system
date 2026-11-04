@@ -4,14 +4,14 @@ import { EmptyState } from '../feedback';
 import { GeneratingDots } from '../generating';
 import { useControllable } from '../hooks';
 import type { IconName } from '../icons';
-import { Tooltip } from '../menus-tooltip';
-import { Tag } from '../tabs-tags-avatar';
+import { Tooltip } from '../tooltip';
+import { Tag } from '../tags-avatar';
 import { cx } from '../utils';
-import { VideoPlayer } from '../video-player';
+import { VideoPlayer } from '../media';
 import './main-site.css';
 
 export type ResultTileType = 'image' | 'video';
-export type ResultTileStatus = 'done' | 'loading' | 'failed';
+export type ResultTileStatus = 'done' | 'generating' | 'failed';
 
 export interface ResultTileAction {
   /** 图标 */
@@ -22,7 +22,7 @@ export interface ResultTileAction {
 }
 
 export interface ResultTileProps extends HTMLAttributes<HTMLDivElement> {
-  /** 类型：图片 / 视频，默认图片。视频用 VideoPlayer 小号播：左下是时长，悬停出控制条 */
+  /** 类型：图片 / 视频，默认图片。视频用 VideoPlayer 卡片播：左下是时长，悬停出控制条 */
   type?: ResultTileType;
   /** 状态：完成 / 生成中 / 失败，默认完成。悬停由鼠标触发，操作才出现 */
   status?: ResultTileStatus;
@@ -46,7 +46,7 @@ export interface ResultTileProps extends HTMLAttributes<HTMLDivElement> {
   onCollectedChange?: (collected: boolean) => void;
   /** 左下快捷操作，合成一条按钮条，最后一个是「更多」。悬停才出；视频会抬到控制条上面 */
   quickActions?: ResultTileAction[];
-  /** 视频右下「预览」：打开大号预览，参数是播到第几秒。不传就没有这个按钮 */
+  /** 视频右下「预览」：打开预览，参数是播到第几秒。不传就没有这个按钮 */
   onPreview?: (currentTime: number) => void;
   /** 失败时的文字，默认「生成失败，消耗猕猴桃已退回」 */
   failedText?: ReactNode;
@@ -95,7 +95,7 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
   const [collected, setCollected] = useControllable(collectedProp, defaultCollected, onCollectedChange);
   const cls = cx('kv-result-tile', type === 'video' && 'kv-result-tile--video', fit && 'kv-result-tile--fit', className);
 
-  if (status === 'loading') {
+  if (status === 'generating') {
     return (
       <div ref={ref} className={cls} aria-busy="true" {...rest}>
         {src && (
@@ -122,7 +122,7 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
   if (status === 'failed') {
     return (
       <div ref={ref} className={cls} aria-invalid="true" tabIndex={topActions?.length ? 0 : undefined} {...rest}>
-        <EmptyState scene="failed" size="sm" title={failedText} />
+        <EmptyState scene="failed" size={96} title={failedText} />
         <Actions list={topActions} position="top" />
         {children}
       </div>

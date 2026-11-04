@@ -11,7 +11,7 @@ export interface IconInfo {
   means: string;
   /** 备注 */
   note?: string;
-  /** 备注前面的黄色标签：待确认 / 先不改 */
+  /** 备注前面的黄色标签：先不改 */
   tag?: string;
 }
 
@@ -22,6 +22,8 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   DownArrow: { means: '下、展开' },
   LeftArrowSmall: { means: '小箭头、上一页', note: '图形缩到 18/24' },
   RightArrowSmall: { means: '小箭头、下一页', note: '图形缩到 18/24' },
+  DoubleLeftArrowSmall: { means: '上一年（日历）', note: '两个 LeftArrowSmall 错开' },
+  DoubleRightArrowSmall: { means: '下一年（日历）', note: '两个 RightArrowSmall 错开' },
   DownArrowSmall: { means: '下拉、展开', note: '下拉选择的箭头；图形缩到 18/24' },
   UpArrowSmall: { means: '收起', note: '下拉展开时的箭头；图形缩到 18/24' },
   FullScreen: { means: '全屏、放大' },
@@ -57,12 +59,22 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   AddFile: { means: '新建文件' },
   AddFolder: { means: '新建文件夹' },
   FileMusic: { means: '音频文件' },
+  FilePdf: { means: 'PDF 文件', note: '参考格、附件里按扩展名换图标' },
+  FileDoc: { means: 'Word 文档（doc、docx）', note: '参考格、附件里按扩展名换图标' },
+  FilePpt: { means: '演示文稿（ppt、pptx）', note: '参考格、附件里按扩展名换图标' },
+  FileTxt: { means: '纯文本（txt、md）', note: '参考格、附件里按扩展名换图标' },
+  FileXls: { means: '表格（xls、xlsx）', note: '参考格、附件里按扩展名换图标' },
+  FileCsv: { means: 'CSV 表格', note: '参考格、附件里按扩展名换图标' },
+  FileZip: { means: '压缩包（zip、rar、7z）', note: '参考格、附件里按扩展名换图标' },
+  FileJson: { means: 'JSON 数据', note: '参考格、附件里按扩展名换图标' },
+  Image: { means: '图片', note: '拖文件进来的卡片' },
+  Files: { means: '多份文件', note: '拖文件进来的卡片' },
   MoveTo: { means: '移动到' },
   Remove: { means: '移出' },
   Stacking: { means: '堆叠、多选' },
   Template: { means: '模板' },
   Pack: { means: '打包、素材包、封装', note: 'lucide/package（10-29 从 box 换）' },
-  Subtitle: { means: '字幕、srt、文本轨', note: 'FileCard 字幕文件（srt）用', tag: '待确认' },
+  Subtitle: { means: '字幕、srt、文本轨', note: 'FileCard 字幕文件（srt）用' },
   // 生成与 AI（17）
   Text: { means: '文本节点', note: '自绘；不要用于字号设置（用 FontSize）；旧名 text' },
   ImageGeneration: { means: '图片生成', note: '自绘' },
@@ -97,7 +109,7 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   CropLeft: { means: '左侧裁剪', note: '自绘' },
   CropRight: { means: '右侧裁剪', note: '自绘' },
   VideoEditing: { means: '视频编辑', note: '自绘' },
-  VideoExtend: { means: '视频延长', note: '待确认 · 自绘：画框 + 右箭头（像时间轴往右拖）' },
+  VideoExtend: { means: '视频延长', note: '自绘：画框 + 右箭头（像时间轴往右拖）' },
   VideoLoop: { means: '循环播放' },
   Connecting: { means: '拼接、连接', note: '自绘' },
   EnableConstraint: { means: '关联、锁定' },
@@ -126,8 +138,8 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   AddToCanvas: { means: '添加到画布', note: '自绘' },
   Hand: { means: '抓手、拖动' },
   UseCanvas: { means: '使用画布' },
-  Canvas: { means: '画布、画布项目、画框', note: '主站侧栏画布列表用', tag: '待确认' },
-  Locate: { means: '定位、定位到画布', note: '画布 Agent 生成结果「定位到画布」用', tag: '待确认' },
+  Canvas: { means: '画布、画布项目、画框', note: '主站侧栏画布列表用' },
+  Locate: { means: '定位、定位到画布', note: '画布 Agent 生成结果「定位到画布」用' },
   // 文本格式（9）
   H1: { means: '标题 1' },
   H2: { means: '标题 2' },
@@ -164,21 +176,21 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   Feedback: { means: '反馈' },
   Message: { means: '询问、对话、消息' },
   Send: { means: '发送、提交', note: '上箭头' },
-  NewChat: { means: '新对话、新建、编辑', note: '主站侧栏对话、画布分组的新建按钮用；和 Add 区分开', tag: '待确认' },
+  NewChat: { means: '新对话、新建、编辑', note: '主站侧栏对话、画布分组的新建按钮用；和 Add 区分开' },
   ScanEye: { means: '查看、理解、识别', note: 'Agent 查看类工具（查看画布、节点、链接内容）用；别用眼睛 Preview，它表示显示 / 隐藏' },
   SquareLibrary: { means: '知识库、资料库', note: 'Agent 搜索知识库用' },
   Brain: { means: '记忆、长期记忆', note: 'Agent 更新记忆用；思考用 Lightbulb' },
-  Rename: { means: '重命名', note: '侧栏「⋯」菜单用。Lucide pen-line，Figma 还没有；和 NewChat（新建）区分开', tag: '待确认' },
+  Rename: { means: '重命名', note: '侧栏「⋯」菜单用。Lucide pen-line；和 NewChat（新建）区分开' },
   // 系统（9）
   Home: { means: '首页' },
   Document: { means: '文档、教程' },
   Localization: { means: '语言、国际化' },
   Calendar: { means: '日历、日期', note: '旧名 calendar' },
-  Create: { means: '创作、生成', note: '主站侧栏「创作」用', tag: '待确认' },
-  Explore: { means: '探索、发现', note: '主站侧栏「探索」用', tag: '待确认' },
-  AITools: { means: 'AI 工具、应用', note: '主站侧栏「AI工具」用', tag: '待确认' },
-  Sidebar: { means: '侧栏、收起、展开', note: '主站侧栏收起 / 展开用', tag: '待确认' },
-  Kiwi: { means: '猕猴桃、积分、余额、消耗', note: '主站积分余额、生成按钮消耗用；颜色跟随所在位置，余额处用品牌绿', tag: '待确认' },
+  Create: { means: '创作、生成', note: '主站侧栏「创作」用' },
+  Explore: { means: '探索、发现', note: '主站侧栏「探索」用' },
+  AITools: { means: 'AI 工具、应用', note: '主站侧栏「AI工具」用' },
+  Sidebar: { means: '侧栏、收起、展开', note: '主站侧栏收起 / 展开用' },
+  Kiwi: { means: '猕猴桃、积分、余额、消耗', note: '主站积分余额、生成按钮消耗用；颜色跟随所在位置，余额处用品牌绿' },
   // 模型 Logo（13）
   Mdoel: { means: '模型 Logo', note: '名字拼错了，应为 Model；代码里在用，改名前要和后端确认', tag: '先不改' },
   Auto: { means: '模型 Logo' },
@@ -194,7 +206,7 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   HappyHorse: { means: '模型 Logo' },
   grok: { means: '模型 Logo' },
   // 品牌（1）
-  Logo: { means: 'KIVI 字标', note: '54×24，单独用；字母跟文字色，星星是品牌绿（brand/solid）；缩放时按比例拉；主站侧栏左上角用', tag: '待确认' },
+  Logo: { means: 'KIVI 字标', note: '54×24，单独用；字母跟文字色，星星是品牌绿（brand/solid）；缩放时按比例拉；主站侧栏左上角用' },
 };
 
 /** 每一组的说明。id 用在标题上，key 是 ICON_GROUPS 里的组名 */

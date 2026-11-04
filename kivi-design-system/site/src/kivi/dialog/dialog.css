@@ -10,7 +10,7 @@
       size={400}
       title="弹窗标题"
       description="一句话说明这个弹窗要做什么，或者操作的后果。"
-      footer={<><Button size="lg" onClick={() => setOpen(false)}>取消</Button><Button size="lg" variant="primary">确定</Button></>}
+      footer={<><Button size={36} onClick={() => setOpen(false)}>取消</Button><Button size={36} variant="primary">确定</Button></>}
     >
       …内容…
     </Dialog>

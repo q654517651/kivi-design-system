@@ -5,7 +5,7 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 
 # KIVI 设计规范
 
-来自 Figma「KIVI UI KIT V2」（草稿 0.1），设计、产品、研发共用。以 Figma 为准，Figma 里没定的不写。
+来自 Figma「KIVI UI KIT V2」，设计、产品、研发共用。以 Figma 为准，Figma 里没定的不写。
 
 ## 先更新
 
@@ -27,33 +27,19 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 
 | 任务 | 读哪个 |
 |---|---|
-| 写前端代码（任何栈） | 样式只用 `tokens.css` 的变量。网站里有的组件，照它的属性、尺寸、状态实现；React 项目可以直接用 `src/kivi/` 的组件。再看下面「核心规则」和「路由」 |
+| 写前端代码（任何栈） | 先读「设计规则」页。样式只用 `tokens.css` 的变量。网站里有的组件，照它的属性、尺寸、状态实现；React 项目可以直接用 `src/kivi/` 的组件。再看下面「路由」 |
 | 可点击原型、没有设计稿要补页面 | `workflows/build-page.md` |
 | 验收开发稿，审查设计稿或代码是否合规 | `workflows/acceptance.md` |
-| 查组件、变量、动效、图标 | 下面「核心规则」和「路由」，再读网站对应页 |
+| 查组件、变量、动效、图标 | 「设计规则」页和下面「路由」，再读网站对应页 |
 | 在 Figma 里搭 | 用已发布的「KIVI UI KIT V2」库组件，颜色、间距、圆角、字号都绑变量。用户作品的位置放 PlaceholderImage 实例：先选图片，再选比例 |
 | 编辑 Figma 组件库本身 | `references/figma-kit.md`。只有加组件、改变体、改名、整理页面时才读 |
 | 加图标、打包图标字体 | 还没做（Figma 导出 → 打包字体 → 提交 GitLab 图标仓库）。先照「图标」页手动补，跟用户说一句 |
 
 ## 核心规则
 
-数值都在网站，这里只写判断方法。
+规则只有一份：网站「设计规则」页 `site/src/docs/foundations/rules.mdx`。**任何任务开始前先读完它**，写代码、搭页面、验收都照它判断；它和别的页对不上时，以它为准。
 
-1. **只用语义变量**。颜色、间距、圆角、字号、行高、透明度、时长都用变量，不写死，不用原始色（`white/8`、`gray/900` 这类）。只有深色一套主题。Figma 名换 CSS 名：`/` 换成 `-`，前面加 `--`；小数写成横杠（`border/width/1-25` → `--border-width-1-25`）。画布连线例外。
-2. **底色分层**：页面底 base → 区域 container-light-2 → 可点的 container-light-1；凹下去的用 container-dark；盖在画布上、必须不透明的用 surface。能点的悬停、按下各升一档，叠加最多两层。贴在图片、视频上的控件（卡片上的按钮和按钮条、标签、播放器控件）用 on-media，只限图片、视频，不加描边。见「变量 · 底色、填充与状态」。
-3. **浮层分三种**：
-   - 悬浮在页面上的（菜单、下拉、右键、节点工具栏、参数面板、主站输入框）用玻璃：`--color-bg-fill-glass` + `--effect-glass-blur` + 1px `--color-border-subtle`。下面是什么都行，图片也可以。
-   - 模态弹窗用 surface，下面一层 mask。
-   - Tooltip、Toast 用 popup 实色。
-   - 浮层都不加投影。
-4. **字号**：界面 13，阅读 14。哪种文字用哪档，见「变量 · 文字样式」。字体苹方。
-5. **尺寸**：间距、圆角、控件高度只用变量和网站上有的档位，不自己发明新值。
-6. **品牌色省着用**：只给主操作、选中、开关打开、进度。主要按钮（品牌渐变）一屏只放一个。单选列表的当前项用「选中」底色，不打勾；勾选只给多选。
-7. **先分清「做动作」还是「选值」**：做动作用 Button / IconButton；几个值选一个用分段（TabItem）；值多或文字长用 Select；开关立刻生效用 Switch；范围调值用 Slider；多选用 Checkbox；切换整块内容用选项卡；只展示用 Tag。
-8. **状态画全**：可交互的至少有默认、悬停、按下、禁用；需要时加选中、加载中、错误。只有图标的按钮要配 Tooltip。
-9. **动效**：先按怎么动选缓动，再按动多远选时长。不用匀速和 CSS 默认 `ease`，只有循环动画（转圈、扫光）用匀速。见「动效」。
-10. **组件不改样式**：业务页面用现有组件拼，不为某个页面再造新按钮、新菜单。
-11. **占位值照用但要说明**：`tokens.css` 和「变量」页标了占位的值（功能色等）照用，交付时注明。
+用户在对话里定了新的设计规则（不是这个项目怎么干活的约定），写进这一页对应的分节，不要只记在别处。
 
 ## 规范没覆盖时
 
@@ -61,12 +47,12 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 
 | 档 | 是什么 | 做的时候 | 验收的时候 |
 |---|---|---|---|
-| 已定 | 网站上写明了：变量、组件属性、参数表数值、上面的核心规则 | 照做 | 不符合就是**不一致** |
+| 已定 | 网站上写明了：变量、组件属性、参数表数值、「设计规则」页 | 照做 | 不符合就是**不一致** |
 | 能组合 | 没有现成组件，但能用现有组件和变量拼出来 | 用现有组件拼，交付时说明怎么拼的 | 写成**建议**，不算不一致 |
 | 没覆盖 | 网站上没有依据（比如整页布局、新的业务模块） | 按最像的现有页面给方案，标「规范未覆盖，待设计确认」 | 写成**建议**，标「规范未覆盖」，不判对错 |
 
 - 不要把自己的审美偏好当规范。说不出依据在网站哪一页，就不是「已定」。
-- 页面上标了「草稿」「待定」「占位」的，算已定但要注明。
+- 变量页标了「占位」的值（功能色等）照用，交付时注明。
 
 ## 搭页面、验收
 
@@ -76,27 +62,34 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 
 ## 路由
 
-按 Figma 的页分。下面的路径都相对 `site/src/`。
+按网站目录的分组。下面的路径都相对 `site/src/`。
 
 | 页 | 规范 | 组件 | 什么时候读 |
 |---|---|---|---|
-| 页面模板 | `docs/templates/main-site.mdx`、`canvas.mdx` | `docs/templates/*.demos.tsx` | 一整页怎么拼：主站生成页（侧栏、生成记录、主站 Agent、输入框）、画布 + Agent 侧栏 |
+| 页面模板 | `docs/templates/main-site.mdx`、`canvas.mdx`、`canvas-tools.mdx`、`skills.mdx`、`assets.mdx` | `docs/templates/*.demos.tsx` | 一整页怎么拼：主站生成页（侧栏、生成记录、主站 Agent、输入框）、画布 + Agent 侧栏、画布工具（节点工具栏、工具面板、裁剪扩图、视频封装、画布底部工具栏）、技能面板、资产管理 |
+| 设计规则 | `docs/foundations/rules.mdx` | — | 每个任务都先读：所有硬规则（变量、底色、浮层、按钮、提示、状态、动效、图标、组件命名） |
 | 变量 | `docs/foundations/tokens.mdx` | `kivi/tokens.css` | 要变量名、取值，或核对某个值该用哪个变量 |
 | 动效 | `docs/foundations/motion.mdx`、`motion-generating.mdx` | `kivi/generating/` | 做任何过渡和动画；生成中的点阵动效 |
 | 图标 | `docs/foundations/icons.mdx` | `kivi/Icon.tsx`、`kivi/icons.ts` | 选图标、确认图标名、补模型厂 Logo |
 | 占位图 | `docs/foundations/placeholder-images.mdx` | `kivi/placeholder-image/` | 用户作品的位置要放图 |
 | 按钮 | `docs/components/button.mdx` | `kivi/button/` | Button、IconButton、ButtonGroup |
-| 菜单和提示 | `docs/components/menus-tooltip.mdx` | `kivi/menus-tooltip/` | Tooltip、菜单、下拉、右键菜单、侧栏条目 |
-| 选择控件 | `docs/components/selection.mdx` | `kivi/selection/` | 开关、滑块、勾选框 |
-| 输入控件 | `docs/components/inputs.mdx` | `kivi/inputs/` | 输入框、数字输入、下拉选择、多行输入 |
+| 菜单 | `docs/components/menu.mdx` | `kivi/menu/` | 菜单、下拉、右键菜单 |
+| 导航 | `docs/components/navigation.mdx` | `kivi/navigation/` | 选项卡、分段 |
+| 输入框 | `docs/components/inputs.mdx` | `kivi/inputs/` | 输入框、数字输入、多行输入 |
+| 选择 | `docs/components/selection.mdx` | `kivi/selection/` | 下拉选择、开关、滑块、勾选框 |
+| 上传 | `docs/components/upload.mdx` | `kivi/upload/` | 上传格、拖拽上传区、上传进度环 |
+| 标签和头像 | `docs/components/tags-avatar.mdx` | `kivi/tags-avatar/` | 标签、头像、素材缩略图 |
+| 布局 | `docs/components/layout.mdx` | `kivi/divider/`、`kivi/collapse/` | 分割线、展开收起 |
+| 图片和视频 | `docs/components/media.mdx` | `kivi/media/` | 图片（加载、失败、重试）、卡片里和预览里的视频 |
+| 提示 | `docs/components/tooltip.mdx` | `kivi/tooltip/` | Tooltip、Popover |
 | 弹窗 | `docs/components/dialog.mdx` | `kivi/dialog/` | 确认、表单、列表、编辑器弹窗 |
 | 反馈 | `docs/components/feedback.mdx` | `kivi/feedback/` | Toast、加载、骨架屏、空状态 |
-| 选项卡、标签和头像 | `docs/components/tabs-tags-avatar.mdx` | `kivi/tabs-tags-avatar/` | 选项卡、分段、标签、头像、素材缩略图 |
-| 播放器 | `docs/components/video-player.mdx` | `kivi/video-player/` | 卡片里和预览里的视频 |
-| 画布 | `docs/business/canvas.mdx` | `kivi/canvas/` | 节点、连线、节点工具栏、生成面板、参数面板、画布工具栏 |
-| Agent | `docs/business/agent.mdx` | `kivi/agent/` | 对话里的工具调用组、询问记录、用户消息、结果、追问、确认卡片、技能卡、发送按钮 |
-| Agent 工具 | `docs/business/agent-tools.mdx` | `docs/business/agent-tools.ts` | Agent 调的每个工具出不出一行、用什么图标 |
-| 主站 | `docs/business/main-site.mdx`、`main-site-prompt-box.mdx` | `kivi/main-site/`、`kivi/prompt-box/` | 生成记录、结果格、创作输入框、参考区、生成按钮 |
-| 生成控件 | `docs/business/generation.tsx` | — | 画布和主站共用的类型、模型、参考类型、参数下拉 |
+| 生成 | `docs/business/generation.mdx` | `kivi/generation/` | 创作输入框、提示词输入、生成按钮、参数面板、Lora |
+| 参考和引用 | `docs/business/reference.mdx` | `kivi/reference/` | 主站参考区、参考格、首尾帧、附件条（画布生成面板、发给 Agent 的附件）、所有 @ 引用胶囊、悬停预览 |
+| 画布 | `docs/business/canvas.mdx` | `kivi/canvas/` | 节点、多图节点、连线、生成面板、小地图（节点工具栏、画布工具栏在模板「画布工具」） |
+| Agent 对话 | `docs/business/agent.mdx` | `kivi/agent/` | 对话里的询问记录、用户消息、追问、确认卡片、技能卡、发送按钮 |
+| Agent 过程 | `docs/business/agent-process.mdx` | `kivi/agent-process/`、`docs/business/agent-tools.ts` | 过程行、工具调用组、思考块、结果叠放；Agent 调的每个工具出不出一行、用什么图标 |
+| 主站 | `docs/business/main-site.mdx` | `kivi/main-site/` | 生成记录、结果格 |
+| 生成控件 | `docs/business/generation.mdx` | `kivi/generation/` | 画布和主站共用的类型、模型、参考类型、参数下拉，模型偏好、技能面板 |
 | 旧名对照 | `docs/legacy-names.mdx` | — | 遇到旧变量名、旧组件名、旧图标名 |
 | 组件写法 | `docs/component-api.mdx` | `kivi/hooks/` | 写或改 React 组件：forwardRef、受控、事件合并 |

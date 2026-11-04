@@ -1,6 +1,5 @@
 import { Demo, PageHeader } from '@shell';
-import { PreviewHost } from '../components/video-player.demos';
-import PromptBoxDoc from './main-site-prompt-box.mdx';
+import { PreviewHost } from '../components/media.demos';
 import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
 
 <style>{`
@@ -35,9 +34,7 @@ import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
 <PageHeader
   eyebrow="业务组件"
   title="主站"
-  lead="主站的业务组件：生成记录的记录头 GenPrompt 和结果格 ResultTile，创作输入框 PromptBox。"
   figma={['主站', '422:658']}
-  status="待确认 0.1.0"
   code="kivi/main-site"
 />
 
@@ -45,13 +42,15 @@ import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
 
 ## GenPrompt
 
+生成记录头：一条生成记录上面的提示词和参数，能复制。
+
 <GenPromptPlayground />
 
 ## ResultTile
 
-<ResultTilePlayground />
+结果格：生成记录里的一张图或一段视频。
 
-<PromptBoxDoc components={props.components} />
+<ResultTilePlayground />
 
 ## 参数
 
@@ -61,7 +60,7 @@ import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `length` | `"short"` `"long"` | 自己量 | 短 / 超出两行。不传就自己量，超过两行就收成两行、末尾省略，复制按钮挪到第二行行尾，左边 40 的渐变从透明过渡到底色 base 盖住截断的文字（放在别的底色上改 `--kv-gen-prompt-bg`）；宽度变了重新量。收起时悬停用 Tooltip 长文看全文，没截断时禁用。传了就固定 |
+| `length` | `"short"` `"long"` | 自己量 | 短 / 超出两行。不传就自己量，超过两行就收成两行、末尾省略，复制按钮挪到第二行行尾，左边 40 的渐变从透明过渡到底色 base 盖住截断的文字（放在别的底色上改 `--kv-gen-prompt-bg`）；宽度变了重新量。收起时悬停用 Popover 长文看全文，没截断时禁用。传了就固定 |
 | `prompt` | `ReactNode` | — | 提示词，14 / 22 常规，primary。没有提示词就不显示这一行（照线上）；工具类任务（抠图、高清…）不传，只显示参数 |
 | `onCopy` | `() => void` | — | 点复制按钮（IconButton 28 · 轻）。有提示词就固定显示，跟在最后一个字后面，间距 6 `--spacing-6` |
 | `children` | `ReactNode` | — | 参数：一排 Tag（任务类型、模型、清晰度、比例、时长…），间距 6，放不下换行；参考区 `GenPromptRefs` 也放在这里。工具类任务的第一个 Tag 带工具图标（抠图 `Rmbg`、扩图 `Expand`、重绘 `SmartEditing`、高清 `HD`、元素去除 `RemoveEle`、视频拼接 `Connecting`…），参考区写「原图」或「原视频」 |
@@ -89,8 +88,8 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `type` | `"image"` `"video"` | `"image"` | 图片 / 视频。视频就是播放器 VideoPlayer 小号（见「播放器」页），时长、悬停播放、控制条都在里面 |
-| `status` | `"done"` `"loading"` `"failed"` | `"done"` | 完成 / 生成中 / 失败。生成中分两种：第一次生成（没有原素材）只有 `GeneratingDots` 铺满，没有遮罩；重新生成（传了 `src`）原素材 + 遮罩 `--color-bg-fill-container-dark`（黑 40%）+ 背景模糊 24（CSS `blur(12px)`），上面叠 `GeneratingDots` 和角标；失败：EmptyState 小 · 生成失败，居中，右上操作和 children 照常渲染（失败的格子还能删除）。悬停由鼠标触发 |
+| `type` | `"image"` `"video"` | `"image"` | 图片 / 视频。视频就是播放器 VideoPlayer 卡片（见「图片和视频」页），时长、悬停播放、控制条都在里面 |
+| `status` | `"done"` `"generating"` `"failed"` | `"done"` | 完成 / 生成中 / 失败。生成中分两种：第一次生成（没有原素材）只有 `GeneratingDots` 铺满，没有遮罩；重新生成（传了 `src`）原素材 + 遮罩 `--color-bg-fill-container-dark`（黑 40%）+ 背景模糊 24（CSS `blur(12px)`），上面叠 `GeneratingDots` 和角标；失败：EmptyState 小 · 生成失败，居中，右上操作和 children 照常渲染（失败的格子还能删除）。悬停由鼠标触发 |
 | `src` | `string` | — | 图片是图片地址，视频是视频文件。生成中传了就是「有原素材」的样子（见 `status`） |
 | `poster` | `string` | — | 视频封面，没播时显示；不传是首帧 |
 | `fit` | `boolean` | `false` | 比例和格子不一致时画面完整显示，留底色；默认铺满，居中裁切 |
@@ -99,102 +98,7 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 | `collect` | `boolean` | `false` | 完成：右上按钮条最后放收藏（`Collect`，收藏了换 `CollectSolid`，图标 `--color-brand-solid` 绿色）。没收藏时悬停才出现；收藏了，鼠标移开后右上还留一个绿星（只是标记，点不到），悬停换回整条（150ms） |
 | `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 完成：收藏了没有。传了 `collected` 就是受控；`onCollectedChange(collected)` 点收藏时触发 |
 | `quickActions` | `ResultTileAction[]` | — | 左下快捷操作，合成一条 ButtonGroup，离边 8，最后一个是「更多」。视频要抬到控制条上面，离底 46 |
-| `onPreview` | `(currentTime) => void` | — | 视频右下「预览」，打开大号预览接着放；不传就没有这个按钮 |
+| `onPreview` | `(currentTime) => void` | — | 视频右下「预览」，打开预览接着放；不传就没有这个按钮 |
 | `failedText` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败时的文字 |
 
 `ResultTileAction` 每一项：`icon`（`IconName`）、`label`（`string`，读屏和 Tooltip 用）、`onClick`。
-
-### PromptBox
-
-外框是玻璃：底 glass `--color-bg-fill-glass` + 背景模糊 32 `--effect-glass-blur`，浮在生成记录上、下面的内容透出来；描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`，宽度拉满；内容区和工具条间距 12 `--spacing-12`。提示词 14 / 20 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32。其余原生 `<div>` 属性都能传。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `value` | `string` | — | 提示词。传了就是受控，要在 `onChange` 里更新 |
-| `defaultValue` | `string` | — | 非受控的初始提示词 |
-| `onChange` | `(value: string) => void` | — | 提示词变了触发，参数是新的文字 |
-| `placeholder` | `string` | — | 没输入时的占位文字，随模式变，比如「描述你想生成的视频，@ 引用参考素材」 |
-| `references` | `ReactNode` | — | 参考区，在提示词左边，间距 24 `--spacing-24`，从顶端对齐：`ReferenceStack`，或首尾帧的两格（`ReferenceItem` 72 + `ReferenceAddSlot`）。不传没有参考区，提示词从最左边开始。展开时浮在提示词上面，被盖住的字由输入框藏起来 |
-| `toolbar` | `ReactNode` | — | 工具条左边，间距 6 `--spacing-6`：任务类型、模型、参考方式、参数、其他开关。一般是 `Select variant="plain"`，放不下换行 |
-| `actions` | `ReactNode` | — | 工具条右边，间距 8 `--spacing-8`：张数 + `GenerateButton` |
-| `maxHeight` | `number` | `240` | 提示词最高多高，单位 px，超过就在里面滚动 |
-| `onDropFiles` | `(files: File[]) => void` | — | 把文件拖进输入框、放下后触发，参数是通过 `accept` 检查的文件：一般是加进 `references` 的素材（缩略图、上传进度自己管，输入框不存素材）。不传就不接收拖拽。拖进来时整个输入框盖一层 `DropOverlay`；类型不收的显示「不支持这种文件」，不接收，放下后弹 toast（页面上要放一个 `<Toaster />`） |
-| `accept` | `string` | `"image/*,video/*,audio/*"` | 收哪些文件，写法同 `<input accept>`。拖的过程中按类型提前判断 |
-| `inputRef` | `Ref<HTMLTextAreaElement>` | — | 提示词输入框的 ref，聚焦、选中用 |
-| `inputLabel` | `string` | `"提示词"` | 输入框的说明，读屏用 |
-
-工具条里的 Select 无底：高 32，圆角 8，左右 8，13 号字，左图标 16，右箭头 16 tertiary，悬停白 8%。参数把分辨率、比例、时长合成一个 Select，写「720P · 16:9 · 8s」。
-
-### DropOverlay
-
-文件拖到输入框上时盖住整个框的提示（Figma 没定，待确认）。品牌色描边 1.5（`--color-border-focus`），品牌色淡底（`--color-brand-subtle`）叠在玻璃（`--color-bg-fill-glass`）上，背景模糊 32，下面的字淡出去；中间 `Upload` 24 + 13 / 20 的字，间距 8。类型不收：描边、淡底、字和图标都换 danger（`--color-status-danger`），图标换成 `Close`。出现 150ms ease-out，消失 100ms ease-in。不挡鼠标。圆角继承所在的框，所以放它的框要 `position: relative`。`PromptBox` 自带；画布 Agent 输入框这类自己拼的框，配合 `useFileDrop`（`hooks/`）用，它给 `dragging`、`rejected`。其余原生 `<div>` 属性都能传。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `active` | `boolean` | `true` | 显示。文件拖到框上时为 `true`，不显示时淡出 |
-| `rejected` | `boolean` | `false` | 拖来的类型不收 |
-| `text` | `ReactNode` | `"松手上传"` | 收的时候的文字 |
-| `rejectedText` | `ReactNode` | `"不支持这种文件"` | 不收的时候的文字 |
-
-### ReferenceStack
-
-放进 `PromptBox` 的 `references` 里用。72 见方，圆角 8。空：只有添加格（白 4%）；一个：卡片正放，右下角 24 的圆形上传按钮；多个：卡片缩到 56 叠放，最后加的在最上面，露 3 张，右上角写最上面那张的序号。鼠标移上去向右展开，卡片 72，间距 6，右上角写序号（和画布一样），鼠标移到哪张，那张的序号换成删除；展开收起 400ms 起每多一张加 10ms、最多 700ms，缓动 `--motion-ease-expand`；移开收回。其余原生 `<div>` 属性都能传。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `items` | `ReferenceStackItem[]` | — | 参考素材，必填，按添加顺序排，最后一个是叠放时最上面那张。每项见下表 |
-| `onAdd` | `() => void` | — | 点添加格、右下角圆形上传按钮时触发：弹出选文件，选完把素材加进 `items` |
-| `onRemove` | `(id: string) => void` | — | 点卡片右上角的删除时触发（鼠标移到卡片上才出现，同时序号隐藏），参数是素材的 `id`：从 `items` 里去掉它 |
-| `onItemClick` | `(item: ReferenceStackItem) => void` | — | 点卡片时触发，预览大图用 |
-| `expanded` | `boolean` | — | 展开（受控）：传 `true` 一直展开。不传是鼠标移上去展开、移开收起，键盘聚焦也展开 |
-| `defaultExpanded` | `boolean` | `false` | 非受控时的初始状态 |
-| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开、收起时触发，参数是展开了没有 |
-| `maxWidth` | `number` | 输入框内容区宽度 | 展开后最宽多宽，超过横向滚动 |
-
-`items` 每一项：
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `id` | `string` | — | 唯一标识，增删时用它认哪一张 |
-| `kind` | `"image"` `"video"` `"audio"` | — | 类型。视频用封面当缩略图，音频是渐变底加音符 |
-| `name` | `string` | — | 名字，比如「图片1」：提示词里 @ 引用和读屏用，要和 @ 出来的一致，`referenceName(items, kind)` 按类型给出下一个编号。卡片上不写名字，右上角写序号（按添加顺序 1、2、3…） |
-| `src` | `string` | — | 缩略图地址：图片、视频封面。音频不用 |
-| `duration` | `string` | — | 时长，视频、音频用，比如 `"8s"` `"15s"`，展开后显示在卡片左下角 |
-| `progress` | `number` | — | 上传进度 0–100。不传就是已经上传完；传了卡片盖一层黑 40%，中间是进度环 28 |
-
-### GenerateButton
-
-就是主要类型的 Button：品牌渐变底，on-brand 字，左图标固定 `Kiwi` 20，文字固定是消耗数，间距 4。宽度跟着数字走，最小 64。其余 Button 属性都能传（`variant`、图标除外）。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `cost` | `number` `string` | — | 这次生成消耗的猕猴桃数，必填，写在图标右边 |
-| `size` | `"sm"` `"md"` `"lg"` | `"md"` | 同按钮：高 28 / 32 / 36。Figma 里是中号 32，圆角 8，左右 12，文字 13 |
-| `loading` | `boolean` | `false` | 点了等结果时用：猕猴桃换成转圈，数字和宽度不变，不能点 |
-| `disabled` | `boolean` | `false` | 参数不全或正在生成时用 |
-| `aria-label` | `string` | `"生成，消耗 N 个猕猴桃"` | 读屏用，N 是 `cost` |
-
-### ReferenceAddSlot
-
-添加格，72 见方，白 4% 底，中间 `AddSmall` 20。首尾帧里没放素材的那一格用，图片生成、音频生成没素材时也放它。其余原生 `<button>` 属性都能传。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `onClick` | `() => void` | — | 点一下上传 |
-| `aria-label` | `string` | `"添加参考素材"` | 读屏用 |
-
-### ToolbarDivider
-
-工具条里的竖线，1 × 16，border，前后间距同工具条 6，把参数组和后面的开关隔开。没有专有属性，其余原生 `<span>` 属性都能传。
-
-### ToolbarSwitch
-
-文字加 Switch：13 号字 + Switch 36 × 20，间距 8，左右各留 6，点文字也能切换。其余原生 `<label>` 属性都能传。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `label` | `string` | — | 开关的文字，必填，比如「样片模式」 |
-| `checked` | `boolean` | — | 开 / 关。传了就是受控 |
-| `defaultChecked` | `boolean` | `false` | 非受控时的初始值 |
-| `onChange` | `(checked: boolean) => void` | — | 切换时触发，参数是切换后的值 |
-| `disabled` | `boolean` | `false` | 禁用 |

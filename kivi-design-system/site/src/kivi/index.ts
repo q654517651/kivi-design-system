@@ -12,22 +12,32 @@ export * from './utils';
 
 // 基础
 export * from './placeholder-image';
-export * from './image';
 
 // 通用组件
 export * from './button';
-export * from './menus-tooltip';
-export * from './selection';
+export * from './divider';
+export * from './collapse';
+export * from './menu';
+export * from './navigation';
 export * from './inputs';
+export * from './selection';
+export * from './date';
+export * from './upload';
+export * from './tags-avatar';
+export * from './media';
+export * from './prose';
+export * from './scroll-area';
+export * from './tooltip';
 export * from './dialog';
 export * from './feedback';
-export * from './tabs-tags-avatar';
-export * from './video-player';
-export * from './scroll-area';
+export * from './generating';
 
 // 业务组件
-export * from './generating';
+export * from './reference';
+export * from './generation';
 export * from './canvas';
+export * from './annotation';
 export * from './agent';
+export * from './agent-process';
 export * from './main-site';
-export * from './prompt-box';
+export * from './asset';

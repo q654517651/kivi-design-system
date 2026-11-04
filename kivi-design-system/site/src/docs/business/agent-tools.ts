@@ -1,7 +1,7 @@
 import type { IconName, ProcessStep } from '@kivi';
 
 // Agent 调的工具在对话里怎么显示（11-02 用户定）。动作文字照后端 stream_event_message.go 的显示名。
-// 「Agent 工具」页和 Agent 页的工具调用演示都用这一份，只写一处
+// 「Agent 过程」页和 Agent 对话页的工具调用演示都用这一份，只写一处
 
 export type AgentTool = Omit<ProcessStep, 'status'>;
 

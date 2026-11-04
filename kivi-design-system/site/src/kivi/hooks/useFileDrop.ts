@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState, type DragEvent, type DragEventH
 import { composeHandlers } from './composeHandlers';
 
 // 组件库内部共用，从 hooks/ 引，不从入口导出。
-// 拖文件进来的公用逻辑：Dropzone、UploadTile、PromptBox 的 DropOverlay、画布 Agent 输入框都用它。
+// 拖文件进来的公用逻辑：PromptBox 的 DropOverlay、画布 Agent 输入框都用它。
 
 /** 为什么拒收：类型不对 / 超过大小 */
 export type FileRejectReason = 'type' | 'size';

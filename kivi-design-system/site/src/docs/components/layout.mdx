@@ -1,0 +1,40 @@
+import { PageHeader } from '@shell';
+import { CollapsePlayground, DividerPlayground } from './layout.demos';
+
+<PageHeader
+  eyebrow="展示"
+  title="布局"
+  code="kivi/divider、kivi/collapse"
+/>
+
+## Divider
+
+分割线：隔开不同类的内容，比如菜单分组、按钮条里分开图标按钮和文字按钮。
+
+<DividerPlayground />
+
+## Collapse
+
+展开收起：让一块内容能收起来，比如思考过程、工具调用列表、侧栏分组。
+
+<CollapsePlayground />
+
+## 参数
+
+### Divider
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `orientation` | `"horizontal"` `"vertical"` | `"horizontal"` | 方向。横向宽撑满、高 1；竖向宽 1，高度取所在条写的 `--kv-divider-size`，没有条时 16（`--spacing-16`），不加 size 属性：ButtonGroup 32 里是 16，44、56 里是 20 |
+
+颜色 `--color-border`。放在 Menu 里由菜单换成 `--color-border-subtle`，上下留白 4、左右缩进 8。放在 ButtonGroup 里把不同类的按钮隔开，也用在工具条里隔开不同类的控件。`role="separator"`，其余原生 `<div>` 属性都能传。
+
+### Collapse
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `open` | `boolean` | — | 展开（受控）。触发行（按钮、箭头）和展开状态由外面写，触发行加 `aria-expanded`、`aria-controls` |
+| `distance` | `number` | `0` | 展开后大约多高，按距离取时长：100 以内 200ms，再长 300ms，ease-in-out |
+| `gap` | `number` | `0` | 展开后离上面一行的间距，取 `--spacing-N` 的 N。放在会被收起的这块里，收起后不留空 |
+
+展开时高度从 0 推到内容高、把下面的内容往下推，同时淡入；收起倒着走。收起后藏起来，Tab 不进去。ThinkingBlock、ProcessGroup、AskRecord、MessageFeedback、侧栏分组都用它。其余原生 `<div>` 属性都能传。

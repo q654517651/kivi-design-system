@@ -1,0 +1,223 @@
+/*
+  网站外壳 · 全局搜索
+  新加的样式：只用 tokens.css 的变量，类名都是 shell-search*，不改任何已有的类。
+  入口用 Button / IconButton，弹窗用 Dialog，输入用 Input，建议用 Button 轻；结果行照左侧目录（shell-nav-item）的样子自己写：
+  悬停和键盘选中同一个底色，圆角 8，一行标题加一行说明。
+*/
+
+/* ---------- 顶栏入口 ---------- */
+
+/* 做宽一点，像个搜索框：字靠左，快捷键推到最右（11-04 用户要） */
+.shell-top .shell-search-btn {
+  justify-content: flex-start;
+  width: 240px;
+}
+
+/* 按钮把字和快捷键包在一个 span 里：让它撑满，快捷键才推得到最右 */
+.shell-top .shell-search-btn > span:not(.kv-icon) {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.shell-top .shell-search-btn .shell-search-kbd {
+  margin-left: auto;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.shell-top .shell-search-ibtn {
+  display: none;
+}
+
+/* 窄屏：入口缩成一个图标，和目录按钮（shell-menu）一样的做法 */
+@media (max-width: 860px) {
+  .shell-top .shell-search-btn {
+    display: none;
+  }
+
+  .shell-top .shell-search-ibtn {
+    display: inline-flex;
+  }
+}
+
+/* ---------- 弹窗里 ---------- */
+
+.shell-search {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
+
+/* 建议：一行，没有建议也留着高度，列表不跳 */
+.shell-search__hints {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-height: 28px;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+}
+
+/* 结果区高度固定，输入时弹窗不跟着忽高忽低 */
+.shell-search__list {
+  box-sizing: border-box;
+  height: min(420px, 50vh);
+  margin: 0 calc(var(--spacing-8) * -1);
+  padding: 0 var(--spacing-8);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.shell-search__group {
+  padding: var(--spacing-8) var(--spacing-12) var(--spacing-4);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+}
+
+.shell-search__empty {
+  margin: 0;
+  padding: var(--spacing-24) var(--spacing-12);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  text-align: center;
+}
+
+.shell-search__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: var(--spacing-8) var(--spacing-12);
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 悬停、键盘选中：和菜单、左侧目录的悬停同一个底色 */
+.shell-search__item[data-active] {
+  background: var(--color-bg-fill-container-light-2-hover);
+}
+
+.shell-search__icon {
+  display: flex;
+  flex: none;
+  color: var(--color-text-fill-secondary);
+}
+
+.shell-search__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.shell-search__label {
+  overflow: hidden;
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-20);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-search__meta {
+  display: flex;
+  gap: var(--spacing-8);
+  min-width: 0;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+}
+
+.shell-search__crumb {
+  flex: 0 1 auto;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-search__snippet {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-fill-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-search__kind {
+  flex: none;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+/* 命中的字：品牌绿，不加底 */
+.shell-search__mark {
+  background: none;
+  color: var(--color-brand-solid);
+}
+
+.shell-search__more {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-8) 0;
+}
+
+.shell-search__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+}
+
+@media (max-width: 560px) {
+  /* 手机宽顶栏已经满了，再塞一个图标会把「Figma 组件库」挤出屏幕；先不放入口，不动原来的顶栏 */
+  .shell-top .shell-search-ibtn {
+    display: none;
+  }
+
+  .shell-search__keys {
+    display: none;
+  }
+
+  .shell-search__foot {
+    justify-content: flex-end;
+  }
+
+  .shell-search__crumb {
+    max-width: 40%;
+  }
+}
+
+/* ---------- 跳转后闪一下 ---------- */
+
+/* 从品牌浅底淡出到本来的底色：关键帧只写开头，结尾就是元素自己的底色，不会盖掉表格行原有的底。
+   时长是 400 的 4 倍（1.6 秒），系统开了减少动态效果时变量是 0，就不闪 */
+@keyframes shell-search-hit {
+  0%,
+  55% {
+    background-color: var(--color-brand-subtle);
+  }
+}
+
+[data-search-hit] {
+  animation: shell-search-hit calc(var(--motion-duration-400) * 4) var(--motion-ease-in-out);
+}

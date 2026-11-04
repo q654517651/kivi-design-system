@@ -1,0 +1,209 @@
+/*
+  KIVI · 提示
+  Figma「提示」页：Tooltip（只写工具名，最多带快捷键）、Popover（说明性的话：标题 + 一段话，带箭头；长文；面板。Figma 还没有）。依赖 tokens.css、base.css。
+
+  写法（React，见 Tooltip.tsx、Popover.tsx）
+    Tooltip：包住触发元素
+      <Tooltip content="下载"><IconButton icon="Download" label="下载" /></Tooltip>
+      <Tooltip content="复制" shortcut="⌘C"><IconButton … /></Tooltip>
+  渲染出来的结构
+    Popover（带箭头的说明气泡，只能包着触发元素用，没有静态的）
+      <Popover title="比例" content="决定画面宽高比。"><Button variant="secondary">比例</Button></Popover>
+      弹出的是挂在 body 上的 <div class="kv-popover" data-side="bottom"> 箭头 kv-popover__arrow、标题 kv-popover__title、正文 kv-popover__text
+      长文：<Popover variant="long" content={一整段}><div>被截断的文字</div></Popover>，kv-popover--long，没有箭头，壳加 kv-popover__anchor--block
+    Tooltip（静态的气泡）
+      <div class="kv-tooltip" role="tooltip">下载</div>
+
+  Tooltip 弹出
+    悬停 500ms 后 150ms ease-out 淡入，移开 100ms ease-in 淡出。默认目标下方 8px，水平居中（Figma 没定水平方向，暂时居中）；
+    placement 可以放上 / 右 / 左，右和左上下居中，放不下翻到对面（收起的侧栏用右边）。
+    禁用（disabled）时不出现。
+    键盘 Tab 到目标（:focus-visible）也会出现，Esc、点击会关掉。包住触发元素的外壳是 kv-tooltip__anchor。
+    弹出的气泡 kv-tooltip--floating 也挂在 body 上，position: fixed。不弹出的 kv-tooltip 就是静态的，文档摆样子用。
+*/
+
+/* ---------- Tooltip ---------- */
+/* 工具名：一行，高 32，可以带快捷键 */
+.kv-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  height: 32px;
+  margin: 0;
+  padding: var(--spacing-6) var(--spacing-12);
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-popup);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.kv-tooltip__shortcut {
+  color: var(--color-text-fill-tertiary);
+}
+
+/* 包住触发元素的壳，只负责收悬停和焦点 */
+.kv-tooltip__anchor {
+  display: inline-flex;
+}
+
+/* 弹出：挂在 body 上，位置由脚本算（目标下方 8px，水平居中）。淡入 150ms ease-out，淡出 100ms ease-in */
+.kv-tooltip--floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--kv-popup-z, 1000);
+  pointer-events: none;
+  animation: kv-tooltip-in var(--motion-duration-150) var(--motion-ease-out) both;
+}
+
+.kv-tooltip--floating[data-state="closed"] {
+  animation: kv-tooltip-out var(--motion-duration-100) var(--motion-ease-in) both;
+}
+
+@keyframes kv-tooltip-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes kv-tooltip-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ---------- Popover ---------- */
+/* 带箭头的说明气泡：底和 Tooltip 一样是实色 popup（不是玻璃），最宽 320，内边距 12，标题 13 加粗 primary，
+   正文 13 / 20 secondary，标题和正文间距 4。挂在 body 上，位置和箭头方向由脚本写：
+   data-side（出在触发元素哪边）、--kv-anchor-x / --kv-anchor-y（触发元素中心在气泡里的位置）。
+   出现、消失和 Tooltip 一样：淡入 150ms ease-out，淡出 100ms ease-in。 */
+.kv-popover__anchor {
+  display: inline-flex;
+}
+
+/* 长文：包的是一段文字，壳是块级，宽度才跟得上 */
+.kv-popover__anchor--block {
+  display: block;
+}
+
+.kv-popover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--kv-popup-z, 1000);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 320px;
+  margin: 0;
+  padding: var(--spacing-12);
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-popup);
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+  overflow-wrap: anywhere;
+  outline: none;
+  animation: kv-tooltip-in var(--motion-duration-150) var(--motion-ease-out) both;
+}
+
+.kv-popover[data-state="closed"] {
+  pointer-events: none;
+  animation: kv-tooltip-out var(--motion-duration-100) var(--motion-ease-in) both;
+}
+
+/* 悬停型换一个（从一行挪到下一行）：旧的立刻没、新的直接出现，不交叉淡化，免得两张叠出重影 */
+.kv-popover[data-swap] {
+  animation: none;
+}
+
+.kv-popover[data-state="closed"][data-swap] {
+  visibility: hidden;
+}
+
+.kv-popover__title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-semibold);
+}
+
+.kv-popover__text {
+  min-width: 0;
+}
+
+/* 箭头：12 × 6 的三角，同一个底色，指着触发元素中心；离气泡的圆角至少 8 + 6，不贴到角上 */
+.kv-popover__arrow {
+  --kv-arrow-min: calc(var(--border-radius-8) + 6px); /* 圆角 + 箭头半宽，Figma 没变量 */
+  position: absolute;
+  width: 12px; /* Figma 没变量 */
+  height: 6px; /* Figma 没变量 */
+  background: var(--color-bg-fill-popup);
+  pointer-events: none;
+}
+
+.kv-popover[data-side="bottom"] > .kv-popover__arrow,
+.kv-popover:not([data-side]) > .kv-popover__arrow {
+  top: -6px; /* Figma 没变量 */
+  left: clamp(var(--kv-arrow-min), var(--kv-anchor-x, 50%), calc(100% - var(--kv-arrow-min)));
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.kv-popover[data-side="top"] > .kv-popover__arrow {
+  bottom: -6px; /* Figma 没变量 */
+  left: clamp(var(--kv-arrow-min), var(--kv-anchor-x, 50%), calc(100% - var(--kv-arrow-min)));
+  transform: translateX(-50%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.kv-popover[data-side="right"] > .kv-popover__arrow,
+.kv-popover[data-side="left"] > .kv-popover__arrow {
+  width: 6px; /* Figma 没变量 */
+  height: 12px; /* Figma 没变量 */
+  top: clamp(var(--kv-arrow-min), var(--kv-anchor-y, 50%), calc(100% - var(--kv-arrow-min)));
+  transform: translateY(-50%);
+}
+
+.kv-popover[data-side="right"] > .kv-popover__arrow {
+  left: -6px; /* Figma 没变量 */
+  clip-path: polygon(0 50%, 100% 0, 100% 100%);
+}
+
+.kv-popover[data-side="left"] > .kv-popover__arrow {
+  right: -6px; /* Figma 没变量 */
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* 面板类（variant="panel"）：给能操作的悬停浮层，比如 Lora 设置。没有箭头，和 Menu 一样是玻璃底
+   （glass + 背景模糊 32 + 描边 border-subtle 画在里面），圆角 16，内边距 12，内容原样放进去，宽度由内容定，不套说明文字的样式 */
+.kv-popover--panel {
+  max-width: none;
+  gap: 0;
+  border-radius: var(--border-radius-16);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+}
+
+/* 长文类（variant="long"）：给被截断的长文字（比如提示词）看全文。没有箭头，底还是实色 popup；
+   能换行，和触发元素一样宽（脚本写宽度）、至少 240；14 / 22 primary，内边距 8 / 12 */
+.kv-popover--long {
+  display: block;
+  min-width: 240px;
+  max-width: none;
+  padding: var(--spacing-8) var(--spacing-12);
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}

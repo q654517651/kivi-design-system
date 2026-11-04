@@ -1,0 +1,27 @@
+import { PageHeader } from '@shell';
+import { SkillsTemplate, SkillPanelStates } from './skills.demos';
+
+<PageHeader
+  eyebrow="页面模板"
+  title="技能面板"
+  lead="Agent 输入框工具条的「技能」点开的面板：分类页签、搜索、两行菜单项，悬停在左边出预览，点一个插进输入框。主站 Agent 和画布 Agent 共用，组件是 SkillPicker、SkillPanel（kivi/generation）。"
+  figma={['模板 · 技能面板', '1083:7590']}
+/>
+
+<SkillsTemplate />
+
+### 状态
+
+<SkillPanelStates />
+
+## 参数
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| 面板 | 玻璃 | — | 宽 400、高 440、内边距 8、圆角 16，竖排间距 8。从「技能」按钮向上弹、左对齐 |
+| 头部 | — | — | 「技能」14 中粗；右边「创建 ▾」（两行菜单：创建新的技能 / 导入已有技能）、「全部技能」，都是 28 的 secondary Button |
+| 分类 | Tabs | 推荐 | 推荐 → 后端下发的分类 → 我的，多了横着滚。右边搜索 IconButton 28，点了整行换成搜索框（Input `clearable`）+「取消」，Esc 只关搜索。每次打开回到推荐、清空搜索 |
+| 列表行 | MenuItem 两行 | — | 图标 Tool（扳手）24、secondary，不加外框 + 名字 + 一行说明；「我的」里公开的名字后面跟 Tag「公共技能」。悬停、键盘进到这一行右边出「详情」（28 的 light Button）。不标选中 |
+| 悬停预览 | Popover 面板 | — | 在面板左边，离面板外边 8（悬停出来的都离 8；挂在行上，`offset` 写 16 = 面板内边距 8 + 8）。宽 280：封面 16:9 圆角 8（没封面用占位图）、名字 14 中粗、说明 12 / 20 最高 96 自己滚 |
+| 状态 | — | — | 加载中 Loading；失败「加载失败」+「点击重试」；「我的」空 EmptyState +「创建技能」；别的页签空「暂无技能」；搜不到「没有搜索到技能」 |
+| 选了 | — | — | 关面板，在输入框光标处插技能胶囊（MentionChip `skill`），不发送 |

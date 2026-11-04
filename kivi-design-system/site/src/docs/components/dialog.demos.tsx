@@ -72,13 +72,13 @@ type DialogState = {
 
 function renderDialog(s: DialogState) {
   const confirm = (
-    <Button size="lg" variant={s.confirm}>
+    <Button size={36} variant={s.confirm}>
       {s.confirm === 'danger' ? '删除' : '确定'}
     </Button>
   );
   const footer = s.secondary ? (
     <>
-      <Button size="lg">取消</Button>
+      <Button size={36}>取消</Button>
       {confirm}
     </>
   ) : (

@@ -1,21 +1,21 @@
 /*
   KIVI · 画布
-  Figma「画布」页：NodeCard、NodeMedia（视频用 VideoPlayer 小号）、AudioWave、ConnectorDot、NodeWrapper、
-  Connector、ConnectorRemove、CropHandles、MentionChip、PromptInput、ReferenceItem。
-  「模板 · 画布」页里的节点工具栏、画布工具栏、生成面板是模板（不发布），这里只给拼它们用的外框样式（templates.tsx）。
+  Figma「画布」页：NodeCard、NodeMedia（视频用 VideoPlayer 卡片）、AudioWave、ConnectorDot、NodeWrapper、
+  Connector、ConnectorRemove、CropHandles、NodeStack、Minimap。
+  「模板 · 画布」页里的生成面板是模板（不发布），这里只给拼它用的外框样式（templates.tsx）。节点工具栏、画布工具栏用 ButtonGroup variant="glass"。
   依赖 tokens.css、base.css、button.css；
-  引导项用 menus-tooltip 的 kv-menu-item；倒计时和时长用 tabs-tags-avatar 的 kv-tag--on-media（Figma 的 Tag「覆盖」）；
-  参考图和 @ 标签里的缩略图用同一页的 kv-asset-thumb。
+  引导项用 menu 的 kv-menu-item；倒计时和时长用 tags-avatar 的 kv-tag--on-media（Figma 的 Tag「覆盖」）。
+  参考图、@ 标签、提示词输入、参数面板在 generation 文件夹（generation.css）。
   生成中的动效不在这里：用 generating 文件夹的 GeneratingDots，铺满 NodeCard。
 
   写法（React，见各个 .tsx）
     <NodeWrapper ratio="1:1" name="节点名称" selected leftDot="connected" rightDot="default">
-      <NodeCard state="done" type="image">
+      <NodeCard status="done" type="image">
         <NodeMedia type="image" src="…" />
       </NodeCard>
     </NodeWrapper>
 
-    <Connector state="active" width={240} height={48} />
+    <Connector status="active" width={240} height={48} />
   渲染出来的结构
     <div class="kv-node-wrapper kv-node-wrapper--1-1" aria-selected="true">
       <span class="kv-node-wrapper__name">节点名称</span>
@@ -31,26 +31,26 @@
     </div>
 
   状态
-    节点状态      kv-node-card--guide / --pending / --generating / --done / --failed（state 属性）
+    节点状态      kv-node-card--guide / --pending / --generating / --done / --failed（status 属性）
     节点内容类型  kv-node-media--image / --video / --audio / --text（type 属性）
-    连接点        kv-connector-dot--connected / --highlight（state 属性，不加是默认）
-    连线          kv-connector--active / --drawing / --flowing（state 属性，不加是默认）
+    连接点        kv-connector-dot--connected / --highlight（status 属性，不加是默认）
+    连线          kv-connector--active / --drawing / --flowing（status 属性，不加是默认）
     选中          NodeWrapper 写 aria-selected="true"（selected 属性）
     生成中        kv-node-card--generating 同时写 aria-busy="true"
     展开          NodeStack 写 data-expanded（expanded 属性）
-    互换中        ReferenceFramePair 写 data-swapping
     跟着鼠标      Connector 里的 ConnectorRemove 写 data-following
     没播放到      AudioWave 里超过播放头的竖条写 data-rest
     音频状态      NodeMedia 音频根元素写 data-status="loading" / "ready" / "error"（有 src 时）；AudioWave 能拖时写 data-interactive
     is-hover 只给文档摆静态的悬停用，项目里不用写
 
-  Figma 里没有变量的值（#0A0A0A、#4AFF70、#181818 70%、白 20%、白 30% 等）直接写数字，不新建变量。
+  Figma 里没有变量的值（#0A0A0A、#4AFF70、白 20%、白 30% 等）直接写数字，不新建变量。
 */
 
 /* ---------- NodeCard：节点本体 ---------- */
-
 .kv-node-card {
   position: relative;
+  /* 自己成一层：里面按钮条、收藏星的 z-index 只在卡片里比，不会盖到卡片外面浮着的东西（比如主站输入框） */
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -135,7 +135,6 @@
 }
 
 /* 生成中动效：GeneratingDots 自己铺满节点，放在遮罩上面、倒计时下面 */
-
 /* 倒计时：Tag 覆盖，左上 */
 .kv-node-card__tag {
   position: absolute;
@@ -224,7 +223,6 @@
 }
 
 /* ---------- NodeMedia：节点完成态的内容 ---------- */
-
 .kv-node-media {
   position: absolute;
   inset: 0;
@@ -250,7 +248,7 @@
   padding: calc(var(--spacing-8) + 32px + 18px) var(--spacing-8) var(--spacing-8);
 }
 
-/* 波形垫一块底：白 8%，圆角 6，左右留 20；播放头上下离边 8 */
+/* 波形垫一块底：白 10%，圆角 6，左右留 20；播放头上下离边 8 */
 .kv-node-media__wave {
   display: flex;
   align-items: center;
@@ -295,14 +293,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-in-out);
 }
 
-/* 播放键：32 的圆，底白 12%，图标 16 */
-.kv-icon-button.kv-node-media__play {
-  --kv-icon-size: 16px;
-  --kv-fill: var(--color-bg-fill-container-light-1-hover);
-  --kv-fill-hover: var(--color-bg-fill-container-light-1-pressed);
-  --kv-fill-pressed: var(--color-bg-fill-container-light-1-pressed);
-  border-radius: var(--border-radius-round);
-}
+/* 播放键：IconButton 32 · 次要，按钮一律方的（11-04 用户定） */
 
 /* 文字：正文 14 号，超出的裁掉 */
 .kv-node-media--text {
@@ -314,7 +305,6 @@
 }
 
 /* ---------- AudioWave：音频波形 ---------- */
-
 .kv-audio-wave {
   position: relative;
   display: flex;
@@ -345,12 +335,6 @@
   cursor: pointer;
   touch-action: none;
   user-select: none;
-}
-
-.kv-audio-wave[data-interactive]:focus-visible {
-  outline: 2px solid var(--color-border-strong);
-  outline-offset: 4px;
-  border-radius: var(--border-radius-6);
 }
 
 .kv-audio-wave[data-disabled] {
@@ -394,7 +378,6 @@
 }
 
 /* ---------- ConnectorDot：连接点 ---------- */
-
 .kv-connector-dot {
   position: relative;
   display: inline-block;
@@ -430,7 +413,6 @@
 }
 
 /* ---------- NodeWrapper：节点外框 ---------- */
-
 .kv-node-wrapper {
   position: relative;
   display: block;
@@ -440,9 +422,13 @@
 
 /* 比例：短边 256 */
 .kv-node-wrapper--1-1 { width: 256px; height: 256px; }
+
 .kv-node-wrapper--3-4 { width: 256px; height: 341px; }
+
 .kv-node-wrapper--16-9 { width: 455px; height: 256px; }
+
 .kv-node-wrapper--4-3 { width: 341px; height: 256px; }
+
 .kv-node-wrapper--9-16 { width: 256px; height: 455px; }
 
 /* 节点名：在节点上方，左对齐，离节点 11 */
@@ -494,7 +480,6 @@
 }
 
 /* ---------- Connector：连线 ---------- */
-
 .kv-connector {
   position: relative;
   display: block;
@@ -577,7 +562,6 @@
 }
 
 /* ---------- ConnectorRemove：连线删除按钮 ---------- */
-
 .kv-connector-remove {
   display: inline-flex;
   flex: none;
@@ -612,7 +596,6 @@
 }
 
 /* ---------- CropHandles：裁剪框 ---------- */
-
 .kv-crop-handles {
   --kv-crop-color: #4AFF70; /* Figma 没变量 */
   position: relative;
@@ -639,8 +622,11 @@
 }
 
 .kv-crop-handles__handle--nw { top: -7px; left: -7px; }
+
 .kv-crop-handles__handle--ne { top: -7px; right: -7px; }
+
 .kv-crop-handles__handle--sw { bottom: -7px; left: -7px; }
+
 .kv-crop-handles__handle--se { right: -7px; bottom: -7px; }
 
 /* 四条边：120 × 6 的圆头条，在每条边的中间。n 上、s 下、w 左、e 右 */
@@ -663,215 +649,16 @@
 }
 
 .kv-crop-handles__handle--n { top: -4px; }
+
 .kv-crop-handles__handle--s { bottom: -4px; }
+
 .kv-crop-handles__handle--w { left: -4px; }
+
 .kv-crop-handles__handle--e { right: -4px; }
 
-/* ---------- MentionChip：提示词里的 @ 引用标签 ---------- */
-
-.kv-mention-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-4);
-  box-sizing: border-box;
-  height: 17px;
-  padding: 0 var(--spacing-4) 0 2px;
-  overflow: hidden;
-  border-radius: var(--border-radius-4);
-  /* 1px 描边画在里面 */
-  outline: var(--border-width-1) solid var(--color-border-subtle);
-  outline-offset: calc(var(--border-width-1) * -1);
-  background: var(--color-bg-fill-container-light-1);
-  color: var(--color-text-fill-secondary);
-  font-family: var(--font-family);
-  font-size: var(--font-size-14);
-  font-weight: var(--font-weight-regular);
-  line-height: 17px;
-  white-space: nowrap;
-  vertical-align: middle;
-  user-select: none;
-}
-
-/* 缩略图用 kv-asset-thumb--16（图片或音频），和文字之间的间距 4 在 gap 里 */
-
-/* ---------- PromptInput：提示词输入 ---------- */
-
-.kv-prompt-input {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  max-height: 120px;
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  border: 0;
-  outline: 0;
-  background: none;
-  color: var(--color-text-fill-primary);
-  font-family: var(--font-family);
-  font-size: var(--font-size-14);
-  font-weight: var(--font-weight-regular);
-  line-height: 17px;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-/* 未输入：高 68，显示占位文字。输入后又删光，浏览器会留一个 <br>，也算空 */
-.kv-prompt-input:is(:empty, :has(> br:only-child)) {
-  min-height: 68px;
-}
-
-.kv-prompt-input:is(:empty, :has(> br:only-child))::before {
-  content: attr(data-placeholder);
-  color: var(--color-text-fill-placeholder);
-}
-
-/* ---------- ReferenceItem：参考图一格 ---------- */
-
-.kv-reference-item {
-  position: relative;
-  display: block;
-  flex: none;
-  box-sizing: border-box;
-  width: 56px;
-  height: 56px;
-  overflow: hidden;
-  border-radius: var(--border-radius-8);
-  background: var(--color-bg-fill-container-light-1);
-  font-family: var(--font-family);
-}
-
-.kv-reference-item--72 {
-  width: 72px;
-  height: 72px;
-}
-
-.kv-reference-item::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: var(--border-width-1) solid var(--color-border);
-  border-radius: inherit;
-  pointer-events: none;
-}
-
-/* 缩略图用 kv-asset-thumb（56 或 72，和外框一致），铺满外框 */
-
-/* 右上角标：序号或首帧 / 尾帧，最小 20 × 20，左右留 4（2026-10-29 用户在 Figma 里加的，不然「首帧」贴边）。
-   左下圆角 4；右上也要跟外框一样做 8 的圆角：角标带背景模糊，Chrome 里外框的圆角裁不掉它，不写就会露出直角 */
-.kv-reference-item__badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 var(--spacing-4);
-  border-radius: 0 var(--border-radius-8) 0 var(--border-radius-4);
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  color: var(--color-on-media-text);
-  font-size: var(--font-size-12);
-  line-height: 14px;
-}
-
-/* 左下视频时长 */
-.kv-reference-item__duration {
-  position: absolute;
-  bottom: 2px;
-  left: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 16px;
-  padding: 0 var(--spacing-6);
-  border-radius: var(--border-radius-6);
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
-  color: var(--color-on-media-text);
-  font-size: var(--font-size-12);
-  line-height: 14px;
-}
-
-/* 底部通栏：Lora 权重。底下两个角跟外框一样圆 8，理由同角标 */
-.kv-reference-item__weight {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  border-radius: 0 0 var(--border-radius-8) var(--border-radius-8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 16px;
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
-  color: var(--color-on-media-text);
-  font-size: var(--font-size-12);
-  line-height: 14px;
-}
-
-/* ---------- 模板外框：节点工具栏、画布工具栏、生成面板 ----------
-   这三个是模板，由 Button / IconButton 等拼成，不发布成组件。这里只给外框的样子。 */
-
-/* 节点工具栏：选中节点后出现在节点上方。玻璃浮层：底 glass、背景模糊 32、描边 border-subtle，圆角 12 */
-.kv-node-toolbar {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-8);
-  box-sizing: border-box;
-  height: 44px;
-  padding: var(--spacing-6);
-  border-radius: var(--border-radius-12);
-  outline: var(--border-width-1) solid var(--color-border-subtle);
-  outline-offset: calc(var(--border-width-1) * -1);
-  background: var(--color-bg-fill-glass);
-  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
-  backdrop-filter: blur(var(--effect-glass-blur));
-}
-
-.kv-node-toolbar__divider {
-  flex: none;
-  width: var(--border-width-1);
-  height: 20px;
-  background: var(--color-border);
-}
-
-/* 画布底部工具栏：圆角胶囊 */
-.kv-canvas-toolbar {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-16);
-  box-sizing: border-box;
-  height: 56px;
-  padding: var(--spacing-12) var(--spacing-16);
-  border-radius: var(--border-radius-round);
-  outline: var(--border-width-1) solid var(--color-border-subtle);
-  outline-offset: calc(var(--border-width-1) * -1);
-  background: var(--color-bg-fill-surface);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-
-/* 第一个「添加」：白底黑图标（Figma 里手动改的，IconButton 没有这个类型） */
-.kv-canvas-toolbar__add {
-  --kv-fill: var(--color-text-fill-primary);
-  --kv-fill-hover: var(--color-text-fill-primary);
-  --kv-fill-pressed: var(--color-text-fill-primary);
-  --kv-content: var(--color-bg-fill-base);
-}
-
-/* 其余按钮的图标是 24 */
-.kv-canvas-toolbar .kv-icon-button:not(.kv-canvas-toolbar__add) {
-  --kv-icon-size: 24px;
-}
-
+/* ---------- 模板外框：生成面板 ----------
+   这个是模板，由 AttachmentStrip、PromptInput 等拼成，不发布成组件。这里只给外框的样子。
+   节点工具栏、画布工具栏不在这里：都是 ButtonGroup variant="glass"（size 44 / 56），样式在 button.css。 */
 /* 生成面板：节点下方 */
 .kv-node-panel {
   position: relative;
@@ -887,10 +674,9 @@
   font-family: var(--font-family);
 }
 
-.kv-node-panel__refs {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-4);
+/* 首尾帧（ReferenceFramePair）直接放在面板里，靠左不撑宽 */
+.kv-node-panel > .kv-reference-frame-pair {
+  align-self: flex-start;
 }
 
 .kv-node-panel__bar {
@@ -922,114 +708,11 @@
   right: var(--spacing-12);
 }
 
-/* 参数摘要后面跟的图标（比如生成音频开着时的音量），和文字垂直居中 */
-.kv-select__text > .kv-icon {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-/* 参数面板：点参数摘要弹出来的玻璃浮层，和菜单一样的底、模糊、描边。圆角 16，内边距 12，块间距 12；
-   宽固定 368，视频、音频、高级设置都一样（11-03 用户定，Figma 没变量） */
-.kv-param-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-12);
-  box-sizing: border-box;
-  width: 368px;
-  padding: var(--spacing-12);
-  border-radius: var(--border-radius-16);
-  outline: var(--border-width-1) solid var(--color-border-subtle);
-  outline-offset: calc(var(--border-width-1) * -1);
-  background: var(--color-bg-fill-glass);
-  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
-  backdrop-filter: blur(var(--effect-glass-blur));
-  color: var(--color-text-fill-primary);
-  font-family: var(--font-family);
-}
-
-/* 一块：标题 14 号，和控件间距 4 */
-.kv-param-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4);
-}
-
-.kv-param-field__label {
-  color: var(--color-text-fill-secondary);
-  font-size: var(--font-size-14);
-  line-height: var(--font-line-height-20);
-}
-
-/* 控件撑满；滑块 + 数字输入框横排，间距 12 */
-.kv-param-field__body {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-12);
-}
-
-.kv-param-field__body > .kv-tab-group {
-  flex: 1;
-}
-
-/* 滑块右边的数值框：56 × 46，圆角 6，底白 8%；12 号，数值白、单位 secondary，左右各 8 */
-.kv-param-value {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-  width: 56px;
-  height: 46px;
-  padding: 0 var(--spacing-8);
-  border-radius: var(--border-radius-6);
-  background: var(--color-bg-fill-container-light-1);
-  color: var(--color-text-fill-primary);
-  font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
-}
-
-.kv-param-value__unit {
-  color: var(--color-text-fill-secondary);
-}
-
-/* ---------- ReferenceFramePair：首尾帧 ---------- */
-
-/* 两格参考图，中间 28 的互换按钮（图标 20），间距 4。角标「首帧」「尾帧」写在右上 */
-.kv-reference-frame-pair {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-4);
-}
-
-.kv-reference-frame-pair__swap {
-  --kv-icon-size: 20px;
-}
-
-/* 互换：两张图各自滑到对方的位置，角标跟着图走；滑完再换回数据、去掉位移 */
-.kv-reference-frame-pair__first,
-.kv-reference-frame-pair__last {
-  transition: none;
-}
-
-.kv-reference-frame-pair[data-swapping] .kv-reference-frame-pair__first,
-.kv-reference-frame-pair[data-swapping] .kv-reference-frame-pair__last {
-  transition: transform var(--motion-duration-200) var(--motion-ease-in-out);
-}
-
-.kv-reference-frame-pair[data-swapping] .kv-reference-frame-pair__first {
-  transform: translateX(var(--kv-frame-distance));
-}
-
-.kv-reference-frame-pair[data-swapping] .kv-reference-frame-pair__last {
-  transform: translateX(calc(var(--kv-frame-distance) * -1));
-}
-
-
-/* ---------- NodeStack：多图节点（堆叠和展开照线上，10-29） ----------
-   收起：主图在最前，后面每张往上 8、缩 5%，依次歪 -4° / 4° / -2°，再往后 ±2° 交替；浅阴影。后面的卡点不到。
-   展开：后面的卡铺成格子，间距 8：右、上、右上，再往右每列两张；不歪、不缩，深阴影，能点。
+/* ---------- NodeStack：多图节点 ----------
+   收起：主图在最前，后面只露两层底，样子同 MediaGroup 的叠放（11-04 用户定）：往右错开 4 / 8，以中心旋转 2° / 4°，底白 18%（container-light-1-pressed），
+   不缩、没有阴影，第 3 张起和第 2 层叠在一起、不再加底；后面的卡里的内容藏起来，点不到。
+   展开：后面的卡铺成格子，间距 8：右、上、右上，再往右每列两张；不歪、不缩，深阴影，能点，底去掉、内容出来（出现 ease-out、消失 ease-in，150ms）。
    动效：transform 400ms 起每多一张加 10ms、最多 700ms（--kv-stack-factor 是 400ms 的倍数，NodeStack 按张数写），弹簧缓动（--motion-ease-spring，冲过头约 4%），一起动、不错开。 */
-
 .kv-node-stack {
   --kv-stack-gap: var(--spacing-8);
 
@@ -1051,25 +734,49 @@
 }
 
 .kv-node-stack__card {
+  /* 第几层底：第 1、2 张各一层，往后都和第 2 层重合 */
+  --kv-layer: min(var(--kv-i), 2);
+
   border-radius: var(--border-radius-16);
-  box-shadow: var(--effect-shadow-stack);
+  background: var(--color-bg-fill-container-light-1-pressed);
   pointer-events: none;
   transform:
-    translate(0, calc(var(--kv-i) * -8px))
-    scale(calc(1 - var(--kv-i) * 0.05))
-    rotate(var(--kv-rotate));
+    translate(calc(var(--kv-layer) * 4px), 0)
+    scale(1)
+    rotate(calc(var(--kv-layer) * 2deg));
   transition:
     transform calc(var(--motion-duration-400) * var(--kv-stack-factor, 1)) var(--motion-ease-spring),
+    background-color var(--motion-duration-150) var(--motion-ease-out),
     box-shadow calc(var(--motion-duration-400) * var(--kv-stack-factor, 1)) var(--motion-ease-out);
 }
 
+/* 第 3 张起不再加底，不然叠在第 2 层上会越来越亮 */
+.kv-node-stack__card[data-extra] {
+  background: transparent;
+}
+
+.kv-node-stack__card > .kv-node-card {
+  opacity: 0;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
 .kv-node-stack[data-expanded] > .kv-node-stack__card {
+  background: transparent;
   box-shadow: var(--effect-shadow-spread);
   pointer-events: auto;
   transform:
     translate(calc(var(--kv-x) * (100% + var(--kv-stack-gap))), calc(var(--kv-y) * (100% + var(--kv-stack-gap))))
     scale(1)
     rotate(0deg);
+  transition:
+    transform calc(var(--motion-duration-400) * var(--kv-stack-factor, 1)) var(--motion-ease-spring),
+    background-color var(--motion-duration-150) var(--motion-ease-in),
+    box-shadow calc(var(--motion-duration-400) * var(--kv-stack-factor, 1)) var(--motion-ease-out);
+}
+
+.kv-node-stack[data-expanded] > .kv-node-stack__card > .kv-node-card {
+  opacity: 1;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
 /* 张数按钮：展开时箭头转到朝上，和卡片同一条弹簧 */
@@ -1079,4 +786,47 @@
 
 .kv-node-stack-toggle[aria-expanded="true"] > .kv-icon:last-child {
   transform: rotate(180deg);
+}
+
+/* ---------- Minimap：小地图 ----------
+   164 × 108，圆角 8，玻璃底（glass + 背景模糊 + 1px border-subtle，会浮动、面积不大，同菜单）。
+   节点是 container-light-1 按下色（白 18%）的小块，圆角 4；视口是白 10% 底 + 1px border 描边的框，圆角 4。
+   能拖时悬停光标是 pointer，按住是 grabbing；出现、收起没有动效。位置在缩放条正上方、左对齐，间距 8（画布里自己摆） */
+.kv-minimap {
+  position: relative;
+  box-sizing: border-box;
+  width: 164px;
+  height: 108px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  touch-action: none;
+}
+
+.kv-minimap[data-interactive] {
+  cursor: pointer;
+}
+
+.kv-minimap[data-interactive]:active {
+  cursor: grabbing;
+}
+
+.kv-minimap__node {
+  position: absolute;
+  border-radius: var(--border-radius-4);
+  background: var(--color-bg-fill-container-light-1-pressed);
+  pointer-events: none;
+}
+
+.kv-minimap__viewport {
+  position: absolute;
+  box-sizing: border-box;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--border-radius-4);
+  background: var(--color-bg-fill-container-light-1);
+  pointer-events: none;
 }

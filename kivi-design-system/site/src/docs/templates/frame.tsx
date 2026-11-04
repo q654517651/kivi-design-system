@@ -21,7 +21,7 @@ export function TemplateFrame({ children }: { children: ReactNode }) {
     <figure className="tpl" data-full={full ? '' : undefined}>
       <div className="tpl-bar">
         <span>只能看：不生成、不调接口</span>
-        <Button size="sm" variant="light" leftIcon={full ? 'Fold' : 'FullScreen'} onClick={() => setFull(!full)}>
+        <Button size={28} variant="light" leftIcon={full ? 'Fold' : 'FullScreen'} onClick={() => setFull(!full)}>
           {full ? '退出全屏' : '全屏看'}
         </Button>
       </div>

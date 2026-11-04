@@ -2,7 +2,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { IconButton } from '../button';
 import { useAudioPlayer } from '../hooks';
 import { cx } from '../utils';
-import { VideoPlayer } from '../video-player';
+import { VideoPlayer } from '../media';
 import { AudioWave } from './AudioWave';
 import './canvas.css';
 
@@ -11,11 +11,11 @@ export type NodeMediaType = 'image' | 'video' | 'audio' | 'text';
 export interface NodeMediaProps extends HTMLAttributes<HTMLDivElement> {
   /** 类型：图片 / 视频 / 音频 / 文字，默认图片 */
   type?: NodeMediaType;
-  /** 内容地址：图片是图片，视频是视频文件，音频是音频文件（mp4 也行，播它的声音）。视频用 VideoPlayer 小号播，时长、播放、音量、进度都在里面；音频用 <audio> 播，同一时间只播一个 */
+  /** 内容地址：图片是图片，视频是视频文件，音频是音频文件（mp4 也行，播它的声音）。视频用 VideoPlayer 卡片播，时长、播放、音量、进度都在里面；音频用 <audio> 播，同一时间只播一个 */
   src?: string;
   /** 视频封面，没播时显示；不传是首帧 */
   poster?: string;
-  /** 视频右下「预览」：打开大号预览，参数是播到第几秒。不传就没有这个按钮 */
+  /** 视频右下「预览」：打开预览，参数是播到第几秒。不传就没有这个按钮 */
   onPreview?: (currentTime: number) => void;
   /** 时间：音频没传 src 时的静态外观，默认「00:08 / 00:08」；有 src 时以真实播放为准 */
   time?: string;

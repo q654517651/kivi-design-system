@@ -1,0 +1,116 @@
+import { Demo, PageHeader } from '@shell';
+import { PopoverPlayground, TooltipPlayground } from './tooltip.demos';
+
+<PageHeader
+  eyebrow="浮层"
+  title="提示"
+  figma={['提示', '1083:7774']}
+  code="kivi/tooltip"
+/>
+
+## Tooltip
+
+悬停提示：鼠标停在图标按钮上时说它叫什么，比如「复制」。
+
+<TooltipPlayground />
+
+### 图标按钮配 Tooltip
+
+<Demo code={`
+<>
+  <Tooltip content="下载">
+    <IconButton icon="Download" label="下载" />
+  </Tooltip>
+  <Tooltip content="复制" shortcut="⌘C">
+    <IconButton icon="Copy" label="复制" />
+  </Tooltip>
+</>
+`} />
+
+## Popover
+
+气泡：要解释或放少量内容时用，比如参数说明、Lora 设置、模型偏好。
+
+<PopoverPlayground />
+
+### 标题加说明
+
+<Demo code={`
+<Popover title="参数设置" content="调整比例、分辨率和生成数量。">
+  <IconButton icon="Configuration" label="参数设置" variant="secondary" />
+</Popover>
+`} />
+
+### 长文：看被截断文字的全文
+
+<Demo code={`
+<Popover variant="long" content="生成一张赛博朋克风格的猕猴桃海报：霓虹灯下的未来都市街道，雨夜反光的路面，巨大的全息广告牌上写着 KIVI，画面中央是一颗发光的猕猴桃切面，电影级光影，8K 质感。">
+  <div style={{ width: 360, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontSize: 14, lineHeight: '22px' }}>
+    生成一张赛博朋克风格的猕猴桃海报：霓虹灯下的未来都市街道，雨夜反光的路面，巨大的全息广告牌上写着 KIVI，画面中央是一颗发光的猕猴桃切面，电影级光影，8K 质感。
+  </div>
+</Popover>
+`} />
+
+### 确认气泡：点击型，带操作
+
+<Demo code={`
+() => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover
+      trigger="click"
+      placement="bottom-start"
+      open={open}
+      onOpenChange={setOpen}
+      title="删除这张图片？"
+      content={
+        <>
+          <div>删除后可在回收站找回 30 天。</div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+            <Button size={28} variant="secondary" onClick={() => setOpen(false)}>取消</Button>
+            <Button size={28} variant="danger" onClick={() => setOpen(false)}>删除</Button>
+          </div>
+        </>
+      }
+    >
+      <Button variant="secondary" rightIcon="DownArrowSmall">更多</Button>
+    </Popover>
+  );
+}
+`} />
+
+## 参数
+
+### Tooltip
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `content` | `ReactNode` | — | 工具名，一行，12 常规，行高 20。不写解释，要解释用 Popover。高 32，上下 6、左右 12，圆角 8，底 `--color-bg-fill-popup`，不加阴影 |
+| `shortcut` | `string` | — | 快捷键，比如 ⌘Z，放在工具名后面。12，tertiary，和工具名间距 8 |
+| `placement` | `"bottom"` `"top"` `"right"` `"left"` | `"bottom"` | 出在目标哪边，离目标 8。上下水平居中，左右上下居中；放不下翻到对面。收起的侧栏用右边 |
+| `children` | `ReactElement` | — | 触发元素，比如 IconButton。不写就只渲染气泡本身（上面面板里就是） |
+| `open` | `boolean` | — | 显示（受控）。不传就悬停、聚焦自己出现 |
+| `defaultOpen` | `boolean` | `false` | 默认是否显示 |
+| `onOpenChange` | `(open: boolean) => void` | — | 显示状态变化 |
+| `delay` | `number` | `500` | 悬停多久后出现，毫秒。出现 150ms ease-out，消失 100ms ease-in |
+| `disabled` | `boolean` | `false` | 禁用：不出现，触发元素照常 |
+
+其余原生 HTML 属性都能传。
+
+### Popover
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `variant` | `"tip"` `"long"` `"panel"` | `"tip"` | 说明 / 长文 / 面板。说明：标题加一段话，带箭头。长文：给被截断的长文字看全文（比如 GenPrompt 的提示词）：没有箭头、没有标题，底还是 `--color-bg-fill-popup`，能换行，宽度和触发元素一样、至少 240，14 / 22 `--color-text-fill-primary`，内边距 8 / 12，圆角 8，离触发元素 8；一般配 `disabled` 在没被截断时不出现；`content` 放全文，触发元素是那段文字本身。面板给能操作的悬停浮层（Lora 设置）：没有箭头，玻璃底（`--color-bg-fill-glass` + 模糊 `--effect-glass-blur`，描边 `--color-border-subtle` 画在里面），圆角 16，内边距 12，宽度由内容定；`content` 原样放进去，不套 13 / 20 的说明样式；按对话框读（`role="dialog"`） |
+| `content` | `ReactNode` | — | 内容，比一句话长的说明。13 / 20，`--color-text-fill-secondary`；长文是全文，14 / 22 |
+| `title` | `ReactNode` | — | 标题，不写就只有内容；长文没有标题。13 加粗，`--color-text-fill-primary`，和内容间距 4 |
+| `trigger` | `"hover"` `"click"` | `"hover"` | 悬停：停 `delay` 后出现，鼠标能挪进气泡里，键盘 Tab 聚焦（`:focus-visible`）也出，移开 150ms 后关。点击：点触发元素开关，点外面关；打开后焦点进气泡。两种都按 Esc 关闭、焦点回到触发元素 |
+| `placement` | `"top"` `"bottom"` `"left"` `"right"`，各可加 `-start` `-end` | `"bottom"` | 出在触发元素哪边，默认居中；`-start` / `-end` 对齐上下方向的左右边、左右方向的上下边。放不下自动翻到对面，不出屏幕 |
+| `offset` | `number` | `10` | 离触发元素的距离：箭头 6 + 空 4；长文没有箭头，默认 8 |
+| `open` / `defaultOpen` / `onOpenChange` | `boolean` | 关 | 显示。受控时仍按 `trigger` 触发，通过 `onOpenChange` 通知 |
+| `delay` | `number` | `200` | 悬停多久后出现，毫秒，只有悬停型用 |
+| `disabled` | `boolean` | `false` | 禁用：不出现，触发元素照常 |
+| `onInteractOutside` | `(event: PointerEvent) => void` | — | 点击型点了气泡外面时调用，`event.preventDefault()` 拦住这次关闭，比如点的是另一个浮层 |
+| `children` | `ReactElement` | — | 触发元素，比如 Button。悬停型会加 `aria-describedby`，点击型加 `aria-haspopup="dialog"`、`aria-expanded`、`aria-controls` |
+
+气泡底 `--color-bg-fill-popup`（实色，不用玻璃，同 Tooltip），圆角 8，内边距 12，最宽 320，不加阴影。箭头 12 × 6，同色，指着触发元素中心；离气泡圆角至少 8 + 6，不贴到角上。出现 150ms ease-out 淡入，消失 100ms ease-in 淡出（同 Tooltip）。悬停型 `role="tooltip"`，点击型 `role="dialog"`，标题作为 `aria-labelledby`。ref 给包住触发元素的外壳 `<span>`，其余原生 `<span>` 属性都能传。

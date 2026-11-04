@@ -1,6 +1,6 @@
 import { forwardRef, Fragment, type HTMLAttributes, type ReactNode } from 'react';
-import { ReferenceItem } from '../canvas';
-import { AssetThumb } from '../tabs-tags-avatar';
+import { ReferenceItem } from '../reference';
+import { AssetThumb } from '../tags-avatar';
 import { cx } from '../utils';
 import './main-site.css';
 

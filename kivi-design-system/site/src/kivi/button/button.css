@@ -3,10 +3,10 @@
   Figma「按钮」页：Button（带文字）、IconButton（只有图标）。依赖 tokens.css、base.css。
 
   写法（React，见 Button.tsx、IconButton.tsx）
-    <Button size="md" variant="secondary" leftIcon="Add">新建</Button>
+    <Button size={32} variant="secondary" leftIcon="Add">新建</Button>
     <IconButton icon="More" label="更多" size={32} variant="text" />
   渲染出来的结构
-    <button class="kv-button kv-button--md kv-button--secondary">
+    <button class="kv-button kv-button--32 kv-button--secondary">
       <span class="kv-icon" data-icon="Add"><svg/></span><span>新建</span>
     </button>
 
@@ -14,6 +14,7 @@
     禁用    disabled（或 aria-disabled="true"）
     加载中  aria-busy="true"，左图标换成转圈的 Loading（loading 属性）
     选中    aria-pressed="true"，只有 IconButton 有
+    加载中  IconButton 也有：aria-busy="true"，图标换成转圈的 Loading（loading 属性）
     is-hover、is-active 只给文档摆静态的悬停、按下用，项目里不用写
 */
 
@@ -67,6 +68,11 @@
   height: var(--kv-icon-size);
 }
 
+/* 右边的下拉箭头减弱一档，和 Select 的箭头一样（11-04 用户定，所有按钮都这样） */
+.kv-button > .kv-button__arrow {
+  color: var(--color-text-fill-tertiary);
+}
+
 /* 类型 */
 
 .kv-button--primary,
@@ -87,11 +93,13 @@
   --kv-fill-pressed: var(--color-bg-fill-container-light-1-pressed);
 }
 
+/* 平时没底色：悬停、按下用所在底那一档的 hover / pressed。深底 Light 1（12% / 16%）；
+   放在带底色的行里（菜单项的「⋯」），行把 --kv-nested-fill-hover / -pressed 设成 Light 2 */
 .kv-button--text,
 .kv-icon-button--text {
   --kv-fill: transparent;
-  --kv-fill-hover: var(--color-bg-fill-container-light-2-hover);
-  --kv-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  --kv-fill-hover: var(--kv-nested-fill-hover, var(--color-bg-fill-container-light-1-hover));
+  --kv-fill-pressed: var(--kv-nested-fill-pressed, var(--color-bg-fill-container-light-1-pressed));
 }
 
 /* 危险只有 Button */
@@ -124,7 +132,7 @@
 }
 
 /* 轻（原来叫「弱」，2026-10-29 Figma 改名改样式）：文字和图标 50%，悬停、按下回到 100%。
-   Button 的轻底色和次要一样（白 8%），不然认不出是按钮；IconButton 的轻没有底 */
+   Button 的轻底色和次要一样（白 10%），不然认不出是按钮；IconButton 的轻没有底 */
 .kv-button--light {
   --kv-fill: var(--color-bg-fill-container-light-1);
   --kv-fill-hover: var(--color-bg-fill-container-light-1-hover);
@@ -134,8 +142,8 @@
 
 .kv-icon-button--light {
   --kv-fill: transparent;
-  --kv-fill-hover: var(--color-bg-fill-container-light-2-hover);
-  --kv-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  --kv-fill-hover: var(--kv-nested-fill-hover, var(--color-bg-fill-container-light-1-hover));
+  --kv-fill-pressed: var(--kv-nested-fill-pressed, var(--color-bg-fill-container-light-1-pressed));
   --kv-content-opacity: var(--opacity-50);
 }
 
@@ -152,13 +160,18 @@
   --kv-content-opacity: 1;
 }
 
-/* 状态：选中（只有 IconButton，主要和轻没有） */
+/* 状态：选中（只有 IconButton，主要没有；轻选中不换色，见下）。
+   IconButton 没有绿色状态（11-04 用户定）：选中是常驻底色，用所在底那一档的默认（深底 Light 1 8%），悬停、按下照常升档，图标白 */
 
 .kv-icon-button[aria-pressed="true"] {
-  --kv-fill: var(--color-brand-subtle);
-  --kv-fill-hover: var(--color-brand-subtle);
-  --kv-fill-pressed: var(--color-brand-subtle);
-  --kv-content: var(--color-brand-solid);
+  --kv-fill: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
+  --kv-content: var(--color-text-fill-primary);
+}
+
+/* 轻：选中不换色，靠换实心图标表示（点赞、点踩），aria-pressed 照写给读屏 */
+.kv-icon-button--light[aria-pressed="true"] {
+  --kv-fill: transparent;
+  --kv-content: var(--color-text-fill-primary);
 }
 
 :is(.kv-icon-button--on-media, .kv-icon-button--on-media-ghost)[aria-pressed="true"] {
@@ -167,7 +180,7 @@
   --kv-fill-pressed: var(--color-on-media-fill-hover);
 }
 
-/* 状态：禁用。底色白 8%，文字白 20%；文字、浮层、轻保持原来的底 */
+/* 状态：禁用。底色白 10%，文字白 20%；文字、浮层、轻保持原来的底 */
 
 :is(.kv-button, .kv-icon-button):is(:disabled, [aria-disabled="true"]) {
   --kv-fill: var(--color-bg-fill-container-light-1);
@@ -192,9 +205,21 @@
   --kv-content-opacity: var(--opacity-20);
 }
 
-/* 轻禁用：Button 保留白 8% 底，IconButton 没有底 */
+/* 轻禁用：Button 保留白 10% 底，IconButton 没有底 */
 .kv-icon-button--light:is(:disabled, [aria-disabled="true"]) {
   --kv-fill: transparent;
+}
+
+/* 换图标：新图标 150ms ease-out 从 60% 放大并淡入，只在换的那一下（data-swapped）。系统开了「减少动态效果」时时长是 0 */
+.kv-icon-button > .kv-icon[data-swapped] {
+  animation: kv-icon-swap var(--motion-duration-150) var(--motion-ease-out);
+}
+
+@keyframes kv-icon-swap {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
 }
 
 /* 状态：加载中。样子同默认，不响应悬停和点击 */
@@ -215,7 +240,7 @@
   font-size: var(--font-size-13);
 }
 
-.kv-button--sm {
+.kv-button--28 {
   --kv-icon-size: 16px;
   height: 28px;
   min-width: 0;
@@ -224,13 +249,13 @@
   font-size: var(--font-size-12);
 }
 
-.kv-button--md {
+.kv-button--32 {
   height: 32px;
   min-width: 64px;
   padding: 0 var(--spacing-12);
 }
 
-.kv-button--lg {
+.kv-button--36 {
   height: 36px;
   min-width: 80px;
   padding: 0 var(--spacing-16);
@@ -273,6 +298,8 @@
 /* 盖在图片、视频上的一排按钮合成一条：高 32（按钮 28 + 四周 2），按钮间距 4。
    底用 on-media（贴在图片、视频上，11-03 从玻璃改过来），不加描边；圆角 8 = 按钮圆角 6 + 2 */
 .kv-button-group {
+  --kv-divider-size: 16px;
+
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-4);
@@ -284,17 +311,53 @@
   backdrop-filter: blur(var(--effect-glass-blur));
 }
 
-/* 条里的选中（收藏了）换实心图标、图标变绿，不加底；悬停和别的按钮一样 */
-.kv-button-group .kv-icon-button[aria-pressed="true"] {
-  --kv-fill: transparent;
-  --kv-fill-hover: var(--color-bg-fill-container-light-2-hover);
-  --kv-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
-  --kv-content: var(--color-brand-solid);
+/* 玻璃：浮在画布这种深色底上（缩放条）用，底 glass，1px border-subtle 画在里面 */
+.kv-button-group--glass {
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
 }
 
-.kv-button-group__divider {
-  flex: none;
-  width: var(--border-width-1);
-  height: 16px;
-  background: var(--color-border);
+/* 实色：画布底部工具栏，照原来的 CanvasToolbar：surface 底、描边 border-subtle、模糊 12 */
+.kv-button-group--surface {
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* 32 的条里的选中（收藏了）换实心图标，和别处一样加一档白底、不变绿（11-04 用户定 IconButton 没有绿色状态）。44、56 的工具栏里选中也是普通样子 */
+
+/* 尺寸：32 是默认（上面）。44 = 节点工具栏，56 = 画布工具栏，按钮都是 32 高；圆角跟着高度走。
+   竖向 Divider 的高度由条给：--kv-divider-size，32 是 16（写在 .kv-button-group 上） */
+
+.kv-button-group--44 {
+  --kv-divider-size: 20px;
+  gap: var(--spacing-8);
+  height: 44px;
+  padding: var(--spacing-6);
+  border-radius: var(--border-radius-12);
+}
+
+/* 56 是胶囊：它是条不是按钮，圆角用 round */
+.kv-button-group--56 {
+  --kv-divider-size: 20px;
+  gap: var(--spacing-16);
+  height: 56px;
+  padding: var(--spacing-12) var(--spacing-16);
+  border-radius: var(--border-radius-round);
+}
+
+/* 56 的条里图标是 24 */
+.kv-button-group--56 .kv-icon-button:not(.kv-button-group__solid) {
+  --kv-icon-size: 24px;
+}
+
+/* 条里强调的那一个按钮（画布工具栏的「添加」）：白底黑图标。Figma 里手动改的，IconButton 没有这个类型 */
+.kv-button-group__solid {
+  --kv-fill: var(--color-text-fill-primary);
+  --kv-fill-hover: var(--color-text-fill-primary);
+  --kv-fill-pressed: var(--color-text-fill-primary);
+  --kv-content: var(--color-bg-fill-base);
 }

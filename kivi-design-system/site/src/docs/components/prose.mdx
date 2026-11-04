@@ -1,0 +1,58 @@
+import { Demo, PageHeader } from '@shell';
+import { ProseSample } from './prose.demos';
+
+<PageHeader
+  eyebrow="展示"
+  title="正文排版"
+  figma={['正文排版', '1083:7728']}
+  code="kivi/prose"
+/>
+
+## Prose
+
+正文排版：显示 Markdown 内容，比如 Agent 的回复。
+
+<ProseSample />
+
+## CodeBlock
+
+代码块：一段能一键复制的文字，比如提示词。
+
+<Demo code={`
+<div style={{ width: 420 }}>
+  <CodeBlock>一只橘猫坐在窗台上，傍晚的暖光从侧面照进来，浅景深，胶片颗粒，电影感，16:9</CodeBlock>
+</div>
+`} />
+
+## 参数
+
+### Prose
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | Markdown 渲染出来的元素：`h1`–`h4`、`p`、`ul` / `ol`、`blockquote`、`code`、`pre`、`table`、`a`、`hr`、`img` |
+
+样子照线上现在用的 Ant Design X Markdown 暗色主题（四套候选里选的 A），颜色、圆角、间距换成 KIVI 变量。正文 14 / 22，`--color-text-fill-primary`。
+
+- 标题：h1 24 / 32、h2 20 / 32、h3 18 / 30、h4 16 / 28，semibold，下面空 16。
+- 段落、列表项下面空 16 / 12；列表左缩进 28，序号和圆点用 primary；往里一层依次是圆点、空心圆、方块，有序列表往里是 a.、i.。
+- 引用：左边 4 的竖线 `--color-border`，底 `--color-bg-fill-container-light-1`，右边圆角 6，悬停底稍亮。
+- 行内代码：底 `--color-bg-fill-container-light-1`，1px `--color-border`，圆角 4，左右内边距 6。
+- 表格：1px `--color-border` 的格线，表头浅底，悬停整行变亮。
+- 链接：`--color-brand-solid`，悬停变 `--color-brand-hover` 加下划线，后面一个 ↗。
+- 分割线：1px `--color-border`，上下各空 24。
+
+其余原生 `<div>` 属性都能传。Markdown 怎么渲染成 HTML 是前端的事，`Prose` 只管样式。
+
+### CodeBlock
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `string` | — | 块里的文字，比如一段提示词。点复制复制的就是它 |
+| `onCopied` | `(text: string) => void` | — | 复制成功后调用。浏览器不让复制时不调用 |
+
+底 `--color-bg-fill-container-light-1`，圆角 6，内边距 16（右边多空出复制按钮的位置），文字 14 / 22，系统等宽字体，自动换行，没有横向滚动条，没有语法高亮。右上角距边 8 一个复制按钮（IconButton 28，文字，悬停提示「复制」）：点了图标换成对勾（换图标动效见按钮页），提示变「已复制」，1.5 秒后换回。
+
+放进 `Prose` 里时，把 Markdown 渲染出来的 `pre` 换成 `CodeBlock`；没换的 `pre` 也有同样的底和换行，只是没有复制按钮。
+
+其余原生 `<div>` 属性都能传。

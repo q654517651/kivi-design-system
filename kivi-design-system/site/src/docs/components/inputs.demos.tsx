@@ -1,8 +1,8 @@
-import { cx, Dropzone, Icon, Input, Menu, MenuItem, NumberInput, Select, Textarea, Toaster, UploadRing, UploadTile, type IconName, type SelectOption, type SelectProps, type SelectVariant, type UploadTileErrorStyle, type UploadTileSize, type UploadTileStatus } from '@kivi';
+import { Input, NumberInput, Textarea } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 
-// 输入控件页的四个属性面板：所有样式、状态都在面板里切。参数表在 inputs.mdx
-// 预览里的输入框能打字、下拉能点开选：写成受控，打的字、选的项会写回面板（「文字」「数值」「状态」）。
+// 输入框页的三个属性面板：所有样式、状态都在面板里切。参数表在 inputs.mdx
+// 预览里的输入框能打字：写成受控，打的字会写回面板（「文字」「状态」）。
 // 悬停、聚焦这种一碰就变的状态不写回，面板上的悬停、聚焦是摆静态样子用的。
 
 /** 这一页的演示用：预览区里把宽度定下来（组件默认填满） */
@@ -34,7 +34,7 @@ const STATES: [string, string][] = [
 
 // ---------- Input ----------
 
-type InputState = { state: string; icon: boolean; count: boolean; placeholder: string; text: string; countText: string };
+type InputState = { state: string; icon: boolean; clear: boolean; count: boolean; placeholder: string; text: string; countText: string };
 
 function renderInput(s: InputState, update: Update) {
   return (
@@ -47,6 +47,7 @@ function renderInput(s: InputState, update: Update) {
       invalid={s.state === 'error' || undefined}
       disabled={s.state === 'disabled' || undefined}
       counter={s.count ? s.countText : undefined}
+      clearable={s.clear || undefined}
       aria-label="输入框"
     />
   );
@@ -60,6 +61,7 @@ export function InputPlayground() {
         controls={[
           { key: 'state', label: '状态', type: 'segment', value: 'default', options: STATES },
           { key: 'icon', label: '左图标', type: 'toggle', value: false },
+          { key: 'clear', label: '可清空', type: 'toggle', value: false },
           { key: 'count', label: '字数', type: 'toggle', value: false },
           { key: 'placeholder', label: '占位文字', type: 'text', value: '请输入' },
           { key: 'text', label: '文字', type: 'text', value: '输入的内容' },
@@ -74,14 +76,15 @@ export function InputPlayground() {
 
 // ---------- NumberInput ----------
 
-type NumberState = { state: string; unit: boolean; value: string; unitText: string };
+type NumberState = { state: string; unit: boolean; precision: string; value: string; unitText: string };
 
 function renderNumberInput(s: NumberState, update: Update) {
   return (
     <NumberInput
       className={STATE_CLASS[s.state]}
-      value={s.value.replace(/\D/g, '')}
+      value={s.value.replace(s.precision === '0' ? /\D/g : /[^\d.]/g, '')}
       onChange={(v) => update({ value: v })}
+      precision={Number(s.precision)}
       unit={s.unit ? s.unitText : undefined}
       disabled={s.state === 'disabled' || undefined}
       aria-label="数值"
@@ -95,119 +98,13 @@ export function NumberInputPlayground() {
       controls={[
         { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['focus', '聚焦'], ['disabled', '禁用']] },
         { key: 'unit', label: '显示单位', type: 'toggle', value: true },
+        { key: 'precision', label: '小数位', type: 'segment', value: '0', options: [['0', '整数'], ['1', '1 位'], ['2', '2 位']] },
         { key: 'value', label: '数值', type: 'text', value: '12' },
         { key: 'unitText', label: '单位', type: 'text', value: '秒' },
       ]}
       rules={(s) => ({ unitText: !s.unit })}
       render={renderNumberInput}
     />
-  );
-}
-
-// ---------- Select ----------
-
-type SelectState = { variant: string; state: string; icon: boolean; optIcon: boolean; placeholder: string; text: string };
-
-const OPTION_ICONS: IconName[] = ['ImageGeneration', 'VideoGeneration', 'Audio'];
-
-function optionsOf(text: string, withIcon: boolean): SelectOption[] {
-  return [
-    { value: 'a', label: text },
-    { value: 'b', label: '选项二' },
-    { value: 'c', label: '选项三' },
-  ].map((o, i) => (withIcon ? { ...o, icon: OPTION_ICONS[i] } : o));
-}
-
-/** 无底一般都有当前值；填充要选过才有值（展开时还没选）；禁用只显示占位文字 */
-function showsValue(variant: string, state: string) {
-  return state !== 'disabled' && (variant === 'plain' || state === 'selected');
-}
-
-/**
- * 文档里摆静态的「展开」：触发器按展开的样子画（底色变、箭头朝上），列表是一个直接摊开的 Menu，当前项是「选中」状态。
- * 真正的列表是挂在 body 上、跟着触发器走的弹出层，一直开着会在页面滚动时盖住别的内容，所以文档里不用它摆静态。
- */
-function StaticSelect({ variant = 'fill', options, value, placeholder, leftIcon, className, style, onChange }: SelectProps) {
-  const selected = options.find((o) => o.value === value);
-  const plain = variant === 'plain';
-  const icon = selected?.icon ?? leftIcon;
-  return (
-    <span
-      className={cx('kv-dropdown', 'kv-select__wrap', plain && 'kv-select__wrap--plain', className)}
-      style={{ position: 'relative', ...style }}
-    >
-      <button type="button" tabIndex={-1} className={`kv-select kv-select--${variant}`} aria-haspopup="listbox" aria-expanded="true">
-        {icon && <Icon name={icon} className="kv-select__lead" data-filled={selected ? '' : undefined} />}
-        <span className={cx('kv-select__text', !selected && 'kv-select__text--placeholder')}>{selected ? selected.label : placeholder}</span>
-        <Icon name="UpArrowSmall" />
-      </button>
-      <Menu role="listbox" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 1, width: plain ? undefined : '100%', minWidth: plain ? '100%' : undefined }}>
-        {options.map((o) => (
-          <MenuItem key={o.value} icon={o.icon} selected={o.value === value} onClick={() => onChange?.(o.value)}>
-            {o.label}
-          </MenuItem>
-        ))}
-      </Menu>
-    </span>
-  );
-}
-
-/** 属性面板里的 Select：选「展开」时换成静态的展开样子，生成的代码仍然写 <Select … open /> */
-function DocSelect(props: SelectProps) {
-  if (!props.open) return <Select {...props} />;
-  return <StaticSelect {...props} value={props.value ?? props.defaultValue} />;
-}
-DocSelect.displayName = 'Select';
-
-// 选了哪项记在面板上不显示的 picked 里；选了以后「状态」变成「已选」（无底一直有值，状态不动）。
-// 点开真的下拉不写回「展开」：面板的「展开」是摆静态样子用的
-function renderSelect(s: SelectState, update: Update) {
-  const raw = (s as Record<string, unknown>).picked;
-  const picked = typeof raw === 'string' ? raw : 'a';
-  const show = showsValue(s.variant, s.state) || (s.state === 'open' && typeof raw === 'string');
-  return (
-    <DocSelect
-      key={s.variant}
-      variant={s.variant as SelectVariant}
-      className={s.state === 'hover' ? 'is-hover' : undefined}
-      options={optionsOf(s.text, s.optIcon)}
-      value={show ? picked : null}
-      onChange={(v) => update({ picked: v, state: s.variant === 'plain' || s.state === 'disabled' ? s.state : 'selected' })}
-      placeholder={s.placeholder}
-      leftIcon={s.icon ? 'Add' : undefined}
-      disabled={s.state === 'disabled' || undefined}
-      open={s.state === 'open' || undefined}
-      aria-label="下拉选择"
-    />
-  );
-}
-
-export function SelectPlayground() {
-  return (
-    <div className="in-pg-select">
-      <DocStyle
-        css={`
-          .in-pg-select .shell-pg-stage { align-items: flex-start; padding-top: 56px; }
-          .in-pg-select .shell-pg-stage .kv-select__wrap:not(.kv-select__wrap--plain) { width: 200px; }
-        `}
-      />
-      <Playground<SelectState>
-        controls={[
-          { key: 'variant', label: '样式', type: 'segment', value: 'fill', options: [['fill', '填充'], ['plain', '无底']] },
-          { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['open', '展开'], ['selected', '已选'], ['disabled', '禁用']] },
-          { key: 'icon', label: '左图标', type: 'toggle', value: false },
-          { key: 'optIcon', label: '选项图标', type: 'toggle', value: false },
-          { key: 'placeholder', label: '占位文字', type: 'text', value: '请选择' },
-          { key: 'text', label: '文字', type: 'text', value: '选项一' },
-        ]}
-        rules={(s) => {
-          const value = showsValue(s.variant, s.state);
-          const listOrValue = value || s.state === 'open';
-          return { placeholder: value, text: !listOrValue, optIcon: !listOrValue };
-        }}
-        render={renderSelect}
-      />
-    </div>
   );
 }
 
@@ -246,108 +143,5 @@ export function TextareaPlayground() {
         render={renderTextarea}
       />
     </div>
-  );
-}
-
-// ---------- UploadTile ----------
-
-const TILE_PIC = './placeholders/kivi-future-1x1.webp';
-
-type UploadTileState = { status: UploadTileStatus; size: string; errorStyle: UploadTileErrorStyle; state: string; progress: string; disabled: boolean; src: string };
-
-/** 选了文件用本地预览（object URL），没选过用占位图 */
-const previewOf = (files: File[]) => (files[0]?.type.startsWith('image/') ? URL.createObjectURL(files[0]) : '');
-
-function renderUploadTile(s: UploadTileState, update: Update) {
-  const src = s.src || TILE_PIC;
-  return (
-    <UploadTile
-      status={s.status}
-      size={Number(s.size) as UploadTileSize}
-      errorStyle={s.status === 'error' ? s.errorStyle : undefined}
-      src={s.status === 'empty' ? undefined : src}
-      progress={s.status === 'uploading' ? Number(s.progress) : undefined}
-      className={s.state === 'hover' ? 'is-hover' : undefined}
-      dragging={s.state === 'dragover' || undefined}
-      disabled={s.disabled || undefined}
-      accept="image/*"
-      onSelect={(files) => update({ status: 'done', src: previewOf(files) })}
-      onReplace={(files) => update({ src: previewOf(files) })}
-      onRemove={() => update({ status: 'empty', src: '' })}
-      onRetry={() => update({ status: 'uploading', progress: '35' })}
-    />
-  );
-}
-
-export function UploadTilePlayground() {
-  return (
-    <Playground<UploadTileState>
-      controls={[
-        { key: 'status', label: '状态', type: 'segment', value: 'empty', options: [['empty', '空'], ['uploading', '上传中'], ['done', '完成'], ['error', '失败']] },
-        { key: 'size', label: '尺寸', type: 'segment', value: '96', options: [['96', '96'], ['64', '64']] },
-        { key: 'errorStyle', label: '失败样式（待定）', type: 'segment', value: 'outline', options: [['outline', '红描边'], ['dim', '变暗'], ['badge', '角标']] },
-        { key: 'state', label: '交互', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['dragover', '拖入']] },
-        { key: 'progress', label: '进度', type: 'segment', value: '35', options: [['0', '0%'], ['35', '35%'], ['72', '72%'], ['100', '100%']] },
-        { key: 'disabled', label: '禁用', type: 'toggle', value: false },
-      ]}
-      rules={(s) => ({
-        errorStyle: s.status !== 'error',
-        progress: s.status !== 'uploading',
-        state: s.status === 'uploading' ? true : s.status === 'error' ? ['dragover'] : [],
-      })}
-      render={renderUploadTile}
-    />
-  );
-}
-
-// ---------- Dropzone ----------
-
-type DropzoneState = { state: string; accept: string; disabled: boolean };
-
-const ACCEPT: Record<string, string | undefined> = { any: undefined, image: 'image/*', media: 'image/*,video/*' };
-
-function renderDropzone(s: DropzoneState) {
-  return (
-    <Dropzone
-      accept={ACCEPT[s.accept]}
-      maxSize={10 * 1024 * 1024}
-      className={s.state === 'hover' ? 'is-hover' : undefined}
-      dragging={s.state === 'dragover' || s.state === 'rejected' || undefined}
-      rejected={s.state === 'rejected' || undefined}
-      disabled={s.disabled || undefined}
-    />
-  );
-}
-
-/** 拒收时弹 toast，这一页放一个 Toaster 就够 */
-export function DropzonePlayground() {
-  return (
-    <div className="in-pg-dropzone">
-      <DocStyle css=".in-pg-dropzone .shell-pg-stage .kv-dropzone { width: 360px; }" />
-      <Toaster />
-      <Playground<DropzoneState>
-        controls={[
-          { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['dragover', '拖入'], ['rejected', '不收']] },
-          { key: 'accept', label: '格式', type: 'segment', value: 'image', options: [['any', '不限'], ['image', '图片'], ['media', '图片、视频']] },
-          { key: 'disabled', label: '禁用', type: 'toggle', value: false },
-        ]}
-        rules={(s) => (s.disabled ? { state: ['dragover', 'rejected'] } : {})}
-        render={renderDropzone}
-      />
-    </div>
-  );
-}
-
-// ---------- UploadRing ----------
-
-type UploadRingState = { progress: string };
-
-export function UploadRingPlayground() {
-  return (
-    <Playground<UploadRingState>
-      controls={[{ key: 'progress', label: '进度', type: 'segment', value: '40', options: [['0', '0%'], ['40', '40%'], ['75', '75%'], ['100', '100%']] }]}
-      media={() => true}
-      render={(s) => <UploadRing progress={Number(s.progress)} />}
-    />
   );
 }

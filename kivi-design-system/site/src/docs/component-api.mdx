@@ -69,6 +69,7 @@ Foo.displayName = 'Foo';
 
 - 一律用 `useControllable` 实现，不自己写 `useState` 再判断受控。
 - `onChange` 直接给新的值，不给事件对象，所以要 `Omit` 掉原生的 `onChange`。
+  - 例外：Input、Textarea 外面就是原生输入框，`onChange` 照原生给事件对象，值在 `e.target.value`。
 - 事件名 `on` 加动作：`onRemove`、`onPreview`；值变了是 `onXxxChange`。
 - 状态写在元素上，CSS 按它选：
   - 先用原生属性和 `aria-*`：`disabled`、`aria-pressed`、`aria-expanded`、`aria-selected`、`aria-checked`、`aria-current`。
@@ -80,6 +81,7 @@ Foo.displayName = 'Foo';
 - 类名：组件 `kv-组件名`，修饰 `kv-组件名--尺寸`，部件 `kv-组件名__部件`。部件类名也是对外的接口，前端改样式靠它。
 - 颜色、间距、圆角、字号、时长、缓动只用 `tokens.css` 的变量。要透明度的用 `color-mix(in srgb, var(--变量) 30%, transparent)`。Figma 没有变量的值直接写数字，同一行写注释「Figma 没变量」。
 - 遮罩（mask）只看透明度，用 `black`、`transparent`。
+- Container 底色按所在的底选档（见「设计规则 · 颜色和底色」）。组件自己不知道放在哪时：自己的底写 `var(--kv-nested-fill, var(--color-bg-fill-container-light-1))`；本身带 Light 1 底、里面还会放别的组件的容器（MentionChip、ReferenceItem、LoraCard），设 `--kv-nested-fill: var(--color-bg-fill-container-light-2)`。悬停、按下同理用 `--kv-nested-fill-hover`、`--kv-nested-fill-pressed`（文字、轻类型的按钮读它们；菜单项的行也设了，给「⋯」用）。
 - 动效用 tokens 里的缓动，不用匀速；只有循环动画例外。
 - 浮层挂到 `body` 上（`createPortal`），`usePresence` 管出现消失，`useFloating` 定位。
 
@@ -101,7 +103,7 @@ Foo.displayName = 'Foo';
 | `composeHandlers` | 合并组件自己的事件和外面传的事件 |
 | `exclusivePlayback` | 同一时间只播一个视频或音频 |
 | `useScrollLock` | 锁背景滚动：body 不能滚，补滚动条宽度防跳动，多层弹窗最后一个关掉才恢复 |
-| `useFileDrop` | 拖文件进来：数 dragenter / dragleave 次数，里面的子元素之间移动不闪；按 `accept`、`maxSize` 检查，返回 `dragging`、`rejected`、`bind`（四个拖拽事件，铺到根元素上）、`receive`（点选文件走同一套检查）。Dropzone、UploadTile、PromptBox、画布 Agent 输入框都用它；`composeDropHandlers` 把组件的和外面传的合并 |
+| `useFileDrop` | 拖文件进来：数 dragenter / dragleave 次数，里面的子元素之间移动不闪；按 `accept`、`maxSize` 检查，返回 `dragging`、`rejected`、`bind`（四个拖拽事件，铺到根元素上）、`receive`（点选文件走同一套检查）。PromptBox、画布 Agent 输入框都用它；`composeDropHandlers` 把组件的和外面传的合并 |
 
 ## 检查
 

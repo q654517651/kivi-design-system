@@ -1,180 +1,32 @@
-import { ActionCard, AskRecord, Button, Dialog, FileCard, SkillCard, IconButton, MediaStack, ProcessGroup, ProcessRow, QuestionOption, QuestionPanel, ReferenceItem, ResultTile, SendButton, UserMessage, type FileCardType, type IconName, type AskRecordStatus, type ProcessRowLevel, type ProcessRowStatus, type ProcessStep, type ResultTileAction } from '@kivi';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
+import {
+  ActionCard,
+  AskRecord,
+  Button,
+  Dialog,
+  FileCard,
+  MentionChip,
+  MessageFeedback,
+  SkillCard,
+  IconButton,
+  ProcessGroup,
+  QuestionOption,
+  QuestionPanel,
+  ReferenceItem,
+  ResultTile,
+  SendButton,
+  UserMessage,
+  type FileCardType,
+  type AskRecordStatus,
+  type ResultTileAction,
+} from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
-import { TOOL_FLOW, TOOL_FLOW_MS } from './agent-tools';
 
-// Agent 页的属性面板：所有层级、类型、状态都在面板里切。参数表在 agent.mdx
+// Agent 对话页的属性面板：所有类型、状态都在面板里切。参数表在 agent.mdx
 
 const IMG = './placeholders/';
 
-// ---------- ProcessRow ----------
-
-type ProcessRowState = {
-  level: ProcessRowLevel;
-  status: ProcessRowStatus;
-  expand: string;
-  iconName: IconName;
-  icon: boolean;
-  avatar: boolean;
-  object: boolean;
-  arrow: boolean;
-  action: string;
-  objectText: string;
-};
-
 type Update = (patch: Partial<PlaygroundState>) => void;
-
-function renderProcessRow(s: ProcessRowState, update: Update) {
-  const sub = s.level === 'sub';
-  return (
-    <ProcessRow
-      level={sub ? 'sub' : undefined}
-      status={s.status === 'done' ? undefined : s.status}
-      icon={s.icon ? s.iconName : undefined}
-      avatar={!sub && s.avatar ? `${IMG}ip-peek-1x1.webp` : undefined}
-      action={s.action}
-      object={s.object ? s.objectText : undefined}
-      arrow={sub || s.arrow ? undefined : false}
-      expanded={!sub && s.arrow ? s.expand === 'yes' : undefined}
-      onExpandedChange={!sub && s.arrow ? (v) => update({ expand: v ? 'yes' : 'no' }) : undefined}
-    />
-  );
-}
-
-export function ProcessRowPlayground() {
-  return (
-    <Playground<ProcessRowState>
-      controls={[
-        { key: 'level', label: '层级', type: 'segment', value: 'main', options: [['main', '一级'], ['sub', '子项']] },
-        { key: 'status', label: '状态', type: 'segment', value: 'running', options: [['running', '进行中'], ['done', '完成'], ['failed', '失败']] },
-        { key: 'expand', label: '展开', type: 'segment', value: 'no', options: [['no', '否'], ['yes', '是']] },
-        { key: 'iconName', label: '图标', type: 'segment', value: 'UseCanvas', options: [['UseCanvas', '工具'], ['Skill', '技能'], ['Message', '询问'], ['ImageGeneration', '生成']] },
-        { key: 'icon', label: '显示图标', type: 'toggle', value: true },
-        { key: 'avatar', label: '显示头像', type: 'toggle', value: false },
-        { key: 'object', label: '显示对象', type: 'toggle', value: true },
-        { key: 'arrow', label: '显示箭头', type: 'toggle', value: true },
-        { key: 'action', label: '动作', type: 'text', value: '创建节点' },
-        { key: 'objectText', label: '对象', type: 'text', value: '活动标题' },
-      ]}
-      // 子项没有头像、箭头、展开；没有箭头就没有展开
-      rules={(s) => ({
-        ...(s.level === 'sub' ? { avatar: true, arrow: true, expand: true } : {}),
-        ...(!s.arrow ? { expand: true } : {}),
-        ...(!s.icon ? { iconName: true } : {}),
-        ...(!s.object ? { objectText: true } : {}),
-      })}
-      render={renderProcessRow}
-    />
-  );
-}
-
-// ---------- ProcessGroup ----------
-
-// 演示用的一串工具：照「Agent 工具」页的定稿，有快有慢，停留超过 0.5 秒的才扫光
-const TOOLS = TOOL_FLOW;
-const TOOL_MS = TOOL_FLOW_MS;
-
-/** 模拟 Agent 一个接一个调工具，调完收成汇总行。切换面板设置会整个重新挂上。tools、ms 换成别的工具和耗时 */
-export function ProcessGroupSim({
-  count: countProp,
-  failed = false,
-  live = true,
-  tools = TOOLS,
-  ms = TOOL_MS,
-}: {
-  count?: number;
-  failed?: boolean;
-  live?: boolean;
-  tools?: Omit<ProcessStep, 'status'>[];
-  ms?: number[];
-}) {
-  const count = countProp ?? tools.length;
-  const [started, setStarted] = useState(live ? 1 : count);
-  const [done, setDone] = useState(!live);
-  const [run, setRun] = useState(0);
-
-  // 一个工具调完开始下一个，最后一个调完就做完了
-  useEffect(() => {
-    if (!live) return;
-    let i = 1;
-    let t = 0;
-    const next = () => {
-      t = window.setTimeout(() => {
-        if (i < count) {
-          i += 1;
-          setStarted(i);
-          next();
-        } else setDone(true);
-      }, ms[i - 1] ?? 300);
-    };
-    next();
-    return () => window.clearTimeout(t);
-  }, [live, count, run, ms]);
-
-  const replay = () => {
-    setStarted(1);
-    setDone(false);
-    setRun((r) => r + 1);
-  };
-
-  const failIndex = count === 1 ? 0 : 2;
-  const steps: ProcessStep[] = tools.slice(0, started).map((tool, i) => ({
-    ...tool,
-    id: String(i),
-    status: !done && i === started - 1 ? 'running' : failed && i === failIndex ? 'failed' : 'done',
-  }));
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16, width: 420, maxWidth: '100%' }}>
-      <ProcessGroup key={run} steps={steps} />
-      {live && (
-        <Button size="sm" variant="light" leftIcon="Reset" onClick={replay}>
-          重放
-        </Button>
-      )}
-    </div>
-  );
-}
-
-type ProcessGroupState = { status: string; count: string; failed: boolean; expand: string };
-
-function renderProcessGroup(s: ProcessGroupState, update: Update) {
-  const n = Number(s.count);
-  const running = s.status === 'running';
-  const k = running ? Math.min(3, n) : n; // 进行中：调到第 3 个
-  const failIndex = n === 1 ? 0 : 2;
-  const steps: ProcessStep[] = TOOLS.slice(0, k).map((tool, i) => {
-    const status = running && i === k - 1 ? 'running' : !running && s.failed && i === failIndex ? 'failed' : undefined;
-    return status ? { ...tool, status } : { ...tool };
-  });
-  const canExpand = !running && n > 1;
-  return (
-    <ProcessGroup
-      steps={steps}
-      expanded={canExpand ? s.expand === 'yes' : undefined}
-      onExpandedChange={canExpand ? (v) => update({ expand: v ? 'yes' : 'no' }) : undefined}
-    />
-  );
-}
-
-export function ProcessGroupPlayground() {
-  return (
-    <Playground<ProcessGroupState>
-      controls={[
-        { key: 'status', label: '状态', type: 'segment', value: 'done', options: [['running', '调用中'], ['done', '做完']] },
-        { key: 'count', label: '工具个数', type: 'segment', value: '8', options: [['1', '1'], ['4', '4'], ['8', '8']] },
-        { key: 'failed', label: '有失败', type: 'toggle', value: false },
-        { key: 'expand', label: '展开', type: 'segment', value: 'no', options: [['no', '否'], ['yes', '是']] },
-      ]}
-      // 调用中只有一行、不能展开；只调了 1 个也不能展开
-      rules={(s) => ({
-        ...(s.status === 'running' ? { failed: true, expand: true } : {}),
-        ...(s.count === '1' ? { expand: true } : {}),
-      })}
-      render={renderProcessGroup}
-    />
-  );
-}
 
 // ---------- AskRecord ----------
 
@@ -303,9 +155,11 @@ export function MainSiteAgentDemo() {
 
 // ---------- UserMessage ----------
 
-type UserMessageState = { assets: string; text: string };
+type UserMessageState = { assets: string; kind: string; text: string; expand: string };
 
-function renderUserMessage(s: UserMessageState) {
+const LONG_TEXT = Array.from({ length: 8 }, (_, i) => `第 ${i + 1} 段：画面是一只在宇宙里漂浮的猕猴桃，冷色背景，边缘有柔和的光，细节要丰富，质感像水彩。`).join('\n');
+
+function renderUserMessage(s: UserMessageState, update: Update) {
   return (
     <UserMessage
       assets={
@@ -316,8 +170,18 @@ function renderUserMessage(s: UserMessageState) {
           </>
         ) : undefined
       }
+      expanded={s.expand === 'yes'}
+      onExpandedChange={(v) => update({ expand: v ? 'yes' : 'no' })}
     >
-      {s.text}
+      {s.kind === 'long' ? (
+        <span style={{ whiteSpace: 'pre-wrap' }}>{LONG_TEXT}</span>
+      ) : s.kind === 'chips' ? (
+        <>
+          用 <MentionChip type="skill">运营活动主视觉</MentionChip> 的风格，参考 <MentionChip type="image" src={`${IMG}kivi-future-1x1.webp`}>图片1</MentionChip> 做 4 张海报，节奏对齐 <MentionChip type="node">分镜脚本</MentionChip>
+        </>
+      ) : (
+        s.text
+      )}
     </UserMessage>
   );
 }
@@ -327,26 +191,41 @@ export function UserMessagePlayground() {
     <Playground<UserMessageState>
       controls={[
         { key: 'assets', label: '素材', type: 'segment', value: 'none', options: [['none', '无'], ['has', '有']] },
+        { key: 'kind', label: '内容', type: 'segment', value: 'short', options: [['short', '短文字'], ['chips', '带引用胶囊'], ['long', '超过 12 行']] },
         { key: 'text', label: '文字', type: 'text', value: '帮我生成 10 个小狗的图片' },
+        { key: 'expand', label: '展开', type: 'segment', value: 'no', options: [['no', '折叠'], ['yes', '展开']] },
       ]}
+      rules={(s) => ({ ...(s.kind === 'short' ? {} : { text: true }), ...(s.kind === 'long' ? {} : { expand: true }) })}
       render={renderUserMessage}
     />
   );
 }
 
-// ---------- MediaStack ----------
+// ---------- MessageFeedback ----------
 
-type MediaStackState = { badge: boolean; count: string };
+type MessageFeedbackState = { value: string; trace: boolean; reason: boolean };
 
-export function MediaStackPlayground() {
+function renderMessageFeedback(s: MessageFeedbackState, update: Update) {
   return (
-    <Playground<MediaStackState>
+    <MessageFeedback
+      text="好的，已经按科幻宇宙风格生成了 4 张。"
+      traceId={s.trace ? 'trace-8f3a21' : undefined}
+      reason={s.reason}
+      value={s.value === 'none' ? null : (s.value as 'like' | 'dislike')}
+      onValueChange={(v) => update({ value: v ?? 'none' })}
+    />
+  );
+}
+
+export function MessageFeedbackPlayground() {
+  return (
+    <Playground<MessageFeedbackState>
       controls={[
-        { key: 'badge', label: '显示数量', type: 'toggle', value: true },
-        { key: 'count', label: '数量', type: 'text', value: '+4' },
+        { key: 'value', label: '赞 / 踩', type: 'segment', value: 'none', options: [['none', '没选'], ['like', '赞'], ['dislike', '踩']] },
+        { key: 'trace', label: '复制 TraceID', type: 'toggle', value: true },
+        { key: 'reason', label: '踩了问原因', type: 'toggle', value: true },
       ]}
-      rules={(s) => (s.badge ? {} : { count: true })}
-      render={(s) => <MediaStack src={`${IMG}kivi-future-1x1.webp`} count={s.badge ? s.count : undefined} aria-label="展开 5 个结果" />}
+      render={renderMessageFeedback}
     />
   );
 }

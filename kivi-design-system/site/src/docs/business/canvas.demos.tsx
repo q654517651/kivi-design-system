@@ -1,37 +1,44 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactElement } from 'react';
 import {
+  AttachmentStrip,
   AudioWave,
   Button,
-  CanvasToolbar,
+  ButtonGroup,
   Connector,
   CropHandles,
+  Divider,
   GenerateButton,
   IconButton,
   Tooltip,
   MentionChip,
+  Minimap,
   NodeCard,
   NodeMedia,
   NodePanel,
   NodePanelBar,
-  NodePanelRefs,
-  NodeToolbar,
   NodeStack,
   NodeStackToggle,
-  NodeToolbarDivider,
   NodeWrapper,
   PromptInput,
   ReferenceFramePair,
-  ReferenceItem,
-  type ConnectorState,
+  AudioCharCount,
+  AudioModelControls,
+  CountSelect,
+  ImageModelControls,
+  ModelSelect,
+  RefModeSelect,
+  VideoModelControls,
+  type AttachmentItem,
+  type ConnectorStatus,
   type IconButtonProps,
   type IconName,
-  type NodeCardState,
+  type MinimapRect,
+  type NodeCardStatus,
   type NodeMediaType,
   type NodeWrapperRatio,
 } from '@kivi';
 import { CodeBlock, Playground, toJsx } from '@shell';
-import { openPreview, VIDEO } from '../components/video-player.demos';
-import { AudioCharCount, AudioModelControls, CountSelect, ImageModelControls, ModelSelect, RefModeSelect, VideoModelControls } from './generation';
+import { openPreview, VIDEO } from '../components/media.demos';
 import './canvas.demos.css';
 
 // 画布页的演示：上面的小画布看整体（点、悬停、生成都是真的，生成是假的演示），下面每个拆解一个属性面板。参数表在 canvas.mdx
@@ -55,7 +62,7 @@ const LONG_TEXT =
 
 type Key = 'text' | 'upload' | 'image' | 'audio' | 'video';
 /** 生成节点用 NodeCard 的 5 个状态；素材节点只有上传中、完成 */
-type Phase = NodeCardState | 'uploading';
+type Phase = NodeCardStatus | 'uploading';
 
 interface NodeDef {
   key: Key;
@@ -156,7 +163,7 @@ function cardOf(def: NodeDef, run: Run, onUpload?: () => void): ReactElement {
     const uploading = run.phase === 'uploading';
     return (
       <NodeCard
-        state="done"
+        status="done"
         type={def.type}
         uploading={uploading || undefined}
         iconButton={
@@ -177,26 +184,26 @@ function cardOf(def: NodeDef, run: Run, onUpload?: () => void): ReactElement {
   }
   switch (run.phase) {
     case 'guide':
-      return <NodeCard state="guide" type={def.type} />;
+      return <NodeCard status="guide" type={def.type} />;
     case 'pending':
-      return <NodeCard state="pending" type={def.type} />;
+      return <NodeCard status="pending" type={def.type} />;
     case 'generating':
       return (
         <NodeCard
-          state="generating"
+          status="generating"
           type={def.type}
           cover={run.cover && def.src ? def.src : undefined}
           countdown={run.countdown ? (run.left === undefined ? '59s 生成中' : `${run.left}s 生成中`) : undefined}
         />
       );
     case 'failed':
-      return <NodeCard state="failed" type={def.type} message={run.message} />;
+      return <NodeCard status="failed" type={def.type} message={run.message} />;
     default: {
       // 图片、视频悬停时右上出按钮条：收藏、全屏、下载
       const media = def.type === 'image' || def.type === 'video';
       return (
         <NodeCard
-          state="done"
+          status="done"
           type={def.type}
           hoverActions={media || undefined}
           collect={media || undefined}
@@ -237,59 +244,59 @@ function toolbarOf(type: NodeMediaType | 'group') {
   switch (type) {
     case 'group':
       return (
-        <NodeToolbar>
+        <ButtonGroup variant="glass" size={44} aria-label="节点工具栏">
           <Button variant="text" leftIcon="PlayLine">整组执行</Button>
           <Button variant="text" leftIcon="Template">创建工作流</Button>
           <Button variant="text" leftIcon="UnGroup">解组</Button>
-        </NodeToolbar>
+        </ButtonGroup>
       );
     case 'text':
       return (
-        <NodeToolbar>
+        <ButtonGroup variant="glass" size={44} aria-label="节点工具栏">
           <TipButton icon="H1" label="一级标题" />
           <TipButton icon="H2" label="二级标题" />
           <TipButton icon="H3" label="三级标题" />
           <TipButton icon="FontSize" label="正文" />
-          <NodeToolbarDivider />
+          <Divider orientation="vertical" />
           <TipButton icon="TextBold" label="加粗" />
           <TipButton icon="TextItalic" label="斜体" />
           <TipButton icon="UnOrderedList" label="无序列表" />
           <TipButton icon="OrderedList" label="有序列表" />
           <TipButton icon="DividingLine" label="分隔线" />
-          <NodeToolbarDivider />
+          <Divider orientation="vertical" />
           <TipButton icon="Copy" label="复制" />
           <TipButton icon="FullScreen" label="全屏" />
-        </NodeToolbar>
+        </ButtonGroup>
       );
     case 'image':
       return (
-        <NodeToolbar>
+        <ButtonGroup variant="glass" size={44} aria-label="节点工具栏">
           <Button variant="text" leftIcon="Rmbg">抠图</Button>
           <Button variant="text" leftIcon="Crop">裁剪</Button>
           <Button variant="text" leftIcon="Expand">扩图</Button>
           <Button variant="text" leftIcon="HD">高清</Button>
           <Button variant="text" leftIcon="SmartEditing">重绘</Button>
           <Button variant="text" leftIcon="RemoveEle">元素去除</Button>
-          <NodeToolbarDivider />
+          <Divider orientation="vertical" />
           <TipButton icon="ImageToText" label="反推提示词" />
           <TipButton icon="Download" label="下载" />
           <TipButton icon="FullScreen" label="全屏" />
-        </NodeToolbar>
+        </ButtonGroup>
       );
     case 'video':
       return (
-        <NodeToolbar>
+        <ButtonGroup variant="glass" size={44} aria-label="节点工具栏">
           <Button variant="text" leftIcon="VideoLoop">循环</Button>
           <Button variant="text" leftIcon="HD">高清</Button>
           <Button variant="text" leftIcon="Connecting">拼接</Button>
           <Button variant="text" leftIcon="Rmbg">抠图</Button>
           <Button variant="text" leftIcon="Cutting">剪辑</Button>
           <Button variant="text" leftIcon="Pack">封装</Button>
-          <NodeToolbarDivider />
+          <Divider orientation="vertical" />
           <TipButton icon="ImageToText" label="反推提示词" />
           <TipButton icon="Download" label="下载" />
           <TipButton icon="FullScreen" label="全屏" />
-        </NodeToolbar>
+        </ButtonGroup>
       );
     default:
       return null;
@@ -300,17 +307,15 @@ function toolbarOf(type: NodeMediaType | 'group') {
 function panelOf(def: NodeDef, inputs: NodeDef[], onGenerate: () => void, busy: boolean) {
   const refs = inputs.filter((n) => n.type === 'image' || n.type === 'video' || n.type === 'audio');
   const generate = <GenerateButton cost={def.type === 'video' ? 20 : 1} onClick={onGenerate} disabled={busy} />;
-  const refRow = refs.length > 0 && (
-    <NodePanelRefs>
-      {refs.map((n, i) =>
-        n.type === 'audio' ? (
-          <ReferenceItem key={n.key} type="audio" badge={String(i + 1)} />
-        ) : (
-          <ReferenceItem key={n.key} src={n.src} badge={String(i + 1)} />
-        ),
-      )}
-    </NodePanelRefs>
-  );
+  // 参考图是连进来的上游节点：右上角写序号，悬停出预览；不能删（连线才是来源），所以不传 onRemove
+  const refItems: AttachmentItem[] = refs.map((n, i) => ({
+    id: n.key,
+    type: n.type as AttachmentItem['type'],
+    name: n.name,
+    src: n.src,
+    badge: String(i + 1),
+  }));
+  const refRow = refItems.length > 0 && <AttachmentStrip items={refItems} aria-label="参考图" />;
 
   // 下拉、参数面板都用 generation.tsx 里共用的那一份，和主站输入框一样
   // 右边：文字只有生成按钮；音频是字数 / 上限（没有张数，照线上）；图片、视频是张数
@@ -322,7 +327,7 @@ function panelOf(def: NodeDef, inputs: NodeDef[], onGenerate: () => void, busy: 
       return (
         <NodePanel expand>
           <PromptInput placeholder="描述任何你想要生成的内容" />
-          {bar(<ModelSelect kind="text" />)}
+          {bar(<ModelSelect type="text" />)}
         </NodePanel>
       );
     case 'video':
@@ -352,9 +357,7 @@ function VideoPanel({ refRow, bar }: { refRow: ReactElement | false; bar: (left:
   return (
     <NodePanel expand>
       {mode === 'frames' ? (
-        <NodePanelRefs>
-          <ReferenceFramePair first={{ src: `${IMG}kivi-future-1x1.webp` }} last={{ src: `${IMG}kiwi-light-1x1.webp` }} />
-        </NodePanelRefs>
+        <ReferenceFramePair first={{ src: `${IMG}kivi-future-1x1.webp` }} last={{ src: `${IMG}kiwi-light-1x1.webp` }} />
       ) : (
         refRow
       )}
@@ -556,7 +559,7 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
     </NodeWrapper>
   );
 
-  const edgeState = ([a, b]: Edge): ConnectorState => {
+  const edgeState = ([a, b]: Edge): ConnectorStatus => {
     if (runs[b].phase === 'generating') return 'flowing';
     if (selected === a || selected === b) return 'active';
     return 'default';
@@ -613,7 +616,7 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
             return (
               <Connector
                 key={edge.join('-')}
-                state={edgeState(edge)}
+                status={edgeState(edge)}
                 width={box.width}
                 height={box.height}
                 direction={box.direction}
@@ -800,7 +803,7 @@ export function NodeStackPlayground() {
         {order.slice(0, n).map((src, i) => (
           <NodeCard
             key={src}
-            state="done"
+            status="done"
             type="image"
             hoverActions
             collect
@@ -939,7 +942,7 @@ export function ConnectorPlayground() {
         },
         { key: 'remove', label: '删除按钮（悬停出现）', type: 'toggle', value: true },
       ]}
-      render={(s) => <Connector state={s.state as ConnectorState} remove={s.remove ? 'hover' : undefined} />}
+      render={(s) => <Connector status={s.state as ConnectorStatus} remove={s.remove ? 'hover' : undefined} />}
     />
   );
 }
@@ -951,21 +954,6 @@ export function PartsDemo() {
   const parts: [string, ReactElement][] = [
     ['AudioWave', <div style={{ width: 284 }}><AudioWave /></div>],
     [
-      'ReferenceItem',
-      <div className="cv-part-row">
-        <ReferenceItem src={`${IMG}kivi-future-1x1.webp`} badge="1" />
-        <ReferenceItem src={`${IMG}kiwi-light-1x1.webp`} badge="首帧" duration="12s" weight="0.8" size={72} />
-      </div>,
-    ],
-    [
-      'PromptInput + MentionChip',
-      <div className="cv-part-panel">
-        <PromptInput>
-          参考 <MentionChip src={`${IMG}kivi-future-1x1.webp`}>图片1</MentionChip> 里的元素，配上 <MentionChip type="music">音乐1</MentionChip> 的节奏
-        </PromptInput>
-      </div>,
-    ],
-    [
       'CropHandles',
       <div className="cv-part-crop">
         <img src={`${IMG}kiwi-light-1x1.webp`} alt="" />
@@ -973,12 +961,12 @@ export function PartsDemo() {
       </div>,
     ],
     [
-      'CanvasToolbar',
-      <CanvasToolbar>
-        <TipButton icon="Add" label="添加" className="kv-canvas-toolbar__add" />
+      'ButtonGroup · 56',
+      <ButtonGroup variant="surface" size={56} aria-label="画布工具栏">
+        <TipButton icon="Add" label="添加" className="kv-button-group__solid" />
         <TipButton icon={HISTORY} label="历史" />
         <TipButton icon="Upload" label="上传" />
-      </CanvasToolbar>,
+      </ButtonGroup>,
     ],
   ];
   return (
@@ -994,5 +982,64 @@ export function PartsDemo() {
         </div>
       </div>
     </figure>
+  );
+}
+
+// ---------- 小地图和缩放条 ----------
+
+/** 画布上的 6 个节点，画布坐标 */
+const WORLD: MinimapRect[] = [
+  { x: 0, y: 80, width: 360, height: 220 },
+  { x: 520, y: 0, width: 400, height: 300 },
+  { x: 520, y: 420, width: 400, height: 260 },
+  { x: 1100, y: 140, width: 480, height: 270 },
+  { x: 1280, y: 560, width: 320, height: 320 },
+  { x: 100, y: 520, width: 280, height: 280 },
+];
+const STAGE = { width: 520, height: 320 };
+const ZOOMS = [0.25, 0.5, 0.75, 1, 1.5, 2];
+
+/** 缩放条（ButtonGroup 玻璃 + IconButton）加小地图：点缩放条改视口大小，点小地图、拖小地图改视口位置 */
+export function ViewControlsDemo() {
+  const [k, setK] = useState(0.5);
+  const [center, setCenter] = useState({ x: 800, y: 440 });
+  const [map, setMap] = useState(true);
+  const viewport: MinimapRect = { x: center.x - STAGE.width / k / 2, y: center.y - STAGE.height / k / 2, width: STAGE.width / k, height: STAGE.height / k };
+  const zoom = (dir: 1 | -1) => setK((v) => ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, ZOOMS.indexOf(v) + dir))]);
+  const fit = () => {
+    setCenter({ x: 800, y: 440 });
+    setK(0.5);
+  };
+  return (
+    <div style={{ position: 'relative', width: STAGE.width, height: STAGE.height, maxWidth: '100%', overflow: 'hidden', borderRadius: 16, background: 'var(--color-bg-fill-base)', border: '1px solid var(--color-border-subtle)' }}>
+      {/* 画布：按视口平移、缩放 */}
+      <div style={{ position: 'absolute', left: 0, top: 0, transformOrigin: '0 0', transform: `scale(${k}) translate(${-viewport.x}px, ${-viewport.y}px)` }}>
+        {WORLD.map((n, i) => (
+          <span key={i} style={{ position: 'absolute', left: n.x, top: n.y, width: n.width, height: n.height, borderRadius: 16, background: 'var(--color-bg-fill-surface)', border: '1px solid var(--color-border-subtle)' }} />
+        ))}
+      </div>
+      <div style={{ position: 'absolute', left: 16, bottom: 16, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+        {map && <Minimap nodes={WORLD} viewport={viewport} onViewportChange={setCenter} />}
+        <ButtonGroup variant="glass" aria-label="视图">
+          <Tooltip content="小地图">
+            <IconButton icon="Map" label="小地图" selected={map} onClick={() => setMap(!map)} />
+          </Tooltip>
+          <Divider orientation="vertical" />
+          <Tooltip content="缩小">
+            <IconButton icon="SubtractSmall" label="缩小" disabled={k === ZOOMS[0]} onClick={() => zoom(-1)} />
+          </Tooltip>
+          <Button style={{ minWidth: 48 }} onClick={() => setK(1)}>
+            {Math.round(k * 100)}%
+          </Button>
+          <Tooltip content="放大">
+            <IconButton icon="AddSmall" label="放大" disabled={k === ZOOMS[ZOOMS.length - 1]} onClick={() => zoom(1)} />
+          </Tooltip>
+          <Divider orientation="vertical" />
+          <Tooltip content="适应画布">
+            <IconButton icon="FitContent" label="适应画布" onClick={fit} />
+          </Tooltip>
+        </ButtonGroup>
+      </div>
+    </div>
   );
 }

@@ -5,17 +5,17 @@ import { cx } from '../utils';
 import { useButtonGroup } from './ButtonGroup';
 import './button.css';
 
-export type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonSize = 28 | 32 | 36;
 export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'danger' | 'on-media' | 'light';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** 尺寸：小 28 / 中 32 / 大 36，默认中，放进 ButtonGroup 默认小。「轻」没有大 */
+  /** 尺寸（高度）：28 / 32 / 36，默认 32，放进 ButtonGroup 默认 28。「轻」没有 36 */
   size?: ButtonSize;
   /** 类型：主要 / 次要 / 文字 / 危险 / 浮层 / 轻，默认次要，放进 ButtonGroup 默认文字。轻：底和次要一样，文字和图标 50%，用在生成记录底部这类内容区里的次级操作 */
   variant?: ButtonVariant;
   /** 左图标 */
   leftIcon?: IconName;
-  /** 右图标：只放下拉箭头 DownArrowSmall */
+  /** 右图标：只放下拉箭头 DownArrowSmall，减弱一档（tertiary），和 Select 的箭头一样 */
   rightIcon?: IconName;
   /** 加载中：左图标换成转圈，不响应悬停；鼠标和键盘（Enter、Space）都不再触发 onClick，也不提交表单。外观不变灰。「轻」没有加载中 */
   loading?: boolean;
@@ -27,7 +27,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   const group = useButtonGroup()?.button;
-  const size = sizeProp ?? group?.size ?? 'md';
+  const size = sizeProp ?? group?.size ?? 32;
   const variant = variantProp ?? group?.variant ?? 'secondary';
   return (
     <button
@@ -47,7 +47,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading ? <Icon name="Loading" spin /> : leftIcon && <Icon name={leftIcon} />}
       <span>{children}</span>
-      {rightIcon && <Icon name={rightIcon} />}
+      {rightIcon && <Icon name={rightIcon} className="kv-button__arrow" />}
     </button>
   );
 });

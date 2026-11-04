@@ -36,7 +36,7 @@ export interface DialogPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   title?: ReactNode;
   /** 描述：一句话说明要做什么，或者操作的后果。和标题栏间距 8 */
   description?: ReactNode;
-  /** 底栏：按钮靠右，间距 8。放大号 Button：取消用次要，确认用主要；删除确认把主要换成危险 */
+  /** 底栏：按钮靠右，间距 8。放 36 的 Button：取消用次要，确认用主要；删除确认把主要换成危险 */
   footer?: ReactNode;
   /** 标题栏里的关闭按钮，默认显示。只有传了 title 才有标题栏 */
   showClose?: boolean;

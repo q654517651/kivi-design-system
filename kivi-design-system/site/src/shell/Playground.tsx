@@ -13,7 +13,7 @@ export type PlaygroundState = Record<string, string | boolean>;
 
 export interface PlaygroundProps<S extends PlaygroundState> {
   controls: Control[];
-  /** 当前组合下哪些选项不能选：{ size: ['lg'] }。传 true 表示这一项用不上，直接不显示（开关同时关掉） */
+  /** 当前组合下哪些选项不能选：{ size: ['36'] }。传 true 表示这一项用不上，直接不显示（开关同时关掉） */
   rules?: (state: S) => Partial<Record<keyof S, string[] | boolean>>;
   /** 返回 true 时预览换成图片底，「浮层」类型用 */
   media?: (state: S) => boolean;
@@ -45,13 +45,9 @@ export function Playground<S extends PlaygroundState>({ controls, rules, media, 
   const set = (key: string, value: string | boolean) => setRaw((s) => ({ ...s, [key]: value }));
   const update = (patch: Partial<PlaygroundState>) => setRaw((s) => ({ ...s, ...patch }) as PlaygroundState);
   const element = render(state as S, update);
-
-  return (
-    <div className="shell-pg">
-      <div className={['shell-pg-stage', media?.(state as S) && 'is-media', stageClassName].filter(Boolean).join(' ')}>{element}</div>
-      <div className="shell-pg-panel">
-        {controls.map((c) => {
-          const o = off[c.key];
+  const rows = (ghost: boolean) =>
+    controls.map((c) => {
+          const o = ghost ? undefined : off[c.key];
           if (o === true) return null;
           return (
             <div className="shell-pg-row" key={c.key}>
@@ -85,7 +81,15 @@ export function Playground<S extends PlaygroundState>({ controls, rules, media, 
               )}
             </div>
           );
-        })}
+        });
+
+  return (
+    <div className="shell-pg">
+      <div className={['shell-pg-stage', media?.(state as S) && 'is-media', stageClassName].filter(Boolean).join(' ')}>{element}</div>
+      <div className="shell-pg-panel">{rows(false)}</div>
+      {/* 影子面板：所有开关都摆出来、看不见（visibility: hidden，也进不了 Tab），只用来撑住高度；面板里出现或藏起某一行时，预览不会跟着上下跳 */}
+      <div className="shell-pg-panel shell-pg-panel--ghost" aria-hidden="true">
+        {rows(true)}
       </div>
       <CodeBlock code={toJsx(element)} bare collapse={6} />
     </div>

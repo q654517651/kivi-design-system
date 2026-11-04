@@ -1,20 +1,28 @@
 import { Demo, PageHeader } from '@shell';
-import { CheckboxPlayground, SliderPlayground, SwitchPlayground } from './selection.demos';
+import { CheckboxPlayground, SelectPlayground, SliderPlayground, SwitchPlayground } from './selection.demos';
 
 <PageHeader
-  eyebrow="通用组件"
-  title="选择控件"
-  lead="开关、滑块、勾选框：点一下、拖一下就是「选一个值」，键盘也能用。"
-  figma={['选择控件', '164:627']}
-  status="草稿 0.1.0"
+  eyebrow="录入"
+  title="选择"
+  figma={['选择', '164:627']}
   code="kivi/selection"
 />
 
+## Select
+
+下拉选择：在多个选项里选一个，比如模型、比例、生成模式。
+
+<SelectPlayground />
+
 ## Switch
+
+开关：打开或关掉一项设置，马上生效，比如生成音频。
 
 <SwitchPlayground />
 
 ## Slider
+
+滑块：在一个范围里调数值，比如时长、Lora 权重。
 
 <SliderPlayground />
 
@@ -39,6 +47,8 @@ import { CheckboxPlayground, SliderPlayground, SwitchPlayground } from './select
 `} />
 
 ## Checkbox
+
+勾选框：多选，比如资产管理里批量选择。
 
 <CheckboxPlayground />
 
@@ -91,6 +101,26 @@ import { CheckboxPlayground, SliderPlayground, SwitchPlayground } from './select
 
 ## 参数
 
+### Select
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `options` | `SelectOption[]` | — | 选项 `{ value, label, icon?, disabled? }`。`icon` 是这一项的左图标（比如模型 logo），选中后触发器的左图标跟着换；`disabled` 灰色，选不了。列表是 Menu + MenuItem，当前项是 MenuItem 的「选中」状态：白 10% 底，不打勾 |
+| `variant` | `"fill"` `"plain"` | `"fill"` | 填充 / 无底。填充用在表单和面板，宽度拉伸，内边距 12，底白 10%，悬停白 14%；无底用在工具条，宽度跟着内容走，内边距 8，底透明，悬停白 14%（Light 1 hover），展开白 10%（常驻底色）。高 32，圆角 8（`--border-radius-8`） |
+| `value` | `string` `null` | — | 选中的值，没选传 `null`。传了就是受控，要自己在 `onChange` 里更新 |
+| `defaultValue` | `string` `null` | `null` | 非受控时的初始值 |
+| `onChange` | `(value: string) => void` | — | 选了一项时触发，参数是选项的值 |
+| `placeholder` | `string` | — | 没选时显示的占位文字。填充是灰的（`--color-text-fill-placeholder`）；无底放在工具条上当入口名（比如「模型」「技能」），和选了值一样白，左图标也白 |
+| `leftIcon` | `IconName` | — | 左图标，16，tertiary。选中的选项带 `icon` 时用选项的 |
+| `disabled` | `boolean` | `false` | 禁用：占位文字和箭头变灰，不能展开 |
+| `open` | `boolean` | — | 展开。传了就是受控；展开时右箭头从 `DownArrowSmall` 换成 `UpArrowSmall` |
+| `defaultOpen` | `boolean` | `false` | 非受控时一开始是不是展开 |
+| `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发 |
+| `placement` | `DropdownPlacement` | `"bottom-start"` | 列表出现的位置，放不下会自己翻到另一边。工具条贴着屏幕底部时写 `"top-start"` |
+| `aria-label` | `string` | — | 触发器上的说明，没有可见标签时必须写 |
+
+`className`、`style`、`ref` 和其余原生 `<span>` 属性加在最外层的壳上，填充的宽度在这里设。列表挂在 body 上，和触发器一样宽（无底的按内容撑宽，但不比触发器窄）。
+
 ### Switch
 
 | 属性 | 类型 | 默认 | 说明 |
@@ -98,8 +128,9 @@ import { CheckboxPlayground, SliderPlayground, SwitchPlayground } from './select
 | `checked` | `boolean` | — | 开 / 关。传了就是受控，要自己在 `onChange` 里更新。36 × 20，圆角 `--border-radius-round`；开 `--color-brand-solid`，关 `--color-bg-fill-container-light-1-pressed`；把手白色圆形 16，四周留 2 |
 | `defaultChecked` | `boolean` | `false` | 非受控时的初始值 |
 | `onChange` | `(checked: boolean) => void` | — | 点一下或按空格、回车时触发，参数是切换后的值 |
-| `disabled` | `boolean` | `false` | 禁用：整体透明度 30%（`--opacity-30`），开、关都一样。开关没有悬停状态 |
-| `aria-label` | `string` | — | 旁边没有文字时必须写，说明它控制什么 |
+| `disabled` | `boolean` | `false` | 禁用：整体透明度 30%（`--opacity-30`），开、关都一样，文字一起。开关没有悬停状态 |
+| `children` | `ReactNode` | — | 文字，13 / 20 号常规，`--color-text-fill-primary`，写在开关左边，间距 8（`--spacing-8`）。整行（文字加开关）都能点，和 Checkbox 一样。不写就只有开关 |
+| `aria-label` | `string` | — | 没有文字时必须写，说明它控制什么 |
 
 其余原生 `<button>` 属性都能传。
 
@@ -113,7 +144,7 @@ import { CheckboxPlayground, SliderPlayground, SwitchPlayground } from './select
 | `min` | `number` | `0` | 最小值 |
 | `max` | `number` | `100` | 最大值 |
 | `step` | `number` | `1` | 步长。方向键一次一步，PageUp / PageDown 一次十步，Home / End 到头 |
-| `marks` | `{ value, label? }[]` | — | 刻度：轨道上 1 × 6 的刻度线（白 20%），带 `label` 的在轨道下 4 写数字（22 高，12 号白 50%）；当前值对上的数字底白 8%、字变白 |
+| `marks` | `{ value, label? }[]` | — | 刻度：轨道上 1 × 6 的刻度线（白 20%），带 `label` 的在轨道下 4 写数字（22 高，12 号白 50%）；当前值对上的数字底白 10%、字变白 |
 | `disabled` | `boolean` | `false` | 禁用：整体透明度 30%，不能拖 |
 | `aria-label` | `string` | — | 没有文字，必须写 |
 

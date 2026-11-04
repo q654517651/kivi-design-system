@@ -1,16 +1,17 @@
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-import { ButtonGroup, ButtonGroupDivider, IconButton } from '../button';
+import { ButtonGroup, IconButton } from '../button';
+import { Divider } from '../divider';
 import { GeneratingDots } from '../generating';
 import { useControllable } from '../hooks';
 import { Icon } from '../Icon';
 import type { IconName } from '../icons';
-import { MenuItem } from '../menus-tooltip';
-import { Tag } from '../tabs-tags-avatar';
+import { MenuItem } from '../menu';
+import { Tag } from '../tags-avatar';
 import { cx } from '../utils';
 import type { NodeMediaType } from './NodeMedia';
 import './canvas.css';
 
-export type NodeCardState = 'guide' | 'pending' | 'generating' | 'done' | 'failed';
+export type NodeCardStatus = 'guide' | 'pending' | 'generating' | 'done' | 'failed';
 
 /** 引导态默认的三个起步方式：音频一套，其他类型一套 */
 const GUIDE_OPTIONS: Record<'audio' | 'other', string[]> = {
@@ -28,12 +29,12 @@ const TYPE_ICON: Record<NodeMediaType, IconName> = {
 
 export interface NodeCardProps extends HTMLAttributes<HTMLDivElement> {
   /** 状态：引导 / 待生成 / 生成中 / 完成 / 失败，默认引导 */
-  state?: NodeCardState;
+  status?: NodeCardStatus;
   /** 内容类型：图片 / 视频 / 音频 / 文字，默认图片。引导项、待生成的图标、生成中动效拼出的图标跟着它走；音频完成态单独放时是 341 宽 */
   type?: NodeMediaType;
   /** 待生成：中间的 64 图标，默认按内容类型取。视频封装用 Pack，视频剪辑用 Cutting */
   icon?: IconName;
-  /** 待生成：图标下面的按钮，Button 小 · 次要，比如「打开视频封装」。不传就没有 */
+  /** 待生成：图标下面的按钮，Button 小 · 轻（占位处的按钮都减弱一档），比如「打开视频封装」。不传就没有 */
   button?: ReactNode;
   /** 生成中：原素材地址，重新生成时放旧图。传了：原素材 + 黑 40% 遮罩 + 背景模糊，上面叠点阵动效；不传（第一次生成）：没有遮罩，只有点阵动效 */
   cover?: string;
@@ -68,7 +69,7 @@ export interface NodeCardProps extends HTMLAttributes<HTMLDivElement> {
 /** 节点本体，所有节点类型共用，5 个状态。大小跟着外面的 NodeWrapper。Figma「画布」页 NodeCard */
 export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeCard(
   {
-    state = 'guide',
+    status = 'guide',
     type = 'image',
     icon,
     button,
@@ -92,7 +93,7 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
   },
   ref,
 ) {
-  const generating = state === 'generating';
+  const generating = status === 'generating';
   const options = type === 'audio' ? GUIDE_OPTIONS.audio : GUIDE_OPTIONS.other;
   const [collected, setCollected] = useControllable(collectedProp, defaultCollected, onCollectedChange);
   const star = (
@@ -109,8 +110,8 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
       ref={ref}
       className={cx(
         'kv-node-card',
-        `kv-node-card--${state}`,
-        state === 'done' && type === 'audio' && 'kv-node-card--audio',
+        `kv-node-card--${status}`,
+        status === 'done' && type === 'audio' && 'kv-node-card--audio',
         hoverActions && 'kv-node-card--hover-actions',
         className,
       )}
@@ -118,7 +119,7 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
       style={style}
       {...rest}
     >
-      {state === 'guide' && (
+      {status === 'guide' && (
         <div className="kv-node-card__options">
           {children ??
             options.map((o) => (
@@ -129,7 +130,7 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
         </div>
       )}
 
-      {state === 'pending' && (
+      {status === 'pending' && (
         <>
           <Icon name={icon ?? TYPE_ICON[type]} size={64} className="kv-node-card__icon" />
           {button}
@@ -149,7 +150,7 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
         </>
       )}
 
-      {state === 'done' && (
+      {status === 'done' && (
         <>
           {children}
           {uploading && (
@@ -161,7 +162,7 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
             <ButtonGroup className="kv-node-card__actions" aria-label="节点操作">
               {collect && star}
               {iconButton}
-              {textButton && (collect || iconButton) && <ButtonGroupDivider />}
+              {textButton && (collect || iconButton) && <Divider orientation="vertical" />}
               {textButton}
             </ButtonGroup>
           )}
@@ -174,7 +175,7 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
         </>
       )}
 
-      {state === 'failed' && (
+      {status === 'failed' && (
         <>
           <img className="kv-node-card__illustration" src={illustration} alt="" />
           <p className="kv-node-card__message">{message}</p>
