@@ -560,7 +560,7 @@
   width: 60%;
   height: 8%;
   border-radius: var(--border-radius-round);
-  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.5), transparent); /* Figma 没变量 */
+  background: radial-gradient(closest-side, #00000080, transparent); /* Figma 没变量 */
 }
 
 .kv-empty-state__ip {

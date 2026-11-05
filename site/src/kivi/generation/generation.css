@@ -734,7 +734,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  border: 2px solid rgba(255, 255, 255, 0.4); /* 和节点选中一样白 40%（11-05 用户定），Figma 没变量 */
+  border: 2px solid #FFFFFF66; /* 和节点选中一样白 40%（11-05 用户定），Figma 没变量 */
   border-radius: inherit;
   opacity: 0;
   pointer-events: none;
