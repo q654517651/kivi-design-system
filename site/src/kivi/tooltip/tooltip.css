@@ -1,6 +1,6 @@
 /*
   KIVI · 提示
-  Figma「提示」页：Tooltip（只写工具名，最多带快捷键）、Popover（说明性的话：标题 + 一段话，带箭头；长文；面板。Figma 还没有）。依赖 tokens.css、base.css。
+  Figma「提示」页：Tooltip（只写工具名，最多带快捷键）、Popover（说明性的话：标题 + 一段话，带箭头；长文；面板）。依赖 tokens.css、base.css。
 
   写法（React，见 Tooltip.tsx、Popover.tsx）
     Tooltip：包住触发元素

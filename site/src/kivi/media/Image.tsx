@@ -45,7 +45,7 @@ const LABEL_MIN_SIDE = 160;
  * 图片：加载中是骨架屏扫光，加载完淡入，失败是深色底 + 居中的 IP 失败插图。
  * 状态写在根元素 `data-status`（loading / loaded / failed）。外面定宽（再配 `ratio`），或者定宽高。
  * 传了 `onRetry`，失败时整块是一个按钮，点了重新加载。
- * className、style 给外层；ref 和其余 `<img>` 属性（`loading`、`crossOrigin`、`srcSet`…）给里面的 `<img>`。Figma「反馈」页还没有，待确认
+ * className、style 给外层；ref 和其余 `<img>` 属性（`loading`、`crossOrigin`、`srcSet`…）给里面的 `<img>`。
  */
 export const Image = forwardRef<HTMLImageElement, ImageProps>(function Image(
   { src, alt = '', ratio, fit = 'cover', onRetry, fallback, onLoad, onError, className, style, ...rest },

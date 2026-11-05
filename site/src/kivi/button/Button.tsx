@@ -1,7 +1,9 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react';
+import { forwardRef, useRef, type ButtonHTMLAttributes, type Ref } from 'react';
 import { Icon } from '../Icon';
 import type { IconName } from '../icons';
 import { cx } from '../utils';
+import { composeHandlers, useMergedRef, useTruncated } from '../hooks';
+import { useTooltip } from '../tooltip/Tooltip';
 import { useButtonGroup } from './ButtonGroup';
 import './button.css';
 
@@ -21,20 +23,51 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
-/** 带文字的按钮，点了做一个动作。Figma「按钮」页 Button */
+/**
+ * 带文字的按钮，点了做一个动作。Figma「按钮」页 Button。
+ * 放不下时文字末尾省略号、内边距不让，悬停出 Tooltip 看全文（设计规则 · 状态）
+ */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { size: sizeProp, variant: variantProp, leftIcon, rightIcon, loading, type = 'button', className, children, onClick, ...rest },
+  {
+    size: sizeProp,
+    variant: variantProp,
+    leftIcon,
+    rightIcon,
+    loading,
+    type = 'button',
+    className,
+    children,
+    onClick,
+    onMouseEnter,
+    onMouseLeave,
+    onFocus,
+    onBlur,
+    onPointerDown,
+    'aria-describedby': describedBy,
+    ...rest
+  },
   ref,
 ) {
   const group = useButtonGroup()?.button;
   const size = sizeProp ?? group?.size ?? 32;
   const variant = variantProp ?? group?.variant ?? 'secondary';
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const truncated = useTruncated(labelRef, [children]);
+  const tip = useTooltip({ content: children, disabled: !truncated });
+  const setRef = useMergedRef(tip.anchorRef as Ref<HTMLButtonElement>, ref);
   return (
+    <>
     <button
-      ref={ref}
+      ref={setRef}
       type={type}
       className={cx('kv-button', `kv-button--${size}`, `kv-button--${variant}`, className)}
       aria-busy={loading || undefined}
+      aria-describedby={[describedBy, tip.describedBy].filter(Boolean).join(' ') || undefined}
+      onMouseEnter={composeHandlers(onMouseEnter, tip.handlers.onMouseEnter)}
+      onMouseLeave={composeHandlers(onMouseLeave, tip.handlers.onMouseLeave)}
+      onFocus={composeHandlers(onFocus, tip.handlers.onFocus)}
+      onBlur={composeHandlers(onBlur, tip.handlers.onBlur)}
+      onPointerDown={composeHandlers(onPointerDown, tip.handlers.onPointerDown)}
       // 加载中：拦掉点击（Enter、Space 也是点击），连表单提交一起挡住；不用 disabled，免得变灰、丢焦点
       onClick={(e) => {
         if (loading) {
@@ -46,9 +79,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...rest}
     >
       {loading ? <Icon name="Loading" spin /> : leftIcon && <Icon name={leftIcon} />}
-      <span>{children}</span>
+      <span ref={labelRef} className="kv-button__label">
+        {children}
+      </span>
       {rightIcon && <Icon name={rightIcon} className="kv-button__arrow" />}
     </button>
+    {tip.bubble}
+    </>
   );
 });
 Button.displayName = 'Button';

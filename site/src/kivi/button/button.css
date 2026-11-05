@@ -67,6 +67,17 @@
   height: var(--kv-icon-size);
 }
 
+/* 放不下时：图标不缩，文字末尾省略号，内边距不让（设计规则 · 状态）；悬停的全文 Tooltip 在 Button.tsx */
+.kv-button > .kv-icon {
+  flex: none;
+}
+
+.kv-button > .kv-button__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* 右边的下拉箭头减弱一档，和 Select 的箭头一样（11-04 用户定，所有按钮都这样） */
 .kv-button > .kv-button__arrow {
   color: var(--color-text-fill-tertiary);

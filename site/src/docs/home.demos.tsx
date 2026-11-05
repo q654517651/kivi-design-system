@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { AsciiGlow } from './home-ascii';
+import { TechTitle } from './home-fx';
 import {
   ActionCard,
   Avatar,
@@ -217,11 +219,21 @@ function RightColumn() {
 
 // ---------- 首页 ----------
 
+const TITLE = 'KIVI Design System';
+
+/** 背景渐变的颜色坡度：从暗到亮都是品牌绿一家（原效果是蓝白），暗的两档是品牌绿压到底色上 */
+const ASCII_COLORS = ['#0E3B22', '#CEFF5D', '#2BFF75', '#17A34F'];
+
 export function Home() {
   return (
     <div className="home">
+      {/* 背景铺满首页上半截，字符和渐变都调弱 */}
+      <AsciiGlow className="home-bg" colors={ASCII_COLORS} glyphOpacity={0.28} gradientOpacity={0.2} glow={0.08} grain={0.04} speed={0.5} />
       <header className="home-hero">
-        <h1 className="home-title">KIVI Design System</h1>
+        <h1 className="home-title">
+          <span className="home-sr">{TITLE}</span>
+          <TechTitle text={TITLE} />
+        </h1>
       </header>
       <div className="home-stage">
         <LeftColumn />

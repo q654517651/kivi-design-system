@@ -1,7 +1,7 @@
 /*
   KIVI · 标注（图片框选评论）
   线上画布图片节点的批注：框、序号气泡、评论浮层，加图片工具栏位置的提示条（提示条是 ButtonGroup variant="glass" size={44} + IconButton，不是组件）。
-  Figma 还没有，样式照线上，颜色换成 KIVI 变量。依赖 tokens.css、base.css、button.css（ButtonGroup、IconButton）。
+  样式照线上，颜色换成 KIVI 变量。依赖 tokens.css、base.css、button.css（ButtonGroup、IconButton）。
 
   写法（React，见各 .tsx）
     <AnnotationBox

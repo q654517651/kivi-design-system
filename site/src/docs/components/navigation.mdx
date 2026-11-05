@@ -44,7 +44,7 @@ import { TabItemPlayground } from './navigation.demos';
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `children` | `ReactNode` | — | 文字。字重常规 400，选中也不加粗 |
+| `children` | `ReactNode` | — | 文字。字重常规 400，选中也不加粗。分段被压窄、放不下时末尾省略号、内边距不让，悬停出 Tooltip 看全文 |
 | `value` | `string` | — | 这一项的值，放在 `Tabs` 里时必填 |
 | `variant` | `"tab"` `"segment"` | `"tab"` | 选项卡（切换下面整块内容）/ 分段（在底槽里选一个参数值）。放在 `Tabs` 里跟着 `Tabs` |
 | `layout` | `"horizontal"` `"vertical"` | `"horizontal"` | 竖排只有分段、32：图标 20 在上，12 号字在下，间距 4，56 × 56，必须传 `icon` |

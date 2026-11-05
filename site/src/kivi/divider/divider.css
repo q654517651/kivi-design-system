@@ -1,6 +1,6 @@
 /*
   KIVI · 分割线
-  Figma 还没有，待确认。依赖 tokens.css。
+  依赖 tokens.css。
 
   写法（React，见 Divider.tsx）
     <Divider />                         横向，宽撑满、高 1

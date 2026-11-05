@@ -1,7 +1,7 @@
 /*
   KIVI · Agent 过程
   Figma「Agent」页的过程部分：ProcessRow、ProcessGroup、ThinkingBlock、MediaGroup。
-  ProcessGroup（一组工具调用滚动成一行）Figma 还没有，交互照 Codex、Claude；ProcessGroup、AskRecord（在 agent 文件夹）都用 Collapse（在 collapse 文件夹）收起。
+  ProcessGroup（一组工具调用滚动成一行）交互照 Codex、Claude；ProcessGroup、AskRecord（在 agent 文件夹）都用 Collapse（在 collapse 文件夹）收起。
   依赖 tokens.css、base.css、button.css（按钮用 kv-button、kv-icon-button）。
   别的页的组件：头像、角标 Tag 用 tags-avatar 的 Avatar、Tag。
   展开列表只给了一个 kv-process-list 方便复制。

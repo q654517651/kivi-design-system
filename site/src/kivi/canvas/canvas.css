@@ -852,6 +852,11 @@
   text-overflow: ellipsis;
 }
 
+/* 画布名是用户起的，和工作区名一样最宽 160，超出省略号，悬停看全文 */
+.kv-canvas-header__canvas > .kv-button__label {
+  max-width: 160px;
+}
+
 .kv-canvas-header__menu {
   max-height: none;
   overflow: visible;

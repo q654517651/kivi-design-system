@@ -50,7 +50,7 @@ function cssMs(name: string, fallback: number): number {
 /**
  * 一组工具调用：进行中只占一行，显示当前在调的工具，换下一个时往上滚；停留超过 0.5 秒扫光。
  * 全部做完换成「调用了 N 个工具」（有失败的写「M 个失败」），不自动展开，悬停出箭头，点开列出每个工具。只调了 1 个就直接显示那一个。
- * 交互照 Codex、Claude，Figma 还没有。Agent 的文字回复不折叠，夹在两组之间照常显示。
+ * 交互照 Codex、Claude。Agent 的文字回复不折叠，夹在两组之间照常显示。
  */
 export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(function ProcessGroup(
   { steps, running: runningProp, icon = 'Tool', expanded: expandedProp, defaultExpanded = false, onExpandedChange, className, ...rest },

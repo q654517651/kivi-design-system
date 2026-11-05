@@ -35,7 +35,7 @@ const LABEL: Record<AskRecordStatus, string> = { asking: '询问中', answered: 
 
 /**
  * 询问记录：Agent 问用户（问题卡）或生成前确认，在对话里留的一行。默认收起，悬停出箭头，点开往下推，看问了什么、怎么答的。
- * 不进工具调用组，自己单独一行。交互照 Codex、Claude，Figma 还没有（Figma「Agent」页只画了已询问展开的样子）。
+ * 不进工具调用组，自己单独一行。交互照 Codex、Claude。
  */
 export const AskRecord = forwardRef<HTMLDivElement, AskRecordProps>(function AskRecord(
   { status = 'answered', items, skippedText = '已跳过', label, expanded: expandedProp, defaultExpanded = false, onExpandedChange, className, ...rest },

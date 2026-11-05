@@ -8,6 +8,7 @@ import {
   BoxSelect,
   CalendarDays,
   Braces,
+  Download,
   FolderOpen,
   Globe,
   House,
@@ -55,6 +56,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
     group: '开始',
     items: [
       { id: 'home', icon: House, title: '总览', path: '/', load: () => import('../docs/index.mdx') },
+      { id: 'install', icon: Download, title: '安装技能', path: '/install', load: () => import('../docs/install.mdx') },
       { id: 'intro', icon: BookOpen, title: '说明', path: '/intro', load: () => import('../docs/intro.mdx') },
       { id: 'legacy-names', icon: ArrowRightLeft, title: '旧名对照', path: '/legacy-names', load: () => import('../docs/legacy-names.mdx') },
       { id: 'component-api', icon: Braces, title: '组件写法', path: '/component-api', load: () => import('../docs/component-api.mdx') },

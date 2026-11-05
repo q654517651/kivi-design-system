@@ -42,7 +42,7 @@ function CopyBox({ title, text, scroll }: { title: string; text: string; scroll?
 
 /**
  * Lora 设置：悬停已选 Lora 弹出的面板内容，宽 234。名字、触发词、提示词模版、权重（滑块 + 数字）。
- * 放进 `Popover variant="panel"` 里用。Figma 还没有，待确认
+ * 放进 `Popover variant="panel"` 里用。
  */
 export const LoraSettings = forwardRef<HTMLDivElement, LoraSettingsProps>(function LoraSettings(
   { name, triggerWords, template, weight, defaultWeight = 1, onWeightChange, className, ...rest },

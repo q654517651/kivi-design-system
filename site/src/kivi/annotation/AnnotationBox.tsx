@@ -24,7 +24,7 @@ export interface AnnotationBoxProps extends Omit<HTMLAttributes<HTMLDivElement>,
 /**
  * 标注框：图片上框出来的一块。盖在图片上，位置和大小由外面用 left / top / width / height 给（百分比最方便，随图缩放）；
  * 3px 品牌绿虚线（8 实 4 空），左上、右下各一个 16 的圆点（nwse-resize），右下角挂序号气泡和评论浮层。
- * 序号气泡、评论浮层会伸出图片，外层不要裁剪。Figma 还没有，样式照线上。
+ * 序号气泡、评论浮层会伸出图片，外层不要裁剪。样式照线上。
  */
 export const AnnotationBox = forwardRef<HTMLDivElement, AnnotationBoxProps>(function AnnotationBox(
   { index, handles = true, comment, onMarkerClick, onMarkerPointerEnter, onMarkerPointerLeave, onHandlePointerDown, className, ...rest },

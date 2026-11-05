@@ -2,7 +2,7 @@
   KIVI · 正文排版
   Prose 给 Markdown 渲染出来的元素套样式，CodeBlock 是带复制按钮的代码块（放提示词用）。
   样子照线上现在用的 Ant Design X Markdown 暗色主题，用户 11-03 在四套候选里选的 A；颜色、圆角、间距换成 KIVI 变量。
-  依赖 tokens.css、base.css；CodeBlock 里的复制按钮用 button.css。页面状态：待确认 0.1.0。
+  依赖 tokens.css、base.css；CodeBlock 里的复制按钮用 button.css。
 
   写法（React，见 Prose.tsx、CodeBlock.tsx）
     <Prose>{Markdown 渲染出来的内容}</Prose>
@@ -11,7 +11,7 @@
     <div class="kv-prose"> h1…h4 · p · ul / ol > li · blockquote · code · pre > code · table · a · hr </div>
     <div class="kv-code-block"><pre><code>…</code></pre><button class="kv-icon-button kv-code-block__copy">…</button></div>
 
-  待定
+  和线上不同的地方
     链接颜色先用品牌绿（线上是蓝色，KIVI 没有蓝）；正文用 primary 白，线上是白 85%，KIVI 没有这一档；
     列表项间距线上是 14，KIVI 间距没有 14，先用 12；代码字体 Figma 没定，先用系统等宽字体。
 */

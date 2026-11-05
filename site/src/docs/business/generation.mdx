@@ -284,7 +284,7 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 | `template` | `string` | — | 提示词模版。不传就不显示这一块。框最高 60，多了在里面滚动，复制按钮同上 |
 | `weight` / `defaultWeight` / `onWeightChange` | `number` | `1` | 权重 0–2，步长 0.1。滑块和数字框同步；数字框输入时最多一位小数，失焦时夹进 0–2 并补成「1.0」 |
 
-宽 234，块间距 12，要放进 `Popover variant="panel"`（内边距 12 由它给）。「触发词」「提示词模版」小标题 12、`--color-text-fill-tertiary`，和下面的框间距 4；框底 `--color-bg-fill-container-light-1`（玻璃是深底），圆角 6，内边距 6，文字 12 / 16、`--color-text-fill-secondary`，复制按钮是 28 的 `IconButton`。权重一行：标签「权重」13 / 20 secondary，`Slider`（不带刻度）撑满，`NumberInput`（`precision={1}`）宽 56，间距 8。其余原生 `<div>` 属性都能传。
+宽 234，块间距 12，要放进 `Popover variant="panel"`（内边距 12 由它给）。「触发词」「提示词模版」小标题 12、`--color-text-fill-tertiary`，和下面的框间距 4；框底 `--color-bg-fill-container-light-1`（玻璃是深底），圆角 6，内边距 6，文字 12、`--color-text-fill-secondary`（提示词模版能换行，12 / 20、最多 3 行），复制按钮是 28 的 `IconButton`。权重一行：标签「权重」13 / 20 secondary，`Slider`（不带刻度）撑满，`NumberInput`（`precision={1}`）宽 56，间距 8。其余原生 `<div>` 属性都能传。
 
 ### LoraCard
 

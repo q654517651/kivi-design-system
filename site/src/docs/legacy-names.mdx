@@ -297,7 +297,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | Button · Content=icon-only | IconButton | 拆分 | 纯图标单独一个组件，正方形 28 / 32 / 36 |
 | Button · Content=leading / trailing / both-icons | Button 的「左图标」「右图标」开关 | 合并 | 不再用变体区分，90 个变体减到 60 个 |
 | Button · State=default / hover / disabled | 状态=默认 / 悬停 / 禁用 | 补齐 | 新增「按下」「加载中」 |
-| ToolbarButton · fill / glass | Button · 中 · 文字；纯图标用 IconButton 32 | 合并 | 毛玻璃底待定，等工具栏组件一起做 |
+| ToolbarButton · fill / glass | Button · 中 · 文字；纯图标用 IconButton 32 | 合并 | 玻璃底由外面的条给：节点工具栏是 `ButtonGroup variant="glass" size={44}` |
 | ICON · background=32（竖向工具栏） | IconButton · 32 · 文字 | 替换 | 当前工具用「选中」状态 |
 | ToolbarItem（填充 / 玻璃） | Button 中 · 文字、IconButton 32 · 文字；玻璃 → 类型=浮层 | 合并 | 节点工具栏不再单独一种按钮。前端要跟着改：字号 14 → 13，字重常规 → 中等（图标保持 20，和代码一致） |
 | IconButton · 尺寸=40 | IconButton · 尺寸=32 | 删除 | 40 没有用到；竖向工具栏以后放到底部，用 32 |
@@ -408,7 +408,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | 旧库 AI工具小标签（图标 + 文字，无底） | 删除 | 删除 | 只是排版，用自动布局 + 图标 + 文字 |
 | 代码 Avatar（HeroUI，w-4 / w-8）· CustomAvatar（w-9）· 技能作者头像 20 | Avatar · 16 / 24 / 32 | 改尺寸 | 导航 36 → 32，技能作者 20 → 24 |
 | 代码 没有头像图时的灰色圆 | Avatar · 文字 | 替换 | 显示用户名首字 |
-| 旧库 头像（KIVI 标志） | 待定 | 待定 | AI 的头像等会话流重构时一起定 |
+| 旧库 头像（KIVI 标志） | 这版不收 | 不收 | 对话里 AI 不显示头像；线上只在技能市场给官方作者当头像，技能市场还没做，做时 Avatar 再加 Logo 类型 |
 | 旧库 封面 · 头像框扩展 / 拆件 | 不收 | 不收 | 会员头像框是运营素材，留在设计稿里 |
 | MentionChip 里的 16 缩略图 · 音乐封面 | AssetThumb 尺寸=16 | 新增 | 原来 3 处各复制一份音频封面，渐变色还不一样，统一成 #89A0BE → #7286AA |
 | MenuItem 缩略图（纯色块，放不了图标） | AssetThumb 尺寸=24 | 新增 | 音频条目切「音频」，补回音符 |
@@ -490,7 +490,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | 旧库 Toast · 成功 / 失败 / 提醒 | Toast · 成功 / 错误 / 警告 | 改样式 | 圆角 8 → 12，图标改成镂空圆 |
 | 旧库 Toast · 处理中（带「取消」） | Toast · 加载中 + 显示操作 | 合并 | 「取消」变成 Toast 的操作文字 |
 | 旧库 Toast · 鼠标悬浮提示 | Tooltip · 说明 | 替换 | 悬停时解释东西的是 Tooltip，不是 Toast |
-| 旧库 封装背景提醒 / 封装素材提醒（黄底条） | 暂不收 | 待定 | 页面里常驻的提醒条，用的地方多了再做 Alert |
+| 旧库 封装背景提醒 / 封装素材提醒（黄底条） | Banner · 警告 | 替换 | 页面里常驻的提醒条统一用 Banner（反馈页） |
 | 代码 message（antd，#2b2d31，14 号，约 130 处） | Toast | 改样式 | 底色换弹层色，圆角 12，图标按新库 |
 | 代码 Spinner（HeroUI，约 20 处） | Loading | 改样式 | 统一用图标库的 Loading，尺寸 16 / 24 / 40 |
 | 代码 CustomSkeleton · LoadingSkeleton · HeroUI Skeleton · 技能市场手写 | Skeleton | 合并 | 底色 `container-light-1`，扫光 `fill-3`，1.4 秒一轮 |
@@ -534,8 +534,8 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | MenuItem · MenuItemAsset（44 高 · 圆角 12 · 14 号字） | MenuItem（菜单页，36 高 · 圆角 8 · 13 号字） | 改样式。按竞品统一成 36；@素材的缩略图用 AssetThumb；单选菜单的当前项用「选中」（白 8% 底，不打勾）；前端 CustomMenu 改成 36 高、13 号字、图标 16 |
 | Heavy 字重（参考图区块 · 菜单） | 常规 400 | 改样式。苹方没有 Heavy，代码里是 400 |
 | Inter 字体（模型选择栏的英文） | `--font-family`（苹方） | 改样式。和代码一致 |
-| 资产图 | 暂不迁 | 待定。是「我的资产」的卡片，不是画布节点 |
-| 图标 AudioGeneration · History · Guide | 待补 | 待定。新图标库里没有，暂时保留矢量 |
+| 资产图 | 「业务组件 · 资产」页的 CoverGrid、FolderCard、ProjectCard、CreateCard；作品格用 ResultTile | 替换。是「我的资产」的卡片，不是画布节点 |
+| 图标 AudioGeneration · History · Guide | Audio · History · 不收 | AudioGeneration 用节点类型的 Audio；History 11-05 从 Hugeicons 补（history）；Guide 线上没用到，不收 |
 
 ## Agent
 

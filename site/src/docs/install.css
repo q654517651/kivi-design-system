@@ -1,0 +1,20 @@
+/* 系统、工具各占一行，前面小标题对齐 */
+.install__pick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-16);
+}
+
+.install__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-16);
+}
+
+.install__label {
+  flex: none;
+  width: 32px;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+}

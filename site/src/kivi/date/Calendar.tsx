@@ -43,7 +43,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 /**
  * 单月日历：点一天选它。一周从周日开始，6 行 42 格，不是这个月的日子淡一档、也能点。
  * 方向键按天 / 按周移动，PageUp / PageDown 翻月，Home / End 到这一周的头尾，Enter / 空格选中。
- * 照 Figma 旧版 KIVI 3.5-3.14（13110:30974）和线上 TimeRangeFilter，V2 还没有，待确认
+ * 照 Figma 旧版 KIVI 3.5-3.14（13110:30974）和线上 TimeRangeFilter
  */
 export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calendar(
   { value, defaultValue = null, onChange, month, defaultMonth, onMonthChange, min, max, disabledDate, className, onKeyDown, ...rest },

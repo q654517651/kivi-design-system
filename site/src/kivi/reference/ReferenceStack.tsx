@@ -124,7 +124,7 @@ export interface ReferenceStackProps extends Omit<HTMLAttributes<HTMLDivElement>
   onAdd?: () => void;
   /** 点卡片右上角的删除时触发，参数是素材的 id：从 items 里去掉它。不传就没有删除按钮，悬停时序号也不隐藏 */
   onRemove?: (id: string) => void;
-  /** 点卡片、卡片聚焦后按 Enter / Space 时触发，预览大图用。传了，展开后的卡片能键盘聚焦。Figma 没定，待确认 */
+  /** 点卡片、卡片聚焦后按 Enter / Space 时触发，预览大图用。传了，展开后的卡片能键盘聚焦。 */
   onItemClick?: (item: ReferenceStackItem) => void;
   /** 展开（受控）：传 true 就一直展开，不等鼠标移上去。不传是鼠标移上去展开、移开收起，键盘聚焦也展开 */
   expanded?: boolean;

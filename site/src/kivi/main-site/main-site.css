@@ -201,7 +201,7 @@
 }
 
 /* 一组里比例不一致时画面完整显示，比例不同的留底色（Figma 的 ResultTile 说明写「FIT」；
-   「模板 · 主站」写的是底下再垫放大模糊的原图，两处不一致，待确认，这里只做留底色） */
+   「模板 · 主站」写的是底下再垫放大模糊的原图，两处不一致，这里只做留底色） */
 .kv-result-tile--fit > .kv-result-tile__media {
   object-fit: contain;
 }

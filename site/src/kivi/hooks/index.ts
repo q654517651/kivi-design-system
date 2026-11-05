@@ -15,3 +15,4 @@ export * from './useAudioPlayer';
 export * from './useScrollFade';
 export * from './useFileDrop';
 export * from './useCopy';
+export * from './useTruncated';
