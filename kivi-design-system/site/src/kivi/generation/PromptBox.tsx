@@ -31,7 +31,7 @@ export interface PromptBoxProps extends Omit<HTMLAttributes<HTMLDivElement>, 'on
   toolbar?: ReactNode;
   /** 工具条右边：张数、生成按钮 */
   actions?: ReactNode;
-  /** 提示词最高多高，超过就在里面滚动，数字按 px。默认 240。Figma 没定，待定 */
+  /** 提示词最高多高，超过就在里面滚动，数字按 px。默认 240。 */
   maxHeight?: number;
   /** 把文件拖进输入框时触发，参数是通过 `accept` 检查的文件列表：一般是加进参考区（上传、占位进度自己管）。不传就不接收拖拽。拖进来时盖一层 DropOverlay「松手上传」，类型不收的显示「不支持这种文件」、不接收，放下后弹 toast（页面上要放 `<Toaster />`）。样子 Figma 没定，待定 */
   onDropFiles?: (files: File[]) => void;

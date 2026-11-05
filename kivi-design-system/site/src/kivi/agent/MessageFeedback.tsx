@@ -30,7 +30,7 @@ export interface MessageFeedbackProps extends Omit<HTMLAttributes<HTMLDivElement
 /**
  * 助手消息底部的反馈条：复制、复制 TraceID、赞、踩，四个都是 IconButton「轻」。
  * 复制成功图标换对勾 1.5 秒；赞、踩选中换实心图标，互斥。点踩后下面往下推出原因输入：Textarea，提交按钮在框里右下角，回车提交、Esc 收起；
- * 点赞、再点踩、提交、Esc 都会收起。生成中不显示这一条（调用方控制）。交互照线上，Figma 还没有。
+ * 点赞、再点踩、提交、Esc 都会收起。生成中不显示这一条（调用方控制）。交互照线上。
  */
 export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(function MessageFeedback(
   { text, traceId, value: valueProp, defaultValue = null, onChange, reason = true, onSubmitReason, onCopied, className, ...rest },

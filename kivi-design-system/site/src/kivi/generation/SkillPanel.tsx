@@ -63,7 +63,7 @@ export interface SkillPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   onDetail?: (skill: SkillItem) => void;
 }
 
-/** 技能面板本体（不带触发器），模板里直接摆出来看。Figma 还没有（待确认） */
+/** 技能面板本体（不带触发器），模板里直接摆出来看。 */
 export const SkillPanel = forwardRef<HTMLDivElement, SkillPanelProps>(function SkillPanel(
   { status = 'ready', items = [], categories = [], defaultTab = 'recommend', defaultSearch, onPick, onRetry, onCreate, onImport, onViewAll, onDetail, className, ...rest },
   ref,

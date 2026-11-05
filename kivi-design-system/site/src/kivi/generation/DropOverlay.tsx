@@ -18,7 +18,7 @@ export interface DropOverlayProps extends HTMLAttributes<HTMLDivElement> {
  * 拖文件到输入框上时的提示：框本身加一圈描边，里面铺遮罩（`--color-bg-fill-mask`，黑 60%），不模糊，正中浮一张小卡，
  * 三个图标（图片、多份文件、文件夹）从中间展开、往上浮，下面一行字；类型不收时描边和字换成 danger 色。
  * 圆角跟着所在的框走（继承），所以放它的框要 `position: relative`。PromptBox 自己带了它；画布 Agent 输入框这类自己拼的框也这么放。
- * 配合 `useFileDrop`（hooks/）用：它给 `dragging`、`rejected`。Figma 没有，待确认。
+ * 配合 `useFileDrop`（hooks/）用：它给 `dragging`、`rejected`。
  */
 export const DropOverlay = forwardRef<HTMLDivElement, DropOverlayProps>(function DropOverlay(
   { active = true, rejected = false, text = '松手上传', rejectedText = '不支持这种文件', className, ...rest },

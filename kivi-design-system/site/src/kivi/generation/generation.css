@@ -4,7 +4,7 @@
   提示词输入：PromptInput（Figma「画布」页）；参考格、附件条、@ 引用胶囊、悬停预览挪到了 kivi/reference/reference.css；
   参数面板：ParamPanel、ParamField、ParamPicker（Figma「模板 · 画布」页「参数面板」，滑块用 selection 的 Slider，数值用 inputs 的 NumberInput）；
   主站输入框：PromptBox、ReferenceStack、GenerateButton 等（下面接着是它原来的说明）；
-  Lora：LoraField、LoraSettings、LoraCard、LoraPicker（Figma 还没有，待确认，下面接着是它原来的说明）。
+  Lora：LoraField、LoraSettings、LoraCard、LoraPicker（下面接着是它原来的说明）。
   依赖 tokens.css、base.css、button.css。
 
   状态
@@ -404,7 +404,7 @@
 
 /*
   Lora 业务组件：LoraField（一排已选 + 添加格）、LoraSettings（悬停设置面板内容）、LoraCard（选择弹窗里的卡）、LoraPicker（选择弹窗）。
-  Figma 还没有，待确认。
+  
 
   结构
     <div class="kv-lora-field">
@@ -530,10 +530,11 @@
   white-space: nowrap;
 }
 
-/* 提示词模版：能换行，最高 60，多了滚动 */
+/* 提示词模版：能换行，12 / 20，最多 3 行（60），多了滚动 */
 
 .kv-lora-settings__box[data-scroll] > .kv-lora-settings__text {
-  max-height: 60px; /* Figma 没变量 */
+  max-height: calc(var(--font-line-height-20) * 3); /* 最多 3 行，多了滚动 */
+  line-height: var(--font-line-height-20);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;

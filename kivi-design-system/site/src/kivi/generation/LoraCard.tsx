@@ -28,7 +28,7 @@ export interface LoraCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'chi
 
 /**
  * 选择弹窗里的一张 Lora 卡，宽跟着网格，3:4。外壳里并排两样：卡片本体是一个复选框（Space、Enter 切换），
- * 收藏按钮在复选框外面，不嵌在里面。悬停封面放大 1.05、名字淡出、底部浮出信息条（名字 + 描述）。Figma 还没有，待确认
+ * 收藏按钮在复选框外面，不嵌在里面。悬停封面放大 1.05、名字淡出、底部浮出信息条（名字 + 描述）。
  */
 export const LoraCard = forwardRef<HTMLDivElement, LoraCardProps>(function LoraCard(
   {

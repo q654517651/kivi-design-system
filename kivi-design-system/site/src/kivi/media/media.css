@@ -1,12 +1,12 @@
 /*
   KIVI · 图片和视频
-  Image（图片，Figma 还没有，待确认）、VideoPlayer（视频播放器，Figma「播放器」页）。依赖 tokens.css、base.css。
+  Image（图片）、VideoPlayer（视频播放器，Figma「播放器」页）。依赖 tokens.css、base.css。
   下面每一段前面接着是它原来的说明。
 */
 
 /*
   KIVI · 图片
-  通用组件 Image（Figma 还没有，待确认）。依赖 tokens.css，骨架屏用反馈页的 Skeleton。
+  通用组件 Image。依赖 tokens.css，骨架屏用反馈页的 Skeleton。
 
   写法（React，见 Image.tsx）
     <Image src="…" alt="…" ratio="16:9" style={{ width: 256 }} />

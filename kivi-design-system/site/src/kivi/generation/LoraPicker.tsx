@@ -48,7 +48,7 @@ const ALL = 'all';
 
 /**
  * Lora 选择弹窗：标题「Lora 模型」，一行「全部 / 收藏」选项卡加底模筛选，下面卡片网格，点卡片选中（最多 max 个）。
- * 收藏页里取消收藏，卡片当场消失；没有内容用 EmptyState。页面上要放一个 `<Toaster />`。Figma 还没有，待确认
+ * 收藏页里取消收藏，卡片当场消失；没有内容用 EmptyState。页面上要放一个 `<Toaster />`。
  */
 export const LoraPicker = forwardRef<HTMLDivElement, LoraPickerProps>(function LoraPicker(
   { items, value, defaultValue = [], onChange, max = 4, collectedIds, defaultCollectedIds, onCollectedIdsChange, ...rest },

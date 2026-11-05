@@ -64,7 +64,7 @@ function measure(vp: HTMLElement, axis: Axis, track: HTMLElement | null) {
  * 滚动区域：里面是浏览器原生滚动（滚轮、触摸、键盘、惯性都照旧），原生滚动条藏起来，换成自己画的细滑块。
  * 平时看不见；滚动时出现，停下 600ms 后淡出；鼠标靠近滚动条会出来，滑块从 6 变宽到 8；能拖，点轨道翻页。
  * 用法：`<ScrollArea maxHeight={320}>…</ScrollArea>`。ref 给最外层，滚动视口用 `viewportRef`。
- * 通用组件，Figma「滚动条」还没有，待确认
+ * 通用组件
  */
 export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function ScrollArea(
   {

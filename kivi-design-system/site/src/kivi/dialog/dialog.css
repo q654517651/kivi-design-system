@@ -39,7 +39,7 @@
     二级弹窗  再放一个 Dialog，后打开的遮罩盖在上面，两层遮罩自然叠起来，一级被压暗。最多两级。
     Esc、点遮罩、关闭按钮、焦点进出、Tab 不跑出弹窗，Dialog 都做了。点遮罩不关用 closeOnMaskClick={false}。
 
-  待定（Figma 没定）
+  Figma 没定的，这里这样做
     最大高度、内容多时怎么滚：先限制在屏幕里（离窗口边 32），内容区滚动。
     z-index：Figma 没有层级的概念，先写 1000。
 */
@@ -54,7 +54,7 @@
   box-sizing: border-box;
   width: 400px;
   max-width: 100%;
-  max-height: 100%; /* 待定：先不超出屏幕 */
+  max-height: 100%; /* 不超出屏幕 */
   padding: var(--spacing-24);
   border-radius: var(--border-radius-16);
   background: var(--color-bg-fill-surface);
@@ -129,7 +129,7 @@
   line-height: var(--font-line-height-22);
 }
 
-/* 内容区：放表单、列表等。待定：内容多了在这里滚动 */
+/* 内容区：放表单、列表等。内容多了在这里滚动 */
 .kv-dialog__body {
   flex: 1 1 auto;
   min-height: 0;

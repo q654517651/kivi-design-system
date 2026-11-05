@@ -47,7 +47,7 @@ export interface SelectProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onCh
   defaultOpen?: boolean;
   /** 展开、收起时触发 */
   onOpenChange?: (open: boolean) => void;
-  /** 列表出现的位置，默认 bottom-start（下方、左对齐），放不下会自己翻到另一边。工具条贴着屏幕底部时可以写 top-start。Figma 没定，待定 */
+  /** 列表出现的位置，默认 bottom-start（下方、左对齐），放不下会自己翻到另一边。工具条贴着屏幕底部时可以写 top-start。 */
   placement?: DropdownPlacement;
   /** 触发器上的说明。没有可见标签时必须写 */
   'aria-label'?: string;

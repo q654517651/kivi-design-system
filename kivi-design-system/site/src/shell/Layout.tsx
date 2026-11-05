@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Button, Icon, IconButton } from '@kivi';
 import { NAV } from './nav';
 import { SearchButton, useSearchJump } from './search';
+// 版本号只写在 package.json 一处，顶栏从这里读（发布规则见仓库根目录 CHANGELOG.md）
+import { version } from '../../package.json';
 
 const FIGMA = 'https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2';
 /** 图标用的是 Hugeicons 免费版（V3），补图标去这里找 */
@@ -105,7 +107,7 @@ export function Layout() {
           <Icon name="Logo" size={24} />
           设计规范
         </NavLink>
-        <span className="shell-badge">v0.1.0</span>
+        <span className="shell-badge">v{version}</span>
         <span className="shell-spacer" />
         <SearchButton />
         <a href={HUGEICONS} target="_blank" rel="noopener">

@@ -25,7 +25,7 @@ export const SKILL_DEFAULT_COVER = './skill-card/default-cover.png';
 
 /**
  * 技能卡：Agent 帮用户新建或更新了一个技能后，在对话里出的一张卡。左边封面，右边技能名和说明，右下角「编辑」「使用技能」。
- * 照旧版 KIVI 3.14「消息气泡」里的技能卡，外框和确认卡（ActionCard）一样。Figma V2 还没有，待确认。
+ * 照旧版 KIVI 3.14「消息气泡」里的技能卡，外框和确认卡（ActionCard）一样。
  */
 export const SkillCard = forwardRef<HTMLDivElement, SkillCardProps>(function SkillCard(
   { title, description, cover, onEdit, onUse, editText = '编辑', useText = '使用技能', className, ...rest },

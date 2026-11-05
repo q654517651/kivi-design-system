@@ -25,7 +25,7 @@ export type MenuItemVariant = 'default' | 'danger';
 export interface MenuItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
   /** 文字 */
   children?: ReactNode;
-  /** 说明：写了就是两行，第二行 12 号 secondary，一行省略。两行时左图标 24；选中（selected）不加底、在右边打勾，因为两行的行大，悬停和选中都是底色分不清（11-03 定，待确认） */
+  /** 说明：写了就是两行，第二行 12 号 secondary，一行省略。两行时左图标 24；选中（selected）不加底、在右边打勾，因为两行的行大，悬停和选中都是底色分不清（11-03 定） */
   description?: ReactNode;
   /** 类型：普通 / 危险，默认普通。危险只有默认、悬停、禁用，没有选中；放在菜单最后，用 Divider 和上面隔开 */
   variant?: MenuItemVariant;

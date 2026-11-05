@@ -67,7 +67,7 @@ let closeActiveHover: (() => void) | null = null;
  * `<Popover title="比例" content="决定画面宽高比。"><Button variant="secondary">比例</Button></Popover>`。
  * `variant="long"` 给被截断的长文字看全文（比如提示词）：没有箭头，和触发元素一样宽、至少 240，悬停出现。
  * `variant="panel"` 给能操作的悬停浮层：没有箭头，玻璃底，内容原样放进去（比如 Lora 设置）。
- * ref 给包住触发元素的外壳 span。这是代码层面的组件，Figma 里还没有，待确认
+ * ref 给包住触发元素的外壳 span。这是代码层面的组件
  */
 export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popover(
   {

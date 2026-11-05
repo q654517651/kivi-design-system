@@ -1,5 +1,5 @@
 /*
-  日期：Calendar（单月日历）、DateRangeFilter（时间筛选）。Figma V2 还没有这一页，照旧版 KIVI 3.5-3.14 和线上做，待确认。
+  日期：Calendar（单月日历）、DateRangeFilter（时间筛选）。照旧版 KIVI 3.5-3.14 和线上做。
 
   Calendar          kv-calendar，头 kv-calendar__head（« ‹ 标题 › »，翻页用 IconButton 28，双箭头图标 Double…ArrowSmall），
                     网格 kv-calendar__grid（role="grid"），每格 kv-calendar__day：

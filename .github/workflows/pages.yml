@@ -1,8 +1,10 @@
 name: Publish design site
 
+# 只在 main（正式版）更新时发布网站：test 是开发分支，推 test 不发布。发布流程见 CHANGELOG.md。
+
 on:
   push:
-    branches: [test]
+    branches: [main]
     paths:
       - 'kivi-design-system/**'
       - '.github/workflows/pages.yml'

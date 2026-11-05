@@ -9,6 +9,20 @@
 - 变量和组件收敛，不能再有例外。
 - 体验做到优秀：交互、状态都要完善，该有动效的地方要有动效。
 
+## 版本和发布（11-05 用户定，必须照做）
+
+- **分支**：`test` 只做开发，日常提交、推送都在 `test`，推了不发布。`main` 才是发布：发布时开合并请求把 `test` 合进 `main`。合进 `main` 后 GitHub Actions 自动发网站（`pages.yml`）、自动拆 `skill` 分支（`skill-branch.yml`，别人克隆它装技能，技能每次用前自己 `git pull`）。不往 `main` 直接提交。
+- **版本号只写一处**：`kivi-design-system/site/package.json` 的 `version`，网站顶栏 `Layout.tsx` 从它读。别处不许写死版本号。
+- **版本号怎么涨**（按前端要不要跟着改代码）：
+  - 主版本 `X.0.0`：前端必须改代码：组件、属性、变量、图标改名或删除，默认值、行为改了。
+  - 次版本 `x.Y.0`：只加东西：新组件、新类型 / 状态 / 尺寸、新变量、新图标、新模板页。
+  - 修订号 `x.y.Z`：不加不删：修 bug、对齐 Figma 的小修、改文档文字。
+  - 一版里有几种改动按最大的涨；正式上线前用 `0.x`（改名删除涨次版本即可），和新 kit 一起上线的那版定 `1.0.0`。
+- **更新日志**：仓库根目录 `CHANGELOG.md`，README 里有入口。每改一件事就在「未发布」下记一行（新增 / 改动 / 改名和删除 / 修复），不等发布时补；改名删除写旧名 → 新名，并指向网站「旧名对照」。
+- **发布步骤**（用户说「发布 x.y.z」时照做，发布前先和用户确认版本号）：改 `package.json` 版本号 → 「未发布」改成 `## [x.y.z] - 日期`、上面空出新的「未发布」→ 提交推 `test` → 开合并请求 `test` → `main` 并合入 → 在 `main` 上打标签 `vx.y.z`、发 GitHub Release（正文贴这一版日志）。
+- `skill` 分支只有 `kivi-design-system/`，所以**维护者自己的东西（规则、待办、记录、审查材料）一律不放进 `kivi-design-system/`**，放 `kivi-design-system-workspace/` 或仓库根目录。
+- skill 和新 kit 一起正式上线（定 `1.0.0`）；上线前图标仓库要做好。技能改成克隆 `skill` 分支装，不再打包 `.skill`（11-05 定）。
+
 ## 目录
 
 - `kivi-design-system/`：skill 本体。SKILL.md 是入口，`assets/placeholders/` 放占位图。
@@ -22,7 +36,7 @@
   - `assets/`（skill 根目录）是网站的静态目录，页面里用 `./placeholders/…`、`./empty-state/…`。
 - `kivi-design-system/references/`：只剩 `figma-kit.md`（改 Figma 组件库时读）。旧的 md 规范 11-05 已全部删掉，别再往里加。
 - `kivi-design-system-workspace/`：旧版备份（skill-snapshot-v0.1）、存档（纯 HTML 版网站在 `archive/site-html/`，别的对话做的演示在 `archive/demos/`）、测试结果，不进 skill。
-- `kivi-design-system.skill`：打包文件，现在是旧版，发布时重新打包，不进 git。
+- `kivi-design-system.skill`：旧的打包文件，不再用（技能改成克隆装），不进 git。
 
 ## 写规范的规矩
 
@@ -44,7 +58,7 @@
 - 样子、变量、组件以 Figma V2 为准；交互（点哪出什么、什么时候出）照线上产品。两边不一致的记进 `page-notes/`，不写进页面。
 - 组件用 React（2026-10-29 用户定：前端是 React，纯 HTML 是「毛坯房」）。不引任何 UI 库、定位库、动画库，交互自己写进组件。组件名就是 Figma 组件名，props 英文、和 Figma 属性一一对应、带中文注释，设 `displayName`。样式用普通 CSS：类名 `kv-组件名`，修饰 `--`，部件 `__`，状态用 `disabled`、`aria-*`，没有对应的用 `data-*`，不用 `is-*`。
 - 组件写法照 HeroUI、Radix 这类成熟组件库（10-29 用户定，不能做得垃圾）：细则在网站「组件写法」页（`src/docs/component-api.mdx`）：forwardRef、属性透传、受控三件套、事件合并，公用逻辑放 `src/kivi/hooks/`，组件里不再各写一份。改完在 `site/` 下跑 `npm run check`。和前端怎么协作（抄代码还是装包）还没定。
-- 页面不写状态（11-04 用户定）：页头、正文、图标备注里不写「草稿」「待确认」「提议」「Figma 还没有」这类，改东西不用跟着改状态；全站只有顶栏一个总版本号（`v0.1.0`）。「废弃」是用法不是状态，保留。
+- 页面不写状态（11-04 用户定）：页头、正文、图标备注里不写「草稿」「待确认」「提议」「Figma 还没有」这类，改东西不用跟着改状态；全站只有顶栏一个总版本号（读 `package.json`，规则见「版本和发布」）。「废弃」是用法不是状态，保留。
 - 规范文字写进 MDX，别用 JS 生成，AI 要能直接读。
 - 演示要组件化：同一个东西在几页出现（比如生成用的下拉、参数面板），先抽成通用组件，再往里填内容，只写一份。生成控件在 `src/kivi/generation/`（11-04 从 docs 挪进组件库），画布和主站都用它（10-29 用户定）。
 - 改名必须有映射表，只放网站「旧名对照」一页（`src/docs/legacy-names.mdx`，变量和组件都在这，11-04 用户定），不放各组件页；Figma 各页的「迁移映射」11-04 已删，只留一句话 + 网站链接，别再加回去。
@@ -58,12 +72,6 @@
 - 码位固定，新图标往后排；旧名（Mdoel、Snap1 等）留别名。字体只能单色。
 - skill 里加一个子技能：Figma 导出 → 打包字体 → 提交 GitLab、打版本。令牌只放环境变量，不进仓库。
 - 待办：用户建 Figma 只读令牌、定 GitLab 仓库；前端装依赖、换掉 `config/config.ts` 里引 iconfont 的那行。
-
-## 发布
-
-- 技能装法（11-05 定）：推送 `test` 后，GitHub Actions（`skill-branch.yml`）把 `kivi-design-system/` 单独拆成 `skill` 分支；别人克隆这个分支装技能，技能每次用前自己 `git pull`。`skill` 分支只有技能本身，所以**维护者自己的东西（规则、待办、记录、审查材料）一律不放进 `kivi-design-system/`**，放 `kivi-design-system-workspace/` 或仓库根目录。
-- skill 和新 kit 一起发布，现在都还没上线。
-- 发布前：图标仓库做好；重新打包 `.skill`。
 
 ## 进度
 
@@ -125,6 +133,7 @@
 - Container 底色对比度（11-04，用户定）：相邻两层对比度不低于 1.12；深浅按背景相对亮度分，< 0.015 深底用 Light 1，≥ 0.015 浅底用 Light 2，写在「设计规则 · 颜色和底色」；全站按这个改完，重跑盘点 316 处全合规。容器给里面的组件传 `--kv-nested-fill`。盘点和改动在 `page-notes/container-contrast-2026-11-04.md`。 后来又定：只有 Light 1 / Light 2 两档，默认、hover、pressed 各管各的，不跨语义借用、不在背景上叠色；常驻底色（选中、展开、当前页）用默认，悬停一律 hover；玻璃改 #181818 50%，Container 每档加 2%（Light 1 10/14/18，Light 2 6/10/14），重跑 344 处全合规。
 - 参考和引用单开一页（11-04，用户定）：「业务组件 · 参考和引用」（`docs/business/reference.mdx`，代码 `kivi/reference/`），放主站 PromptBox 的参考区和参考格、画布生成面板的附件条和首尾帧、所有 @ 引用胶囊（MentionChip，标注页那份也挪来）、悬停预览。纯搬家，样式没改（搬前搬后 177 个元素逐个比过）。三家共用的删除角标规则还在 generation.css。 之后又定：MentionChip 加了 7 种类型的属性面板，图标类（音乐、技能、节点、模型）直接放 16 白色图标；ReferenceItem 加了属性面板，音频和文件一个样子（图标占位底），文件按扩展名换图标（新加 8 个 Hugeicons 文件图标）；附件条只留 56、间距 4；缩略图删除改回右上 18 的小圆。 11-04 又定：UploadTile 并进 AddTile（添加素材从素材库还是电脑都是它），AddTile 去掉 `size` 只留 56，格子自己的拖入不要；角标和删除、悬停浮层换一个时不交叉淡化（旧的立刻没、新的直接出）。 Dropzone 删了，拖文件只用 DropOverlay，照 Claude 桌面端改：框加 border-strong 描边、不铺底不模糊，正中 popup 小卡、三个图标（新加 Image、Files，Hugeicons）弹簧展开、中间上浮。 拖入提示加 mask 遮罩、图标和字用品牌绿；规则页品牌色改成「省着用，不大面积铺底」+ 举例。PromptBox 宽度照即梦：最宽 1040，最窄是工具条一行排开的宽度（不折行、控件不压缩）。 图标定用 V3（11-04 用户定）：网站默认 V3，去掉 V2 / V3 切换（V2 数据 icons.ts 留着），顶栏右上角加「Hugeicons 图标库」链接；「图标」页规格和「设计规则 · 图标」改成 Hugeicons 缩 21、线宽 1.6，补图标从 Hugeicons 找。 图标改用蒙版渲染（Icon.tsx 生成 `--kv-icon-mask`，底色 currentColor），颜色带透明度时线段交叠处不再叠色；V3 的 Tool 换成 Hugeicons wrench-01。
 - 多画布（11-04，飞书「P1 工作区内支持多个画布」，用户点头照方案做）：新组件 `CanvasHeader`（`kivi/canvas`，「画布」页 + 画布模板左上角）：玻璃按钮条 44 Logo｜工作区｜画布名 ⌄，下拉列表当前项选中底色不打勾、7.5 条滚动、「⋯」在新窗口打开 / 重命名 / 复制 / 删除，删除和 Agent 工作中切换都弹 Dialog 400，上限 30 出 Toast。顺手：Dropdown 支持套着的弹出层；弹出菜单里 MenuLabel 按钮一直显示；Icon 名字不存在时画空的不崩；新图标 NewWindow。记录在 `page-notes/multi-canvas.md`，Figma 没跟。
+- 文字放不下（11-05，用户定「截断比超过去强」）：Button、TabItem 文字包一层 `__label`，放不下末尾省略号、内边距不让，截断了悬停出 Tooltip 看全文（`hooks/useTruncated`）；分段从 flex 平分改成网格等分（原来条宽是各项文字宽相加再平分，最长那项一定放不下）；画布切换的画布名最宽 160。规则写在「设计规则 · 状态」。网站「开始」组加了「安装技能」页（选系统、工具，复制一段话发给 AI 装）。
 - 网站全局搜索（11-04，用户要的，不改现有样式）：顶栏「搜索 ⌘K」（也认 Ctrl K、`/`），弹窗用 Dialog 560 + Input + Button 轻。能搜页面、标题、正文、表格行（参数表、旧名对照）、变量、图标；模糊（缩写 pb → PromptBox、隔字 生面 → 生成面板、拼错 Mdoel / buton、空格横线大小写不分）、多个词是「且」。排序：匹配分 + 类型加分（页面 > 二级标题 > 三级标题 > 图标 > 变量 > 表格行 = 正文），最近打开的加分，旧名对照的行扣分。建议三种：没输入时是「最近打开」+ 全部页面；输入时顶上一排补全（Tab 接受第一个）；一条都没有时「你是不是想搜」。点中后切页，滚到对应的标题 / 段落 / 表格行 / 变量 / 图标，闪一下品牌浅底（`[data-search-hit]`，1.6 秒，减少动态效果时不闪）。新样式只在 `src/shell/search/search.css`（新类名、只用 tokens），没改任何已有的类；`.shell-top` 原样没动，手机宽（≤560）不放入口，免得挤掉 Figma 按钮。开发时改了文档要刷新页面索引才更新。新依赖（devDependencies，原来就在 node_modules 里）：unified、remark-parse、remark-mdx、mdast-util-to-string、github-slugger。没做：拼音搜索。
 - 自洽审查（11-04）：8 个 Sonnet 分维度查 + 4 个复核，又吸纳了 GPT 那份（`outputs/consistency-audit-2026-11-04/`，新增 25 条复核过）。报告 `kivi-design-system-workspace/review-2026-11-04/report.html`（原始报告和复核在 `raw/`）。用户让先修「bug 和明显写错的」，已修 65 条（报告里标「已修」）：Logo 绿星（Icon 带固定颜色的照旧直接画 SVG）、网站外壳加错误边界、日历翻月、Tabs 方向键、Dropdown 面板类放行 Tab（`haspopup="dialog"`）、Tooltip / MessageFeedback / ReferenceStack 的 Esc 不连弹窗一起关、弹窗焦点陷阱放过挂在 body 上的浮层、禁用 Select、音高负号、首尾帧旧回调、GenPrompt 复制和空提示词、UserMessage 换行、ScrollArea 续载、主站模板改用 MessageFeedback，以及一批参数表、旧百分比、SKILL.md 路由表。追问单选和「其他」互斥是兜底做法（线上没有可照抄的）。没修：画布页里另一个对话在改的（History 空位、CanvasHeader 三条、C-2 / C-3 / C-4），和报告「要你定」的十几组，等用户看。
 - 变量收敛（11-05，用户定）：`--color-border-focus` 删了（组件不加聚焦描边，`base.css` 关掉浏览器默认聚焦框，和前端一致）；`--effect-shadow-stack` 删了（叠放用白底加旋转）；背景模糊只有两档、不许例外：32 `--effect-glass-blur` 给玻璃和 on-media，16 `--effect-mask-blur` 给生成中、占位图遮罩，底不透明的不加，`npm run check` 会拦写死的模糊。行高只给多行文字、单行不设（组件库默认 1.4 = Figma 苹方自动行高，单行的 75 处已删）。规则在「设计规则」页，Figma 待改已记。填充色阶（11-05 用户定）：`--color-fill-1~4`（白 6 / 10 / 14 / 18），Container 六个变量改成引用它、名字值不变；`fill-n` 只给 Container 语义不符的静态色块（名单在设计规则：叠层、小地图节点、骨架屏扫光），检查脚本拦名单以外的；开关轨道、文字头像、试听播放中改回 Container 默认。变量只留两层（填充色阶 → 语义变量），不要原始色层（只有深色一套用不上，以后做亮色再加），Figma 隐藏的原始色集合下次同步删。禁用的底和平时一样、只变字色；填充对比度 1.12 不管禁用和遮罩。IconButton 自带提示（label，`tooltip={false}` 关），通用符号不配，名单在设计规则「提示」。SendButton 纳入按钮体系（IconButton 主要 · 36 · `round`，圆形只给规则名单里的专用按钮）。生成失败态统一 EmptyState 生成失败 · 96，可配 `failedTitle` / `failedDescription`。待办（11-05 用户定，都是新增、先不做）：画布生成按钮「10 秒内可停止」、节点和结果格的停止、节点工具栏补框选 / 编辑文字和调顺序、停止图标，细节记在总表 `page-notes/component-inventory.md`「待做」。收藏了的星图标品牌绿（IconButton `data-collected`，设计规则里写成唯一例外）；连线删除改玻璃；音频字数超上限变红（11-05 用户定）；细滑杆暂定给剪辑时间线缩放，记待做。画布底部工具栏「添加」改 IconButton 主要（品牌绿，`__solid` 类删了）；Wan 用 Qwen Logo；Checkbox / Skeleton `shape` → `variant`、Popover `trigger` → `on`；生成结果组不补更多状态、模型面板不做加载 / 失败 / 空态（有缓存）。审查报告 11-05 第二轮又修了 72 条（四个 Sonnet 分组），只剩 6 条：行高 T-11、生成确认卡 L-21 等用户定，L-17 / L-18 待办，侧栏读屏 GPT-PR-09 等前端，C-23 还缺两个属性面板。字号必须对齐变量（11-05 用户定）：两处 9 号字改 10，上传进度环为放下「100%」从 28 放大到 36，`npm run check` 拦写死字号（Markdown 正文 prose 例外）。L-21 用户定按钮不换（确认卡消耗不消耗都有，写在说明里）。T-11 用户定多行行高按表：7 处 14/20 → 14/22、12/16 → 12/20。PromptInput 照线上默认 4 行、最多 6 行（行高乘行数，88 / 132），生成面板和 Agent 输入框一样；粘贴、拖入只取纯文字（不许带进字号颜色），占位文字浮在框上（光标在最前）。L-21 提交中状态也不要。节点工具栏照线上补了框选（DragSelect = Hugeicons select-02，用户挑的）、编辑文字（TextEditing = text-creation），封装挪到剪辑前，图推词 / 视频推词。MediaGroup、AnnotationBox 补了属性面板。审查只剩 L-17（待做）和 GPT-PR-09（读屏）。审查报告剩下的 181 条都分了 P0 / P1 / P2、写了问题和处理（`cur.json` 的 triage），15 条等用户定，其余按已定规矩由我定。

@@ -1,8 +1,8 @@
 /*
   KIVI · Agent 对话
   Figma「Agent」页的对话部分：UserMessage、QuestionPanel（QuestionOption）、ActionCard、SendButton、FileCard。
-  SkillCard（技能卡）照旧版 KIVI 3.14 做，Figma V2 还没有。
-  AskRecord（询问记录，能收起）Figma 还没有，交互照 Codex、Claude；用 Collapse 收起（在 collapse 文件夹）。
+  SkillCard（技能卡）照旧版 KIVI 3.14 做。
+  AskRecord（询问记录，能收起）交互照 Codex、Claude；用 Collapse 收起（在 collapse 文件夹）。
   依赖 tokens.css、base.css、button.css（按钮用 kv-button、kv-icon-button）。
   别的页的组件：头像用 tags-avatar 的 Avatar；
   用户消息里的素材用 generation 的 ReferenceItem（里面是 AssetThumb）。

@@ -38,7 +38,7 @@ export interface LoraFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
 
 /**
  * 一排已选的 Lora 加一个添加格，主站输入框和画布生成面板共用。已选的是 56 的参考格，底部通栏写权重；
- * 悬停弹出设置面板（`LoraSettings`，鼠标能挪进去），悬停格子右上角出删除。Figma 还没有，待确认
+ * 悬停弹出设置面板（`LoraSettings`，鼠标能挪进去），悬停格子右上角出删除。
  */
 export const LoraField = forwardRef<HTMLDivElement, LoraFieldProps>(function LoraField(
   { value, defaultValue = [], onChange, max = 4, onAdd, className, ...rest },

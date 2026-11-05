@@ -150,7 +150,11 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
           haspopup="listbox"
           // 从看得见的边量：按钮没底，看得见的是外面的条，按钮底到条底还有内边距 6，再空 4
           offset={10}
-          trigger={<Button rightIcon={open ? 'UpArrowSmall' : 'DownArrowSmall'}>{current?.name}</Button>}
+          trigger={
+            <Button className="kv-canvas-header__canvas" rightIcon={open ? 'UpArrowSmall' : 'DownArrowSmall'}>
+              {current?.name}
+            </Button>
+          }
         >
           <Menu width={240} role="group" aria-label="画布" className="kv-canvas-header__menu">
             <MenuLabel action={<IconButton icon="Add" label="新建画布" size={28} variant="light" onClick={create} />}>画布</MenuLabel>

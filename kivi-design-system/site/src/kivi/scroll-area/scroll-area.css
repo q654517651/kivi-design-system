@@ -1,6 +1,6 @@
 /*
   KIVI · 滚动条
-  通用组件 ScrollArea（Figma 还没有，待确认）。依赖 tokens.css。
+  通用组件 ScrollArea。依赖 tokens.css。
 
   写法（React，见 ScrollArea.tsx）
     <ScrollArea maxHeight={320}>…内容…</ScrollArea>

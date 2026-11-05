@@ -6,6 +6,7 @@
 - 技能入口：[`kivi-design-system/SKILL.md`](kivi-design-system/SKILL.md)
 - 网站源码：[`kivi-design-system/site/`](kivi-design-system/site/)
 - 图片和演示素材：[`kivi-design-system/assets/`](kivi-design-system/assets/)
+- 更新日志：[`CHANGELOG.md`](CHANGELOG.md)（每一版改了什么、版本号规则、发布流程）
 
 ## 使用技能
 
@@ -15,7 +16,7 @@
 git clone -b skill --single-branch https://github.com/q654517651/kivi-design-system.git ~/.claude/skills/kivi-design-system
 ```
 
-`skill` 分支只有技能本身（`kivi-design-system/` 里的东西），推送 `test` 后由 GitHub Actions 自动更新。技能每次使用前会自己 `git pull`，不用手动更新。不要只复制文件夹：复制的没有 git 记录，没法更新。
+`skill` 分支只有技能本身（`kivi-design-system/` 里的东西），`main` 更新（发布新版本）后由 GitHub Actions 自动更新。技能每次使用前会自己 `git pull`，不用手动更新。不要只复制文件夹：复制的没有 git 记录，没法更新。
 
 ## 本地查看网站
 
@@ -27,9 +28,11 @@ npm run dev
 
 打开 http://localhost:4173/。
 
-## 发布网站
+## 版本和发布
 
-推送 `test` 分支后，GitHub Actions 会检查组件、构建技能目录内的网站，并将 `site/dist/` 发布到本仓库的 GitHub Pages。也可以在 Actions 中手动运行 `Publish design site`。
+- `test` 是开发分支，日常改动推这里，推了不发布。
+- `main` 是正式版：发布时把 `test` 合进 `main`，GitHub Actions 会检查组件、构建网站发布到 GitHub Pages，同时更新 `skill` 分支。也可以在 Actions 里手动运行 `Publish design site`。
+- 版本号只写在 [`kivi-design-system/site/package.json`](kivi-design-system/site/package.json)，网站顶栏读它。每一位什么时候涨、发布的步骤，见 [`CHANGELOG.md`](CHANGELOG.md)。
 
 ## 当前状态
 

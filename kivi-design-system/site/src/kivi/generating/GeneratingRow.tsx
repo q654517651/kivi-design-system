@@ -21,7 +21,7 @@ export interface GeneratingRowProps extends GeneratingCommon, Omit<HTMLAttribute
  * 动效和 GeneratingDots 一样，只是每张比左边一张晚 0.1 时间线秒（0.5× 速度下 200ms），扫光也跟着错开，每张各扫一道；
  * 背景星点的噪波是连成一片的。
  * 铺满最近的定位父元素，父元素里要把 count 个等宽格子排成一行，格子之间的缝和 gap 一样。
- * 2026-10-29 用户在对话里定的，Figma 里还没有。
+ * 2026-10-29 用户定的。
  */
 export const GeneratingRow = forwardRef<HTMLDivElement, GeneratingRowProps>(function GeneratingRow(
   {

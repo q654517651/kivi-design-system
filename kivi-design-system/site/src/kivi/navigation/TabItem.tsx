@@ -1,8 +1,9 @@
-import { forwardRef, useRef, type ButtonHTMLAttributes } from 'react';
+import { forwardRef, useRef, type ButtonHTMLAttributes, type Ref } from 'react';
 import { Icon } from '../Icon';
 import type { IconName } from '../icons';
 import { cx } from '../utils';
-import { composeHandlers, useMergedRef } from '../hooks';
+import { composeHandlers, useMergedRef, useTruncated } from '../hooks';
+import { useTooltip } from '../tooltip/Tooltip';
 import { useTabs, type TabLayout, type TabSize, type TabVariant } from './context';
 import './navigation.css';
 
@@ -23,14 +24,38 @@ export interface TabItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonElemen
   selected?: boolean;
 }
 
-/** 一个选项。「样式」切换选项卡和分段两种用法。Figma「选项卡、标签和头像」页 TabItem */
+/**
+ * 一个选项。「样式」切换选项卡和分段两种用法。Figma「选项卡、标签和头像」页 TabItem。
+ * 放不下时文字末尾省略号、内边距不让，悬停出 Tooltip 看全文（设计规则 · 状态）
+ */
 export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(function TabItem(
-  { value, variant, layout, size, icon, selected, type = 'button', className, children, onClick, ...rest },
+  {
+    value,
+    variant,
+    layout,
+    size,
+    icon,
+    selected,
+    type = 'button',
+    className,
+    children,
+    onClick,
+    onMouseEnter,
+    onMouseLeave,
+    onFocus,
+    onBlur,
+    onPointerDown,
+    'aria-describedby': describedBy,
+    ...rest
+  },
   ref,
 ) {
   const tabs = useTabs();
   const ownRef = useRef<HTMLButtonElement>(null);
-  const mergedRef = useMergedRef(ownRef, ref);
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const truncated = useTruncated(labelRef, [children]);
+  const tip = useTooltip({ content: children, disabled: !truncated });
+  const mergedRef = useMergedRef(ownRef, tip.anchorRef as Ref<HTMLButtonElement>, ref);
   const v = variant ?? tabs?.variant ?? 'tab';
   const l = layout ?? tabs?.layout ?? 'horizontal';
   const s = size ?? tabs?.size ?? 32;
@@ -38,6 +63,7 @@ export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(function TabI
   const segment = v === 'segment';
 
   return (
+    <>
     <button
       ref={mergedRef}
       type={type}
@@ -50,14 +76,24 @@ export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(function TabI
       role={segment ? 'radio' : 'tab'}
       {...(segment ? { 'aria-checked': on } : { 'aria-selected': on })}
       tabIndex={tabs ? (on || tabs.entry === ownRef.current ? 0 : -1) : undefined}
+      aria-describedby={[describedBy, tip.describedBy].filter(Boolean).join(' ') || undefined}
+      onMouseEnter={composeHandlers(onMouseEnter, tip.handlers.onMouseEnter)}
+      onMouseLeave={composeHandlers(onMouseLeave, tip.handlers.onMouseLeave)}
+      onFocus={composeHandlers(onFocus, tip.handlers.onFocus)}
+      onBlur={composeHandlers(onBlur, tip.handlers.onBlur)}
+      onPointerDown={composeHandlers(onPointerDown, tip.handlers.onPointerDown)}
       onClick={composeHandlers(onClick, () => {
         if (tabs && value !== undefined) tabs.select(value);
       })}
       {...rest}
     >
       {icon && <Icon name={icon} />}
-      {children}
+      <span ref={labelRef} className="kv-tab-item__label">
+        {children}
+      </span>
     </button>
+    {tip.bubble}
+    </>
   );
 });
 TabItem.displayName = 'TabItem';

@@ -61,8 +61,17 @@
 }
 
 .kv-tab-item > .kv-icon {
+  flex: none;
   width: var(--kv-tab-icon-size);
   height: var(--kv-tab-icon-size);
+}
+
+/* 放不下时（分段被压窄）：文字末尾省略号，内边距不让（设计规则 · 状态）；悬停的全文 Tooltip 在 TabItem.tsx */
+.kv-tab-item > .kv-tab-item__label {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 样式：选项卡是默认。悬停只有字变白；选中白 10% */
@@ -130,8 +139,15 @@
   gap: var(--spacing-4);
 }
 
-/* 分段选择：底槽内边距 4、圆角 12、底白 10%；选项等宽平分，选项之间没有间距 */
+/*
+  分段选择：底槽内边距 4、圆角 12、底白 10%；选项等宽平分，选项之间没有间距。
+  用网格等分：宽度跟着内容走时，每项都和最长那项一样宽，文字不会被压；宽度给定、放不下时才截断（11-05）。
+  原来用 flex 平分，条的宽度是各项文字宽相加再平分，最长那项一定放不下
+*/
 .kv-tab-group--segment {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   box-sizing: border-box;
   gap: 0;
   padding: var(--spacing-4);
@@ -139,7 +155,12 @@
   background: var(--color-bg-fill-container-light-1);
 }
 
+/* 竖排的项自己是 56 宽，放进分段里跟着格子铺满 */
 .kv-tab-group--segment > .kv-tab-item {
-  flex: 1 1 0;
+  width: auto;
   min-width: 0;
+}
+
+.kv-tab-group--segment > .kv-tab-item--vertical {
+  min-width: 56px;
 }

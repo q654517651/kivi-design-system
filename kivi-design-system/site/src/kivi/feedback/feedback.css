@@ -1,7 +1,7 @@
 /*
   KIVI · 反馈
   Figma「反馈」页：Toast（轻提示）、Loading（加载）、Skeleton（骨架屏）、EmptyState（空状态）。
-  依赖 tokens.css、base.css；EmptyState 下面的引导按钮用 button.css。页面状态：待确认 0.1.0。
+  依赖 tokens.css、base.css；EmptyState 下面的引导按钮用 button.css。
 
   写法（React，见 Toast.tsx、Toaster.tsx、Loading.tsx、Skeleton.tsx、EmptyState.tsx）
     <Toaster />                                                  根上放一次
@@ -45,7 +45,7 @@
     Skeleton 形状 kv-skeleton--rect / --circle / --text，矩形是默认；宽高照真实内容自己写
     EmptyState 尺寸 kv-empty-state--160 / --96，160 是默认；场景只是换 IP 图和文字，样式一样
 
-  待定（Figma 没定）
+  Figma 没定的，这里这样做
     Toast 的最大宽度、操作文字的悬停和按下、层级（z-index 先写 1100，比弹窗高）。
     Skeleton 扫光的渐变形状：Figma 只写了「高光白 14%，从左往右」，先用两头透明的横向渐变。
     EmptyState 的最大宽度、引导按钮的间距是从文字算起还是从插图算起（先按从文字算起 24）。
@@ -163,7 +163,7 @@
   position: fixed;
   top: var(--spacing-24);
   left: 50%;
-  z-index: 1100; /* 待定：先比弹窗高 */
+  z-index: 1100; /* 比弹窗高 */
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -324,7 +324,7 @@
   position: fixed;
   top: var(--spacing-24);
   right: var(--spacing-24);
-  z-index: 1100; /* 待定：先比弹窗高，和 Toast 一样 */
+  z-index: 1100; /* 比弹窗高，和 Toast 一样 */
   box-sizing: border-box;
   width: 400px;
   max-width: calc(100vw - var(--spacing-24) * 2);
