@@ -100,8 +100,18 @@ for (const file of css) {
     if (/font-size:\s*[\d.]+px/.test(code) && !file.includes('prose')) report(file, i + 1, `写死了字号：${code.trim()}（只用 --font-size-n）`);
     // 填充色阶只给名单里的静态色块（设计规则 · 颜色和底色），别处用 Container（11-05 用户定）
     if (/var\(--color-fill-[1-4]\)/.test(code) && !FILL_OK.some((c) => sel.includes(c))) report(file, i + 1, `直接用了填充色阶：${code.trim()}（先用 Container；确实不符的静态色块先加进设计规则的名单和 FILL_OK）`);
+    if (/\b(rgba?|hsla?)\(/.test(code)) report(file, i + 1, `颜色用了 rgba / hsla：${code.trim()}（一律写十六进制，半透明写 8 位，比如白 10% 是 #FFFFFF1A）`);
     if (raw.includes(NO_TOKEN_MARK)) return;
     if (/#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?)\(/.test(code)) report(file, i + 1, `写死了颜色：${code.trim()}（用变量；Figma 没变量就在这一行注释「${NO_TOKEN_MARK}」）`);
+  });
+}
+
+// tokens.css 里的值也一律十六进制（11-05 用户定）
+{
+  const file = files.find((f) => f.endsWith('tokens.css'));
+  readFileSync(file, 'utf8').split('\n').forEach((raw, i) => {
+    const code = raw.replace(/\/\*.*?\*\//g, '');
+    if (/\b(rgba?|hsla?)\(/.test(code)) report(file, i + 1, `颜色用了 rgba / hsla：${code.trim()}（一律写十六进制，半透明写 8 位）`);
   });
 }
 

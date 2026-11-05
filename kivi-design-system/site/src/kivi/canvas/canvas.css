@@ -366,7 +366,7 @@
   box-sizing: border-box;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.2); /* Figma 没变量 */
+  border: 2px solid #FFFFFF33; /* Figma 没变量 */
   border-radius: var(--border-radius-round);
   background: #0A0A0A; /* Figma 没变量 */
 }
@@ -382,7 +382,7 @@
   height: 6px;
   margin: -3px 0 0 -3px;
   border-radius: var(--border-radius-round);
-  background: rgba(255, 255, 255, 0.2); /* Figma 没变量 */
+  background: #FFFFFF33; /* Figma 没变量 */
 }
 
 .kv-connector-dot--highlight {
@@ -448,7 +448,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  border: 2px solid rgba(255, 255, 255, 0.4); /* Figma 没变量 */
+  border: 2px solid #FFFFFF66; /* Figma 没变量 */
   border-radius: var(--border-radius-16);
   opacity: 0;
   pointer-events: none;

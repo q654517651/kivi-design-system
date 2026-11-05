@@ -164,7 +164,7 @@ export interface Palette {
 }
 
 // 变量读不到时的备用值，和 tokens.css 一致
-const FALLBACK: Palette = { from: [206, 255, 93], to: [43, 255, 117], white: [255, 255, 255], lattice: 'rgba(255, 255, 255, 0.08)' };
+const FALLBACK: Palette = { from: [206, 255, 93], to: [43, 255, 117], white: [255, 255, 255], lattice: '#FFFFFF14' };
 
 /** 把 CSS 变量解析成实际颜色：借一个 span 让浏览器算，变量套变量也能读 */
 function resolveColor(host: HTMLElement, name: string): string | null {
