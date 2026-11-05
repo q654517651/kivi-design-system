@@ -61,6 +61,7 @@
 
 ## 发布
 
+- 技能装法（11-05 定）：推送 `test` 后，GitHub Actions（`skill-branch.yml`）把 `kivi-design-system/` 单独拆成 `skill` 分支；别人克隆这个分支装技能，技能每次用前自己 `git pull`。`skill` 分支只有技能本身，所以**维护者自己的东西（规则、待办、记录、审查材料）一律不放进 `kivi-design-system/`**，放 `kivi-design-system-workspace/` 或仓库根目录。
 - skill 和新 kit 一起发布，现在都还没上线。
 - 发布前：图标仓库做好；重新打包 `.skill`。
 

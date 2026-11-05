@@ -1,0 +1,32 @@
+name: Publish skill branch
+
+# 把 kivi-design-system/ 单独拆成 skill 分支：别人装技能就克隆这个分支，里面只有技能本身，
+# 维护者自己的东西（CLAUDE.md、README、工作区、部署配置）都不带。拆出来的历史是固定的，每次只往后加，装好的技能 git pull 就能更新。
+
+on:
+  push:
+    branches: [test]
+    paths:
+      - 'kivi-design-system/**'
+      - '.github/workflows/skill-branch.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: skill-branch
+  cancel-in-progress: false
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Split and push
+        run: |
+          git subtree split --prefix=kivi-design-system -b skill
+          git push origin skill:skill

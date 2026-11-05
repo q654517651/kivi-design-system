@@ -9,7 +9,13 @@
 
 ## 使用技能
 
-将 `kivi-design-system/` 整个目录放入所用 Agent 支持的技能目录，保留内部文件结构。
+克隆 `skill` 分支到所用 Agent 的技能目录（Claude Code 是 `~/.claude/skills/`，Codex 是 `~/.codex/skills/`）：
+
+```bash
+git clone -b skill --single-branch https://github.com/q654517651/kivi-design-system.git ~/.claude/skills/kivi-design-system
+```
+
+`skill` 分支只有技能本身（`kivi-design-system/` 里的东西），推送 `test` 后由 GitHub Actions 自动更新。技能每次使用前会自己 `git pull`，不用手动更新。不要只复制文件夹：复制的没有 git 记录，没法更新。
 
 ## 本地查看网站
 
