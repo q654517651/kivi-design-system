@@ -7,7 +7,7 @@ import './canvas.css';
   「模板 · 画布」页的模板：生成面板。
   它在 Figma 里是模板，不是组件：里面放什么按钮、什么参数，随节点类型和模型变，复制整条改内容。
   这里只提供外框（容器的圆角、底色、间距），里面用 AttachmentStrip、PromptInput、NodePanelBar 拼。
-  节点工具栏、画布工具栏不在这里：都是 ButtonGroup variant="glass"（size 44 / 56）。
+  节点工具栏 glass 44，画布工具栏 surface 56：都不在这里，是 ButtonGroup。
 */
 
 export interface NodePanelProps extends HTMLAttributes<HTMLDivElement> {

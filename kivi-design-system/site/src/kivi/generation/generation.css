@@ -16,7 +16,9 @@
   display: block;
   box-sizing: border-box;
   width: 100%;
-  max-height: 120px;
+  /* 照线上：默认 4 行，随字长高，最多 6 行，再多就滚动。按行高乘行数，总是整行 */
+  min-height: calc(var(--font-line-height-22) * 4);
+  max-height: calc(var(--font-line-height-22) * 6);
   margin: 0;
   padding: 0;
   overflow-y: auto;
@@ -27,19 +29,25 @@
   font-family: var(--font-family);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20); /* 和 @ 标签一样高（20），有标签的行不会被撑开 */
+  line-height: var(--font-line-height-22); /* 比 @ 标签（20）高，有标签的行不会被撑开 */
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
-/* 未输入：高 68，显示占位文字。输入后又删光，浏览器会留一个 <br>，也算空 */
+/* 未输入显示占位文字。输入后又删光，浏览器会留一个 <br>，也算空。
+   占位文字浮在框上、不占位置，光标才会在最前面，不跑到占位文字后面 */
 .kv-prompt-input:is(:empty, :has(> br:only-child)) {
-  min-height: 68px;
+  position: relative;
 }
 
 .kv-prompt-input:is(:empty, :has(> br:only-child))::before {
   content: attr(data-placeholder);
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
   color: var(--color-text-fill-placeholder);
+  pointer-events: none;
 }
 
 /* 参数摘要后面跟的图标（比如生成音频开着时的音量），和文字垂直居中 */
@@ -205,13 +213,13 @@
   gap: var(--spacing-12);
 }
 
-/* 提示词：14 / 20，无底无描边，聚焦也不加描边。高度由 JS 随内容撑，最矮 120，超过 maxHeight 就滚 */
+/* 提示词：14 / 22，无底无描边，聚焦也不加描边。高度由 JS 随内容撑，最矮 120，超过 maxHeight 就滚 */
 
 .kv-prompt-box__input {
   /* 参考区展开时盖住的宽度（含渐隐），由 JS 写。没盖住是 0 */
   --kv-prompt-cover: 0px;
-  /* 盖住的高度：参考区 72 高，按 20 的行高是 3.6 行，整行盖住取 4 行，不切半行字 */
-  --kv-prompt-cover-height: calc(var(--font-line-height-20) * 4);
+  /* 盖住的高度：参考区 72 高，按 22 的行高是 3.3 行，整行盖住取 4 行，不切半行字 */
+  --kv-prompt-cover-height: calc(var(--font-line-height-22) * 4);
 
   flex: 1 1 0;
   box-sizing: border-box;
@@ -226,7 +234,7 @@
   font-family: var(--font-family);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
+  line-height: var(--font-line-height-22);
   resize: none;
   overflow-y: hidden;
   scrollbar-width: thin;
@@ -288,42 +296,6 @@
 .kv-prompt-box__toolbar-end {
   gap: var(--spacing-8);
   margin-left: auto;
-}
-
-/* 删除：展开后悬停或聚焦到某一张，右上角标换成删除（序号隐藏），三处共用这一份 */
-
-.kv-reference-stack__remove,
-.kv-attachment-strip__remove,
-.kv-lora-field__remove {
-  /* 删除是右上角的小圆：离边 4，18 的圆，黑 40% + 模糊 24，图标 14（11-04 用户定改回原来的圆，不用角标），同时那张的序号隐藏 */
-  position: absolute;
-  top: var(--spacing-4);
-  right: var(--spacing-4);
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: var(--border-radius-round);
-  background: var(--color-on-media-fill);
-  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
-  backdrop-filter: blur(var(--effect-glass-blur));
-  color: var(--color-on-media-text);
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  /* 移开时直接消失、不淡出，序号同时淡入；和序号交叉淡化会叠出重影（11-04） */
-  transition: none;
-}
-
-.kv-reference-stack__remove > .kv-icon,
-.kv-attachment-strip__remove > .kv-icon,
-.kv-lora-field__remove > .kv-icon {
-  width: 14px;
-  height: 14px;
 }
 
 /* ---------- 拖文件进来：DropOverlay ---------- */
@@ -452,9 +424,12 @@
       <div class="kv-lora-settings__weight">权重 + Slider + NumberInput</div>
     </div>
 
-    <div class="kv-lora-card" role="checkbox" aria-checked="false" tabindex="0">
-      <img class="kv-lora-card__cover"> <div class="kv-lora-card__tags">…</div>
-      <div class="kv-lora-card__actions">…</div> <div class="kv-lora-card__name"></div> <div class="kv-lora-card__info">…</div>
+    <div class="kv-lora-card">
+      <div class="kv-lora-card__body" role="checkbox" aria-checked="false" tabindex="0">
+        <img class="kv-lora-card__cover"> <div class="kv-lora-card__tags">…</div>
+        <div class="kv-lora-card__name"></div> <div class="kv-lora-card__info">…</div>
+      </div>
+      <div class="kv-lora-card__actions">…</div>   收藏按钮在复选框外面
     </div>
 
     <div class="kv-lora-picker">
@@ -463,7 +438,7 @@
     </div>
 
   状态
-    选中      data-selected（卡片上，同时 aria-checked="true"）
+    勾选      data-checked（外壳上，本体 aria-checked="true"）
     已收藏    data-collected（卡片上）
 */
 
@@ -489,7 +464,7 @@
 
 /* 删除：悬停或聚焦到这一格，右上角出现，样子同参考区的删除（右上角标） */
 
-.kv-lora-field__item:where(:hover, :focus-within) > .kv-lora-field__remove {
+.kv-lora-field__item:where(:hover, :focus-visible, :has(:focus-visible)) > .kv-lora-field__remove {
   opacity: 1;
   pointer-events: auto;
   transition: opacity var(--motion-duration-150) var(--motion-ease-out);
@@ -619,8 +594,15 @@
   border-radius: var(--border-radius-12);
   background: var(--color-bg-fill-container-light-1);
   color: var(--color-text-fill-primary);
-  cursor: pointer;
   font-family: var(--font-family);
+}
+
+/* 复选框本体：铺满外壳；收藏按钮和它并排，在它外面 */
+
+.kv-lora-card__body {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -636,7 +618,8 @@
   user-select: none;
 }
 
-.kv-lora-card:where(:hover, :focus-visible, .is-hover) > .kv-lora-card__cover {
+.kv-lora-card:where(:hover, .is-hover) .kv-lora-card__cover,
+.kv-lora-card__body:focus-visible > .kv-lora-card__cover {
   transform: scale(1.05);
   transition: transform var(--motion-duration-200) var(--motion-ease-out);
 }
@@ -652,7 +635,7 @@
   gap: var(--spacing-4);
 }
 
-/* 右上：按钮条里一个收藏。平时隐藏，悬停、聚焦或已收藏时显示 */
+/* 右上：按钮条里一个收藏，在复选框外面。平时隐藏，悬停、键盘聚焦（:focus-visible）或已收藏时显示，鼠标点一下选中不算 */
 
 .kv-lora-card__actions {
   position: absolute;
@@ -663,7 +646,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-in);
 }
 
-.kv-lora-card:where(:hover, :focus-within) > .kv-lora-card__actions,
+.kv-lora-card:where(:hover, :has(:focus-visible)) > .kv-lora-card__actions,
 .kv-lora-card[data-collected] > .kv-lora-card__actions {
   opacity: 1;
   pointer-events: auto;
@@ -689,7 +672,8 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-in);
 }
 
-.kv-lora-card:where(:hover, :focus-visible, .is-hover) > .kv-lora-card__name {
+.kv-lora-card:where(:hover, .is-hover) .kv-lora-card__name,
+.kv-lora-card__body:focus-visible > .kv-lora-card__name {
   opacity: 0;
 }
 
@@ -716,7 +700,8 @@
     transform var(--motion-duration-150) var(--motion-ease-in);
 }
 
-.kv-lora-card:where(:hover, :focus-visible, .is-hover) > .kv-lora-card__info {
+.kv-lora-card:where(:hover, .is-hover) .kv-lora-card__info,
+.kv-lora-card__body:focus-visible > .kv-lora-card__info {
   opacity: 1;
   transform: translateY(0);
   transition:
@@ -737,7 +722,7 @@
   overflow: hidden;
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
+  line-height: var(--font-line-height-20);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -756,7 +741,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-in-out);
 }
 
-.kv-lora-card[data-selected]::after {
+.kv-lora-card[data-checked]::after {
   opacity: 1;
 }
 
@@ -987,7 +972,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
-.kv-skill-panel__row-inner:is(:hover, :focus-within) > .kv-skill-panel__detail {
+.kv-skill-panel__row-inner:is(:hover, :focus-visible, :has(:focus-visible)) > .kv-skill-panel__detail {
   opacity: 1;
   pointer-events: auto;
 }
@@ -998,7 +983,7 @@
 }
 
 /* 有「详情」时字给它让位 */
-.kv-skill-panel__row-inner:is(:hover, :focus-within) .kv-menu-item__text {
+.kv-skill-panel__row-inner:is(:hover, :focus-visible, :has(:focus-visible)) .kv-menu-item__text {
   padding-right: 56px;
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type ReactElement } from 'react';
 import {
   Button,
+  DEFAULT_MODEL,
   GenerateButton,
   PromptBox,
   ReferenceStack,
@@ -21,6 +22,9 @@ import {
   PromptInput,
   AgentControls,
   AudioCharCount,
+  GenModelPicker,
+  GEN_MODEL_GROUPS,
+  SkillPanel,
   AudioModelControls,
   CountSelect,
   ImageModelControls,
@@ -29,6 +33,7 @@ import {
 } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from './skill-data';
+import { demoCost } from './gen-demo-cost';
 import './canvas.demos.css';
 import './generation.demos.css';
 
@@ -166,29 +171,30 @@ const noop = () => {};
 // ---------- 工具条 ----------
 // 下拉、参数面板都用 generation.tsx 里共用的那一份，和画布生成面板一样：选项、顺序、图标、展开方向都一致
 
-const TOOLBARS: Record<string, () => JSX.Element> = {
+// model 和 onModelChange：输入框演示按模型算生成按钮的消耗，别处不传就是各自管各自的
+const TOOLBARS: Record<string, (model?: string, onModelChange?: (m: string) => void) => JSX.Element> = {
   agent: () => (
     <>
       <TaskSelect defaultValue="agent" />
       <AgentControls skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />
     </>
   ),
-  image: () => (
+  image: (model, onModelChange) => (
     <>
       <TaskSelect defaultValue="image" />
-      <ImageModelControls />
+      <ImageModelControls model={model} onModelChange={onModelChange} />
     </>
   ),
-  video: () => (
+  video: (model, onModelChange) => (
     <>
       <TaskSelect defaultValue="video" />
-      <VideoModelControls />
+      <VideoModelControls model={model} onModelChange={onModelChange} />
     </>
   ),
-  audio: () => (
+  audio: (model, onModelChange) => (
     <>
       <TaskSelect defaultValue="audio" />
-      <AudioModelControls />
+      <AudioModelControls model={model} onModelChange={onModelChange} />
     </>
   ),
 };
@@ -208,6 +214,12 @@ const PLACEHOLDER: Record<string, string> = {
   audio: '描述你想生成的声音，或者输入要念的文字',
 };
 
+// 每种任务各记一个模型（面板上没有，记在 update 里），没选过用默认
+const modelOf = (s: BoxState): string => {
+  const picked = (s as Record<string, unknown>)[`model-${s.mode}`];
+  return typeof picked === 'string' ? picked : (DEFAULT_MODEL as Record<string, string>)[s.mode] ?? '';
+};
+
 export function PromptBoxPlayground() {
   return (
     <Playground<BoxState>
@@ -225,12 +237,12 @@ export function PromptBoxPlayground() {
           value={s.text === 'custom' ? String((s as Record<string, unknown>).custom ?? '') : TEXT[s.text]}
           onChange={(v) => update(v ? { text: 'custom', custom: v } : { text: 'empty' })}
           references={s.refs ? <ReferenceStack items={SAMPLE.slice(0, 6)} onAdd={noop} onRemove={noop} /> : undefined}
-          toolbar={TOOLBARS[s.mode]()}
+          toolbar={TOOLBARS[s.mode](modelOf(s), (m) => update({ [`model-${s.mode}`]: m }))}
           actions={
             // 音频没有张数，换成字数 / 上限（照线上）
             <>
               {s.mode === 'audio' ? <AudioCharCount count={(s.text === 'custom' ? String((s as Record<string, unknown>).custom ?? '') : TEXT[s.text]).length} /> : countSelect}
-              <GenerateButton cost={s.mode === 'image' ? 4 : s.mode === 'audio' ? 2 : 99} />
+              <GenerateButton cost={demoCost(s.mode, modelOf(s))} />
             </>
           }
         />
@@ -521,7 +533,7 @@ function renderCard(s: CardState, update: (patch: Partial<PlaygroundState>) => v
       cover={cover('kiwi-glass')}
       base={s.base}
       isNew={s.isNew}
-      selected={s.selected}
+      checked={s.selected}
       collected={s.collected}
       onClick={() => update({ selected: !s.selected })}
       onCollectedChange={(collected) => update({ collected })}
@@ -594,7 +606,7 @@ export function PromptInputDemo() {
       'PromptInput + MentionChip',
       <div className="cv-part-panel">
         <PromptInput>
-          参考 <MentionChip src={`${IMG}kivi-future-1x1.webp`}>图片1</MentionChip> 里的元素，配上 <MentionChip type="music">音乐1</MentionChip> 的节奏，用 <MentionChip type="video" src={`${IMG}kiwi-light-1x1.webp`}>视频1</MentionChip>、<MentionChip type="skill">分镜脚本</MentionChip> 和 <MentionChip type="node">文本节点</MentionChip> 补充
+          参考 <MentionChip src={`${IMG}kivi-future-1x1.webp`}>图片1</MentionChip> 里的元素，配上 <MentionChip type="audio">音频1</MentionChip> 的节奏，用 <MentionChip type="video" src={`${IMG}kiwi-light-1x1.webp`}>视频1</MentionChip>、<MentionChip type="skill">分镜脚本</MentionChip> 和 <MentionChip type="node">文本节点</MentionChip> 补充
         </PromptInput>
       </div>,
     ],
@@ -612,5 +624,62 @@ export function PromptInputDemo() {
         </div>
       </div>
     </figure>
+  );
+}
+
+// ---------- GenModelPicker ----------
+
+type GenModelPickerState = { open: boolean; picked: string };
+
+const pickedModels = (mode: string): string[] => {
+  const image = GEN_MODEL_GROUPS.find((g) => g.type === 'image')!.options.map((o) => o.value);
+  const video = GEN_MODEL_GROUPS.find((g) => g.type === 'video')!.options.map((o) => o.value);
+  if (mode === 'image') return image.slice(0, 4);
+  if (mode === 'some') return [image[0], video[0]];
+  return [];
+};
+
+export function GenModelPickerPlayground() {
+  return (
+    <Playground<GenModelPickerState>
+      controls={[
+        { key: 'open', label: '展开', type: 'toggle', value: true },
+        { key: 'picked', label: '已选', type: 'segment', value: 'none', options: [['none', '没选'], ['some', '各选一个'], ['image', '图片选满 4 个']] },
+      ]}
+      render={(s, update) => (
+        // 面板向下开，台子留够高度
+        <div style={{ minHeight: 520 }}>
+          <GenModelPicker open={s.open} onOpenChange={(open) => update({ open })} placement="bottom-start" picked={pickedModels(s.picked)} />
+        </div>
+      )}
+    />
+  );
+}
+
+// ---------- SkillPanel ----------
+
+type SkillPanelState = { status: 'ready' | 'loading' | 'failed'; tab: string; empty: boolean; search: string };
+
+export function SkillPanelPlayground() {
+  return (
+    <Playground<SkillPanelState>
+      controls={[
+        { key: 'status', label: '列表', type: 'segment', value: 'ready', options: [['ready', '正常'], ['loading', '加载中'], ['failed', '加载失败']] },
+        { key: 'tab', label: '页签', type: 'segment', value: 'recommend', options: [['recommend', '推荐'], ...SKILL_CATEGORIES.map((c) => [c, c] as [string, string]), ['mine', '我的']] },
+        { key: 'empty', label: '没有技能', type: 'toggle', value: false },
+        { key: 'search', label: '搜索的字', type: 'text', value: '' },
+      ]}
+      render={(s) => (
+        // 页签和搜索只是初始状态：换了就重新挂载
+        <SkillPanel
+          key={`${s.tab}|${s.search}`}
+          status={s.status}
+          items={s.empty ? [] : SKILL_ITEMS}
+          categories={SKILL_CATEGORIES}
+          defaultTab={s.tab}
+          defaultSearch={s.search || undefined}
+        />
+      )}
+    />
   );
 }

@@ -96,6 +96,8 @@ for (const file of css) {
     }
     // 背景模糊只有两档，没有例外（11-05 用户定），「Figma 没变量」也不放过
     if (/backdrop-filter:\s*blur\(\s*[\d.]/.test(code)) report(file, i + 1, `写死了背景模糊：${code.trim()}（只用 --effect-glass-blur 32 或 --effect-mask-blur 16）`);
+    // 字号只用变量（11-05 用户定）；Markdown 正文照 Ant Design X，是设计规则里写明的例外
+    if (/font-size:\s*[\d.]+px/.test(code) && !file.includes('prose')) report(file, i + 1, `写死了字号：${code.trim()}（只用 --font-size-n）`);
     // 填充色阶只给名单里的静态色块（设计规则 · 颜色和底色），别处用 Container（11-05 用户定）
     if (/var\(--color-fill-[1-4]\)/.test(code) && !FILL_OK.some((c) => sel.includes(c))) report(file, i + 1, `直接用了填充色阶：${code.trim()}（先用 Container；确实不符的静态色块先加进设计规则的名单和 FILL_OK）`);
     if (raw.includes(NO_TOKEN_MARK)) return;

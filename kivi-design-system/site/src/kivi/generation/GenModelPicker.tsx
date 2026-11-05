@@ -1,5 +1,6 @@
 import { Fragment, forwardRef, useRef, useState, type ReactElement } from 'react';
 import { IconButton } from '../button';
+import { useControllable } from '../hooks';
 import { Dropdown, Menu, MenuItem, MenuLabel, type DropdownProps } from '../menu';
 import { TabItem, Tabs } from '../navigation';
 import { ScrollArea } from '../scroll-area';
@@ -11,13 +12,19 @@ import './generation.css';
 type GenModelType = 'image' | 'video';
 
 export interface GenModelPickerProps
-  extends Omit<DropdownProps, 'trigger' | 'children' | 'open' | 'defaultOpen' | 'onOpenChange' | 'anchorPoint' | 'matchTriggerWidth' | 'closeOnSelect' | 'haspopup'> {
+  extends Omit<DropdownProps, 'trigger' | 'children' | 'anchorPoint' | 'matchTriggerWidth' | 'closeOnSelect' | 'haspopup'> {
   /** 已经插进输入框的模型（值），用来算每组选满没有 */
   picked?: string[];
   /** 点了一个模型：插进输入框，面板关上。参数是选项和它在哪一组（图片 / 视频） */
   onPick?: (model: SelectOption, type: GenModelType) => void;
   /** 触发器，默认工具条上的方块图标按钮（画布 Agent）；主站 Agent 工具条传一个无底按钮 */
   trigger?: ReactElement;
+  /** 面板展开。传了就是受控 */
+  open?: boolean;
+  /** 非受控时一开始是否展开，默认收起 */
+  defaultOpen?: boolean;
+  /** 展开、收起时触发，参数是新的状态 */
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -27,10 +34,10 @@ export interface GenModelPickerProps
  * ref 给包住触发器的外壳 span（和 Dropdown 一样）。
  */
 export const GenModelPicker = forwardRef<HTMLSpanElement, GenModelPickerProps>(function GenModelPicker(
-  { picked = [], onPick, trigger, placement = 'top-start', ...rest },
+  { picked = [], onPick, trigger, open: openProp, defaultOpen = false, onOpenChange, placement = 'top-start', ...rest },
   ref,
 ) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
   const [active, setActive] = useState<GenModelType>('image');
   const viewport = useRef<HTMLDivElement>(null);
   const labels = useRef<Partial<Record<GenModelType, HTMLDivElement | null>>>({});
@@ -104,7 +111,7 @@ export const GenModelPicker = forwardRef<HTMLSpanElement, GenModelPickerProps>(f
                       </MenuItem>
                     );
                     return off ? (
-                      <Popover key={m.value} content={`最多同时选择 ${GEN_MODEL_MAX} 个${g.label}模型`} placement="right" delay={0} className="kv-gen-model-picker__tip">
+                      <Popover key={m.value} content={`最多同时选择 ${GEN_MODEL_MAX} 个${g.label}模型`} placement="right" delay={0} className="kv-gen-model-picker__tip" offset={14}>
                         {item}
                       </Popover>
                     ) : (

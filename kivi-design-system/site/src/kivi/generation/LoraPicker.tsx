@@ -103,7 +103,7 @@ export const LoraPicker = forwardRef<HTMLDivElement, LoraPickerProps>(function L
                 cover={item.cover}
                 base={item.base}
                 isNew={item.isNew}
-                selected={selected.includes(item.id)}
+                checked={selected.includes(item.id)}
                 collected={collected.includes(item.id)}
                 onCollectedChange={(c) => setCollected(c ? [...collected, item.id] : collected.filter((x) => x !== item.id))}
                 onClick={() => toggle(item.id)}
@@ -113,7 +113,7 @@ export const LoraPicker = forwardRef<HTMLDivElement, LoraPickerProps>(function L
         ) : (
           <div className="kv-lora-picker__empty">
             {tab === 'collected' && !filtered ? (
-              <EmptyState scene="favorite" title="还没有收藏的 Lora" description="在卡片右上角点星标收藏" />
+              <EmptyState type="favorite" title="还没有收藏的 Lora" description="在卡片右上角点星标收藏" />
             ) : (
               <EmptyState title="没有符合条件的 Lora" description="换个底模试试" />
             )}

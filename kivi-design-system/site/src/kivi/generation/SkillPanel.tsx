@@ -51,11 +51,21 @@ export interface SkillPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   defaultSearch?: string;
   /** 点了一个技能：插进输入框，面板关上 */
   onPick?: (skill: SkillItem) => void;
+  /** 加载失败时点「点击重试」：重新拉技能列表 */
+  onRetry?: () => void;
+  /** 点「创建新的技能」（「创建」下拉里）或「我的」空状态里的「创建技能」：去创建 */
+  onCreate?: () => void;
+  /** 点「导入已有技能」（「创建」下拉里）：去导入 */
+  onImport?: () => void;
+  /** 点头部的「全部技能」：去技能管理 */
+  onViewAll?: () => void;
+  /** 点某一行的「详情」，参数是那个技能 */
+  onDetail?: (skill: SkillItem) => void;
 }
 
 /** 技能面板本体（不带触发器），模板里直接摆出来看。Figma 还没有（待确认） */
 export const SkillPanel = forwardRef<HTMLDivElement, SkillPanelProps>(function SkillPanel(
-  { status = 'ready', items = [], categories = [], defaultTab = 'recommend', defaultSearch, onPick, className, ...rest },
+  { status = 'ready', items = [], categories = [], defaultTab = 'recommend', defaultSearch, onPick, onRetry, onCreate, onImport, onViewAll, onDetail, className, ...rest },
   ref,
 ) {
   const [tab, setTab] = useState(defaultTab);
@@ -90,7 +100,7 @@ export const SkillPanel = forwardRef<HTMLDivElement, SkillPanelProps>(function S
       return (
         <div className="kv-skill-panel__state">
           <span>加载失败</span>
-          <Button size={28} variant="light">
+          <Button size={28} variant="light" onClick={onRetry}>
             点击重试
           </Button>
         </div>
@@ -102,7 +112,11 @@ export const SkillPanel = forwardRef<HTMLDivElement, SkillPanelProps>(function S
           <EmptyState
             size={96}
             title="你还没有创建技能，开始创建吧"
-            action={<Button variant="light">创建技能</Button>}
+            action={
+              <Button variant="light" onClick={onCreate}>
+                创建技能
+              </Button>
+            }
             className="kv-skill-panel__state"
           />
         );
@@ -112,7 +126,7 @@ export const SkillPanel = forwardRef<HTMLDivElement, SkillPanelProps>(function S
       <ScrollArea className="kv-skill-panel__scroll" maxHeight="100%">
         <div className="kv-skill-panel__list" role="menu" aria-label="技能">
           {list.map((s) => (
-            <SkillRow key={s.id} skill={s} showPublic={tab === 'mine'} onPick={onPick} />
+            <SkillRow key={s.id} skill={s} showPublic={tab === 'mine'} onPick={onPick} onDetail={onDetail} />
           ))}
         </div>
       </ScrollArea>
@@ -126,15 +140,15 @@ export const SkillPanel = forwardRef<HTMLDivElement, SkillPanelProps>(function S
         <div className="kv-skill-panel__actions">
           <Dropdown placement="bottom-end" trigger={<Button size={28} variant="secondary" leftIcon="Add" rightIcon="DownArrowSmall">创建</Button>}>
             <Menu>
-              <MenuItem icon="Skill" description="通过与 Agent 对话创建">
+              <MenuItem icon="Skill" description="通过与 Agent 对话创建" onClick={onCreate}>
                 创建新的技能
               </MenuItem>
-              <MenuItem icon="Upload" description="上传 .md 文件或文件夹">
+              <MenuItem icon="Upload" description="上传 .md 文件或文件夹" onClick={onImport}>
                 导入已有技能
               </MenuItem>
             </Menu>
           </Dropdown>
-          <Button size={28} variant="secondary">
+          <Button size={28} variant="secondary" onClick={onViewAll}>
             全部技能
           </Button>
         </div>
@@ -177,7 +191,17 @@ export const SkillPanel = forwardRef<HTMLDivElement, SkillPanelProps>(function S
 SkillPanel.displayName = 'SkillPanel';
 
 /** 一行技能：两行菜单项 + 悬停出「详情」+ 左边出预览卡。技能没有不能点的状态 */
-function SkillRow({ skill, showPublic, onPick }: { skill: SkillItem; showPublic: boolean; onPick?: (skill: SkillItem) => void }) {
+function SkillRow({
+  skill,
+  showPublic,
+  onPick,
+  onDetail,
+}: {
+  skill: SkillItem;
+  showPublic: boolean;
+  onPick?: (skill: SkillItem) => void;
+  onDetail?: (skill: SkillItem) => void;
+}) {
   const label = (
     <>
       {skill.title}
@@ -212,7 +236,7 @@ function SkillRow({ skill, showPublic, onPick }: { skill: SkillItem; showPublic:
     >
       <div className="kv-skill-panel__row-inner">
         {item}
-        <Button size={28} variant="light" className="kv-skill-panel__detail">
+        <Button size={28} variant="light" className="kv-skill-panel__detail" onClick={() => onDetail?.(skill)}>
           详情
         </Button>
       </div>

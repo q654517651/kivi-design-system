@@ -38,7 +38,7 @@ export interface PopoverProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'con
   onOpenChange?: (open: boolean) => void;
   /** 出在触发元素哪边，默认下方居中；放不下自动翻到对面。top / bottom / left / right，可以带 -start / -end 对齐 */
   placement?: PopoverPlacement;
-  /** 离触发元素的距离。默认：提示、面板 10（箭头 6 + 空 4），长文 8（没有箭头） */
+  /** 离触发元素的距离。默认：提示 10（箭头 6 + 空 4）；长文和面板没有箭头，悬停出的 8、点开的 4 */
   offset?: number;
   /** 悬停多久后出现，毫秒，默认 200。只有悬停型用 */
   delay?: number;
@@ -106,7 +106,7 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
   const click = on === 'click';
   const panel = variant === 'panel';
   const long = variant === 'long';
-  const offset = offsetProp ?? (long ? 8 : 10);
+  const offset = offsetProp ?? (long ? 8 : panel ? (click ? 4 : 8) : 10);
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const skipFocus = useRef(false);
   // 这次出现 / 消失是不是「换一个」：是就不播动画（见 closeActiveHover）

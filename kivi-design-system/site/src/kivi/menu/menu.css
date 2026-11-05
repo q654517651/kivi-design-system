@@ -244,6 +244,15 @@
   background: var(--color-bg-fill-container-light-1); /* 选中是常驻底色，用 Light 1 默认 8%；悬停 12% */
 }
 
+/* 选中项悬停、键盘聚焦、按下：比选中亮一档（hover / pressed），选择器比上面选中那条更具体 */
+.kv-menu-item[aria-selected="true"]:where(:hover, :focus-visible, .is-hover):not(:disabled, [aria-disabled="true"], [data-editing]) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-menu-item[aria-selected="true"]:active:not(:disabled, [aria-disabled="true"], [data-editing]) {
+  background: var(--color-bg-fill-container-light-1-pressed);
+}
+
 /* 状态：禁用 */
 /* 有两行项的菜单最宽 320（单行的 240） */
 .kv-menu:has(> .kv-menu-item[data-two-line]) {
@@ -309,7 +318,7 @@
   flex: none;
 }
 
-.kv-menu-item:where(:hover, :focus-within, .is-hover, [aria-current="page"]) > .kv-menu-item__more,
+.kv-menu-item:where(:hover, :focus-visible, :has(:focus-visible), .is-hover, [aria-current="page"]) > .kv-menu-item__more,
 .kv-menu-item:has([aria-expanded="true"]) > .kv-menu-item__more {
   display: inline-flex;
 }
@@ -379,6 +388,15 @@
 
 .kv-menu--plain .kv-menu-item[aria-current="page"] {
   background: var(--color-bg-fill-container-light-1); /* 当前页是常驻底色：Light 1 默认 8% */
+}
+
+/* 当前页悬停、键盘聚焦、按下：比常驻底色亮一档（hover / pressed） */
+.kv-menu--plain .kv-menu-item[aria-current="page"]:where(:hover, :focus-visible, .is-hover):not(:disabled, [aria-disabled="true"], [data-editing]) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-menu--plain .kv-menu-item[aria-current="page"]:active:not(:disabled, [aria-disabled="true"], [data-editing]) {
+  background: var(--color-bg-fill-container-light-1-pressed);
 }
 
 /* 重命名中不出选中底色（要比上面那条更具体） */

@@ -1,6 +1,6 @@
 import { Demo, PageHeader } from '@shell';
 import { PreviewHost } from '../components/media.demos';
-import { CanvasHeaderPlayground, ConnectorPlayground, NodePlayground, NodeStackPlayground, PanelPlayground, PartsDemo, ViewControlsDemo } from './canvas.demos';
+import { AudioWavePlayground, CanvasHeaderPlayground, ConnectorPlayground, NodePlayground, NodeStackPlayground, NodeWrapperPlayground, PanelPlayground, PartsDemo, ViewControlsDemo } from './canvas.demos';
 
 <PageHeader
   eyebrow="业务组件"
@@ -10,6 +10,12 @@ import { CanvasHeaderPlayground, ConnectorPlayground, NodePlayground, NodeStackP
 />
 
 <PreviewHost />
+
+## NodeWrapper
+
+节点外框：每个节点外面包一层，带节点名、连接点、选中描边。
+
+<NodeWrapperPlayground />
 
 ## NodeCard
 
@@ -47,9 +53,15 @@ import { CanvasHeaderPlayground, ConnectorPlayground, NodePlayground, NodeStackP
 
 <CanvasHeaderPlayground />
 
-## AudioWave、CropHandles
+## AudioWave
 
-音频波形：在音频节点里看和拖播放位置。裁剪框：裁剪图片时拖边角选范围。
+音频波形：在音频节点里看和拖播放位置。
+
+<AudioWavePlayground />
+
+## CropHandles
+
+裁剪框：盖在图片上的拉伸手柄，拖动逻辑自己写。
 
 <PartsDemo />
 
@@ -100,7 +112,7 @@ import { CanvasHeaderPlayground, ConnectorPlayground, NodePlayground, NodeStackP
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `expanded` | `boolean` | `false` | 收起：后面只露两层底，样子同 MediaGroup 的叠放：往右错开 4 / 8，以中心旋转 2° / 4°，底白 18%（`--color-bg-fill-container-light-1-pressed`），圆角 16，不缩、没有阴影，里面的图藏起来，点不到；第 3 张起和第 2 层重合、不再加底。展开：铺成格子，间距 8，依次放右、上、右上，再往右每列两张；不歪不缩，阴影 0 10 30 黑 50%。动效弹簧 `--motion-ease-spring`，冲过头约 4%，一起动；时长 400ms 起，每多一张加 10ms，最多 700ms |
-| `children` | `ReactNode` | — | 每张一个 NodeCard，第一张是主图。主图右上的按钮条是收藏、全屏、下载 | NodeStackToggle；候选图是收藏、全屏、下载 | 「设为主图」，点候选图也是设为主图，设完收起 |
+| `children` | `ReactNode` | — | 每张一个 NodeCard，第一张是主图。主图右上的按钮条是收藏、全屏、下载、NodeStackToggle；候选图是收藏、全屏、下载、「设为主图」。点候选图也是设为主图，设完收起 |
 
 展开时选中节点；取消选中、开始生成都会收起。
 
@@ -149,7 +161,7 @@ import { CanvasHeaderPlayground, ConnectorPlayground, NodePlayground, NodeStackP
 | `width` | `number` | `240` | 宽，按两个连接点的水平距离拉伸 |
 | `height` | `number` | `48` | 高，按两个连接点的垂直距离拉伸 |
 | `direction` | `"up"` `"down"` `"flat"` | `"up"` | up 起点在下、终点在上；down 起点在上、终点在下；flat 同高，是直线（高给 2） |
-| `remove` | `boolean` `"hover"` | — | 删除按钮：`true` 一直显示；`"hover"` 悬停线时出现；不传没有。默认在中点，鼠标移动时跟到线上离鼠标最近的点，150ms ease-out |
+| `remove` | `boolean` `"hover"` | — | 删除按钮：`true` 一直显示；`"hover"` 悬停线时出现，键盘 Tab 到线上也出现（聚焦和悬停一样，不加描边）；不传没有。默认在中点，鼠标移动时跟到线上离鼠标最近的点，150ms ease-out。只有线本身（粗 16 的命中区）接鼠标，外框空白处不接，两条线的外框重叠也互不抢 |
 | `onRemove` | `() => void` | — | 点了删除按钮 |
 
 ### ConnectorDot
@@ -162,12 +174,20 @@ import { CanvasHeaderPlayground, ConnectorPlayground, NodePlayground, NodeStackP
 
 ### ConnectorRemove
 
-连线上的删除按钮，默认在中点。24 的圆，玻璃：底 `--color-bg-fill-glass`，1px `--color-border-subtle`，背景模糊 32，图标 `Cutting` 16。其余原生 `<button>` 属性都能传。
+连线上的删除按钮，默认在中点。24 的圆，玻璃：底 `--color-bg-fill-glass`，1px `--color-border-subtle`，背景模糊 32，图标 `Cutting` 16。悬停、按下：玻璃底上叠 `--color-bg-fill-container-light-1-hover` / `-pressed`，和玻璃按钮条里的无底按钮一样。其余原生 `<button>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `visible` | `boolean` | `true` | 出现：悬停或选中连线时 `true`，其余时候 `false`（淡出，读屏也读不到）。出现、消失 150ms |
 | `label` | `string` | `"删除连线"` | 说明，读屏用 |
+
+### 连线规则
+
+- 不能连自己，不能连成环。
+- 不能超过目标节点的输入上限。
+- 不能跨组连，组里不能再放组。
+- 上传类节点只有输出口，没有输入口。
+- 连到非法目标时的反馈样子还没定。
 
 ### NodePanel
 
@@ -243,7 +263,7 @@ import { CanvasHeaderPlayground, ConnectorPlayground, NodePlayground, NodeStackP
 | `onCanvasesChange` | `(canvases: CanvasItem[]) => void` | — | 新建、改名、复制、删除后的新列表 |
 | `value` | `string` | — | 当前画布的 id（受控） |
 | `defaultValue` | `string` | 第一个 | 当前画布（非受控） |
-| `onValueChange` | `(id: string) => void` | — | 切到别的画布 |
+| `onChange` | `(id: string) => void` | — | 切到别的画布 |
 | `max` | `number` | `30` | 一个工作区最多几个画布 |
 | `agentWorking` | `boolean` | `false` | Agent 正在工作，切画布先确认 |
 | `onOpenInNewWindow` | `(id: string) => void` | — | 「⋯」里的「在新窗口打开」 |

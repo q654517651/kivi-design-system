@@ -175,7 +175,7 @@ export function AnnotationDemo() {
           {draft && <AnnotationBox style={percent(draft)} handles={false} />}
         </div>
       </div>
-      <Button variant={mode ? 'primary' : 'secondary'} leftIcon="Crop" onClick={() => setMode(!mode)}>
+      <Button variant={mode ? 'primary' : 'secondary'} leftIcon="DragSelect" onClick={() => setMode(!mode)}>
         {mode ? '退出框选' : '框选'}
       </Button>
     </div>
@@ -183,6 +183,46 @@ export function AnnotationDemo() {
 }
 
 // ---------- 属性面板 ----------
+
+type BoxState = { label: string; handles: boolean; comment: string; text: string };
+
+/** 一张图上摆一个框：序号空着就是正在画的框（没有气泡） */
+function renderBox(s: BoxState, update: (patch: Partial<BoxState>) => void) {
+  const hasMarker = s.label !== '';
+  const comment =
+    !hasMarker || s.comment === 'none' ? undefined : s.comment === 'preview' ? (
+      <AnnotationComment collapsed value={s.text} />
+    ) : (
+      <AnnotationComment value={s.text} onChange={(text) => update({ text })} />
+    );
+  return (
+    <div style={{ position: 'relative', width: 360, height: 240, margin: '0 200px 120px 0' }}>
+      <img
+        src={`${IMG}kiwi-light-1x1.webp`}
+        alt=""
+        draggable={false}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 16 }}
+      />
+      <AnnotationBox style={percent(START[0].rect)} index={hasMarker ? s.label : undefined} handles={s.handles} comment={comment} />
+    </div>
+  );
+}
+
+export function AnnotationBoxPlayground() {
+  return (
+    <Playground<BoxState>
+      controls={[
+        { key: 'label', label: '序号', type: 'text', value: '1' },
+        { key: 'handles', label: '拖动圆点', type: 'toggle', value: true },
+        { key: 'comment', label: '评论', type: 'segment', value: 'none', options: [['none', '不出'], ['preview', '悬停预览'], ['edit', '编辑']] },
+        { key: 'text', label: '描述', type: 'text', value: START[0].text },
+      ]}
+      // 没有序号（正在画的框）就没有气泡，也挂不了评论
+      rules={(s) => (s.label === '' ? { comment: true, text: true } : s.comment === 'none' ? { text: true } : {})}
+      render={(s, update) => renderBox(s, update as (patch: Partial<BoxState>) => void)}
+    />
+  );
+}
 
 type MarkerState = { label: string };
 

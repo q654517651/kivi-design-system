@@ -13,6 +13,7 @@ import {
   MediaGroup,
   ThinkingBlock,
   type MediaGroupItem,
+  type MediaGroupType,
 } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 import { TOOL_FLOW, TOOL_FLOW_MS, GEN_TOOLS, HIDDEN_TOOLS, TOOL_GROUPS } from './agent-tools';
@@ -287,19 +288,34 @@ const RESULT_RATIOS: MediaGroupItem[] = [
 // 画布 Agent 侧栏 500，减去左右内边距大约 420
 const PANEL: CSSProperties = { ...COLUMN, width: 420, maxWidth: '100%' };
 
-/** 点标题行或叠放展开，点标题行收起 */
-export function MediaGroupDemo() {
+type MediaGroupState = { items: string; type: string; expand: string };
+
+const RESULT_SETS: Record<string, MediaGroupItem[]> = { mixed: RESULT_MIXED, ratios: RESULT_RATIOS };
+
+/** 点标题行或叠放展开，点标题行收起；展开写回面板 */
+function renderMediaGroup(s: MediaGroupState, update: Update) {
   return (
-    <div style={{ ...COLUMNS, gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))' }}>
-      <div style={PANEL}>
-        <div style={CAPTION}>中间有失败：封面取第一张成功的</div>
-        <MediaGroup items={RESULT_MIXED} />
-      </div>
-      <div style={PANEL}>
-        <div style={CAPTION}>比例不同：叠放跟第一张</div>
-        <MediaGroup items={RESULT_RATIOS} />
-      </div>
+    <div style={PANEL}>
+      <MediaGroup
+        items={RESULT_SETS[s.items]}
+        type={s.type as MediaGroupType}
+        expanded={s.expand === 'yes'}
+        onExpandedChange={(v) => update({ expand: v ? 'yes' : 'no' })}
+      />
     </div>
+  );
+}
+
+export function MediaGroupPlayground() {
+  return (
+    <Playground<MediaGroupState>
+      controls={[
+        { key: 'items', label: '结果', type: 'segment', value: 'mixed', options: [['mixed', '中间有失败'], ['ratios', '比例不同']] },
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频']] },
+        { key: 'expand', label: '展开', type: 'segment', value: 'no', options: [['no', '否'], ['yes', '是']] },
+      ]}
+      render={renderMediaGroup}
+    />
   );
 }
 

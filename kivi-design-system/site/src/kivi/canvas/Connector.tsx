@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type MouseEvent } from 'react';
+import { forwardRef, useEffect, useRef, useState, type CSSProperties, type FocusEvent, type HTMLAttributes, type MouseEvent } from 'react';
 import { composeHandlers } from '../hooks';
 import { cx } from '../utils';
 import { ConnectorRemove } from './ConnectorRemove';
@@ -15,8 +15,8 @@ export interface ConnectorProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
   height?: number;
   /** 走向：up 起点在下、终点在上（默认）；down 起点在上、终点在下；flat 同高，是一条直线（高给 2） */
   direction?: 'up' | 'down' | 'flat';
-  /** 删除按钮（ConnectorRemove）：true 一直显示；"hover" 鼠标移到线上才出现。不传就没有。Figma 里默认关。
-   *  鼠标在线上移动时，按钮沿着线跟过去（取线上离鼠标最近的点），照线上 */
+  /** 删除按钮（ConnectorRemove）：true 一直显示；"hover" 鼠标移到线上才出现，键盘 Tab 到这条线上也出现（聚焦和悬停一样）。不传就没有。Figma 里默认关。
+   *  鼠标在线上移动时，按钮沿着线跟过去（取线上离鼠标最近的点），照线上。只有线本身（粗 16 的范围）接鼠标，外框的空白处不接 */
   remove?: boolean | 'hover';
   /** 点了删除按钮 */
   onRemove?: () => void;
@@ -76,11 +76,15 @@ export const Connector = forwardRef<HTMLDivElement, ConnectorProps>(function Con
     onMouseEnter,
     onMouseLeave,
     onMouseMove,
+    onFocus,
+    onBlur,
     ...rest
   },
   ref,
 ) {
   const [hovered, setHovered] = useState(false);
+  /** 键盘聚焦（含删除按钮自己）：显示删除按钮，和悬停一样 */
+  const [focused, setFocused] = useState(false);
   /** 删除按钮的位置，SVG 坐标；null 是在中点 */
   const [at, setAt] = useState<Point | null>(null);
   /** 跟着鼠标滑：刚出现那一下直接放到鼠标处，不从上次的位置滑过来 */
@@ -124,6 +128,13 @@ export const Connector = forwardRef<HTMLDivElement, ConnectorProps>(function Con
     setFollowing(false);
     setHovered(false);
   };
+  const focusIn = (e: FocusEvent<HTMLDivElement>) => {
+    // 只认键盘聚焦；鼠标点线不算
+    if ((e.target as HTMLElement).matches(':focus-visible')) setFocused(true);
+  };
+  const focusOut = (e: FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);
+  };
   const removeAt = at ?? { x: width / 2, y: height / 2 };
 
   return (
@@ -134,17 +145,21 @@ export const Connector = forwardRef<HTMLDivElement, ConnectorProps>(function Con
       onMouseEnter={composeHandlers(onMouseEnter, remove ? enter : undefined)}
       onMouseLeave={composeHandlers(onMouseLeave, remove ? leave : undefined)}
       onMouseMove={composeHandlers(onMouseMove, remove ? follow : undefined)}
+      tabIndex={remove === 'hover' ? 0 : undefined}
+      onFocus={composeHandlers(onFocus, remove === 'hover' ? focusIn : undefined)}
+      onBlur={composeHandlers(onBlur, remove === 'hover' ? focusOut : undefined)}
       {...rest}
     >
       <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
         <path ref={lineRef} d={d} />
+        <path className="kv-connector__hit" d={d} />
         {status === 'flowing' && <path className="kv-connector__flow" d={d} />}
       </svg>
       {remove && (
         <ConnectorRemove
           className="kv-connector__remove"
           data-following={following ? '' : undefined}
-          visible={remove === true || hovered}
+          visible={remove === true || hovered || focused}
           onClick={onRemove}
           style={{ '--kv-remove-x': `${removeAt.x}px`, '--kv-remove-y': `${removeAt.y}px` } as CSSProperties}
         />

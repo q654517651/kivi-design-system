@@ -132,6 +132,10 @@ export const AudioParams = forwardRef<HTMLSpanElement, AudioParamsProps>(functio
             { value: 'happy', label: '开心' },
             { value: 'sad', label: '悲伤' },
             { value: 'angry', label: '愤怒' },
+            { value: 'fearful', label: '害怕' },
+            { value: 'disgusted', label: '厌恶' },
+            { value: 'surprised', label: '惊讶' },
+            { value: 'neutral', label: '中性' },
           ]}
           onChange={setEmotion}
         />

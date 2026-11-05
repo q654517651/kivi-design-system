@@ -64,6 +64,28 @@ function renderGenPrompt(s: GenPromptState) {
   );
 }
 
+type RefsState = { count: string; type: string; label: string };
+
+export function GenPromptRefsPlayground() {
+  return (
+    // 悬停浮层往下开，台子留够高度（样式在 main-site.mdx 顶上）
+    <div className="ms-pg-gen-prompt">
+      <Playground<RefsState>
+        controls={[
+          { key: 'count', label: '素材', type: 'segment', value: '4', options: [['1', '1 个'], ['4', '4 个'], ['5', '5 个'], ['6', '6 个（超出）']] },
+          { key: 'type', label: '类型', type: 'segment', value: 'mixed', options: [['image', '图片'], ['mixed', '混排']] },
+          { key: 'label', label: '参考方式', type: 'text', value: '全能参考' },
+        ]}
+        render={(s) => {
+          // 只放图片：把视频首帧、音频都当图片用
+          const items = (s.type === 'image' ? REFS.map((r): GenPromptRefItem => ({ type: 'image', src: r.src ?? `${IMG}kiwi-light-1x1.webp` })) : REFS).slice(0, Number(s.count));
+          return <GenPromptRefs label={s.label || '参考图'} items={items} />;
+        }}
+      />
+    </div>
+  );
+}
+
 export function GenPromptPlayground() {
   return (
     // 这个属性面板里浮层往下开，台子留够高度（样式在 main-site.mdx 顶上）

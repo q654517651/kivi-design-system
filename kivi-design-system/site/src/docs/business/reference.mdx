@@ -3,6 +3,8 @@ import {
   AnnotationChipDemo,
   AttachmentStripPlayground,
   MentionChipPlayground,
+  PreviewCardPlayground,
+  PreviewPopoverPlayground,
   ReferenceItemPlayground,
   ReferenceStackPlayground,
 } from './reference.demos';
@@ -41,6 +43,22 @@ import {
 
 <Demo noCode scope={{ AnnotationChipDemo }} code={`<AnnotationChipDemo />`} />
 
+## PreviewCard
+
+预览卡：悬停素材时看大图、名字、时长或说明。
+
+<PreviewCardPlayground />
+
+## PreviewPopover
+
+悬停预览：鼠标移到缩略图、引用标签上，弹出预览卡。
+
+<PreviewPopoverPlayground />
+
+## ReferenceFramePair
+
+首尾帧：视频的首帧、尾帧两格参考图，中间可以互换。
+
 ## 参数
 
 ### ReferenceStack
@@ -57,6 +75,7 @@ import {
 | `defaultExpanded` | `boolean` | `false` | 非受控时的初始状态 |
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 展开、收起时触发，参数是展开了没有 |
 | `maxWidth` | `number` | 输入框内容区宽度 | 展开后最宽多宽，超过横向滚动 |
+| `max` | `number` | 不限 | 最多放几个：放满了添加格和右下角的小圆加号隐藏，展开后卡片从最左边排起 |
 
 `items` 每一项：
 
@@ -67,7 +86,7 @@ import {
 | `name` | `string` | — | 名字，比如「图片1」：提示词里 @ 引用和读屏用，要和 @ 出来的一致，`referenceName(items, type)` 按类型给出下一个编号。卡片上不写名字，右上角写序号（按添加顺序 1、2、3…） |
 | `src` | `string` | — | 缩略图地址：图片、视频封面。音频不用 |
 | `duration` | `string` | — | 时长，视频、音频用，比如 `"8s"` `"15s"`，展开后显示在卡片左下角 |
-| `progress` | `number` | — | 上传进度 0–100。不传就是已经上传完；传了卡片盖一层黑 40%，中间是进度环 28 |
+| `progress` | `number` | — | 上传进度 0–100。不传就是已经上传完；传了卡片盖一层黑 40%，中间是进度环 36 |
 
 展开后鼠标移到某一张（上传中、没有图的除外）出预览卡：`PreviewCard`，放在 `Popover` 面板（玻璃底）里，出在卡片上方、左对齐，距离 8，和附件条是同一个。
 
@@ -117,7 +136,7 @@ import {
 | `type` | `"image"` `"video"` `"audio"` `"file"` | `"image"` | 类型。图片、视频是 160 见方的大图（圆角 8，图按比例完整放进去，不裁）；音频、文件是 56 缩略图加右边的字，宽 220 |
 | `src` | `string` | — | 大图地址：图片、视频封面 |
 | `name` | `ReactNode` | — | 名字，12 号 secondary，一行，超出省略 |
-| `description` | `ReactNode` | — | 说明，12 / 16 tertiary，最多 4 行。标注点的描述写这里 |
+| `description` | `ReactNode` | — | 说明，12 / 20 tertiary，最多 4 行。标注点的描述写这里 |
 | `duration` | `ReactNode` | — | 时长：视频写在大图左下角，音频写在名字下面 |
 | `ext` | `ReactNode` | — | 文件扩展名，文件用，写在名字下面 |
 | `box` | `{ x, y, width, height }` | — | 标注框：在大图上画 1.5px 品牌色的框，四个值是相对 160 见方大图的 0–1 比例 |
@@ -143,12 +162,12 @@ import {
 
 ### MentionChip
 
-提示词里的 @ 引用，输入框里和用户消息里是同一个。高 20（缩略图 16 上下左右都留 2），圆角 4，底 `--color-bg-fill-container-light-1`，1px `--color-border-subtle`；左 2 右 4；缩略图或图标 16 + 名字 14 / 20 `--color-text-fill-secondary`，间距 4。有图的（图片、视频封面、标注）放缩略图；只有图标的（音乐、技能、节点、模型、没封面的视频）直接放 16 的图标，白色 `--color-text-fill-primary`，不加底框、不加背景。整体不可编辑。其余原生 `<span>` 属性都能传。
+提示词里的 @ 引用，输入框里和用户消息里是同一个。高 20（缩略图 16 上下左右都留 2），圆角 4，底 `--color-bg-fill-container-light-1`，1px `--color-border-subtle`；左 2 右 4；缩略图或图标 16 + 名字 14 / 20 `--color-text-fill-secondary`，间距 4。有图的（图片、视频封面、标注）放缩略图；只有图标的（音频、技能、节点、模型、没封面的视频）直接放 16 的图标，白色 `--color-text-fill-primary`，不加底框、不加背景。整体不可编辑。其余原生 `<span>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `type` | `"image"` `"video"` `"music"` `"skill"` `"node"` `"annotation"` `"model"` | `"image"` | 图片 / 视频 / 音乐 / 技能 / 节点 / 标注点。前三种是素材，技能、节点是技能和画布节点，标注点是图上框出来的一块（见「标注」页），悬停出预览卡（`PreviewCard` 带标注框）；模型是模型偏好里选的模型，前面是厂商 Logo |
-| `src` | `string` | — | 缩略图地址，图片、视频用（视频传封面），标注传所在图片。音乐、技能、节点、模型不用传 |
+| `type` | `"image"` `"video"` `"audio"` `"skill"` `"node"` `"annotation"` `"model"` | `"image"` | 图片 / 视频 / 音频 / 技能 / 节点 / 标注点。前三种是素材，技能、节点是技能和画布节点，标注点是图上框出来的一块（见「标注」页），悬停出预览卡（`PreviewCard` 带标注框）；模型是模型偏好里选的模型，前面是厂商 Logo |
+| `src` | `string` | — | 缩略图地址，图片、视频用（视频传封面），标注传所在图片。音频、技能、节点、模型不用传 |
 | `icon` | `IconName` | — | 前面的图标（16、白色、不加底框）。音乐默认 `Music`，技能默认 `Skill`，节点默认 `Text`（文本节点；别的节点传自己类型的图标，比如 `ImageGeneration`），视频没传 `src` 时是 `Video`，一般不用传；模型必传，是模型自带的厂商 Logo（16、白色不透明） |
 | `index` | `number` `string` | — | 标注点的序号，只有标注点用：缩略图后面单独一格 12 的品牌色小气泡（左下是尖角），缩略图、气泡、文字间距都是 4 |
-| `children` | `ReactNode` | — | 名字，和参考图区里的名字对应，比如「图片1」「音乐1」；标注点写描述 |
+| `children` | `ReactNode` | — | 名字，和参考图区里的名字对应，比如「图片1」「音频1」；标注点写描述 |

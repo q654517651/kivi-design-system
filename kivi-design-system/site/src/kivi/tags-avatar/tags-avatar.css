@@ -5,7 +5,7 @@
   写法（React，见 Tag.tsx、Avatar.tsx、AssetThumb.tsx）
     标签：  <Tag>FLUX</Tag>   <Tag variant="on-media">4K</Tag>   <Tag variant="brand">已发布</Tag>
     头像：  <Avatar size={24} src="…" name="阿远" />   <Avatar size={24} name="Kivi 用户" />
-    缩略图：<AssetThumb size={56} type="image" src="…" />   <AssetThumb size={56} type="audio" />
+    缩略图：<AssetThumb size={56} type="image" src="…" />   <AssetThumb size={56} type="icon" icon="Music" />（音频）
   渲染出来的结构
     标签
       <span class="kv-tag kv-tag--default">FLUX</span>
@@ -14,7 +14,7 @@
       <span class="kv-avatar kv-avatar--24 kv-avatar--text" role="img" aria-label="Kivi 用户">K</span>
     素材缩略图
       <span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--image"><img src="…" alt=""></span>
-      <span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--audio"><span class="kv-icon" data-icon="Music"><svg/></span></span>
+      <span class="kv-asset-thumb kv-asset-thumb--56 kv-asset-thumb--icon"><span class="kv-icon" data-icon="Music"><svg/></span></span>
     is-hover 只给文档摆静态的悬停用，项目里不用写
 */
 
@@ -59,9 +59,8 @@
   object-fit: cover;
 }
 
-/* 类型：默认 */
+/* 类型：默认（底色由 .kv-tag 管，放进 Light 1 容器自动换 Light 2） */
 .kv-tag--default {
-  background: var(--color-bg-fill-container-light-1);
   color: var(--color-text-fill-secondary);
 }
 
@@ -92,7 +91,7 @@
   height: 16px;
   overflow: hidden;
   border-radius: var(--border-radius-round);
-  background: var(--color-bg-fill-container-light-1);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
   color: var(--color-text-fill-primary);
   font-family: var(--font-family);
   font-size: var(--font-size-10);
@@ -128,7 +127,7 @@
 
 /* 类型：图片 底白 10%，加载前垫着；文字 底白 18% */
 .kv-avatar--image {
-  background: var(--color-bg-fill-container-light-1);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
 }
 
 .kv-avatar--text {
@@ -207,14 +206,7 @@
   background: transparent;
 }
 
-/* 类型：音频。统一的渐变底 + 音符。这两个颜色 Figma 里没有变量 */
-.kv-asset-thumb--audio {
-  --kv-thumb-audio-from: #89A0BE; /* Figma 没变量 */
-  --kv-thumb-audio-to: #7286AA; /* Figma 没变量 */
-  background: linear-gradient(180deg, var(--kv-thumb-audio-from), var(--kv-thumb-audio-to));
-}
-
-/* 类型：图标（没封面时占位）。白 10% 底，图标不透明度 30%，图标可换 */
+/* 类型：图标（没封面时占位，音频也用它，图标换成 Music）。白 10% 底，图标不透明度 30%，图标可换 */
 /* 底按所在的底选档：深底 Light 1；放进带 Light 1 底的容器（芯片、参考格）里，容器把 --kv-nested-fill 设成 Light 2 */
 .kv-asset-thumb--icon {
   background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));

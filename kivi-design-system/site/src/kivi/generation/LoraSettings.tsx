@@ -1,16 +1,15 @@
 import { forwardRef, useState, type HTMLAttributes } from 'react';
 import { IconButton } from '../button';
-import { toast } from '../feedback';
 import { NumberInput } from '../inputs';
 import { Slider } from '../selection';
-import { useControllable, writeClipboard } from '../hooks';
+import { useControllable, useCopy } from '../hooks';
 import { cx } from '../utils';
 import './generation.css';
 
 export interface LoraSettingsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'onChange'> {
   /** Lora 名字，14 / 22，一行省略 */
   name: string;
-  /** 触发词。不传就不显示这一块。右边有复制按钮，点了复制并弹 Toast「复制成功」，失败弹「复制失败」 */
+  /** 触发词。不传就不显示这一块。右边有复制按钮，点了复制，图标换成对勾，失败弹 Toast「复制失败」 */
   triggerWords?: string;
   /** 提示词模版。不传就不显示这一块。最高 60，多了在里面滚动 */
   template?: string;
@@ -26,13 +25,8 @@ const MIN = 0;
 const MAX = 2;
 const clamp = (n: number) => Math.min(MAX, Math.max(MIN, Math.round(n * 10) / 10));
 
-/** 复制到剪贴板，成功弹 Toast「复制成功」，失败弹「复制失败」 */
-async function copy(text: string) {
-  if (await writeClipboard(text)) toast.success('复制成功');
-  else toast.error('复制失败');
-}
-
 function CopyBox({ title, text, scroll }: { title: string; text: string; scroll?: boolean }) {
+  const { copied, copy } = useCopy();
   return (
     <div className="kv-lora-settings__block">
       <div className="kv-lora-settings__label">{title}</div>
@@ -40,7 +34,7 @@ function CopyBox({ title, text, scroll }: { title: string; text: string; scroll?
         <div className="kv-lora-settings__text" title={scroll ? undefined : text}>
           {text}
         </div>
-        <IconButton icon="Copy" label={`复制${title}`} size={28} className="kv-lora-settings__copy" onClick={() => copy(text)} />
+        <IconButton icon={copied ? 'CheckSmall' : 'Copy'} label={copied ? '已复制' : `复制${title}`} size={28} className="kv-lora-settings__copy" onClick={() => copy(text)} />
       </div>
     </div>
   );

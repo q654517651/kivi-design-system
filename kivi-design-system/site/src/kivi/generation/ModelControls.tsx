@@ -1,4 +1,5 @@
-import { forwardRef, useState, type ReactNode } from 'react';
+import { forwardRef, type ReactNode } from 'react';
+import { useControllable } from '../hooks';
 import { AudioParams, VideoParams } from './GenParams';
 import { BackgroundSelect, ModelSelect, RatioSelect, RefModeSelect, SizeSelect, VoiceSelect, type GenSelectProps } from './GenSelects';
 import { DEFAULT_MODEL, VIDEO_FIRST_LAST_ONLY, VIDEO_WITH_AUDIO } from './options';
@@ -12,8 +13,12 @@ import { DEFAULT_MODEL, VIDEO_FIRST_LAST_ONLY, VIDEO_WITH_AUDIO } from './option
 type ModelSelectRest = Omit<GenSelectProps, 'value' | 'defaultValue' | 'onChange'>;
 
 export interface VideoModelControlsProps extends ModelSelectRest {
-  /** 一开始选哪个视频模型（值），默认 Seedance 2.0 */
+  /** 视频模型（值）。传了就是受控，参考方式、参数跟着它换；外面要按模型算消耗就传 */
+  model?: string;
+  /** 非受控时一开始选哪个视频模型（值），默认 Seedance 2.0 */
   defaultModel?: string;
+  /** 换了模型时触发，参数是新的模型值 */
+  onModelChange?: (model: string) => void;
   /** 参考方式那一格，默认不受控的 RefModeSelect；要跟着切参考区就自己传一个受控的 */
   refMode?: ReactNode;
 }
@@ -24,32 +29,36 @@ export interface VideoModelControlsProps extends ModelSelectRest {
  * refMode 默认是不受控的 RefModeSelect，要跟着切参考区就自己传一个受控的
  */
 export const VideoModelControls = forwardRef<HTMLSpanElement, VideoModelControlsProps>(function VideoModelControls(
-  { defaultModel = DEFAULT_MODEL.video, refMode = <RefModeSelect />, ...rest },
+  { model: modelProp, defaultModel = DEFAULT_MODEL.video, onModelChange, refMode = <RefModeSelect />, ...rest },
   ref,
 ) {
-  const [model, setModel] = useState(defaultModel);
+  const [model, setModel] = useControllable(modelProp, defaultModel, onModelChange);
   const audio = VIDEO_WITH_AUDIO.includes(model);
   return (
     <>
       <ModelSelect ref={ref} type="video" value={model} onChange={setModel} {...rest} />
       {!VIDEO_FIRST_LAST_ONLY.includes(model) && refMode}
-      <VideoParams key={audio ? 'audio' : 'silent'} audio={audio} />
+      <VideoParams audio={audio} />
     </>
   );
 });
 VideoModelControls.displayName = 'VideoModelControls';
 
 export interface ImageModelControlsProps extends ModelSelectRest {
-  /** 一开始选哪个图片模型（值），默认 GPT Image 2 */
+  /** 图片模型（值）。传了就是受控；外面要按模型算消耗就传 */
+  model?: string;
+  /** 非受控时一开始选哪个图片模型（值），默认 GPT Image 2 */
   defaultModel?: string;
+  /** 换了模型时触发，参数是新的模型值 */
+  onModelChange?: (model: string) => void;
 }
 
 /** 图片：模型 + 分辨率 + 比例；GPT Image 多一个背景（Figma 主站「图片生成 · GPT」示例） */
 export const ImageModelControls = forwardRef<HTMLSpanElement, ImageModelControlsProps>(function ImageModelControls(
-  { defaultModel = DEFAULT_MODEL.image, ...rest },
+  { model: modelProp, defaultModel = DEFAULT_MODEL.image, onModelChange, ...rest },
   ref,
 ) {
-  const [model, setModel] = useState(defaultModel);
+  const [model, setModel] = useControllable(modelProp, defaultModel, onModelChange);
   return (
     <>
       <ModelSelect ref={ref} type="image" value={model} onChange={setModel} {...rest} />
@@ -73,12 +82,7 @@ export const AudioModelControls = forwardRef<HTMLSpanElement, AudioModelControls
   { model: modelProp, onModelChange, ...rest },
   ref,
 ) {
-  const [inner, setInner] = useState(DEFAULT_MODEL.audio);
-  const model = modelProp ?? inner;
-  const change = (m: string) => {
-    setInner(m);
-    onModelChange?.(m);
-  };
+  const [model, change] = useControllable(modelProp, DEFAULT_MODEL.audio, onModelChange);
   return (
     <>
       <ModelSelect ref={ref} type="audio" value={model} onChange={change} {...rest} />

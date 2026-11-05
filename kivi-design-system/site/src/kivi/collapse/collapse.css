@@ -4,7 +4,7 @@
 
   写法（React，见 Collapse.tsx）
     <button aria-expanded={open} aria-controls={id} onClick={…}>标题</button>
-    <Collapse id={id} open={open} distance={200} gap={6}>…</Collapse>
+    <Collapse id={id} expanded={open} distance={200} gap={6}>…</Collapse>
   渲染出来的结构
     <div class="kv-collapse" data-open aria-hidden>
       <div class="kv-collapse__inner"><div class="kv-collapse__body">…</div></div>
@@ -43,4 +43,19 @@
 
 .kv-collapse__body {
   padding-top: var(--kv-collapse-gap, 0px);
+}
+
+/* 露一截（collapsedSize）：收起不淡出、不藏，高度在 --kv-collapse-size 和内容高 --kv-collapse-full 之间走，超出的裁掉。
+   不用 grid：grid 的收起是 0 到内容高，露一截时前一段会停在原地不动 */
+.kv-collapse[data-partial] {
+  display: block;
+  max-height: var(--kv-collapse-size);
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+  transition: max-height var(--kv-collapse-duration) var(--motion-ease-in-out);
+}
+
+.kv-collapse[data-partial][data-open] {
+  max-height: var(--kv-collapse-full);
 }

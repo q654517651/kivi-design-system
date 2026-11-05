@@ -100,6 +100,8 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   HD: { means: '高清、超分' },
   Rmbg: { means: '抠图、去背景', note: '自绘' },
   RemoveEle: { means: '消除、去除' },
+  DragSelect: { means: '框选、进标注态' },
+  TextEditing: { means: '编辑图里的文字' },
   ImageEditing: { means: '图片编辑', note: '自绘' },
   Brush: { means: '画笔' },
   BrushSize: { means: '笔刷大小', note: '自绘' },

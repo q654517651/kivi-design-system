@@ -1,9 +1,9 @@
-import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type KeyboardEvent } from 'react';
+import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type KeyboardEvent, type MouseEvent } from 'react';
 import { Button } from '../button';
 import { Dropdown, MenuItem, type DropdownPlacement } from '../menu';
 import { Icon } from '../Icon';
 import { cx } from '../utils';
-import { useControllable } from '../hooks';
+import { useControllable, usePresence } from '../hooks';
 import { Calendar, startOfDay } from './Calendar';
 import './date.css';
 
@@ -21,16 +21,18 @@ export interface DateRangePreset {
   value: string;
   /** 显示的字，比如「最近一周」 */
   label: string;
-  /** 往前推几天（含今天）。不写就是「全部」，起止都是空 */
+  /** 往前推几天（含今天），比如一周是 7。和 months 二选一 */
   days?: number;
+  /** 往前推几个日历月（含今天）：从今天往前数这么多个月的同一号，再加一天，比如 11 月 5 日往前一个月是 10 月 6 日；没有这一天的月取月底。和 days 二选一。days、months 都不写就是「全部」，起止都是空 */
+  months?: number;
 }
 
 /** 默认的四个预设：照线上 TimeRangeFilter */
 export const DATE_RANGE_PRESETS: DateRangePreset[] = [
   { value: 'all', label: '全部' },
   { value: 'week', label: '最近一周', days: 7 },
-  { value: 'month', label: '最近一个月', days: 30 },
-  { value: 'quarter', label: '最近三个月', days: 90 },
+  { value: 'month', label: '最近一个月', months: 1 },
+  { value: 'quarter', label: '最近三个月', months: 3 },
 ];
 
 export interface DateRangeFilterProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'onChange' | 'defaultValue'> {
@@ -65,6 +67,22 @@ export const formatShortDate = (d: Date) => `${String(d.getFullYear()).slice(2)}
 
 type Side = 'start' | 'end';
 
+const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const sameDate = (a: Date | null, b: Date | null) => (a && b ? a.getTime() === b.getTime() : a === b);
+
+/** 往前推 n 个日历月，保持几号；那个月没有这一天（3 月 31 日往前一个月）就取月底 */
+function monthsBack(d: Date, n: number) {
+  const last = new Date(d.getFullYear(), d.getMonth() - n + 1, 0).getDate();
+  return new Date(d.getFullYear(), d.getMonth() - n, Math.min(d.getDate(), last));
+}
+
+/** 预设对应的起止（含今天，结束是 today）。「全部」没有范围，返回 null */
+export function presetRange(p: DateRangePreset, today: Date): { start: Date; end: Date } | null {
+  if (p.days) return { start: addDays(today, -(p.days - 1)), end: today };
+  if (p.months) return { start: addDays(monthsBack(today, p.months), 1), end: today };
+  return null;
+}
+
 /**
  * 时间筛选：一个文字按钮（32），点开是玻璃面板：上面起止两个日期框，下面一列预设。
  * 点预设立刻生效并收起；点日期框，在这个框下面浮出第二层单月日历（Calendar），和框左对齐、离 4，压在预设上；
@@ -90,18 +108,27 @@ export const DateRangeFilter = forwardRef<HTMLSpanElement, DateRangeFilterProps>
   ref,
 ) {
   const [range, setRange] = useControllable(value, defaultValue, onChange);
-  const [open, setOpen] = useControllable(openProp, defaultOpen, (o) => {
-    if (!o) setSide(null);
-    onOpenChange?.(o);
-  });
+  const [open, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
   const [side, setSide] = useState<Side | null>(null);
   const today = startOfDay(max ?? new Date());
   const calId = useId();
   const fieldRefs = { start: useRef<HTMLButtonElement>(null), end: useRef<HTMLButtonElement>(null) };
 
+  // 面板关了（自己关、外面受控关都算）就收起日历，下次打开不直接浮出
+  const shown = open && !disabled;
+  useEffect(() => {
+    if (!shown) setSide(null);
+  }, [shown]);
+
+  // 日历层的出现、消失：关的时候先播 150ms 消失动画再卸掉，期间还要显示着关之前的那一边
+  const cal = usePresence(side !== null, 150);
+  const lastSide = useRef<Side>('start');
+  if (side) lastSide.current = side;
+  const calSide = side ?? lastSide.current;
+
   const preset = presets.find((p) => p.value === range.preset);
   const label =
-    preset && preset.days
+    preset && (preset.days || preset.months)
       ? preset.label
       : range.start || range.end
         ? `${range.start ? formatShortDate(range.start) : ''} ~ ${range.end ? formatShortDate(range.end) : ''}`.trim()
@@ -109,16 +136,30 @@ export const DateRangeFilter = forwardRef<HTMLSpanElement, DateRangeFilterProps>
 
   const pickPreset = (p: DateRangePreset) => {
     setSide(null);
-    if (!p.days) return setRange({ preset: p.value, start: null, end: null });
-    setRange({ preset: p.value, start: new Date(today.getFullYear(), today.getMonth(), today.getDate() - p.days + 1), end: today });
+    const r = presetRange(p, today);
+    setRange({ preset: p.value, start: r?.start ?? null, end: r?.end ?? null });
   };
 
+  // 选了一天：另一端保留。起止凑巧等于某个预设，就算选中那个预设
   const pickDay = (d: Date) => {
     const s = side;
     if (!s) return;
-    setRange({ preset: undefined, start: s === 'start' ? d : preset ? null : range.start, end: s === 'end' ? d : preset ? null : range.end });
+    const start = s === 'start' ? d : range.start;
+    const end = s === 'end' ? d : range.end;
+    const hit = presets.find((p) => {
+      const r = presetRange(p, today);
+      return r && sameDate(r.start, start) && sameDate(r.end, end);
+    });
+    setRange({ preset: hit?.value, start, end });
     setSide(null);
     fieldRefs[s].current?.focus();
+  };
+
+  // 点的是已经选中的那天：Calendar 不重复触发 onChange，这里直接收起日历
+  const closeOnSameDay = (e: MouseEvent<HTMLDivElement>) => {
+    if (!side || !(e.target as HTMLElement).closest('.kv-calendar__day[aria-selected="true"]:not([aria-disabled="true"])')) return;
+    setSide(null);
+    fieldRefs[side].current?.focus();
   };
 
   // 日历开着时 Esc 只关日历：挂在 window 的捕获阶段，比 Dropdown 挂在 document 上的先收到
@@ -141,7 +182,7 @@ export const DateRangeFilter = forwardRef<HTMLSpanElement, DateRangeFilterProps>
   };
 
   const field = (s: Side) => {
-    const v = preset ? null : range[s];
+    const v = range[s];
     return (
       <button
         ref={fieldRefs[s]}
@@ -166,7 +207,7 @@ export const DateRangeFilter = forwardRef<HTMLSpanElement, DateRangeFilterProps>
     <Dropdown
       ref={ref}
       className={cx('kv-date-range-filter', className)}
-      open={open && !disabled}
+      open={shown}
       onOpenChange={setOpen}
       placement={placement}
       haspopup="dialog"
@@ -197,20 +238,23 @@ export const DateRangeFilter = forwardRef<HTMLSpanElement, DateRangeFilterProps>
           ))}
         </div>
       </div>
-      {side && (
+      {cal.mounted && (
         <div
           id={calId}
-          key={side}
-          className={cx('kv-date-range__calendar', side === 'end' && 'kv-date-range__calendar--end')}
+          key={calSide}
+          className={cx('kv-date-range__calendar', calSide === 'end' && 'kv-date-range__calendar--end')}
           role="group"
-          aria-label={side === 'start' ? '选择开始日期' : '选择结束日期'}
+          aria-label={calSide === 'start' ? '选择开始日期' : '选择结束日期'}
+          data-state={cal.state}
+          aria-hidden={cal.state === 'closed' || undefined}
           onKeyDown={onPanelKey}
+          onClick={closeOnSameDay}
         >
           <Calendar
-            value={preset ? null : range[side]}
-            defaultMonth={(preset ? null : range[side] ?? (side === 'start' ? range.end : range.start)) ?? today}
-            max={side === 'start' && !preset && range.end ? range.end : today}
-            min={side === 'end' && !preset && range.start ? range.start : undefined}
+            value={range[calSide]}
+            defaultMonth={range[calSide] ?? (calSide === 'start' ? range.end : range.start) ?? today}
+            max={calSide === 'start' && range.end ? range.end : today}
+            min={calSide === 'end' && range.start ? range.start : undefined}
             onChange={pickDay}
           />
         </div>

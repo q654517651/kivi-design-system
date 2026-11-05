@@ -49,6 +49,10 @@ let current: ToastItem | null = null;
 let seq = 0;
 let hideTimer: number | undefined;
 let removeTimer: number | undefined;
+// 悬停、聚焦时暂停计时：left 是还剩多久，startedAt 是这一段计时开始的时间
+let paused = false;
+let left = 0;
+let startedAt = 0;
 const listeners = new Set<() => void>();
 
 const emit = () => listeners.forEach((l) => l());
@@ -78,11 +82,36 @@ function makeItem(id: number, o: ToastOptions): ToastItem {
   };
 }
 
-// 到点自己收起；加载中不收
+// 这一条要不要自己收起：加载中不收，duration 为 0 不收
+function autoHides(item: ToastItem) {
+  return item.type !== 'loading' && item.duration > 0;
+}
+
+function startTimer(item: ToastItem) {
+  startedAt = Date.now();
+  hideTimer = window.setTimeout(() => hide(item.id), left);
+}
+
+// 到点自己收起；鼠标停在上面时先不走，挪开后接着走剩下的时间
 function schedule(item: ToastItem) {
   window.clearTimeout(hideTimer);
-  if (item.type !== 'loading' && item.duration > 0) {
-    hideTimer = window.setTimeout(() => hide(item.id), item.duration);
+  hideTimer = undefined;
+  left = item.duration;
+  if (autoHides(item) && !paused) startTimer(item);
+}
+
+/** 给 Toaster 用：悬停或聚焦在这一条上时暂停计时，离开后接着走剩余时间 */
+export function setToastPaused(next: boolean) {
+  if (paused === next) return;
+  paused = next;
+  if (!current || current.leaving || !autoHides(current)) return;
+  if (next) {
+    if (hideTimer === undefined) return;
+    window.clearTimeout(hideTimer);
+    hideTimer = undefined;
+    left = Math.max(0, left - (Date.now() - startedAt));
+  } else if (hideTimer === undefined) {
+    startTimer(current);
   }
 }
 
@@ -112,6 +141,7 @@ function update(id: number, options: ToastOptions): boolean {
 function hide(id?: number) {
   if (!current || current.leaving || (id !== undefined && current.id !== id)) return;
   window.clearTimeout(hideTimer);
+  hideTimer = undefined;
   current = { ...current, leaving: true };
   emit();
   removeTimer = window.setTimeout(() => {

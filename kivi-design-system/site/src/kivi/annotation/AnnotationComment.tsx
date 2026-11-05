@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef, type HTMLAttributes, type KeyboardEvent } from 'react';
 import { Button, IconButton } from '../button';
 import { cx } from '../utils';
-import { useControllable } from '../hooks';
+import { composeHandlers, useControllable } from '../hooks';
 import './annotation.css';
 
 export interface AnnotationCommentProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'> {
@@ -36,7 +36,7 @@ export interface AnnotationCommentProps extends Omit<HTMLAttributes<HTMLDivEleme
 /**
  * 标注的评论浮层：挂在序号气泡右边。悬停是一行描述预览（不能操作）；点气泡后换成编辑面板：
  * 输入框随内容长高，最多 5 行再滚动；底栏左边删除，右边「发送」「添加到对话」，没写字两个都不可点；添加过之后「添加到对话」换成「更新」。
- * 玻璃底（会浮动、面积不大），宽 240，圆角 12，内边距 8。回车换行不发送，Esc 收起。
+ * 玻璃底（会浮动、面积不大），宽 240，圆角 12，内边距 8。回车换行不发送，焦点在面板里任何一处按 Esc 都收起。
  */
 export const AnnotationComment = forwardRef<HTMLDivElement, AnnotationCommentProps>(function AnnotationComment(
   {
@@ -54,6 +54,7 @@ export const AnnotationComment = forwardRef<HTMLDivElement, AnnotationCommentPro
     onUpdate,
     onCollapse,
     className,
+    onKeyDown,
     ...rest
   },
   ref,
@@ -80,14 +81,26 @@ export const AnnotationComment = forwardRef<HTMLDivElement, AnnotationCommentPro
 
   if (collapsed) {
     return (
-      <div ref={ref} className={cx('kv-annotation-comment', 'kv-annotation-comment--collapsed', className)} {...rest}>
+      <div ref={ref} className={cx('kv-annotation-comment', 'kv-annotation-comment--collapsed', className)} onKeyDown={onKeyDown} {...rest}>
         <div className="kv-annotation-comment__preview">{value}</div>
       </div>
     );
   }
 
   return (
-    <div ref={ref} className={cx('kv-annotation-comment', className)} {...rest}>
+    <div
+      ref={ref}
+      className={cx('kv-annotation-comment', className)}
+      onKeyDown={composeHandlers(onKeyDown, (e: KeyboardEvent<HTMLDivElement>) => {
+        // 键盘事件不往上冒，免得触发画布的删除节点这类快捷键；焦点在输入框、发送、删除上，Esc 都收起
+        e.stopPropagation();
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          onCollapse?.();
+        }
+      })}
+      {...rest}
+    >
       <textarea
         ref={field}
         className="kv-annotation-comment__field"
@@ -96,14 +109,6 @@ export const AnnotationComment = forwardRef<HTMLDivElement, AnnotationCommentPro
         rows={1}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
-          // 键盘事件不往上冒，免得触发画布的删除节点这类快捷键
-          e.stopPropagation();
-          if (e.key === 'Escape') {
-            e.preventDefault();
-            onCollapse?.();
-          }
-        }}
       />
       <div className="kv-annotation-comment__footer">
         <IconButton icon="Delete" label="删除标注" size={28} onClick={onDelete} />

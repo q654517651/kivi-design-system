@@ -4,8 +4,23 @@ import { composeHandlers } from './composeHandlers';
 // 组件库内部共用，从 hooks/ 引，不从入口导出。
 // 拖文件进来的公用逻辑：PromptBox 的 DropOverlay、画布 Agent 输入框都用它。
 
-/** 为什么拒收：类型不对 / 超过大小 */
-export type FileRejectReason = 'type' | 'size';
+/**
+ * 为什么拒收：类型不对 / 超过大小 / 时长 / 分辨率 / 宽高比。
+ * 后三种要读了媒体信息才知道，hook 自己只判断前两种；业务读完媒体信息后自己用这三种调 rejectMessage
+ */
+export type FileRejectReason = 'type' | 'size' | 'duration' | 'resolution' | 'ratio';
+
+/** 拒收文案里要写进去的数字（上限、下限），照线上的上传校验 */
+export interface FileLimits {
+  /** 单个文件最大多少字节 */
+  maxSize?: number;
+  /** 时长下限、上限，单位秒 */
+  minDuration?: number;
+  maxDuration?: number;
+  /** 分辨率（短边像素）下限、上限 */
+  minResolution?: number;
+  maxResolution?: number;
+}
 
 export interface FileRule {
   /** 收哪些文件，写法和 `<input accept>` 一样：`image/*`、`image/png`、`.pdf`，逗号隔开。不传不限 */
@@ -53,11 +68,28 @@ export function filterFiles(files: File[], rule: FileRule): { accepted: File[]; 
   return { accepted, rejected, reason };
 }
 
-/** 拒收时提示的文字 */
-export function rejectMessage(reason: FileRejectReason, maxSize?: number): string {
-  if (reason === 'type' || maxSize == null) return '不支持这种文件';
-  const mb = Math.round((maxSize / 1024 / 1024) * 10) / 10;
-  return `文件超过 ${mb} MB`;
+/** 拒收时提示的文字，文案照线上的上传校验：带上限、下限的数字 */
+export function rejectMessage(reason: FileRejectReason, limits: FileLimits = {}): string {
+  const { maxSize, minDuration, maxDuration, minResolution, maxResolution } = limits;
+  switch (reason) {
+    case 'size': {
+      if (maxSize == null) return '不支持这种文件';
+      const mb = Math.round((maxSize / 1024 / 1024) * 10) / 10;
+      return `上传失败 文件大小不能超过${mb}MB`;
+    }
+    case 'duration':
+      if (maxDuration != null) return `上传失败 时长不能超过${maxDuration}s`;
+      if (minDuration != null) return `上传失败 时长不能小于${minDuration}s`;
+      return '上传失败 时长不符合要求';
+    case 'resolution':
+      if (maxResolution != null) return `上传失败 分辨率不能超过${maxResolution}p`;
+      if (minResolution != null) return `上传失败 分辨率不能低于${minResolution}p`;
+      return '上传失败 分辨率不符合要求';
+    case 'ratio':
+      return '上传失败 图片宽高比需在 1:2.5～2.5:1 之间';
+    default:
+      return '不支持这种文件';
+  }
 }
 
 export interface UseFileDropOptions extends FileRule {

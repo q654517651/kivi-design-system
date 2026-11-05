@@ -1,6 +1,6 @@
 import { Demo, PageHeader } from '@shell';
 import { PreviewHost } from '../components/media.demos';
-import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
+import { GenPromptPlayground, GenPromptRefsPlayground, ResultTilePlayground } from './main-site.demos';
 
 <style>{`
   /* 这一页的演示用 */
@@ -45,6 +45,12 @@ import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
 生成记录头：一条生成记录上面的提示词和参数，能复制。
 
 <GenPromptPlayground />
+
+## GenPromptRefs
+
+参考区：生成记录头里，一排参考素材的缩略图和参考方式，悬停看全部素材。
+
+<GenPromptRefsPlayground />
 
 ## ResultTile
 

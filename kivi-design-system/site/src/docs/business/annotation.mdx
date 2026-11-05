@@ -1,5 +1,5 @@
 import { Demo, PageHeader } from '@shell';
-import { AnnotationCommentPlayground, AnnotationDemo, AnnotationMarkerPlayground } from './annotation.demos';
+import { AnnotationBoxPlayground, AnnotationCommentPlayground, AnnotationDemo, AnnotationMarkerPlayground } from './annotation.demos';
 
 <PageHeader
   eyebrow="业务组件"
@@ -11,6 +11,10 @@ import { AnnotationCommentPlayground, AnnotationDemo, AnnotationMarkerPlayground
 ## AnnotationBox
 
 标注框：在图片上框出一块。
+
+<AnnotationBoxPlayground />
+
+### 在图片节点上框选
 
 <Demo noCode scope={{ AnnotationDemo }} code={`<AnnotationDemo />`} />
 
@@ -38,7 +42,7 @@ import { AnnotationCommentPlayground, AnnotationDemo, AnnotationMarkerPlayground
 | `handles` | `boolean` | `true` | 左上、右下两个拖动圆点，常驻显示。正在画的框不要 |
 | `comment` | `ReactNode` | — | 评论浮层：放 `AnnotationComment` |
 | `onMarkerClick` | `() => void` | — | 点气泡：进入编辑 |
-| `onMarkerPointerEnter` / `onMarkerPointerLeave` | `() => void` | — | 鼠标移进、移出气泡：悬停出一行预览 |
+| `onMarkerPointerEnter` / `onMarkerPointerLeave` | `() => void` | — | 鼠标移进、移出气泡，键盘聚焦、移开也触发：悬停出一行预览 |
 | `onHandlePointerDown` | `(corner: "tl" \| "br", event) => void` | — | 在圆点上按下：开始拖，固定对角那个点，拖的逻辑自己写 |
 
 ### AnnotationMarker
@@ -67,7 +71,7 @@ import { AnnotationCommentPlayground, AnnotationDemo, AnnotationMarkerPlayground
 | `onSend` | `() => void` | — | 点「发送」：直接把这条标注和描述发给 Agent |
 | `onAddToChat` | `() => void` | — | 点「添加到对话」：把这条标注作为引用放进对话输入框 |
 | `onUpdate` | `() => void` | — | 点「更新」：用新的描述更新对话输入框里的引用 |
-| `onCollapse` | `() => void` | — | 按 Esc：只收起，不发送 |
+| `onCollapse` | `() => void` | — | 焦点在面板里任何一处按 Esc：只收起，不发送 |
 
 ### 提示条
 

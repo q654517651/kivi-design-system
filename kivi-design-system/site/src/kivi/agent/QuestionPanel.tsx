@@ -15,6 +15,10 @@ export interface QuestionPanelProps extends Omit<HTMLAttributes<HTMLElement>, 't
   onPrev?: () => void;
   /** 点分页右边的「下一题」 */
   onNext?: () => void;
+  /** 「上一题」不能点：第一题时用 */
+  prevDisabled?: boolean;
+  /** 「下一题」不能点：最后一题时用 */
+  nextDisabled?: boolean;
   /** 多选：默认单选，只有一项选中，选项和「其他」互斥（选了选项清掉「其他」里的字，在「其他」打字清掉已选的）；多选可以选多项 */
   multiple?: boolean;
   /** 选中的值：受控。单选最多一项，值是 QuestionOption 的 value */
@@ -29,6 +33,12 @@ export interface QuestionPanelProps extends Omit<HTMLAttributes<HTMLElement>, 't
   skipText?: ReactNode;
   /** 点「忽略」 */
   onSkip?: () => void;
+  /** 显示「全部由 AI 决策」（Button 次要）：不答了，剩下的都交给 AI 决定，默认开 */
+  aiDecide?: boolean;
+  /** 「全部由 AI 决策」按钮的文字，默认「全部由 AI 决策」 */
+  aiDecideText?: ReactNode;
+  /** 点「全部由 AI 决策」。对应的 AskRecord 用 `status="skipped"`、`skippedText="交给 AI 决策"` */
+  onAiDecide?: () => void;
   /** 「确认提交」按钮的文字，默认「确认提交」 */
   submitText?: ReactNode;
   /** 点「确认提交」。一项都没选、「其他」也没填字时按钮不能点 */
@@ -46,6 +56,8 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
     pager,
     onPrev,
     onNext,
+    prevDisabled = false,
+    nextDisabled = false,
     multiple = false,
     value: valueProp,
     defaultValue = [],
@@ -53,6 +65,9 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
     skip = true,
     skipText = '忽略',
     onSkip,
+    aiDecide = true,
+    aiDecideText = '全部由 AI 决策',
+    onAiDecide,
     submitText = '确认提交',
     onSubmit,
     disabled = false,
@@ -133,9 +148,9 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
         <div className="kv-question-panel__title">{title}</div>
         {pager != null && (
           <div className="kv-question-panel__pager">
-            <IconButton tooltip={false} icon="LeftArrowSmall" label="上一题" size={28} variant="text" onClick={onPrev} disabled={disabled} />
+            <IconButton tooltip={false} icon="LeftArrowSmall" label="上一题" size={28} variant="text" onClick={onPrev} disabled={disabled || prevDisabled} />
             <span>{pager}</span>
-            <IconButton tooltip={false} icon="RightArrowSmall" label="下一题" size={28} variant="text" onClick={onNext} disabled={disabled} />
+            <IconButton tooltip={false} icon="RightArrowSmall" label="下一题" size={28} variant="text" onClick={onNext} disabled={disabled || nextDisabled} />
           </div>
         )}
       </div>
@@ -154,6 +169,11 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
         {skip && (
           <Button variant="text" onClick={onSkip} disabled={disabled}>
             {skipText}
+          </Button>
+        )}
+        {aiDecide && (
+          <Button variant="secondary" onClick={onAiDecide} disabled={disabled}>
+            {aiDecideText}
           </Button>
         )}
         <Button variant="primary" onClick={onSubmit} disabled={disabled || !canSubmit}>

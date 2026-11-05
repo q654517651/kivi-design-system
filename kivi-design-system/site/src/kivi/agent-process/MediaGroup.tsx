@@ -87,7 +87,7 @@ type Rect = { x: number; y: number; w: number; h: number };
 /**
  * 生成结果组：Agent 对话里同步的画布节点。标题行 + 结果，收起是叠放，展开是瀑布流。
  * 叠放的封面取第一张成功的（全失败取第一张），叠放比例跟封面走；只有一张时不能收起。
- * 动画只动 transform，缓动 --motion-ease-expand；展开 400ms 起，每多一张加 10ms，最多 700ms，收起固定 300ms。
+ * 卡片只动 transform，容器高度用同一条曲线、同一个时长，缓动 --motion-ease-expand；展开 400ms 起，每多一张加 10ms，最多 700ms，收起固定 300ms。
  */
 export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function MediaGroup(
   {
@@ -225,7 +225,7 @@ export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function M
             >
               {tileFailed ? (
                 <span className="kv-media-group__failed">
-                  <EmptyState scene="failed" size={96} title={failedTitle} description={failedDescription} />
+                  <EmptyState type="failed" size={96} title={failedTitle} description={failedDescription} />
                 </span>
               ) : (
                 it.src && <img className="kv-media-group__media" src={it.src} alt="" draggable={false} />

@@ -57,7 +57,6 @@
   /* 品牌色 */
   --color-brand-solid: #2BFF75;
   --color-brand-hover: #5CFF95;
-  --color-brand-pressed: #1FD962;
   --color-brand-subtle: rgba(43, 255, 117, 0.12);
   --color-brand-gradient-1: #CEFF5D;
   --color-brand-gradient-2: #2BFF75;
@@ -80,10 +79,8 @@
   --g-workflow-line-color-drawing: rgba(255, 255, 255, 0.35);
   --g-workflow-line-color-active: rgba(255, 255, 255, 0.55);
   --g-workflow-line-color-flowing: rgba(255, 255, 255, 0.9);
-  --g-workflow-line-color-error: rgba(255, 255, 255, 0.6);
 
   /* 间距 */
-  --spacing-0: 0px;
   --spacing-2: 2px;
   --spacing-4: 4px;
   --spacing-6: 6px;
@@ -104,7 +101,6 @@
 
   /* 描边粗细 */
   --border-width-1: 1px;
-  --border-width-1-25: 1.25px;
   --border-width-1-5: 1.5px;
 
   /* 字号、行高、字重、字体 */

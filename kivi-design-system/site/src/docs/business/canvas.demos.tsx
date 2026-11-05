@@ -30,9 +30,9 @@ import {
   RefModeSelect,
   VideoModelControls,
   type AttachmentItem,
+  type ConnectorDotStatus,
   type ConnectorStatus,
   type IconButtonProps,
-  type IconName,
   type MinimapRect,
   type NodeCardStatus,
   type NodeMediaType,
@@ -236,8 +236,6 @@ function edgeBox(from: NodeDef, to: NodeDef) {
 
 // ---------- 选中后：节点工具栏、生成面板 ----------
 
-const HISTORY = 'History' as IconName; // History 图标新图标库里还没有，先留空位
-
 /** 节点工具栏：「模板 · 画布」页 4 条里按节点类型取。音频没有画 */
 function toolbarOf(type: NodeMediaType | 'group') {
   switch (type) {
@@ -276,8 +274,10 @@ function toolbarOf(type: NodeMediaType | 'group') {
           <Button variant="text" leftIcon="HD">高清</Button>
           <Button variant="text" leftIcon="SmartEditing">重绘</Button>
           <Button variant="text" leftIcon="RemoveEle">元素去除</Button>
+          <Button variant="text" leftIcon="DragSelect">框选</Button>
+          <Button variant="text" leftIcon="TextEditing">编辑文字</Button>
           <Divider orientation="vertical" />
-          <TipButton icon="ImageToText" label="反推提示词" />
+          <TipButton icon="ImageToText" label="图推词" />
           <TipButton icon="Download" label="下载" />
           <TipButton icon="FullScreen" label="全屏" />
         </ButtonGroup>
@@ -289,10 +289,10 @@ function toolbarOf(type: NodeMediaType | 'group') {
           <Button variant="text" leftIcon="HD">高清</Button>
           <Button variant="text" leftIcon="Connecting">拼接</Button>
           <Button variant="text" leftIcon="Rmbg">抠图</Button>
-          <Button variant="text" leftIcon="Cutting">剪辑</Button>
           <Button variant="text" leftIcon="Pack">封装</Button>
+          <Button variant="text" leftIcon="Cutting">剪辑</Button>
           <Divider orientation="vertical" />
-          <TipButton icon="ImageToText" label="反推提示词" />
+          <TipButton icon="ImageToText" label="视频推词" />
           <TipButton icon="Download" label="下载" />
           <TipButton icon="FullScreen" label="全屏" />
         </ButtonGroup>
@@ -768,6 +768,57 @@ export function NodePlayground() {
   );
 }
 
+// ---------- 拆解：节点外框 ----------
+
+type WrapperPg = { ratio: string; name: boolean; selected: boolean; left: string; right: string };
+
+const DOT_OPTIONS: [string, string][] = [
+  ['none', '无'],
+  ['default', '默认'],
+  ['connected', '已连接'],
+  ['highlight', '高亮'],
+];
+
+/** 节点外框：比例、节点名、选中描边、左右连接点（连接点的三种状态也在这里切）。点一下节点切换选中 */
+export function NodeWrapperPlayground() {
+  return (
+    <Playground<WrapperPg>
+      stageClassName="cv-pg-canvas cv-pg-wrapper"
+      controls={[
+        {
+          key: 'ratio',
+          label: '比例',
+          type: 'segment',
+          value: '1:1',
+          options: [
+            ['1:1', '1:1'],
+            ['3:4', '3:4'],
+            ['16:9', '16:9'],
+            ['4:3', '4:3'],
+            ['9:16', '9:16'],
+          ],
+        },
+        { key: 'name', label: '显示节点名', type: 'toggle', value: true },
+        { key: 'selected', label: '选中', type: 'toggle', value: false },
+        { key: 'left', label: '左连接点', type: 'segment', value: 'default', options: DOT_OPTIONS },
+        { key: 'right', label: '右连接点', type: 'segment', value: 'connected', options: DOT_OPTIONS },
+      ]}
+      render={(s, update) => (
+        <NodeWrapper
+          ratio={s.ratio as NodeWrapperRatio}
+          name={s.name ? '图片节点' : undefined}
+          selected={s.selected}
+          leftDot={s.left === 'none' ? undefined : (s.left as ConnectorDotStatus)}
+          rightDot={s.right === 'none' ? undefined : (s.right as ConnectorDotStatus)}
+          onClick={() => update({ selected: !s.selected })}
+        >
+          {cardOf(nodeOf('image'), RUN)}
+        </NodeWrapper>
+      )}
+    />
+  );
+}
+
 // ---------- 拆解：多图节点 ----------
 
 const STACK_IMAGES = ['kiwi-light', 'ip-future', 'monstera-dots', 'bunny-gouache'].map((n) => `${IMG}${n}-1x1.webp`);
@@ -978,26 +1029,48 @@ export function CanvasHeaderPlayground() {
   );
 }
 
+// ---------- 拆解：音频波形 ----------
+
+type WavePg = { progress: string; drag: boolean; disabled: boolean };
+
+/** 音频波形：播放位置、能不能拖（传不传 onProgressChange）、禁用。拖动、点击、方向键改了位置会写回面板 */
+export function AudioWavePlayground() {
+  return (
+    <Playground<WavePg>
+      stageClassName="cv-pg-canvas"
+      controls={[
+        { key: 'progress', label: '播放位置（0–100）', type: 'text', value: '49' },
+        { key: 'drag', label: '能拖动', type: 'toggle', value: true },
+        { key: 'disabled', label: '禁用', type: 'toggle', value: false },
+      ]}
+      rules={(s) => (s.drag ? {} : { disabled: true })}
+      render={(s, update) => {
+        const progress = Math.min(100, Math.max(0, Number(s.progress) || 0));
+        return (
+          <div style={{ width: 284 }}>
+            <AudioWave
+              progress={progress}
+              disabled={s.drag && s.disabled ? true : undefined}
+              onProgressChange={s.drag ? (v) => update({ progress: String(Math.round(v)) }) : undefined}
+            />
+          </div>
+        );
+      }}
+    />
+  );
+}
+
 // ---------- 拆解：其他零件 ----------
 
 /** 其他零件各摆一个，下面写名字 */
 export function PartsDemo() {
   const parts: [string, ReactElement][] = [
-    ['AudioWave', <div style={{ width: 284 }}><AudioWave /></div>],
     [
       'CropHandles',
       <div className="cv-part-crop">
         <img src={`${IMG}kiwi-light-1x1.webp`} alt="" />
         <CropHandles />
       </div>,
-    ],
-    [
-      'ButtonGroup · 56',
-      <ButtonGroup variant="surface" size={56} aria-label="画布工具栏">
-        <TipButton icon="Add" label="添加" variant="primary" />
-        <TipButton icon={HISTORY} label="历史" />
-        <TipButton icon="Upload" label="上传" />
-      </ButtonGroup>,
     ],
   ];
   return (

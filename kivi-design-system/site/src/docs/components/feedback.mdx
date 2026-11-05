@@ -106,7 +106,7 @@ import {
 | `text` | `ReactNode` | — | 提示文字 |
 | `action` | `ReactNode` | — | 操作文字，点了先调 `onAction`，再收起这一条 |
 | `onAction` | `() => void` | — | 点操作文字 |
-| `duration` | `number` | `3000` | 停留毫秒。`0` 是不自己消失；加载中不管填多少都不自己消失 |
+| `duration` | `number` | `3000` | 停留毫秒。`0` 是不自己消失；加载中不管填多少都不自己消失。鼠标停在 Toast 上、或键盘聚焦进去时暂停计时，离开后接着走剩下的时间 |
 
 `Toaster` 的 `className`、`ref` 和其余原生 `<div>` 属性落在外层 `.kv-toaster` 上。
 
@@ -183,11 +183,11 @@ import {
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `scene` | `"empty"` `"favorite"` `"offline"` `"failed"` | `"empty"` | 暂无内容 / 暂无收藏 / 无网络 / 生成失败。换的是 IP 图，样式一样 |
+| `type` | `"empty"` `"favorite"` `"offline"` `"failed"` | `"empty"` | 暂无内容 / 暂无收藏 / 无网络 / 生成失败。换的是 IP 图，样式一样 |
 | `size` | `160` `96` | `160` | 插图边长。160（页面、大面板）：间距 16，标题 16 / 24 粗 primary，描述 14 / 22 tertiary。96（下拉、侧栏）：间距 8，标题 14 / 22 粗 secondary，描述 12 / 20 tertiary。标题和描述间距都是 4 |
 | `title` | `ReactNode` | — | 标题，必填，一句话说清楚现在是什么情况 |
 | `description` | `ReactNode` | — | 说明，写清楚下一步做什么。下拉里不要 |
 | `action` | `ReactNode` | — | 引导操作，放一个 32 的轻 `Button`（占位处的按钮都减弱一档，文字灰），离文字 24 |
-| `image` | `string` | — | 换一张插图的地址；不传就按 `scene` 取 `EMPTY_STATE_IMAGES` |
+| `image` | `string` | — | 换一张插图的地址；不传就按 `type` 取 `EMPTY_STATE_IMAGES` |
 
 四张 IP 图在 `assets/empty-state/`（`empty.png` · `no-favorites.png` · `offline.png` · `failed.png`，320×320），项目里放到自己的静态目录后改 `EMPTY_STATE_IMAGES`。插图背后有绿色光晕，脚下有地面阴影。其余原生 `<div>` 属性（除 `title`）都能传。

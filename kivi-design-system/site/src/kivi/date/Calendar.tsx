@@ -94,6 +94,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
   const pick = (d: Date) => {
     if (isDisabled(d)) return;
     setFocus(d);
+    // 点的就是已经选中的那天：什么都没变，不再触发 onChange
+    if (sameDay(d, selected)) return;
     setSelected(d);
   };
 

@@ -84,8 +84,9 @@ interface CardLayout {
   hidden: boolean;
 }
 
-function cardLayout(index: number, count: number, open: boolean): CardLayout {
-  if (open) return { tx: STEP * (index + 1), ty: 0, rot: 0, scale: 1, opacity: 1, z: index + 1, label: true, hidden: false };
+/** lead：展开后卡片前面有几格添加格，满了（`max`）添加格隐藏就是 0，平时是 1 */
+function cardLayout(index: number, count: number, open: boolean, lead = 1): CardLayout {
+  if (open) return { tx: STEP * (index + lead), ty: 0, rot: 0, scale: 1, opacity: 1, z: index + 1, label: true, hidden: false };
   if (count === 1) return { tx: 0, ty: 0, rot: 0, scale: 1, opacity: 1, z: 5, label: true, hidden: false };
   const k = count - 1 - index; // 0 是最上面那张，也就是最后加的
   const p = STACK[Math.min(k, 2)];
@@ -133,6 +134,8 @@ export interface ReferenceStackProps extends Omit<HTMLAttributes<HTMLDivElement>
   onExpandedChange?: (expanded: boolean) => void;
   /** 展开后最宽多宽，超过就横向滚动。不传取所在输入框内容区的宽度 */
   maxWidth?: number;
+  /** 最多放几个：放满了添加格（和右下角的小圆加号）隐藏，不能再添加。默认不限 */
+  max?: number;
 }
 
 interface Ghost {
@@ -159,6 +162,7 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
     defaultExpanded = false,
     onExpandedChange,
     maxWidth,
+    max,
     className,
     style,
     ...rest
@@ -177,7 +181,9 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
   const mounted = useRef(false);
 
   const open = n > 0 && expanded;
-  const full = STEP * (n + 1);
+  const atMax = max != null && n >= max; // 放满了：添加格隐藏
+  const lead = atMax ? 0 : 1;
+  const full = STEP * (n + lead);
   const over = open && full > avail;
   const trayWidth = open ? (over ? avail : full) : CELL;
   const factor = durationFactor(n);
@@ -246,6 +252,11 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
   // 悬停、键盘聚焦展开，移开马上收起。手机没有悬停：点一下展开，再点一下收起
   const enter = () => setExpanded(true);
   const leave = () => setExpanded(false);
+  // 鼠标移开时，键盘焦点（:focus-visible）还在参考区里就不收，免得删除按钮藏起来、焦点却还在上面
+  const mouseLeave = () => {
+    if (rootRef.current?.querySelector(':focus-visible')) return;
+    leave();
+  };
 
   // 删掉的卡片先留着，播完消失动画再卸掉
   const lastLayouts = useRef(new Map<string, CardLayout>());
@@ -276,7 +287,7 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
   }, [ghosts]);
 
   // 每张卡片这一刻的位置；记下来，被删掉时从这个位置开始播消失动画
-  const layouts = items.map((_, i) => cardLayout(i, n, open));
+  const layouts = items.map((_, i) => cardLayout(i, n, open, lead));
   items.forEach((item, i) => lastLayouts.current.set(item.id, layouts[i]));
   useEffect(() => {
     mounted.current = true;
@@ -315,7 +326,7 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
         tabIndex={n > 0 ? 0 : undefined}
         style={{ width: trayWidth }}
         onMouseEnter={enter}
-        onMouseLeave={leave}
+        onMouseLeave={mouseLeave}
         onFocus={enter}
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave();
@@ -336,18 +347,20 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
         <span className="kv-reference-stack__hit" aria-hidden="true" />
         <div ref={scrollerRef} className="kv-reference-stack__scroller" onScroll={updateEnd}>
           <div className="kv-reference-stack__track" style={{ width: open ? full : CELL }}>
-            <button
-              type="button"
-              className="kv-reference-stack__trigger"
-              data-compact={compact ? '' : undefined}
-              aria-label="添加参考素材"
-              onClick={(e) => {
-                e.stopPropagation();
-                onAdd?.();
-              }}
-            >
-              <Icon name="AddSmall" className="kv-reference-stack__trigger-icon" />
-            </button>
+            {!atMax && (
+              <button
+                type="button"
+                className="kv-reference-stack__trigger"
+                data-compact={compact ? '' : undefined}
+                aria-label="添加参考素材"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAdd?.();
+                }}
+              >
+                <Icon name="AddSmall" className="kv-reference-stack__trigger-icon" />
+              </button>
+            )}
             {entries.map(({ item, layout, ghost, index }) => (
               <ReferenceStackCard
                 key={item.id}

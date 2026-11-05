@@ -56,6 +56,8 @@ const NestContext = createContext<Register | null>(null);
 
 const ITEMS = '.kv-menu-item:not(:disabled):not([aria-disabled="true"])';
 const SELECTABLE = `${ITEMS}:not([aria-haspopup])`;
+/** 方向键能走到的：菜单项，加上分组标题右边的按钮（比如「新建画布」） */
+const NAVIGABLE = `${ITEMS}, .kv-menu-label__action button:not(:disabled)`;
 const EXIT_MS = 150;
 /** 面板（haspopup="dialog"）里能用 Tab 走到的控件 */
 const TABBABLE =
@@ -192,7 +194,7 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     }
     // 在输入框里（原地重命名）打字，方向键、Home、End 留给输入框
     if ((e.target as HTMLElement).closest('input, textarea')) return;
-    const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>(ITEMS));
+    const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>(NAVIGABLE));
     if (!items.length) return;
     const i = items.indexOf(document.activeElement as HTMLElement);
     let next = -1;
