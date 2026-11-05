@@ -8,7 +8,7 @@
 //   items[j]  = [kind, 页下标, heads 下标（没有是 -1）, 标题, 正文]
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import GithubSlugger from 'github-slugger';
 import { toString } from 'mdast-util-to-string';
@@ -76,6 +76,11 @@ function readMdx(file, page, pageIndex, out) {
   };
   slugAll(tree);
 
+  // MDX 里 import 进来的本地 .mdx 组件（import X from './x.mdx'，再 <X />）：内容并进当前页。
+  // 被 import 的文件自己编译，锚点也用它自己的一套 slugger 数
+  const embeds = new Map();
+  for (const m of src.matchAll(/^import\s+(\w+)\s+from\s+'(\.[^']+\.mdx)'/gm)) embeds.set(m[1], resolve(dirname(file), m[2]));
+
   const heads = []; // [id, 路径]
   const stack = []; // 当前标题路径 { depth, text }
   const crumbNow = () => stack.map((s) => s.text).join(' › ');
@@ -123,6 +128,15 @@ function readMdx(file, page, pageIndex, out) {
       case 'mdxJsxFlowElement':
         if (n.name === 'PageHeader') {
           page.lead = attrText(n, 'lead');
+        } else if (embeds.has(n.name)) {
+          const sub = parser.parse(readFileSync(embeds.get(n.name), 'utf8'));
+          const subSlugger = new GithubSlugger();
+          const slugSub = (x) => {
+            if (x.type === 'heading') ids.set(x, subSlugger.slug(toString(x)));
+            x.children?.forEach(slugSub);
+          };
+          slugSub(sub);
+          sub.children.forEach(block);
         } else {
           n.children?.forEach(block);
         }

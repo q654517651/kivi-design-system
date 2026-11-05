@@ -101,7 +101,7 @@ import { InputPlayground, NumberInputPlayground, TextareaPlayground } from './in
 | `onClear` | `() => void` | — | 点了清空按钮 |
 | `invalid` | `boolean` | `false` | 错误：1px `--color-status-danger` 描边，向里画，框大小不变。等于写 `aria-invalid` |
 | `placeholder` | `string` | — | 占位文字，`--color-text-fill-placeholder` |
-| `disabled` | `boolean` | `false` | 禁用：底白 6%（`--color-bg-fill-container-light-2`），文字、图标、字数 `--color-text-fill-disabled` |
+| `disabled` | `boolean` | `false` | 禁用：底和平时一样，文字、图标、字数 `--color-text-fill-disabled`，不响应悬停 |
 | `aria-label` | `string` | — | 没有可见文字标签时必须写 |
 | `className` | `string` | — | 加在最外层的框上。高 32，圆角 8（`--border-radius-8`），左右内边距 12，元素间距 8，文字 13 / 行高 20；底白 10%，悬停白 14%，聚焦只出现光标；宽度默认填满，要固定自己设 |
 
@@ -129,9 +129,10 @@ import { InputPlayground, NumberInputPlayground, TextareaPlayground } from './in
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `counter` | `ReactNode` | — | 字数，右下角，12 号 tertiary，和正文间距 8，比如 `"0/500"`。传什么显示什么，超没超限自己算 |
+| `actions` | `ReactNode` | — | 框内按钮：放在框里右下角，字数在它左边，间距 8。按钮用 28，比如取消 / 保存、提交 |
 | `invalid` | `boolean` | `false` | 错误：1px `--color-status-danger` 描边，字数也变 danger。等于写 `aria-invalid` |
 | `placeholder` | `string` | — | 占位文字 |
-| `disabled` | `boolean` | `false` | 禁用：底白 6%，字数 `--color-text-fill-disabled` |
+| `disabled` | `boolean` | `false` | 禁用：底和平时一样，字数 `--color-text-fill-disabled` |
 | `aria-label` | `string` | — | 没有可见标签时必须写 |
 | `className` | `string` | — | 加在最外层的框上。默认 320 × 104，右下角可以拖着改高度，宽度默认填满；圆角 8，内边距 12，文字 14 / 行高 22 |
 

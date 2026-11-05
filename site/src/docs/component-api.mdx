@@ -15,10 +15,10 @@ import { PageHeader } from '@shell';
 ## 组件
 
 ```tsx
-export type FooSize = 'sm' | 'lg';
+export type FooSize = 28 | 36;
 
 export interface FooProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
-  /** 尺寸：小 / 大，默认小 */
+  /** 尺寸：高 28 / 36，默认 28 */
   size?: FooSize;
   /** 当前值。传了就是受控 */
   value?: string;
@@ -30,7 +30,7 @@ export interface FooProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange
 
 /** 一句话说它是什么。Figma「某页」Foo */
 export const Foo = forwardRef<HTMLDivElement, FooProps>(function Foo(
-  { size = 'sm', value, defaultValue = '', onChange, className, onKeyDown, ...rest },
+  { size = 28, value, defaultValue = '', onChange, className, onKeyDown, ...rest },
   ref,
 ) {
   const [current, setCurrent] = useControllable(value, defaultValue, onChange);
@@ -101,6 +101,9 @@ Foo.displayName = 'Foo';
 | `useHoverIntent` | 离开后等一会儿才算离开，鼠标挪到浮层的路上不断 |
 | `useMergedRef` | 合并组件自己的 ref 和外面传的 ref |
 | `composeHandlers` | 合并组件自己的事件和外面传的事件 |
+| `useCopy` | 复制到剪贴板：返回 `copy` 和「已复制」状态（默认 1.5 秒后恢复）；`writeClipboard` 在 http 内网地址这类没有 `navigator.clipboard` 的环境退到老办法 |
+| `useScrollFade` | 滚动列表的渐隐：跟着滑的方向走，往下滑下面渐隐、往上滑上面渐隐，到头换另一边；返回 `fade`（写到列表的 `data-fade`）和 `onScroll` |
+| `useAudioPlayer` | 音频播放：播放、暂停、进度、时长、加载状态，同一时间只播一个（走 `exclusivePlayback`）；`seek`、`seekBy` 用来拖进度条、按方向键 |
 | `exclusivePlayback` | 同一时间只播一个视频或音频 |
 | `useScrollLock` | 锁背景滚动：body 不能滚，补滚动条宽度防跳动，多层弹窗最后一个关掉才恢复 |
 | `useFileDrop` | 拖文件进来：数 dragenter / dragleave 次数，里面的子元素之间移动不闪；按 `accept`、`maxSize` 检查，返回 `dragging`、`rejected`、`bind`（四个拖拽事件，铺到根元素上）、`receive`（点选文件走同一套检查）。PromptBox、画布 Agent 输入框都用它；`composeDropHandlers` 把组件的和外面传的合并 |

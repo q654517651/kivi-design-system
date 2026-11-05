@@ -34,7 +34,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-12);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   white-space: nowrap;
 }
 
@@ -69,6 +68,8 @@
 /* 类型：覆盖，盖在图片、视频上 */
 .kv-tag--on-media {
   background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-on-media-text);
 }
 
@@ -96,7 +97,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-10);
   font-weight: var(--font-weight-medium);
-  line-height: var(--font-line-height-16);
   user-select: none;
 }
 
@@ -112,21 +112,18 @@
   width: 16px;
   height: 16px;
   font-size: var(--font-size-10);
-  line-height: var(--font-line-height-16);
 }
 
 .kv-avatar--24 {
   width: 24px;
   height: 24px;
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-avatar--32 {
   width: 32px;
   height: 32px;
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-22);
 }
 
 /* 类型：图片 底白 10%，加载前垫着；文字 底白 18% */
@@ -135,7 +132,7 @@
 }
 
 .kv-avatar--text {
-  background: var(--color-bg-fill-container-light-1-pressed);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1)); /* 和图片头像同一档（11-05 从 pressed 改） */
 }
 
 /* ---------- AssetThumb ---------- */

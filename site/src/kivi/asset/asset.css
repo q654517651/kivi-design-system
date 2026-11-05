@@ -95,6 +95,12 @@
   outline: var(--border-width-1) solid var(--color-border);
   outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-container-light-1);
+  transition: background-color var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 悬停：和画布卡、新建卡一样，卡的底变 Light 1 悬停，「⋯」悬停才出（11-05 统一）。文件夹卡的「卡」就是封面这块 */
+.kv-folder-card:where(:hover, :focus-within, .is-hover) .kv-folder-card__cover {
+  background: var(--color-bg-fill-container-light-1-hover);
 }
 
 /* 空文件夹：浅底正中一个文件夹图标（线上是一张小插图，11-04 改成图标） */
@@ -143,7 +149,6 @@
   min-width: 0;
   color: var(--color-text-fill-primary);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-22);
   white-space: nowrap;
 }
 
@@ -225,7 +230,6 @@
 .kv-project-card__time {
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-20);
 }
 
 /* ---------- CreateCard ---------- */
@@ -250,7 +254,6 @@
   color: var(--color-text-fill-primary);
   font-family: var(--font-family);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-22);
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;

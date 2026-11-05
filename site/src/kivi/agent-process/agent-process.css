@@ -43,7 +43,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   text-align: left;
   white-space: nowrap;
 }
@@ -307,7 +306,7 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
    两层同一个白 18%，叠在一起的地方自然更亮：外圈约 #353535、里圈约 #555，和 LibTV 量出来的差不多 */
 .kv-media-group__layer {
   border-radius: var(--border-radius-16);
-  background: var(--color-bg-fill-container-light-1-pressed);
+  background: var(--color-fill-4); /* 叠放的后层：深底起点 2 档 + 2 */
   pointer-events: none;
   transform-origin: 50% 50%;
   transition: opacity var(--kv-media-group-duration) var(--motion-ease-out);
@@ -386,19 +385,16 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-8);
   padding: var(--spacing-12);
   background: var(--color-bg-fill-container-light-1);
-  color: var(--color-text-fill-tertiary);
-  font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
-  text-align: center;
+  container-type: size;
 }
 
-.kv-media-group__failed > img {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
+/* 格子矮（16:9 这类）放不下 96 的插图，只留文字 */
+@container (max-height: 169px) {
+  .kv-media-group__failed .kv-empty-state__illustration {
+    display: none;
+  }
 }
 
 /* 展开后悬停：底部渐变 + 节点名，右上定位 */
@@ -419,7 +415,6 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   overflow: hidden;
   color: var(--color-on-media-text);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-20);
   white-space: nowrap;
   text-overflow: ellipsis;
 }

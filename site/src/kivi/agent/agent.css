@@ -14,7 +14,7 @@
   状态
     QuestionOption 选中 aria-checked="true"（单选 role="radio"，多选 role="checkbox"）；禁用 disabled（「其他」写 data-disabled）
     QuestionPanel  禁用（提交中）data-disabled + aria-busy="true"；一项都没选时「确认提交」是 disabled
-    SendButton     禁用 disabled；生成中 aria-busy="true"，里面换成 kv-send-button__stop
+    SendButton     禁用 disabled；生成中 data-generating，里面换成 kv-send-button__stop（还能点，悬停、按下照常）
     FileCard       生成中 aria-busy="true"
     is-hover 只给文档摆静态的悬停用，项目里不用写
 */
@@ -90,6 +90,12 @@
   transition: max-height var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
+/* 保留文字里的换行（行为，不改样子） */
+.kv-user-message__text {
+  line-height: var(--font-line-height-22);
+  white-space: pre-wrap;
+}
+
 .kv-user-message__toggle {
   margin: var(--spacing-8) calc(var(--spacing-8) * -1) calc(var(--spacing-8) * -1);
 }
@@ -103,7 +109,7 @@
 }
 
 /* ---------- MessageFeedback：消息反馈条 ----------
-   一排 IconButton「轻」；点踩后下面用 Collapse 往下推出原因输入：输入框撑满 + 提交 + 关闭，间距 8 */
+   一排 IconButton「轻」；点踩后下面用 Collapse 往下推出原因输入：Textarea 撑满，提交在框里右下角 */
 .kv-message-feedback {
   display: flex;
   flex-direction: column;
@@ -116,14 +122,7 @@
 }
 
 .kv-message-feedback__reason {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-8);
-}
-
-.kv-message-feedback__input {
-  flex: 1;
-  min-width: 0;
+  align-self: stretch;
 }
 
 /* ---------- QuestionPanel：追问面板 ---------- */
@@ -162,7 +161,6 @@
   gap: var(--spacing-4);
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-question-panel__options {
@@ -193,7 +191,6 @@
   color: var(--color-text-fill-secondary);
   font-family: var(--font-family);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-22);
   text-align: left;
   cursor: pointer;
   transition:
@@ -214,7 +211,6 @@
   background: var(--color-bg-fill-container-light-1);
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
   transition: border-color var(--motion-duration-100) var(--motion-ease-in-out);
 }
 
@@ -413,35 +409,11 @@
   gap: var(--spacing-8);
 }
 
-/* ---------- SendButton：发送按钮 ---------- */
+/* ---------- SendButton：发送按钮 ----------
+   样子全用按钮体系：IconButton 主要 · 36 · 圆形（kv-icon-button--primary / --36 / --round），悬停、按下、禁用都跟按钮走。
+   这里只管停止方块 */
 .kv-send-button {
-  display: inline-flex;
   flex: none;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 36px;
-  height: 36px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: var(--border-radius-round);
-  background: linear-gradient(90deg, var(--color-brand-gradient-1), var(--color-brand-gradient-2));
-  color: var(--color-text-fill-on-brand);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* 发送图标 20 */
-.kv-send-button > .kv-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.kv-send-button:disabled {
-  background: var(--color-bg-fill-container-light-1);
-  color: var(--color-text-fill-disabled);
-  cursor: not-allowed;
 }
 
 /* 生成中：换成停止方块 12×12，圆角 4，点了停止生成 */
@@ -499,7 +471,6 @@
   color: var(--color-text-fill-primary);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-medium);
-  line-height: var(--font-line-height-22);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -508,7 +479,6 @@
   overflow: hidden;
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

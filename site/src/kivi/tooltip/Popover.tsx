@@ -17,7 +17,7 @@ import { cx } from '../utils';
 import { composeHandlers, rectOf, useControllable, useFloating, useHoverIntent, useMergedRef, usePresence, type FloatingPlacement } from '../hooks';
 import './tooltip.css';
 
-export type PopoverTrigger = 'hover' | 'click';
+export type PopoverOn = 'hover' | 'click';
 export type PopoverPlacement = FloatingPlacement;
 export type PopoverVariant = 'tip' | 'long' | 'panel';
 
@@ -29,8 +29,8 @@ export interface PopoverProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'con
   /** 标题。不写就只有内容。长文类没有标题 */
   title?: ReactNode;
   /** 怎么出现：悬停（默认，鼠标能挪进气泡里，键盘聚焦也出）/ 点击（再点一下、点外面、按 Esc 关） */
-  trigger?: PopoverTrigger;
-  /** 显示（受控）。不传就按 trigger 自己出现和消失 */
+  on?: PopoverOn;
+  /** 显示（受控）。不传就按 on 自己出现和消失 */
   open?: boolean;
   /** 默认是否显示（非受控） */
   defaultOpen?: boolean;
@@ -51,6 +51,7 @@ export interface PopoverProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'con
 }
 
 const EXIT_MS = 100;
+const PANEL_EXIT_MS = 150;
 /** 鼠标从触发元素挪进气泡的路上不算离开 */
 const LEAVE_MS = 150;
 
@@ -73,7 +74,7 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
     variant = 'tip',
     content,
     title,
-    trigger = 'hover',
+    on = 'hover',
     open: openProp,
     defaultOpen = false,
     onOpenChange,
@@ -95,13 +96,14 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
 ) {
   const [openState, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
   const open = openState && !disabled;
-  const { mounted, state } = usePresence(open, EXIT_MS);
+  // 面板类消失和菜单一样 150ms，提示、长文 100ms
+  const { mounted, state } = usePresence(open, variant === 'panel' ? PANEL_EXIT_MS : EXIT_MS);
   const anchorRef = useRef<HTMLSpanElement>(null);
   const setAnchor = useMergedRef(anchorRef, ref);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const id = useId();
   const titleId = useId();
-  const click = trigger === 'click';
+  const click = on === 'click';
   const panel = variant === 'panel';
   const long = variant === 'long';
   const offset = offsetProp ?? (long ? 8 : 10);
@@ -194,7 +196,11 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
   // 面板里有能操作的东西，不能当 tooltip 读：悬停型也按对话框的写法
   const aria = click || panel
     ? { 'aria-haspopup': 'dialog' as const, 'aria-expanded': open, 'aria-controls': open ? id : undefined }
-    : { 'aria-describedby': open ? id : undefined };
+    : {
+        // 和触发元素原有的 aria-describedby 合并，不覆盖
+        'aria-describedby':
+          [(children.props as { 'aria-describedby'?: string })['aria-describedby'], open ? id : undefined].filter(Boolean).join(' ') || undefined,
+      };
 
   return (
     <>

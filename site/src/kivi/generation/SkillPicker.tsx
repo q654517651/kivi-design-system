@@ -25,7 +25,12 @@ export const SkillPicker = forwardRef<HTMLSpanElement, SkillPickerProps>(functio
   { trigger, items, categories, onPick, defaultOpen = false, placement = 'top-start', ...rest },
   ref,
 ) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpenState] = useState(defaultOpen);
+  const [session, setSession] = useState(0);
+  const setOpen = (next: boolean) => {
+    if (next && !open) setSession((n) => n + 1);
+    setOpenState(next);
+  };
   return (
     <Dropdown
       ref={ref}
@@ -37,9 +42,9 @@ export const SkillPicker = forwardRef<HTMLSpanElement, SkillPickerProps>(functio
       trigger={trigger ?? <IconButton icon="Skill" label="技能" variant="text" />}
       {...rest}
     >
-      {/* 换 key 重新挂载，每次打开回到「推荐」、清空搜索 */}
+      {/* 换 key 重新挂载，每次打开回到「推荐」、清空搜索；key 只在打开时递增，关闭动画期间内容不变 */}
       <SkillPanel
-        key={open ? 'open' : 'closed'}
+        key={session}
         items={items}
         categories={categories}
         onPick={(s) => {

@@ -93,7 +93,6 @@
   color: var(--color-text-fill-secondary);
   font-family: var(--font-family);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-20);
   text-align: center;
 }
 
@@ -256,14 +255,12 @@ button.kv-image__error:hover {
 .kv-video-player__time {
   padding-left: var(--spacing-4);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .kv-video-player--preview .kv-video-player__time {
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-video-player__total {
@@ -409,7 +406,6 @@ button.kv-image__error:hover {
 
 .kv-video-player__volume-value {
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
   font-variant-numeric: tabular-nums;
 }
 

@@ -51,7 +51,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-13);
   font-weight: var(--font-weight-regular); /* 选中也不加粗，免得切换时宽度跳动 */
-  line-height: var(--font-line-height-20);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
@@ -85,14 +84,12 @@
   height: 32px;
   padding: 0 var(--spacing-12);
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-tab-item--36 {
   height: 36px;
   padding: 0 var(--spacing-16);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-22);
 }
 
 /* 布局：竖排（图标 20 + 12 号字，56×56），只有分段、中号用 */
@@ -104,7 +101,6 @@
   height: 56px;
   padding: 0;
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-20);
 }
 
 /* 状态：悬停 */

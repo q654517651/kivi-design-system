@@ -186,7 +186,7 @@ function CropMode() {
         </div>
       </div>
       <ButtonGroup variant="glass" size={44} className="tpl-tool__bar">
-        <IconButton icon="Close" label="关闭裁剪" variant="text" />
+        <IconButton tooltip={false} icon="Close" label="关闭裁剪" variant="text" />
         <span className="tpl-tool__bar-title">图片裁剪</span>
         <SizeInputs
           name="裁剪"
@@ -224,7 +224,7 @@ function ExpandMode() {
         </div>
       </div>
       <ButtonGroup variant="glass" size={44} className="tpl-tool__bar">
-        <IconButton icon="Close" label="关闭扩图" variant="text" />
+        <IconButton tooltip={false} icon="Close" label="关闭扩图" variant="text" />
         <span className="tpl-tool__bar-hint">拖动边框进行扩图</span>
         <Select variant="plain" options={EXPAND_RATIOS} value={ratio} onChange={setRatio} aria-label="扩图比例" />
         <GenerateButton cost={8} />

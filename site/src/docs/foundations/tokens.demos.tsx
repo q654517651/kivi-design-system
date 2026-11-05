@@ -1,9 +1,9 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { copyText, CopyButton, Tag } from '@shell';
+import { copyText, CopyButton } from '@shell';
 import { placeholderImageSrc } from '@kivi';
 
 // 变量页的数据和表格。规范文字在 tokens.mdx。
-// 每一行：token 是 CSS 变量名（和 kivi/tokens.css 一一对应），figma 是 Figma 里的名字，use 是用在哪，status 是新 / 占位。
+// 每一行：token 是 CSS 变量名（和 kivi/tokens.css 一一对应），figma 是 Figma 里的名字，use 是用在哪。
 // 「值」不写在这里：页面加载时用 getComputedStyle 从 tokens.css 读，Figma 改了变量只改 tokens.css。
 
 export type TokenKind = 'color' | 'space' | 'radius' | 'stroke' | 'font-size' | 'line-height' | 'weight' | 'opacity' | 'motion' | 'effect';
@@ -17,8 +17,6 @@ export interface TokenRow {
   desc?: string;
   /** 用在哪、不要用于哪。反引号包起来的显示成代码。颜色卡片上不显示，留给 AI 读；间距的用法直接写在 tokens.mdx，这里不填 */
   use?: string;
-  /** new：v2 新增；draft：占位，取值待视觉确定，可以照用 */
-  status?: 'new' | 'draft';
 }
 
 export interface TokenGroup {
@@ -38,9 +36,9 @@ export const TOKEN_GROUPS = {
     kind: 'color',
     rows: [
       { token: '--color-brand-solid', desc: '选中、开关、进度', figma: 'color/brand/solid', use: '选中指示、开关打开、进度、勾选框选中。不要用于大面积背景、正文' },
-      { token: '--color-brand-hover', desc: '品牌色悬停', figma: 'color/brand/hover', use: '品牌色控件的悬停态', status: 'draft' },
-      { token: '--color-brand-pressed', desc: '品牌色按下', figma: 'color/brand/pressed', use: '品牌色控件的按下态', status: 'draft' },
-      { token: '--color-brand-subtle', desc: '选中的浅底', figma: 'color/brand/subtle', use: '选中态的浅底：选中的模型、选中的卡片、选中的图标按钮', status: 'draft' },
+      { token: '--color-brand-hover', desc: '品牌色悬停', figma: 'color/brand/hover', use: '品牌色控件的悬停态' },
+      { token: '--color-brand-pressed', desc: '品牌色按下', figma: 'color/brand/pressed', use: '品牌色控件的按下态' },
+      { token: '--color-brand-subtle', desc: '选中的浅底', figma: 'color/brand/subtle', use: '选中态的浅底：选中的模型、选中的卡片、选中的图标按钮' },
       { token: '--color-brand-gradient-1', desc: '主要按钮渐变起点', figma: 'color/brand/gradient-1', use: '品牌渐变起点（左）' },
       { token: '--color-brand-gradient-2', desc: '主要按钮渐变终点', figma: 'color/brand/gradient-2', use: '品牌渐变终点（右）。主要按钮：`linear-gradient(90deg, gradient-1, gradient-2)`' },
     ],
@@ -50,21 +48,31 @@ export const TOKEN_GROUPS = {
     kind: 'color',
     rows: [
       { token: '--color-bg-fill-base', desc: '页面和画布的底', figma: 'color/bg/fill/base', use: '全局底色：外框、画布、各页面的底。不要用于面板卡片（用叠加）、弹窗（surface）、浮层（popup）' },
-      { token: '--color-bg-fill-surface', desc: '盖在画布上的不透明面板', figma: 'color/bg/fill/surface', use: '必须不透明的地方：盖在画布上的节点卡片、浮动面板、模态弹窗。不要用于页面里普通的面板和卡片（用 Container）', status: 'new' },
+      { token: '--color-bg-fill-surface', desc: '盖在画布上的不透明面板', figma: 'color/bg/fill/surface', use: '必须不透明的地方：盖在画布上的节点卡片、浮动面板、模态弹窗。不要用于页面里普通的面板和卡片（用 Container）' },
       { token: '--color-bg-fill-popup', desc: 'Tooltip、Toast', figma: 'color/bg/fill/popup', use: '实色的提示浮层：Tooltip、Toast。菜单、下拉用 glass；模态弹窗用 surface + mask' },
       { token: '--color-bg-fill-glass', desc: '菜单、下拉等玻璃浮层', figma: 'color/bg/fill/glass', use: '悬浮在页面上的浮层（菜单、下拉、右键、节点工具栏、参数面板、主站输入框），配 effect-glass-blur 和描边 border-subtle。下面是什么都行' },
+    ],
+  },
+  fillScale: {
+    title: '填充色阶',
+    kind: 'color',
+    rows: [
+      { token: '--color-fill-1', desc: '1 档 · 白 6%', figma: 'color/fill/1', use: 'Light 2 默认引用它。组件里先用 Container；只有 Container 语义不符的静态色块才直接用，名单见「设计规则 · 颜色和底色」' },
+      { token: '--color-fill-2', desc: '2 档 · 白 10%', figma: 'color/fill/2', use: 'Light 1 默认、Light 2 悬停引用它。直接用：小地图节点色块（玻璃上起点档）' },
+      { token: '--color-fill-3', desc: '3 档 · 白 14%', figma: 'color/fill/3', use: 'Light 1 悬停、Light 2 按下引用它。直接用：骨架屏扫光（比底高一档）' },
+      { token: '--color-fill-4', desc: '4 档 · 白 18%', figma: 'color/fill/4', use: 'Light 1 按下引用它。直接用：叠放露出来的后层（MediaGroup、多图节点，深底起点 + 2）' },
     ],
   },
   fill: {
     title: '填充与状态',
     kind: 'color',
     rows: [
-      { token: '--color-bg-fill-container-light-1', desc: '深底上的容器', figma: 'color/bg/fill/container-light-1', use: '深底（相对亮度 < 0.015：base、surface、玻璃）上有底色的东西：按钮、输入框、标签、卡片；选中、展开这类常驻底色也用它' },
-      { token: '--color-bg-fill-container-light-1-hover', desc: '深底上的悬停', figma: 'color/bg/fill/container-light-1-hover', use: '深底上的悬停，平时没底色的东西（菜单项、文字按钮）悬停也用它' },
-      { token: '--color-bg-fill-container-light-1-pressed', desc: '深底上的按下', figma: 'color/bg/fill/container-light-1-pressed', use: '深底上的按下。选中不用它，选中是常驻底色，用默认', status: 'new' },
-      { token: '--color-bg-fill-container-light-2', desc: '浅底上的容器', figma: 'color/bg/fill/container-light-2', use: '浅底（相对亮度 ≥ 0.015：叠在一层 Light 1 上、popup）上有底色的东西和常驻底色。深底上不用' },
-      { token: '--color-bg-fill-container-light-2-hover', desc: '浅底上的悬停', figma: 'color/bg/fill/container-light-2-hover', use: '浅底上的悬停（比如分段里的项、菜单行里的「⋯」）' },
-      { token: '--color-bg-fill-container-light-2-pressed', desc: '浅底上的按下', figma: 'color/bg/fill/container-light-2-pressed', use: '浅底上的按下。选中用默认', status: 'new' },
+      { token: '--color-bg-fill-container-light-1', desc: '深底上的容器', figma: 'color/bg/fill/container-light-1', use: '= fill-2。深底（相对亮度 < 0.015：base、surface、玻璃）上有底色的东西：按钮、输入框、标签、卡片、开关轨道、文字头像；选中、展开、播放中这类常驻底色也用它' },
+      { token: '--color-bg-fill-container-light-1-hover', desc: '深底上的悬停', figma: 'color/bg/fill/container-light-1-hover', use: '= fill-3。深底上的悬停，平时没底色的东西（菜单项、文字按钮）悬停也用它' },
+      { token: '--color-bg-fill-container-light-1-pressed', desc: '深底上的按下', figma: 'color/bg/fill/container-light-1-pressed', use: '= fill-4。深底上的按下。选中不用它，选中是常驻底色，用默认' },
+      { token: '--color-bg-fill-container-light-2', desc: '浅底上的容器', figma: 'color/bg/fill/container-light-2', use: '= fill-1。浅底（相对亮度 ≥ 0.015：叠在一层 Light 1 上、popup）上有底色的东西和常驻底色。深底上不用' },
+      { token: '--color-bg-fill-container-light-2-hover', desc: '浅底上的悬停', figma: 'color/bg/fill/container-light-2-hover', use: '= fill-2。浅底上的悬停（比如分段里的项、菜单行里的「⋯」）' },
+      { token: '--color-bg-fill-container-light-2-pressed', desc: '浅底上的按下', figma: 'color/bg/fill/container-light-2-pressed', use: '= fill-3。浅底上的按下。选中用默认' },
       { token: '--color-bg-fill-container-dark', desc: '凹下去的：上传框、图片垫底', figma: 'color/bg/fill/container-dark', use: '凹下去的区域：上传框、图片和视频的垫底' },
       { token: '--color-bg-fill-container-dark-hover', desc: '悬停', figma: 'color/bg/fill/container-dark-hover', use: 'container-dark 的悬停态' },
     ],
@@ -75,10 +83,10 @@ export const TOKEN_GROUPS = {
     rows: [
       { token: '--color-text-fill-primary', desc: '标题、正文', figma: 'color/text/fill/primary', use: '标题、正文、主要图标' },
       { token: '--color-text-fill-secondary', desc: '次要说明、标签', figma: 'color/text/fill/secondary', use: '次要说明、表单标签、未选中的 Tab、次要图标' },
-      { token: '--color-text-fill-tertiary', desc: '时间、数量、辅助提示', figma: 'color/text/fill/tertiary', use: '时间、数量、辅助提示、菜单分组标题、单位', status: 'new' },
+      { token: '--color-text-fill-tertiary', desc: '时间、数量、辅助提示', figma: 'color/text/fill/tertiary', use: '时间、数量、辅助提示、菜单分组标题、单位' },
       { token: '--color-text-fill-placeholder', desc: '输入框占位文字', figma: 'color/text/fill/placeholder', use: '只给输入框里的占位文字，对比度不够，不能放要读的信息' },
       { token: '--color-text-fill-disabled', desc: '禁用', figma: 'color/text/fill/disabled', use: '禁用的文字和图标' },
-      { token: '--color-text-fill-on-brand', desc: '品牌色上的文字', figma: 'color/text/fill/on-brand', use: '品牌色、品牌渐变上的文字和图标', status: 'new' },
+      { token: '--color-text-fill-on-brand', desc: '品牌色上的文字', figma: 'color/text/fill/on-brand', use: '品牌色、品牌渐变上的文字和图标' },
     ],
   },
   border: {
@@ -86,31 +94,30 @@ export const TOKEN_GROUPS = {
     kind: 'color',
     rows: [
       { token: '--color-border', desc: '卡片描边', figma: 'color/border', use: '卡片的默认描边' },
-      { token: '--color-border-subtle', desc: '分割线、浮层描边', figma: 'color/border-subtle', use: '列表分割线、菜单分割线、区块之间的细线', status: 'new' },
-      { token: '--color-border-strong', desc: '勾选框未选中', figma: 'color/border-strong', use: '需要强调的描边，如勾选框未选中的边框', status: 'draft' },
-      { token: '--color-border-focus', desc: '节点选中、拖拽目标', figma: 'color/border-focus', use: '节点选中、拖拽目标高亮（输入框聚焦不加描边）', status: 'new' },
+      { token: '--color-border-subtle', desc: '分割线、浮层描边', figma: 'color/border-subtle', use: '列表分割线、菜单分割线、区块之间的细线' },
+      { token: '--color-border-strong', desc: '勾选框未选中', figma: 'color/border-strong', use: '需要强调的描边，如勾选框未选中的边框' },
     ],
   },
   status: {
-    title: '功能色（占位）',
+    title: '功能色',
     kind: 'color',
     rows: [
-      { token: '--color-status-danger', desc: '报错、删除', figma: 'color/status/danger', use: '报错文字和图标、危险按钮、删除菜单项', status: 'draft' },
-      { token: '--color-status-danger-subtle', desc: '报错浅底', figma: 'color/status/danger-subtle', use: '错误提示条、报错节点浅底、危险菜单项悬停', status: 'draft' },
-      { token: '--color-status-warning', desc: '警告', figma: 'color/status/warning', use: '警告：余额不足、即将过期', status: 'draft' },
-      { token: '--color-status-warning-subtle', desc: '警告浅底', figma: 'color/status/warning-subtle', use: '警告提示条浅底', status: 'draft' },
-      { token: '--color-status-success', desc: '成功', figma: 'color/status/success', use: '成功提示的图标和文字', status: 'draft' },
-      { token: '--color-status-success-subtle', desc: '成功浅底', figma: 'color/status/success-subtle', use: '成功提示条浅底', status: 'draft' },
+      { token: '--color-status-danger', desc: '报错、删除', figma: 'color/status/danger', use: '报错文字和图标、危险按钮、删除菜单项' },
+      { token: '--color-status-danger-subtle', desc: '报错浅底', figma: 'color/status/danger-subtle', use: '错误提示条、报错节点浅底、危险菜单项悬停' },
+      { token: '--color-status-warning', desc: '警告', figma: 'color/status/warning', use: '警告：余额不足、即将过期' },
+      { token: '--color-status-warning-subtle', desc: '警告浅底', figma: 'color/status/warning-subtle', use: '警告提示条浅底' },
+      { token: '--color-status-success', desc: '成功', figma: 'color/status/success', use: '成功提示的图标和文字' },
+      { token: '--color-status-success-subtle', desc: '成功浅底', figma: 'color/status/success-subtle', use: '成功提示条浅底' },
     ],
   },
   overlay: {
     title: '遮罩和叠加',
     kind: 'color',
     rows: [
-      { token: '--color-bg-fill-mask', desc: '弹窗遮罩', figma: 'color/bg/fill/mask', use: '模态弹窗下面的遮罩，每一级弹窗一层，不模糊', status: 'new' },
-      { token: '--color-on-media-fill', desc: '图片上的按钮底', figma: 'color/on-media/fill', use: '只给贴在图片、视频上的控件：按钮、按钮条、标签、勾选框、播放器控件，不加描边。悬浮在页面上的浮层用 glass', status: 'new' },
-      { token: '--color-on-media-fill-hover', desc: '悬停', figma: 'color/on-media/fill-hover', use: 'on-media/fill 的悬停态', status: 'new' },
-      { token: '--color-on-media-text', desc: '图片上的文字', figma: 'color/on-media/text', use: '叠在图片、视频上的文字和图标', status: 'new' },
+      { token: '--color-bg-fill-mask', desc: '弹窗遮罩', figma: 'color/bg/fill/mask', use: '模态弹窗下面的遮罩，每一级弹窗一层，不模糊' },
+      { token: '--color-on-media-fill', desc: '图片上的按钮底', figma: 'color/on-media/fill', use: '只给贴在图片、视频上的控件：按钮、按钮条、标签、勾选框、播放器控件，不加描边。悬浮在页面上的浮层用 glass' },
+      { token: '--color-on-media-fill-hover', desc: '悬停', figma: 'color/on-media/fill-hover', use: 'on-media/fill 的悬停态' },
+      { token: '--color-on-media-text', desc: '图片上的文字', figma: 'color/on-media/text', use: '叠在图片、视频上的文字和图标' },
     ],
   },
   connector: {
@@ -129,7 +136,7 @@ export const TOKEN_GROUPS = {
     kind: 'space',
     rows: [
       { token: '--spacing-0', figma: 'spacing/0' },
-      { token: '--spacing-2', figma: 'spacing/2', status: 'new' },
+      { token: '--spacing-2', figma: 'spacing/2' },
       { token: '--spacing-4', figma: 'spacing/4' },
       { token: '--spacing-6', figma: 'spacing/6' },
       { token: '--spacing-8', figma: 'spacing/8' },
@@ -148,7 +155,7 @@ export const TOKEN_GROUPS = {
       { token: '--border-radius-8', figma: 'border/radius/8', use: '按钮、输入框、菜单项、Tooltip，最常用' },
       { token: '--border-radius-12', figma: 'border/radius/12', use: '卡片、画布节点、菜单容器、Toast' },
       { token: '--border-radius-16', figma: 'border/radius/16', use: '弹窗、大面板' },
-      { token: '--border-radius-24', figma: 'border/radius/24', use: '大容器：首页提示词输入框、大卡片、Banner。弹窗和面板仍用 16', status: 'new' },
+      { token: '--border-radius-24', figma: 'border/radius/24', use: '大容器：首页提示词输入框、大卡片、Banner。弹窗和面板仍用 16' },
       { token: '--border-radius-round', figma: 'border/radius/round', use: '开关、头像、圆形图标按钮、胶囊' },
     ],
   },
@@ -211,8 +218,8 @@ export const TOKEN_GROUPS = {
     title: '效果',
     kind: 'effect',
     rows: [
-      { token: '--effect-glass-blur', figma: '效果样式 玻璃/背景模糊', use: '玻璃浮层的背景模糊：`backdrop-filter: blur(var(--effect-glass-blur))`' },
-      { token: '--effect-shadow-stack', figma: '效果样式 阴影/叠放', use: '多图节点叠着时的阴影，浅：`box-shadow: var(--effect-shadow-stack)`' },
+      { token: '--effect-glass-blur', figma: '效果样式 玻璃/背景模糊', use: '玻璃浮层和 on-media 控件的背景模糊：`backdrop-filter: blur(var(--effect-glass-blur))`' },
+      { token: '--effect-mask-blur', figma: '效果样式 遮罩/背景模糊', use: '盖在图片、视频上的遮罩（生成中、占位图）的背景模糊：`backdrop-filter: blur(var(--effect-mask-blur))`' },
       { token: '--effect-shadow-spread', figma: '效果样式 阴影/展开', use: '多图节点铺开盖在画布上时的阴影，深：`box-shadow: var(--effect-shadow-spread)`' },
     ],
   },
@@ -321,7 +328,6 @@ export function TokenTable({ group }: { group: TokenGroupId }) {
   const g: TokenGroup = TOKEN_GROUPS[group];
   const values = useMemo(() => g.rows.map((r) => readToken(r.token)), [g]);
   const hasPreview = g.kind !== 'motion';
-  const hasStatus = g.rows.some((r) => r.status);
   return (
     <div className="table-wrap">
       <table>
@@ -332,7 +338,6 @@ export function TokenTable({ group }: { group: TokenGroupId }) {
             <th>CSS 变量</th>
             <th>值</th>
             <th>{g.useHeader ?? '用在哪'}</th>
-            {hasStatus && <th />}
           </tr>
         </thead>
         <tbody>
@@ -351,12 +356,6 @@ export function TokenTable({ group }: { group: TokenGroupId }) {
               <td>
                 <Inline text={r.use ?? ''} />
               </td>
-              {hasStatus && (
-                <td>
-                  {r.status === 'new' && <Tag>新</Tag>}
-                  {r.status === 'draft' && <Tag kind="draft">占位</Tag>}
-                </td>
-              )}
             </tr>
           ))}
         </tbody>
@@ -400,7 +399,6 @@ function ColorSwatch({ row, onMedia }: { row: TokenRow; onMedia: boolean }) {
       </span>
       <span className="tk-sw__name">
         {shortName(row.figma)}
-        {row.status === 'draft' && <Tag kind="draft">占位</Tag>}
       </span>
       {row.desc && <span className="tk-sw__desc">{row.desc}</span>}
     </button>

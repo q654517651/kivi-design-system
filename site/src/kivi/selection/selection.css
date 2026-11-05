@@ -7,7 +7,7 @@
   写法（React，见 Switch.tsx、Slider.tsx、Checkbox.tsx、Select.tsx）
     <Switch defaultChecked>生成音频</Switch>        没有文字时写 aria-label="生成音频"
     <Slider aria-label="时长" min={1} max={15} defaultValue={12} />
-    <Checkbox shape="square" defaultChecked="mixed">选项</Checkbox>
+    <Checkbox variant="square" defaultChecked="mixed">选项</Checkbox>
     <Select variant="fill" placeholder="请选择" options={[{ value: 'png', label: 'PNG' }]} />
   渲染出来的结构
     <button class="kv-switch" role="switch" aria-checked="true">
@@ -76,7 +76,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-13);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   text-align: left;
   white-space: nowrap;
   cursor: pointer;
@@ -95,7 +94,7 @@
   width: 36px;
   height: 20px;
   border-radius: var(--border-radius-round);
-  background: var(--color-bg-fill-container-light-1-pressed);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1)); /* 控件的部件，按所在的底取 Container 默认档（11-05 从 pressed 改） */
   transition: background-color var(--motion-duration-150) var(--motion-ease-in-out);
 }
 
@@ -216,7 +215,6 @@
   color: color-mix(in srgb, var(--color-text-fill-primary) 50%, transparent);
   font-family: var(--font-family);
   font-size: var(--font-size-12);
-  line-height: 22px;
   text-align: center;
   white-space: nowrap;
   transform: translateX(-50%);
@@ -254,13 +252,12 @@
   font-family: var(--font-family);
   font-size: var(--font-size-13);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 方框：没选时黑 40% 底 + 1px 白 50% 描边，放在图片上也看得清 */
+/* 方框：没选时黑 40% 底（on-media）+ 1px 白 50% 描边。勾选框是媒体上的控件，放在别的底上也照用（11-05 用户定） */
 
 .kv-checkbox__box {
   position: relative;
@@ -348,7 +345,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-13);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -414,14 +410,14 @@
   background: var(--kv-select-fill-open);
 }
 
-/* 禁用：填充底白 6%；无底不加底。文字和箭头 disabled */
+/* 禁用：底和平时一样（11-05，和按钮一致）；无底不加底。文字和箭头 disabled */
 .kv-select:disabled {
   color: var(--color-text-fill-disabled);
   cursor: not-allowed;
 }
 
 .kv-select--fill:disabled {
-  background: var(--color-bg-fill-container-light-2);
+  background: var(--kv-select-fill);
 }
 
 .kv-select:disabled > .kv-icon,
@@ -470,12 +466,13 @@
   background: var(--color-bg-fill-container-light-1-hover);
 }
 
+/* 播放中是常驻状态，用默认档（11-05 从 pressed 改） */
 .kv-select-preview[aria-pressed="true"] {
-  background: var(--color-bg-fill-container-light-1-pressed);
+  background: var(--color-bg-fill-container-light-1);
 }
 
 .kv-select-preview[aria-disabled="true"] {
-  background: var(--color-bg-fill-container-light-2);
+  background: var(--color-bg-fill-container-light-1); /* 禁用底和平时一样，只变字色（11-05） */
   color: var(--color-text-fill-disabled);
   cursor: not-allowed;
 }

@@ -79,7 +79,7 @@ export const DialogPanel = forwardRef<HTMLDivElement, DialogPanelProps>(function
               <div className="kv-dialog__title" id={titleId}>
                 {title}
               </div>
-              {showClose && <IconButton icon="Close" label="关闭" size={32} variant="text" onClick={onClose} />}
+              {showClose && <IconButton tooltip={false} icon="Close" label="关闭" size={32} variant="text" onClick={onClose} />}
             </div>
           )}
           {hasDesc && (
@@ -118,9 +118,14 @@ const stack: StackEntry[] = [];
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Tab 不跑出弹窗：到头了绕回去；焦点跑到外面了拉回来 */
-function trapTab(e: KeyboardEvent, panel: HTMLElement | null | undefined) {
+/** 弹窗之后打开、挂在 body 上的浮层：Popover（.kv-popover）、Dropdown 和 Select 的弹层（.kv-popup） */
+const LAYERS = '.kv-popup, .kv-popover';
+
+/** Tab 不跑出弹窗：到头了绕回去；焦点跑到外面了拉回来。焦点在弹窗之后打开的浮层里（弹窗里点开的气泡、下拉）不拉，浮层自己管 */
+function trapTab(e: KeyboardEvent, panel: HTMLElement | null | undefined, mask: HTMLElement | null | undefined) {
   if (!panel) return;
+  const layer = (document.activeElement as Element | null)?.closest?.(LAYERS);
+  if (layer && !panel.contains(layer) && mask && mask.compareDocumentPosition(layer) & Node.DOCUMENT_POSITION_FOLLOWING) return;
   const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.getClientRects().length > 0);
   const active = document.activeElement;
   if (!items.length) {
@@ -207,7 +212,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(function Dialog(
         e.preventDefault();
         latest.current.requestClose();
       } else if (e.key === 'Tab') {
-        trapTab(e, panelRef.current);
+        trapTab(e, panelRef.current, maskRef.current);
       }
     };
     document.addEventListener('keydown', onKeyDown);

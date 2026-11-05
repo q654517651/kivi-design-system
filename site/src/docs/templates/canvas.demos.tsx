@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { AskRecord, AttachmentStrip, Button, DropOverlay, GenModelPicker, Icon, IconButton, MediaGroup, MentionChip, MessageFeedback, PromptInput, ProcessGroup, ProcessRow, SendButton, SkillPicker, Toaster, UserMessage, toast, type AttachmentItem, type IconName, type MediaGroupItem, type MediaGroupType, type ProcessStep } from '@kivi';
+import { AskRecord, AttachmentStrip, Button, CanvasHeader, DropOverlay, GenModelPicker, Icon, IconButton, MediaGroup, MentionChip, MessageFeedback, PromptInput, ProcessGroup, ProcessRow, SendButton, SkillPicker, Toaster, UserMessage, toast, type AttachmentItem, type IconName, type MediaGroupItem, type MediaGroupType, type ProcessStep } from '@kivi';
 import { rejectMessage, useFileDrop } from '../../kivi/hooks';
 import { MiniCanvas, type CanvasNodeKey, type MiniCanvasHandle } from '../business/canvas.demos';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../business/skill-data';
@@ -142,7 +142,19 @@ export function CanvasTemplate() {
     <TemplateFrame>
       <Toaster />
       <div className="tpl-cv">
-        <MiniCanvas ref={canvas} chrome={false} fake={false} phases={{ video: 'done' }} className="tpl-cv__canvas" />
+        <div className="tpl-cv__main">
+          <MiniCanvas ref={canvas} chrome={false} fake={false} phases={{ video: 'done' }} className="tpl-cv__canvas" />
+          {/* 左上角：Logo｜工作区｜画布切换 */}
+          <CanvasHeader
+            className="tpl-cv__header"
+            workspace="618 大促活动"
+            defaultCanvases={[
+              { id: 'c1', name: '头图' },
+              { id: 'c2', name: 'Banner' },
+              { id: 'c3', name: '画布 3' },
+            ]}
+          />
+        </div>
         <AgentPanel onLocate={(key) => canvas.current?.focus(key)} />
       </div>
     </TemplateFrame>

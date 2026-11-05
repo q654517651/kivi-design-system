@@ -1,6 +1,5 @@
 import { forwardRef, type HTMLAttributes } from 'react';
 import { IconButton } from '../button';
-import { Tooltip } from '../tooltip';
 import { cx } from '../utils';
 import { useCopy } from '../hooks';
 import './prose.css';
@@ -30,9 +29,7 @@ export const CodeBlock = forwardRef<HTMLDivElement, CodeBlockProps>(function Cod
       <pre>
         <code>{children}</code>
       </pre>
-      <Tooltip content={copied ? '已复制' : '复制'}>
-        <IconButton className="kv-code-block__copy" icon={copied ? 'CheckSmall' : 'Copy'} label={copied ? '已复制' : '复制'} size={28} variant="text" onClick={onCopy} />
-      </Tooltip>
+      <IconButton className="kv-code-block__copy" icon={copied ? 'CheckSmall' : 'Copy'} label={copied ? '已复制' : '复制'} size={28} variant="text" onClick={onCopy} />
     </div>
   );
 });

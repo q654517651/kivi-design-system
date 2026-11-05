@@ -23,7 +23,7 @@ const ITEMS = '[role="tab"]:not(:disabled), [role="radio"]:not(:disabled)';
 const isOn = (el: HTMLElement) => el.getAttribute('aria-selected') === 'true' || el.getAttribute('aria-checked') === 'true';
 
 /**
- * 一组选项：同一时间只有一个选中，方向键移动选中（横排左右、竖排上下，Home / End 到头尾，跳过禁用项）。
+ * 一组选项：同一时间只有一个选中，方向键移动选中（← →；分段 ↑ ↓ 也行；Home / End 到头尾，跳过禁用项）。
  * 选项卡是 tablist，分段是 radiogroup，分段带底槽。Figma「模板 · 通用」页的「选项卡组」「分段选择」。
  */
 export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
@@ -63,9 +63,10 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
     const i = items.indexOf(document.activeElement as HTMLElement);
     if (i < 0) return;
     let next = -1;
-    const [prevKey, nextKey] = layout === 'vertical' ? ['ArrowUp', 'ArrowDown'] : ['ArrowLeft', 'ArrowRight'];
-    if (e.key === nextKey) next = (i + 1) % items.length;
-    else if (e.key === prevKey) next = (i - 1 + items.length) % items.length;
+    // 竖排只是单项上图标下文字，整组仍横排：左右切换。分段是 radiogroup，上下也认（WAI-ARIA radio）
+    const radio = variant === 'segment';
+    if (e.key === 'ArrowRight' || (radio && e.key === 'ArrowDown')) next = (i + 1) % items.length;
+    else if (e.key === 'ArrowLeft' || (radio && e.key === 'ArrowUp')) next = (i - 1 + items.length) % items.length;
     else if (e.key === 'Home') next = 0;
     else if (e.key === 'End') next = items.length - 1;
     if (next < 0) return;
@@ -80,7 +81,6 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
         ref={mergedRef}
         className={cx('kv-tab-group', variant === 'segment' && 'kv-tab-group--segment', className)}
         role={variant === 'segment' ? 'radiogroup' : 'tablist'}
-        aria-orientation={layout}
         onKeyDown={composeHandlers(onKeyDown, keys)}
         {...rest}
       >

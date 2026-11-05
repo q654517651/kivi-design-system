@@ -52,6 +52,7 @@ export const ParamPicker = forwardRef<HTMLSpanElement, ParamPickerProps>(functio
       onOpenChange={setOpen}
       placement={placement}
       closeOnSelect={false}
+      haspopup="dialog"
       className={cx('kv-select__wrap kv-select__wrap--plain', className)}
       trigger={
         <button type="button" className="kv-select kv-select--plain" aria-label={ariaLabel}>

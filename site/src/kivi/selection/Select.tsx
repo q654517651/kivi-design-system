@@ -85,6 +85,11 @@ export const Select = forwardRef<HTMLSpanElement, SelectProps>(function Select(
   const [isOpen, setOpen] = useControllable<boolean>(open, defaultOpen, onOpenChange);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
+  // 禁用了：不打开；已经开着的收起（受控的也通知外面）
+  useEffect(() => {
+    if (disabled && isOpen) setOpen(false);
+  }, [disabled, isOpen, setOpen]);
+
   // 无底的触发器很窄：展开时量一下，列表按内容撑宽，但不比触发器窄
   const [triggerWidth, setTriggerWidth] = useState<number>();
   useLayoutEffect(() => {
@@ -126,8 +131,11 @@ export const Select = forwardRef<HTMLSpanElement, SelectProps>(function Select(
     <Dropdown
       ref={ref}
       trigger={trigger}
-      open={isOpen}
-      onOpenChange={setOpen}
+      open={isOpen && !disabled}
+      onOpenChange={(o) => {
+        if (o && disabled) return;
+        setOpen(o);
+      }}
       placement={placement}
       matchTriggerWidth={variant === 'fill'}
       haspopup="listbox"
@@ -144,7 +152,9 @@ export const Select = forwardRef<HTMLSpanElement, SelectProps>(function Select(
             description={o.description}
             selected={o.value === current}
             disabled={o.disabled}
-            onClick={() => setCurrent(o.value)}
+            onClick={() => {
+              if (!disabled) setCurrent(o.value);
+            }}
           >
             {o.label}
           </MenuItem>

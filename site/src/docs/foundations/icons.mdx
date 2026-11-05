@@ -66,7 +66,7 @@ import { Icon } from '@kivi';
 2. 等比缩到 21，居中放进 24 的框，线宽改成 1.6。
 3. 描边版放「_源文件 · 图标描边」页；转轮廓、合并后做成组件，放进「图标」页对应分组，加进 Icon 组件的首选值。
 4. 组件描述写「状态：待确认（用在哪）」，设计师确认后转正式。
-5. 在 `icons.demos.tsx` 的 `ICON_INFO` 里补名字和意思，重新导出 `kivi/icons.ts`。
+5. 在 `icons.demos.tsx` 的 `ICON_INFO` 里补名字和意思，重新导出 `kivi/icons.ts`（默认用的 V3 数据在 `kivi/icons-v3.ts`，`icons.ts` 是 V2 数据和新补的图标）。
 
 Hugeicons 里也没有的，由设计师照 Hugeicons 的画法自己画：线端圆头、转折圆角、只描边；方的 19、横竖长边 20、圆的 20；分开的部分之间至少留 2。小四角星只加给同一件事有普通版和 AI 版、要并排区分的图标（像 SmartEditing）；节点类型图标（文字、图片、视频、音频）不加。
 
@@ -80,7 +80,7 @@ Hugeicons 里也没有的，由设计师照 Hugeicons 的画法自己画：线�
 1. 在 [LobeHub Icons](https://lobehub.com/icons) 搜厂商或模型名，下载 Mono（单色）版 SVG。不用 Color、Text 版：图标字体只能单色。也可以直接拿 npm 包 `@lobehub/icons-static-svg` 里的 `icons/名字.svg`，同一批。
 2. 不改图形、不加描边，等比缩放后居中放进 24 的框。大小按看起来和圆形图标（Localization、Explore）一样大来定：外轮廓大约是直径 19 的圆；特别实的（像 Sora）再小一点；最长边不超过 20。颜色跟文字走，不用品牌色。
 3. 做成组件，放进 Figma「图标」页「模型 Logo」组，名字用厂商英文名、首字母大写（和 Kling、Minimax 一样）。组件描述写「状态：待确认（LobeHub：名字）」。
-4. 在 `icons.demos.tsx` 的 `ICON_INFO` 里补名字和意思，重新导出 `kivi/icons.ts`。
+4. 在 `icons.demos.tsx` 的 `ICON_INFO` 里补名字和意思，重新导出 `kivi/icons.ts`（默认用的 V3 数据在 `kivi/icons-v3.ts`，`icons.ts` 是 V2 数据和新补的图标）。
 
 </details>
 

@@ -1,7 +1,6 @@
-import { forwardRef, isValidElement, useId, type HTMLAttributes, type ReactElement, type ReactNode } from 'react';
+import { cloneElement, forwardRef, isValidElement, useId, type HTMLAttributes, type ReactElement, type ReactNode } from 'react';
 import { Collapse } from '../collapse';
 import { Icon } from '../Icon';
-import { Tooltip } from '../tooltip/Tooltip';
 import { cx } from '../utils';
 import { useControllable } from '../hooks';
 import './menu.css';
@@ -19,7 +18,7 @@ export interface MenuLabelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
   onExpandedChange?: (expanded: boolean) => void;
   /** 跟着标题展开收起的条目，一般是一组 MenuItem。写了就用 Collapse（高度从 0 推到内容高 + 淡入，300ms ease-in-out）把它们和标题包成一组；不写，条目自己写在 Menu 里，由使用方跟着显示或隐藏 */
   items?: ReactNode;
-  /** 右边悬停这一行才出现的按钮，比如新建：传一个 IconButton 28 轻（`<IconButton icon="NewChat" label="新建对话" size={28} variant="light" />`），出现 150ms ease-out、消失 100ms ease-in。收起时一直显示 */
+  /** 右边的按钮，比如新建（侧栏 plain 里悬停这一行才出现，弹出的菜单里一直显示）：传一个 IconButton 28 轻（`<IconButton icon="NewChat" label="新建对话" size={28} variant="light" />`），出现 150ms ease-out、消失 100ms ease-in。收起时一直显示 */
   action?: ReactElement;
   /** 收起：侧栏收成图标栏时用。标题、箭头淡出，只留 action（图标栏里宽 36，按钮居中），悬停在右边出 Tooltip 写 action 的 label */
   collapsed?: boolean;
@@ -48,17 +47,12 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
   const bodyId = useId();
   const grouped = items !== undefined;
 
-  // 收起后只剩 action，悬停出 Tooltip；action 的 label 就是文字。一直包着，收起、展开时结构不变
+  // 收起后只剩 action；action 的 label 就是提示文字
   const actionLabel = isValidElement(action) ? (action.props as { label?: string }).label : undefined;
+  // action 一般是 IconButton，自带提示：收起时出在右边，展开时在下方
   const actionNode = action && (
     <span className="kv-menu-label__action">
-      {actionLabel ? (
-        <Tooltip content={actionLabel} placement="right" disabled={!collapsed}>
-          {action}
-        </Tooltip>
-      ) : (
-        action
-      )}
+      {actionLabel && isValidElement(action) ? cloneElement(action as ReactElement<{ tooltip?: unknown }>, { tooltip: { placement: collapsed ? 'right' : 'bottom' } }) : action}
     </span>
   );
 

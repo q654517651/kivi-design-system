@@ -4,12 +4,13 @@ import {
   AudioWave,
   Button,
   ButtonGroup,
+  CanvasHeader,
   Connector,
   CropHandles,
   Divider,
   GenerateButton,
   IconButton,
-  Tooltip,
+  Toaster,
   MentionChip,
   Minimap,
   NodeCard,
@@ -47,12 +48,10 @@ const IMG = './placeholders/';
 // 演示音频：assets 里没有纯音频，用 mp4 的音轨（audio 元素能播 mp4）
 const AUDIO = './placeholders/video/kivi-demo-9x16.mp4';
 
-/** 只有图标的按钮：悬停出 Tooltip，文字用 label */
+/** 只有图标的按钮：IconButton 自带提示，文字用 label */
 function TipButton(props: IconButtonProps) {
   return (
-    <Tooltip content={props.label}>
-      <IconButton {...props} />
-    </Tooltip>
+    <IconButton {...props} />
   );
 }
 const LONG_TEXT =
@@ -197,7 +196,7 @@ function cardOf(def: NodeDef, run: Run, onUpload?: () => void): ReactElement {
         />
       );
     case 'failed':
-      return <NodeCard status="failed" type={def.type} message={run.message} />;
+      return <NodeCard status="failed" type={def.type} failedTitle={run.message} />;
     default: {
       // 图片、视频悬停时右上出按钮条：收藏、全屏、下载
       const media = def.type === 'image' || def.type === 'video';
@@ -947,6 +946,38 @@ export function ConnectorPlayground() {
   );
 }
 
+// ---------- 画布左上角：CanvasHeader ----------
+
+type HeaderPg = { count: string; agent: boolean };
+
+/** 一开始的画布：画布 1 … 画布 n */
+const canvasList = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `c${i + 1}`, name: `画布 ${i + 1}` }));
+
+export function CanvasHeaderPlayground() {
+  return (
+    <Playground<HeaderPg>
+      stageClassName="cv-pg-canvas cv-pg-header"
+      controls={[
+        { key: 'count', label: '一开始几个画布', type: 'segment', value: '2', options: [['1', '1 个'], ['2', '2 个'], ['12', '12 个（滚动）'], ['30', '30 个（上限）']] },
+        { key: 'agent', label: 'Agent 工作中（切换先确认）', type: 'toggle', value: false },
+      ]}
+      render={(s) => (
+        <>
+          {/* 换了个数就重新来一套 */}
+          <CanvasHeader
+            key={s.count}
+            workspace="未命名工作区"
+            defaultCanvases={canvasList(Number(s.count))}
+            defaultValue={`c${s.count === '1' ? 1 : 2}`}
+            agentWorking={s.agent}
+          />
+          <Toaster />
+        </>
+      )}
+    />
+  );
+}
+
 // ---------- 拆解：其他零件 ----------
 
 /** 其他零件各摆一个，下面写名字 */
@@ -963,7 +994,7 @@ export function PartsDemo() {
     [
       'ButtonGroup · 56',
       <ButtonGroup variant="surface" size={56} aria-label="画布工具栏">
-        <TipButton icon="Add" label="添加" className="kv-button-group__solid" />
+        <TipButton icon="Add" label="添加" variant="primary" />
         <TipButton icon={HISTORY} label="历史" />
         <TipButton icon="Upload" label="上传" />
       </ButtonGroup>,
@@ -1021,23 +1052,15 @@ export function ViewControlsDemo() {
       <div style={{ position: 'absolute', left: 16, bottom: 16, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
         {map && <Minimap nodes={WORLD} viewport={viewport} onViewportChange={setCenter} />}
         <ButtonGroup variant="glass" aria-label="视图">
-          <Tooltip content="小地图">
-            <IconButton icon="Map" label="小地图" selected={map} onClick={() => setMap(!map)} />
-          </Tooltip>
+          <IconButton icon="Map" label="小地图" selected={map} onClick={() => setMap(!map)} />
           <Divider orientation="vertical" />
-          <Tooltip content="缩小">
-            <IconButton icon="SubtractSmall" label="缩小" disabled={k === ZOOMS[0]} onClick={() => zoom(-1)} />
-          </Tooltip>
+          <IconButton icon="SubtractSmall" label="缩小" disabled={k === ZOOMS[0]} onClick={() => zoom(-1)} />
           <Button style={{ minWidth: 48 }} onClick={() => setK(1)}>
             {Math.round(k * 100)}%
           </Button>
-          <Tooltip content="放大">
-            <IconButton icon="AddSmall" label="放大" disabled={k === ZOOMS[ZOOMS.length - 1]} onClick={() => zoom(1)} />
-          </Tooltip>
+          <IconButton icon="AddSmall" label="放大" disabled={k === ZOOMS[ZOOMS.length - 1]} onClick={() => zoom(1)} />
           <Divider orientation="vertical" />
-          <Tooltip content="适应画布">
-            <IconButton icon="FitContent" label="适应画布" onClick={fit} />
-          </Tooltip>
+          <IconButton icon="FitContent" label="适应画布" onClick={fit} />
         </ButtonGroup>
       </div>
     </div>

@@ -3,13 +3,13 @@ import { cx } from '../utils';
 import { composeHandlers, useControllable } from '../hooks';
 import './selection.css';
 
-export type CheckboxShape = 'square' | 'round';
+export type CheckboxVariant = 'square' | 'round';
 export type CheckboxChecked = boolean | 'mixed';
 
 export interface CheckboxProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onChange' | 'role' | 'value' | 'defaultValue' | 'defaultChecked'> {
   /** 形状：方形 / 圆形，默认方形。方形用在列表和表单，圆形用在图片多选 */
-  shape?: CheckboxShape;
+  variant?: CheckboxVariant;
   /** 选中：true 是 / false 否 / 'mixed' 部分。传了就是受控，要自己在 onChange 里更新 */
   checked?: CheckboxChecked;
   /** 非受控时的初始值，默认否 */
@@ -27,7 +27,7 @@ export interface CheckboxProps
  * 「部分」只给全选框用：下面选了一部分时显示。整行（方框加文字）都能点。
  */
 export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Checkbox(
-  { shape = 'square', checked, defaultChecked = false, onChange, className, children, onClick, type = 'button', ...rest },
+  { variant = 'square', checked, defaultChecked = false, onChange, className, children, onClick, type = 'button', ...rest },
   ref,
 ) {
   const [state, setState] = useControllable<CheckboxChecked>(checked, defaultChecked, (next) => onChange?.(next === true));
@@ -38,7 +38,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Ch
       type={type}
       role="checkbox"
       aria-checked={state}
-      className={cx('kv-checkbox', `kv-checkbox--${shape}`, className)}
+      className={cx('kv-checkbox', `kv-checkbox--${variant}`, className)}
       onClick={composeHandlers(onClick, () => setState(state !== true))}
       {...rest}
     >

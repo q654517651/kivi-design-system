@@ -17,9 +17,9 @@ function SliderField(p: { label: string; min: number; max: number; step?: number
   const step = p.step ?? 1;
   const precision = p.precision ?? 0;
   const snap = (n: number) => Number(Math.min(p.max, Math.max(p.min, Math.round(n / step) * step)).toFixed(precision));
-  // 输入框打字时先留着打的那串（比如「1.」「-」），对不上当前值（拖了滑块）就用当前值
-  const [draft, setDraft] = useState<string>();
-  const shown = draft !== undefined && snap(Number(draft)) === p.value ? draft : p.value.toFixed(precision);
+  // 输入框打字时先留着打的那串（比如「1.」「-」「-.」这种打到一半的），记下当时的值；拖了滑块值变了就用当前值。夹住等失焦（NumberInput）再做
+  const [draft, setDraft] = useState<{ text: string; value: number }>();
+  const shown = draft !== undefined && draft.value === p.value ? draft.text : p.value.toFixed(precision);
   return (
     <ParamField label={p.label}>
       <Slider aria-label={p.label} min={p.min} max={p.max} step={step} value={p.value} marks={p.marks} onChange={p.onChange} />
@@ -31,8 +31,11 @@ function SliderField(p: { label: string; min: number; max: number; step?: number
         unit={p.unit}
         value={shown}
         onChange={(v) => {
-          setDraft(v);
-          if (v !== '' && !Number.isNaN(Number(v))) p.onChange(snap(Number(v)));
+          // 空、单独的「-」「.」「-.」是中间态，不改值，只留着显示
+          const partial = v === '' || Number.isNaN(Number(v));
+          const next = partial ? p.value : snap(Number(v));
+          setDraft({ text: v, value: next });
+          if (!partial) p.onChange(next);
         }}
         onBlur={() => setDraft(undefined)}
       />

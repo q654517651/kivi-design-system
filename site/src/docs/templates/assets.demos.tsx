@@ -214,7 +214,7 @@ function AssetsPage() {
             size={160}
             title={onlyCollected ? '暂无符合条件的收藏' : '没有找到相关生成记录'}
             action={
-              <Button variant="secondary" onClick={reset}>
+              <Button variant="light" onClick={reset}>
                 重置筛选
               </Button>
             }

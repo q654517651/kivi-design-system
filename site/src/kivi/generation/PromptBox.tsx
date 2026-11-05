@@ -27,7 +27,7 @@ export interface PromptBoxProps extends Omit<HTMLAttributes<HTMLDivElement>, 'on
   placeholder?: string;
   /** 参考区，放在提示词左边：ReferenceStack，或首尾帧这样固定的两格（ReferenceItem、AddTile）。不传就没有参考区 */
   references?: ReactNode;
-  /** 工具条左边，从左到右：任务类型、参考方式、模型、参数、其他开关。一般是无底的 Select */
+  /** 工具条左边，从左到右：任务类型、模型、参考方式、参数、其他开关。一般是无底的 Select */
   toolbar?: ReactNode;
   /** 工具条右边：张数、生成按钮 */
   actions?: ReactNode;

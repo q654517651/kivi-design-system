@@ -1,4 +1,4 @@
-import { Children, cloneElement, forwardRef, isValidElement, useCallback, useMemo, useState, type HTMLAttributes, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
+import { Children, cloneElement, forwardRef, isValidElement, useCallback, useMemo, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
 import { Button, IconButton } from '../button';
 import { cx } from '../utils';
 import { useControllable } from '../hooks';
@@ -15,7 +15,7 @@ export interface QuestionPanelProps extends Omit<HTMLAttributes<HTMLElement>, 't
   onPrev?: () => void;
   /** 点分页右边的「下一题」 */
   onNext?: () => void;
-  /** 多选：默认单选，只有一项选中；多选可以选多项 */
+  /** 多选：默认单选，只有一项选中，选项和「其他」互斥（选了选项清掉「其他」里的字，在「其他」打字清掉已选的）；多选可以选多项 */
   multiple?: boolean;
   /** 选中的值：受控。单选最多一项，值是 QuestionOption 的 value */
   value?: string[];
@@ -64,12 +64,24 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
 ) {
   const [value, setValue] = useControllable(valueProp, defaultValue, onChange);
 
+  // 单选时选项和「其他」互斥：各个「其他」登记清空方法，选了选项就都清掉
+  const others = useRef(new Map<string, () => void>());
+  const registerOther = useCallback((id: string, clear: () => void) => {
+    others.current.set(id, clear);
+    return () => {
+      others.current.delete(id);
+    };
+  }, []);
   const toggle = useCallback(
     (v: string) => {
+      if (!multiple && !value.includes(v)) others.current.forEach((clear) => clear());
       setValue(multiple ? (value.includes(v) ? value.filter((x) => x !== v) : [...value, v]) : value.includes(v) ? [] : [v]);
     },
     [multiple, value, setValue],
   );
+  const clearSelection = useCallback(() => {
+    if (!multiple && value.length) setValue([]);
+  }, [multiple, value, setValue]);
   // 「其他」里有字的算选了：记哪几个「其他」填了字
   const [filled, setFilled] = useState<Record<string, boolean>>({});
   const reportOther = useCallback((id: string, on: boolean) => {
@@ -90,8 +102,8 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
   const tabStop = value.find((v) => keys.includes(v)) ?? keys[0];
 
   const ctx = useMemo(
-    () => ({ multiple, value, toggle, disabled, tabStop, reportOther }),
-    [multiple, value, toggle, disabled, tabStop, reportOther],
+    () => ({ multiple, value, toggle, disabled, tabStop, reportOther, clearSelection, registerOther }),
+    [multiple, value, toggle, disabled, tabStop, reportOther, clearSelection, registerOther],
   );
 
   // 单选用方向键换：上、左到上一项，下、右到下一项，首尾相接；焦点到哪就选到哪（和原生单选一样）
@@ -121,9 +133,9 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
         <div className="kv-question-panel__title">{title}</div>
         {pager != null && (
           <div className="kv-question-panel__pager">
-            <IconButton icon="LeftArrowSmall" label="上一题" size={28} variant="text" onClick={onPrev} disabled={disabled} />
+            <IconButton tooltip={false} icon="LeftArrowSmall" label="上一题" size={28} variant="text" onClick={onPrev} disabled={disabled} />
             <span>{pager}</span>
-            <IconButton icon="RightArrowSmall" label="下一题" size={28} variant="text" onClick={onNext} disabled={disabled} />
+            <IconButton tooltip={false} icon="RightArrowSmall" label="下一题" size={28} variant="text" onClick={onNext} disabled={disabled} />
           </div>
         )}
       </div>

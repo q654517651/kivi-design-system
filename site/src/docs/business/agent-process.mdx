@@ -124,6 +124,8 @@ Agent 两段话之间连续调的工具算一组。进行中只占一行，显�
 | `items` | `MediaGroupItem[]` | — | 这一组结果，按生成顺序。每项 `id`、`src`（视频传封面）、`ratio`（数字或「16:9」，限制 9:16–16:9，默认 1:1）、`status`（`done` / `failed`）、`name`（悬停显示在左下） |
 | `type` | `"image"` `"video"` | `"image"` | 产出类型，决定标题行的图标和文字 |
 | `title` | `ReactNode` | 按结果算 | 标题行，比如「图片已生成 ×2，图片生成失败 ×3」 |
+| `failedTitle` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败的那几张：标题。失败态就是 EmptyState 生成失败 · 96，和结果格、节点一样；格子矮于 170（16:9 这类）放不下插图，只留文字 |
+| `failedDescription` | `ReactNode` | — | 失败的那几张：副标题 |
 | `expanded` | `boolean` | — | 展开：受控。只有一张时不叠放，直接平铺 |
 | `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |

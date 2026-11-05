@@ -1,4 +1,5 @@
 export * from './AudioWave';
+export * from './CanvasHeader';
 export * from './Connector';
 export * from './ConnectorDot';
 export * from './ConnectorRemove';

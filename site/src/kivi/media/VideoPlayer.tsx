@@ -91,14 +91,15 @@ function Volume({ variant, shown, onVolumeChange, onMuteToggle, hold }: VolumePr
   const icon: IconName = shown === 0 ? 'VolumeOff' : shown < 50 ? 'VolumeHalf' : 'VolumeFull';
   const drag = usePointerDrag({ axis: 'y', onMove: (r) => onVolumeChange(Math.round(r * 100)) });
 
-  useFloating(mounted, popupRef, () => (buttonRef.current ? rectOf(buttonRef.current) : null), 'top', 4);
+  useFloating(mounted, popupRef, () => (buttonRef.current ? rectOf(buttonRef.current) : null), 'top', 8);
 
-  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    const step = e.key === 'ArrowUp' ? 10 : e.key === 'ArrowDown' ? -10 : 0;
-    if (!step) return;
+  const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    const step = e.key === 'ArrowUp' || e.key === 'ArrowRight' ? 10 : e.key === 'ArrowDown' || e.key === 'ArrowLeft' ? -10 : 0;
+    const jump = e.key === 'Home' ? 0 : e.key === 'End' ? 100 : undefined;
+    if (!step && jump === undefined) return;
     e.preventDefault();
     e.stopPropagation();
-    onVolumeChange(Math.min(100, Math.max(0, shown + step)));
+    onVolumeChange(jump ?? Math.min(100, Math.max(0, shown + step)));
     pop.enter();
     pop.leave(1200);
   };
@@ -108,6 +109,7 @@ function Volume({ variant, shown, onVolumeChange, onMuteToggle, hold }: VolumePr
       <IconButton
         ref={buttonRef}
         icon={icon}
+        tooltip={false}
         label={shown === 0 ? '取消静音' : '静音'}
         size={variant === 'preview' ? 32 : 28}
         variant="on-media-ghost"
@@ -138,12 +140,14 @@ function Volume({ variant, shown, onVolumeChange, onMuteToggle, hold }: VolumePr
               <div
                 className="kv-video-player__volume-rail"
                 role="slider"
+                tabIndex={0}
                 aria-label="音量"
                 aria-orientation="vertical"
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={shown}
                 style={{ '--value': `${shown}%` } as CSSProperties}
+                onKeyDown={onKeyDown}
                 {...drag}
               >
                 <span className="kv-video-player__volume-track">
@@ -315,7 +319,7 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
   const showFullscreen = large || !!onFullscreen;
 
   // 预览款键盘：空格 / K 播放暂停，M 静音，F 全屏，← → 跳 5 秒
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (e: { key: string; target: EventTarget | null; preventDefault: () => void }) => {
     const v = videoRef.current;
     if (!large || !v || failed) return;
     const k = e.key.toLowerCase();
@@ -329,6 +333,22 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
     e.preventDefault();
     wake();
   };
+
+  // 放在弹窗里的预览款：弹窗刚打开焦点在弹窗面板上，不在播放器里，keydown 到不了播放器根。
+  // 所以焦点在所在弹窗面板本身时，也按播放器的快捷键处理（焦点在弹窗里别的输入上不管）
+  const keyRef = useRef(handleKeyDown);
+  keyRef.current = handleKeyDown;
+  useEffect(() => {
+    const root = rootRef.current;
+    const dialog = large ? root?.closest<HTMLElement>('[role="dialog"]') : null;
+    if (!dialog) return;
+    const onDocKey = (e: globalThis.KeyboardEvent) => {
+      if (e.defaultPrevented || e.isComposing || e.ctrlKey || e.metaKey || e.altKey || e.target !== dialog) return;
+      keyRef.current(e);
+    };
+    document.addEventListener('keydown', onDocKey);
+    return () => document.removeEventListener('keydown', onDocKey);
+  }, [large]);
 
   const ratio = duration ? Math.min(1, current / duration) : 0;
   const controlsOn = large ? !playing || awake || dragging : hover.inside || dragging;
@@ -451,6 +471,7 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
           <div className="kv-video-player__bar">
             <IconButton
               icon={playing ? 'Pause' : 'Play'}
+              tooltip={false}
               label={playing ? '暂停' : '播放'}
               size={btnSize}
               variant="on-media-ghost"
@@ -472,6 +493,7 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
             {showFullscreen && (
               <IconButton
                 icon={fullscreen ? 'Fold' : 'FullScreen'}
+                tooltip={false}
                 label={fullscreen ? '退出全屏' : large ? '全屏' : '预览'}
                 size={btnSize}
                 variant="on-media-ghost"

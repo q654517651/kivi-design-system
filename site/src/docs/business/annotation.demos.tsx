@@ -105,7 +105,7 @@ export function AnnotationDemo() {
       <div style={{ position: 'relative', width: 360, height: 240 }}>
         {mode && (
           <ButtonGroup variant="glass" size={44} aria-label="标注" style={{ position: 'absolute', left: '50%', bottom: 'calc(100% + 8px)', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}>
-            <IconButton icon="Close" label="退出框选" onClick={() => setMode(false)} />
+            <IconButton tooltip={false} icon="Close" label="退出框选" onClick={() => setMode(false)} />
             <span style={{ color: 'var(--color-text-fill-tertiary)', fontSize: 14, lineHeight: '20px', paddingRight: 8 }}>在图像上拖拽选区添加评论</span>
           </ButtonGroup>
         )}
@@ -206,7 +206,7 @@ export function AnnotationCommentPlayground() {
         { key: 'text', label: '描述', type: 'text', value: '把这个猕猴桃换成切开的，露出果肉' },
       ]}
       rules={(s) => (s.status === 'collapsed' ? { added: true } : {})}
-      render={(s) => <AnnotationComment collapsed={s.status === 'collapsed'} added={s.added !== 'no'} changed={s.added === 'changed'} value={s.text} />}
+      render={(s, update) => <AnnotationComment collapsed={s.status === 'collapsed'} added={s.added !== 'no'} changed={s.added === 'changed'} value={s.text} onChange={(text) => update({ text })} />}
     />
   );
 }

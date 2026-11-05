@@ -32,6 +32,11 @@ export const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d
 const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const addMonths = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, 1);
+/** 翻月保持「几号」：目标月没有这一天（3/31 往前翻）就取目标月最后一天 */
+const shiftMonth = (d: Date, n: number) => {
+  const last = new Date(d.getFullYear(), d.getMonth() + n + 1, 0).getDate();
+  return new Date(d.getFullYear(), d.getMonth() + n, Math.min(d.getDate(), last));
+};
 const sameDay = (a?: Date | null, b?: Date | null) => !!a && !!b && a.toDateString() === b.toDateString();
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -100,8 +105,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
       ArrowDown: addDays(focusInView, 7),
       Home: addDays(focusInView, -focusInView.getDay()),
       End: addDays(focusInView, 6 - focusInView.getDay()),
-      PageUp: new Date(focusInView.getFullYear(), focusInView.getMonth() - 1, focusInView.getDate()),
-      PageDown: new Date(focusInView.getFullYear(), focusInView.getMonth() + 1, focusInView.getDate()),
+      PageUp: shiftMonth(focusInView, -1),
+      PageDown: shiftMonth(focusInView, 1),
     };
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -122,7 +127,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
   };
 
   const nav = (n: number, label: string, icon: 'LeftArrowSmall' | 'RightArrowSmall' | 'DoubleLeftArrowSmall' | 'DoubleRightArrowSmall') => (
-    <IconButton size={28} icon={icon} label={label} disabled={!(n < 0 ? canPrev : canNext)} onClick={() => go(n)} />
+    <IconButton tooltip={false} size={28} icon={icon} label={label} disabled={!(n < 0 ? canPrev : canNext)} onClick={() => go(n)} />
   );
 
   const title = `${first.getFullYear()}年${pad(first.getMonth() + 1)}月`;

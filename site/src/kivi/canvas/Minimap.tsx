@@ -47,7 +47,7 @@ function frameOf(nodes: MinimapRect[], viewport: MinimapRect): Frame {
  * 视口拖出节点范围时小地图跟着变大。出现、收起没有动效。线上用第三方的小地图插件，样式要自己清；这里是自己的组件。
  */
 export const Minimap = forwardRef<HTMLDivElement, MinimapProps>(function Minimap(
-  { nodes, viewport, onViewportChange, className, onPointerDown, onPointerMove, onPointerUp, onKeyDown, ...rest },
+  { nodes, viewport, onViewportChange, className, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onLostPointerCapture, onKeyDown, ...rest },
   ref,
 ) {
   const frozen = useRef<Frame | null>(null);
@@ -88,6 +88,14 @@ export const Minimap = forwardRef<HTMLDivElement, MinimapProps>(function Minimap
       }}
       onPointerUp={(e) => {
         onPointerUp?.(e);
+        frozen.current = null;
+      }}
+      onPointerCancel={(e) => {
+        onPointerCancel?.(e);
+        frozen.current = null;
+      }}
+      onLostPointerCapture={(e) => {
+        onLostPointerCapture?.(e);
         frozen.current = null;
       }}
       onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {

@@ -10,6 +10,7 @@ import {
   Icon,
   IconButton,
   Menu,
+  MessageFeedback,
   Divider,
   MenuItem,
   MenuLabel,
@@ -28,7 +29,6 @@ import {
   ResultTile,
   Tag,
   Toaster,
-  Tooltip,
   UserMessage,
   placeholderImageSrc,
   referenceName,
@@ -359,9 +359,9 @@ export function Sidebar({
         <div className="tpl-ms__brand">
           <Icon name="Logo" />
           {/* 展开时在右边；收起时叠在 Logo 上，悬停 Logo 才换成它。轻：平时 50%，悬停变亮 */}
-          <Tooltip content={toggle} placement={collapsed ? 'right' : 'bottom'} className="tpl-ms__toggle">
-            <IconButton icon="Sidebar" label={toggle} variant="light" size={28} onClick={() => setCollapsed(!collapsed)} />
-          </Tooltip>
+          <span className="tpl-ms__toggle">
+            <IconButton icon="Sidebar" label={toggle} variant="light" size={28} tooltip={{ placement: collapsed ? 'right' : 'bottom' }} onClick={() => setCollapsed(!collapsed)} />
+          </span>
         </div>
         <Menu variant="plain" aria-label="主站导航">
           <MenuItem icon="Create" collapsed={collapsed}>创作</MenuItem>
@@ -537,12 +537,7 @@ export function MainSiteTemplate() {
                     <ProcessGroup steps={AGENT_STEPS} />
                     <div className="tpl-text">参考图是冷色宇宙背景加漂浮的猕猴桃切片，下面按这个风格生成 4 张竖版海报。</div>
                     <div className="tpl-grid">{AGENT_RESULTS.map((src, i) => tile({ src }, i, '9:16', 1))}</div>
-                    <div className="tpl-row" style={{ gap: 0 }}>
-                      <IconButton icon="Copy" label="复制" variant="light" />
-                      <IconButton icon="CopyTraceID" label="复制 TraceID" variant="light" />
-                      <IconButton icon="ThumbsUp" label="赞" variant="light" />
-                      <IconButton icon="ThumbsDown" label="踩" variant="light" />
-                    </div>
+                    <MessageFeedback text="参考图是冷色宇宙背景加漂浮的猕猴桃切片，下面按这个风格生成 4 张竖版海报。" traceId="trace-4c9d07" />
                   </div>
                 ) : (
                   <div key={r.id} className="tpl-record">

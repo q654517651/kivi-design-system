@@ -1,24 +1,19 @@
-import { useState, type CSSProperties } from 'react';
+import { useState } from 'react';
 import {
   ActionCard,
   AskRecord,
   Button,
-  Dialog,
   FileCard,
   MentionChip,
   MessageFeedback,
   SkillCard,
-  IconButton,
-  ProcessGroup,
   QuestionOption,
   QuestionPanel,
   ReferenceItem,
-  ResultTile,
   SendButton,
   UserMessage,
   type FileCardType,
   type AskRecordStatus,
-  type ResultTileAction,
 } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 
@@ -91,68 +86,6 @@ export function SkillCardPlayground() {
   );
 }
 
-// ---------- 示例：主站 Agent ----------
-
-const TEXT: CSSProperties = { color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' };
-const RESULTS = ['ip-gouache-1x1.webp', 'kivi-future-1x1.webp', 'bunny-gouache-1x1.webp', 'ip-kiwi-pile-1x1.webp'];
-const TOP: ResultTileAction[] = [
-  { icon: 'Delete', label: '删除' },
-  { icon: 'Download', label: '下载' },
-];
-const QUICK: ResultTileAction[] = [
-  { icon: 'ImageEditing', label: '图片编辑' },
-  { icon: 'VideoGeneration', label: '图生视频' },
-  { icon: 'ImageToImage', label: '一键垫图' },
-  { icon: 'More', label: '更多' },
-];
-
-/** 主站 Agent：生成的结果直接跟在回复下面，4 张大图；点一张全屏看 */
-export function MainSiteAgentDemo() {
-  const [preview, setPreview] = useState<number | null>(null);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
-      <UserMessage assets={<ReferenceItem src={`${IMG}kiwi-light-1x1.webp`} />}>参考这张图，做 4 张科幻宇宙风格的猕猴桃海报</UserMessage>
-      <div style={TEXT}>好的，我先看看参考图的风格。</div>
-      <ProcessGroup
-        steps={[
-          { icon: 'Skill', action: '读取参考图' },
-          { icon: 'Skill', action: '分析画面风格' },
-          { icon: 'Text', action: '整理提示词' },
-        ]}
-      />
-      <div style={TEXT}>参考图是冷色宇宙背景加漂浮的猕猴桃切片，下面按这个风格生成 4 张。</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
-        {RESULTS.map((file, i) => (
-          <ResultTile
-            key={file}
-            src={`${IMG}${file}`}
-            topActions={TOP}
-            collect
-            quickActions={QUICK}
-            style={{ cursor: 'zoom-in' }}
-            onClick={(e) => {
-              // 点的是格子里的按钮就不打开预览
-              if ((e.target as HTMLElement).closest('button')) return;
-              setPreview(i);
-            }}
-          />
-        ))}
-      </div>
-      <div style={{ display: 'flex' }}>
-        <IconButton icon="Copy" label="复制" variant="light" />
-        <IconButton icon="CopyTraceID" label="复制 TraceID" variant="light" />
-        <IconButton icon="ThumbsUp" label="赞" variant="light" />
-        <IconButton icon="ThumbsDown" label="踩" variant="light" />
-      </div>
-      <Dialog size="full" title={preview === null ? undefined : `图片 ${preview + 1}`} open={preview !== null} onOpenChange={(open) => !open && setPreview(null)}>
-        {preview !== null && (
-          <img src={`${IMG}${RESULTS[preview]}`} alt={`图片 ${preview + 1}`} style={{ display: 'block', maxWidth: '100%', maxHeight: '75vh', margin: '0 auto', objectFit: 'contain' }} />
-        )}
-      </Dialog>
-    </div>
-  );
-}
-
 // ---------- UserMessage ----------
 
 type UserMessageState = { assets: string; kind: string; text: string; expand: string };
@@ -174,7 +107,7 @@ function renderUserMessage(s: UserMessageState, update: Update) {
       onExpandedChange={(v) => update({ expand: v ? 'yes' : 'no' })}
     >
       {s.kind === 'long' ? (
-        <span style={{ whiteSpace: 'pre-wrap' }}>{LONG_TEXT}</span>
+        LONG_TEXT
       ) : s.kind === 'chips' ? (
         <>
           用 <MentionChip type="skill">运营活动主视觉</MentionChip> 的风格，参考 <MentionChip type="image" src={`${IMG}kivi-future-1x1.webp`}>图片1</MentionChip> 做 4 张海报，节奏对齐 <MentionChip type="node">分镜脚本</MentionChip>
@@ -380,13 +313,15 @@ export function ActionCardPlayground() {
 type SendButtonState = { state: string };
 
 function sendButton(state: string) {
-  return <SendButton disabled={state === 'disabled' || undefined} generating={state === 'busy' || undefined} />;
+  // 悬停、按下是摆静态样子用的（is-hover / is-active），项目里不用写
+  const cls = state === 'hover' ? 'is-hover' : state === 'active' ? 'is-active' : undefined;
+  return <SendButton className={cls} disabled={state === 'disabled' || undefined} generating={state === 'busy' || undefined} />;
 }
 
 export function SendButtonPlayground() {
   return (
     <Playground<SendButtonState>
-      controls={[{ key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['disabled', '禁用'], ['busy', '生成中']] }]}
+      controls={[{ key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['active', '按下'], ['disabled', '禁用'], ['busy', '生成中']] }]}
       render={(s) => sendButton(s.state)}
     />
   );

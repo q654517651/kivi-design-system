@@ -1,6 +1,7 @@
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { ButtonGroup, IconButton } from '../button';
 import { Divider } from '../divider';
+import { EmptyState, GENERATION_FAILED_TITLE } from '../feedback';
 import { GeneratingDots } from '../generating';
 import { useControllable } from '../hooks';
 import { Icon } from '../Icon';
@@ -44,7 +45,7 @@ export interface NodeCardProps extends HTMLAttributes<HTMLDivElement> {
   uploading?: boolean;
   /** 完成：右上按钮条最左边放收藏。生成的图片、视频节点开，素材节点不开 */
   collect?: boolean;
-  /** 完成：收藏了没有。收藏了图标换实心；悬停才出按钮时，不悬停右上只留一个绿星 */
+  /** 完成：收藏了没有。收藏了图标换实心；悬停才出按钮时，不悬停右上只留一个绿星（图标品牌绿） */
   collected?: boolean;
   /** 完成：一开始收藏了没有，不受控时用 */
   defaultCollected?: boolean;
@@ -56,10 +57,10 @@ export interface NodeCardProps extends HTMLAttributes<HTMLDivElement> {
   textButton?: ReactNode;
   /** 完成：右上的按钮条只在鼠标移上去时出现。画布上的真实节点都开；不开就一直显示，文档摆静态用 */
   hoverActions?: boolean;
-  /** 失败：文案，默认「生成失败，消耗猕猴桃已退回」 */
-  message?: ReactNode;
-  /** 失败：插画地址，默认 ./empty-state/failed.png */
-  illustration?: string;
+  /** 失败：标题，默认「生成失败，消耗猕猴桃已退回」。失败态就是 EmptyState 生成失败 · 96，和结果格、生成结果组一样 */
+  failedTitle?: ReactNode;
+  /** 失败：副标题，默认没有 */
+  failedDescription?: ReactNode;
   /** 引导：点了某个起步方式。传了 children 时用自己的菜单项 */
   onGuideSelect?: (option: string) => void;
   /** 引导：换掉默认的三个起步方式（MenuItem）；完成：里面放 NodeMedia */
@@ -83,8 +84,8 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
     iconButton,
     textButton,
     hoverActions,
-    message = '生成失败，消耗猕猴桃已退回',
-    illustration = './empty-state/failed.png',
+    failedTitle = GENERATION_FAILED_TITLE,
+    failedDescription,
     onGuideSelect,
     className,
     style,
@@ -101,6 +102,7 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
       icon={collected ? 'CollectSolid' : 'Collect'}
       label={collected ? '取消收藏' : '收藏'}
       selected={collected}
+      data-collected={collected || undefined}
       onClick={() => setCollected(!collected)}
     />
   );
@@ -169,18 +171,13 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
           {/* 收藏了、不悬停：右上只留一个星，悬停时换成整条。只是标记，点不到（鼠标一移上去就是整条） */}
           {collect && collected && hoverActions && (
             <ButtonGroup className="kv-node-card__pin" aria-hidden>
-              <IconButton icon="CollectSolid" label="已收藏" selected tabIndex={-1} />
+              <IconButton icon="CollectSolid" label="已收藏" selected data-collected tabIndex={-1} />
             </ButtonGroup>
           )}
         </>
       )}
 
-      {status === 'failed' && (
-        <>
-          <img className="kv-node-card__illustration" src={illustration} alt="" />
-          <p className="kv-node-card__message">{message}</p>
-        </>
-      )}
+      {status === 'failed' && <EmptyState scene="failed" size={96} title={failedTitle} description={failedDescription} />}
     </div>
   );
 });

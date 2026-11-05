@@ -15,6 +15,14 @@
   background-size: 18px 18px;
 }
 
+/* 画布左上角：贴左上，下面留出下拉的高度 */
+.cv-pg-header.shell-pg-stage {
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 440px;
+  padding: var(--spacing-16);
+}
+
 /* 小画布：拖空白处移动 */
 .cv-canvas {
   position: relative;

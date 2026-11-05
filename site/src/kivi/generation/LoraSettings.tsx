@@ -3,14 +3,14 @@ import { IconButton } from '../button';
 import { toast } from '../feedback';
 import { NumberInput } from '../inputs';
 import { Slider } from '../selection';
-import { useControllable } from '../hooks';
+import { useControllable, writeClipboard } from '../hooks';
 import { cx } from '../utils';
 import './generation.css';
 
 export interface LoraSettingsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'onChange'> {
   /** Lora 名字，14 / 22，一行省略 */
   name: string;
-  /** 触发词。不传就不显示这一块。右边有复制按钮，点了复制并弹 Toast「复制成功」 */
+  /** 触发词。不传就不显示这一块。右边有复制按钮，点了复制并弹 Toast「复制成功」，失败弹「复制失败」 */
   triggerWords?: string;
   /** 提示词模版。不传就不显示这一块。最高 60，多了在里面滚动 */
   template?: string;
@@ -26,21 +26,10 @@ const MIN = 0;
 const MAX = 2;
 const clamp = (n: number) => Math.min(MAX, Math.max(MIN, Math.round(n * 10) / 10));
 
-/** 复制到剪贴板，成功弹 Toast。剪贴板接口不可用时退回 execCommand */
+/** 复制到剪贴板，成功弹 Toast「复制成功」，失败弹「复制失败」 */
 async function copy(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    const area = document.createElement('textarea');
-    area.value = text;
-    area.style.position = 'fixed';
-    area.style.opacity = '0';
-    document.body.appendChild(area);
-    area.select();
-    document.execCommand('copy');
-    area.remove();
-  }
-  toast.success('复制成功');
+  if (await writeClipboard(text)) toast.success('复制成功');
+  else toast.error('复制失败');
 }
 
 function CopyBox({ title, text, scroll }: { title: string; text: string; scroll?: boolean }) {

@@ -16,6 +16,9 @@ export const EMPTY_STATE_IMAGES: Record<EmptyStateScene, string> = {
   failed: './empty-state/failed.png',
 };
 
+/** 生成失败的默认标题（10-29 用户定）。结果格、节点、生成结果组的失败态都用它 */
+export const GENERATION_FAILED_TITLE = '生成失败，消耗猕猴桃已退回';
+
 export interface EmptyStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   /** 场景：暂无内容 / 暂无收藏 / 无网络 / 生成失败，决定用哪张 IP 图，默认暂无内容。样式一样 */
   scene?: EmptyStateScene;

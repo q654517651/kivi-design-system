@@ -8,7 +8,6 @@ import {
   BoxSelect,
   CalendarDays,
   Braces,
-  Compass,
   FolderOpen,
   Globe,
   House,
@@ -53,6 +52,15 @@ export interface NavItem {
 
 export const NAV: { group: string; items: NavItem[] }[] = [
   {
+    group: '开始',
+    items: [
+      { id: 'home', icon: House, title: '总览', path: '/', load: () => import('../docs/index.mdx') },
+      { id: 'intro', icon: BookOpen, title: '说明', path: '/intro', load: () => import('../docs/intro.mdx') },
+      { id: 'legacy-names', icon: ArrowRightLeft, title: '旧名对照', path: '/legacy-names', load: () => import('../docs/legacy-names.mdx') },
+      { id: 'component-api', icon: Braces, title: '组件写法', path: '/component-api', load: () => import('../docs/component-api.mdx') },
+    ],
+  },
+  {
     group: '页面模板',
     items: [
       { id: 'tpl-main-site', icon: LayoutTemplate, title: '主站', path: '/templates/main-site', load: () => import('../docs/templates/main-site.mdx') },
@@ -63,18 +71,8 @@ export const NAV: { group: string; items: NavItem[] }[] = [
     ],
   },
   {
-    group: '开始',
-    items: [
-      { id: 'home', icon: House, title: '总览', path: '/', load: () => import('../docs/index.mdx') },
-      { id: 'intro', icon: BookOpen, title: '说明', path: '/intro', load: () => import('../docs/intro.mdx') },
-      { id: 'legacy-names', icon: ArrowRightLeft, title: '旧名对照', path: '/legacy-names', load: () => import('../docs/legacy-names.mdx') },
-      { id: 'component-api', icon: Braces, title: '组件写法', path: '/component-api', load: () => import('../docs/component-api.mdx') },
-    ],
-  },
-  {
     group: '基础',
     items: [
-      { id: 'guidelines', icon: Compass, title: '设计指南', path: '/foundations/guidelines', load: () => import('../docs/foundations/guidelines.mdx') },
       { id: 'rules', icon: Ruler, title: '设计规则', path: '/foundations/rules', load: () => import('../docs/foundations/rules.mdx') },
       { id: 'tokens', icon: Palette, title: '变量', path: '/foundations/tokens', load: () => import('../docs/foundations/tokens.mdx') },
       { id: 'motion', icon: Sparkles, title: '动效', path: '/foundations/motion', load: () => import('../docs/foundations/motion.mdx') },

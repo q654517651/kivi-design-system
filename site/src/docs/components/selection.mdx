@@ -86,7 +86,7 @@ import { CheckboxPlayground, SelectPlayground, SliderPlayground, SwitchPlaygroun
           style={{ position: 'relative', width: 120, height: 120, borderRadius: 8, background: 'url(./placeholders/' + name + '-1x1.webp) center / cover' }}
         >
           <Checkbox
-            shape="round"
+            variant="round"
             aria-label={'选择图片 ' + (i + 1)}
             checked={picked[i]}
             onChange={(v) => setPicked(picked.map((x, j) => (j === i ? v : x)))}
@@ -105,14 +105,14 @@ import { CheckboxPlayground, SelectPlayground, SliderPlayground, SwitchPlaygroun
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `options` | `SelectOption[]` | — | 选项 `{ value, label, icon?, disabled? }`。`icon` 是这一项的左图标（比如模型 logo），选中后触发器的左图标跟着换；`disabled` 灰色，选不了。列表是 Menu + MenuItem，当前项是 MenuItem 的「选中」状态：白 10% 底，不打勾 |
+| `options` | `SelectOption[]` | — | 选项 `{ value, label, icon?, description?, preview?, disabled? }`。`icon` 是这一项的左图标（比如模型 logo），选中后触发器的左图标跟着换；`description` 是第二行说明，写了这一项就是两行菜单项（图标 24，当前项打勾不加底），触发器上只显示 `label`；`preview` 是试听音频地址（音色选择用），左边出圆形试听按钮，点它只试听、不选中、不关列表，和 `icon` 二选一；`disabled` 灰色，选不了。列表是 Menu + MenuItem，当前项是 MenuItem 的「选中」状态：白 10% 底，不打勾 |
 | `variant` | `"fill"` `"plain"` | `"fill"` | 填充 / 无底。填充用在表单和面板，宽度拉伸，内边距 12，底白 10%，悬停白 14%；无底用在工具条，宽度跟着内容走，内边距 8，底透明，悬停白 14%（Light 1 hover），展开白 10%（常驻底色）。高 32，圆角 8（`--border-radius-8`） |
 | `value` | `string` `null` | — | 选中的值，没选传 `null`。传了就是受控，要自己在 `onChange` 里更新 |
 | `defaultValue` | `string` `null` | `null` | 非受控时的初始值 |
 | `onChange` | `(value: string) => void` | — | 选了一项时触发，参数是选项的值 |
 | `placeholder` | `string` | — | 没选时显示的占位文字。填充是灰的（`--color-text-fill-placeholder`）；无底放在工具条上当入口名（比如「模型」「技能」），和选了值一样白，左图标也白 |
 | `leftIcon` | `IconName` | — | 左图标，16，tertiary。选中的选项带 `icon` 时用选项的 |
-| `disabled` | `boolean` | `false` | 禁用：占位文字和箭头变灰，不能展开 |
+| `disabled` | `boolean` | `false` | 禁用：占位文字和箭头变灰，不能展开；开着时变禁用会收起，选项不响应、不触发 `onChange` |
 | `open` | `boolean` | — | 展开。传了就是受控；展开时右箭头从 `DownArrowSmall` 换成 `UpArrowSmall` |
 | `defaultOpen` | `boolean` | `false` | 非受控时一开始是不是展开 |
 | `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发 |
@@ -138,7 +138,7 @@ import { CheckboxPlayground, SelectPlayground, SliderPlayground, SwitchPlaygroun
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `value` | `number` | — | 当前值。传了就是受控，要自己在 `onChange` 里更新。轨道高 20、圆角 4、`--color-bg-fill-container-light-1`；已选 `--color-bg-fill-container-light-1-hover`；把手 8 × 20 白条，`--color-text-fill-primary`；键盘聚焦在轨道外画 1.5 描边 `--color-border-strong`。原来的绿色细滑块不用了 |
+| `value` | `number` | — | 当前值。传了就是受控，要自己在 `onChange` 里更新。轨道高 20、圆角 4、`--color-bg-fill-container-light-1`；已选 `--color-bg-fill-container-light-1-hover`；把手 8 × 20 白条，`--color-text-fill-primary`；键盘聚焦不加描边（组件一律不加聚焦描边）。原来的绿色细滑块不用了 |
 | `defaultValue` | `number` | `min` | 非受控时的初始值 |
 | `onChange` | `(value: number) => void` | — | 拖动、点轨道、按方向键时触发，参数是新的值 |
 | `min` | `number` | `0` | 最小值 |
@@ -154,7 +154,7 @@ import { CheckboxPlayground, SelectPlayground, SliderPlayground, SwitchPlaygroun
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `shape` | `"square"` `"round"` | `"square"` | 方形 / 圆形。方形用在列表和表单，圆形用在图片多选。方框 16，圆角 4（`--border-radius-4`）/ 999 |
+| `variant` | `"square"` `"round"` | `"square"` | 方形 / 圆形。方形用在列表和表单，圆形用在图片多选。方框 16，圆角 4（`--border-radius-4`）/ 999 |
 | `checked` | `boolean` `"mixed"` | — | 否 / 是 / 部分。传了就是受控，要自己在 `onChange` 里更新。「部分」只给全选框用。没选：黑 40% 底 + 1px 白 50% 描边；是、部分：`--color-brand-solid` 底，悬停 `--color-brand-hover` |
 | `defaultChecked` | `boolean` `"mixed"` | `false` | 非受控时的初始值 |
 | `onChange` | `(checked: boolean) => void` | — | 点一下或按空格时触发，参数是点完的值；「部分」点完变成 `true` |

@@ -33,10 +33,10 @@ import { CalendarPlayground, DateRangeFilterPlayground } from './date.demos';
 | `presets` | `DateRangePreset[]` | 全部 / 最近一周 / 最近一个月 / 最近三个月 | 预设 `{ value, label, days? }`，`days` 是往前推几天（含今天），不写就是「全部」 |
 | `placeholder` | `string` | `"时间筛选"` | 没选、或选了「全部」时触发器上的字。选了预设显示预设名，自己选的显示「26-10-01 ~ 26-11-03」，只有一头就只写一头 |
 | `max` | `Date` | 今天 | 最晚能选到哪天。开始不能晚于结束，结束不能早于开始，不能选的日子变灰 |
-| `placement` | `"bottom-start"` `"bottom-end"` | `"bottom-start"` | 面板出在哪边：放在一行最右边时用右对齐 |
+| `placement` | `"bottom-start"` `"bottom"` `"bottom-end"` `"top-start"` `"top"` `"top-end"` | `"bottom-start"` | 面板出在哪边：放在一行最右边时用右对齐；放不下翻到另一边 |
 | `disabled` | `boolean` | `false` | 禁用 |
 
-触发器是 32 的文字 Button，一直是 primary 的字，没选也不变灰；展开时箭头转上去（200ms ease-in-out）。面板：宽 272，玻璃底（`--color-bg-fill-glass` + 模糊 32）+ 描边 `--color-border-subtle`，圆角 16，内边距 8，离触发器 4，出现、消失同菜单。上面起止两个日期框：高 36，底白 10%（`--color-bg-fill-container-light-1`，玻璃是深底），悬停白 14%（`-hover`），日历开着时是常驻底色、用默认 8%，右边 `Calendar` 图标 16 tertiary，没值时是「开始日期」「结束日期」。下面预设是 `MenuItem`，当前项用选中底色、不打勾；点了立刻生效并收起面板。点日期框，在这个框下面浮出第二层日历：和框左对齐、离 4，压在预设上、可以伸出面板；同样是玻璃，圆角 16，内边距 8，出现同菜单。点一天填进去、日历收起，面板不关。Esc 先关日历再关面板；面板里 Tab 照常在控件之间走。照 Figma 旧版 KIVI 3.5-3.14（14637:17589）和线上 TimeRangeFilter，两层都是玻璃。其余原生 `<span>` 属性都能传，给包住触发器的外壳。
+触发器是 32 的文字 Button，一直是 primary 的字，没选也不变灰；展开时箭头转上去（200ms ease-in-out）。面板：宽 272，玻璃底（`--color-bg-fill-glass` + 模糊 32）+ 描边 `--color-border-subtle`，圆角 16，内边距 8，离触发器 4，出现、消失同菜单。上面起止两个日期框：高 36，底白 10%（`--color-bg-fill-container-light-1`，玻璃是深底），悬停白 14%（`-hover`），日历开着时是常驻底色、用默认 10%，右边 `Calendar` 图标 16 tertiary，没值时是「开始日期」「结束日期」。下面预设是 `MenuItem`，当前项用选中底色、不打勾；点了立刻生效并收起面板。点日期框，在这个框下面浮出第二层日历：和框左对齐、离 4，压在预设上、可以伸出面板；同样是玻璃，圆角 16，内边距 8，出现同菜单。点一天填进去、日历收起，面板不关。Esc 先关日历再关面板；面板里 Tab 照常在控件之间走。两层都是玻璃。其余原生 `<span>` 属性都能传，给包住触发器的外壳。
 
 ### Calendar
 
@@ -48,4 +48,4 @@ import { CalendarPlayground, DateRangeFilterPlayground } from './date.demos';
 | `max` | `Date` | — | 最晚能选的日子，再晚的变灰，也翻不过去 |
 | `disabledDate` | `(date: Date) => boolean` | — | 另外不能选的日子 |
 
-一周从周日开始，6 行 42 格。头：« 上一年、‹ 上个月、「2026年11月」14 / 24 semibold、› 下个月、» 下一年，按钮是 IconButton 28 · 文字（年用双箭头 `DoubleLeftArrowSmall` / `DoubleRightArrowSmall`），翻不过去时 disabled。星期 13 secondary。日子 24 圆格，横向间距 4、竖向 12，网格宽 192，13 号字；不是这个月的 tertiary（能点）；不能选的 disabled 色；悬停白 14%（Light 1 hover），选中白 10%（常驻底色，Light 1 默认）。今天不画标记（Figma 没有）。方向键按天 / 按周移，PageUp / PageDown 翻月，Home / End 到这周头尾，Enter / 空格选中。照 Figma 旧版（13110:30974）。其余原生 `<div>` 属性都能传。
+一周从周日开始，6 行 42 格。头：« 上一年、‹ 上个月、「2026年11月」14 / 24 semibold、› 下个月、» 下一年，按钮是 IconButton 28 · 文字（年用双箭头 `DoubleLeftArrowSmall` / `DoubleRightArrowSmall`），翻不过去时 disabled。星期 13 secondary。日子 24 圆格，横向间距 4、竖向 12，网格宽 192，13 号字；不是这个月的 tertiary（能点）；不能选的 disabled 色；悬停白 14%（Light 1 hover），选中白 10%（常驻底色，Light 1 默认）。今天不画标记。方向键按天 / 按周移，PageUp / PageDown 翻月，Home / End 到这周头尾，Enter / 空格选中。其余原生 `<div>` 属性都能传。

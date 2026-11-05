@@ -8,7 +8,7 @@
     toast.show({ type: 'success', text: '任务已提交' })         在哪里都能调
     <Toast type="loading" action="取消">正在上传 3 张图片</Toast>   只摆样子（文档里的示意）
     <Loading size={16}>加载中…</Loading>
-    <Skeleton shape="rect" width={160} height={90} />
+    <Skeleton variant="rect" width={160} height={90} />
     <EmptyState scene="empty" title="还没有作品" description="在左侧写下描述，生成第一张作品" />
   渲染出来的结构
     <div class="kv-toast kv-toast--success">
@@ -71,6 +71,11 @@
 }
 
 /* 状态图标：16 的实心圆 + 镂空符号，符号的颜色就是弹层底色 */
+/* 文字可能折行，多行行高 */
+.kv-toast__message {
+  line-height: var(--font-line-height-22);
+}
+
 .kv-toast__icon,
 .kv-notification__icon {
   position: relative;
@@ -219,6 +224,7 @@
 
 .kv-banner__text {
   flex: 1;
+  line-height: var(--font-line-height-22);
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -291,6 +297,7 @@
 
 .kv-notification__description {
   max-height: 132px;
+  line-height: var(--font-line-height-22);
   overflow-x: hidden;
   overflow-y: auto;
   overflow-wrap: anywhere;
@@ -400,7 +407,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-12);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-loading > .kv-icon {
@@ -413,7 +419,6 @@
 .kv-loading--16 {
   gap: var(--spacing-8);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-loading--16 > .kv-icon {
@@ -426,7 +431,6 @@
   flex-direction: column;
   gap: var(--spacing-8);
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-loading--24 > .kv-icon {
@@ -439,7 +443,6 @@
   flex-direction: column;
   gap: var(--spacing-12);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-22);
 }
 
 .kv-loading--40 > .kv-icon {
@@ -462,7 +465,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, var(--color-bg-fill-container-light-1-hover), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-fill-3), transparent); /* 扫光不是悬停：填充色阶，比底高一档 */
   transform: translateX(-100%);
   animation: kv-skeleton-sweep 1.4s linear infinite;
 }

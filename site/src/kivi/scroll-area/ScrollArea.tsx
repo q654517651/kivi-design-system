@@ -21,7 +21,7 @@ export type ScrollAreaOrientation = 'vertical' | 'horizontal' | 'both';
 export interface ScrollAreaProps extends HTMLAttributes<HTMLDivElement> {
   /** 哪个方向能滚：纵向 / 横向 / 两个方向，默认纵向 */
   orientation?: ScrollAreaOrientation;
-  /** 滚到离末尾不到 `reachEndOffset` 时调用，每次「到了」只调一次：滚开（或内容变长）后再靠近才会再调。做无限加载用 */
+  /** 滚到离末尾不到 `reachEndOffset` 时调用，每次「到了」只调一次：滚开后再靠近才会再调；内容变长了、还停在末尾（比如内容不满一屏）也会再调一次。做无限加载用 */
   onReachEnd?: () => void;
   /** 离末尾多少 px 算到了，默认 200 */
   reachEndOffset?: number;
@@ -97,6 +97,8 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
   const drag = useRef<{ axis: Axis; start: number; scroll: number } | null>(null);
   const armed = useRef(true);
+  // 上一次触发时内容有多高：内容不满一屏或追加后仍在底部时，内容变长了要再触发一次
+  const firedSize = useRef(0);
   const reachEnd = useRef(onReachEnd);
   reachEnd.current = onReachEnd;
 
@@ -127,8 +129,9 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     const m = measure(vp, main, null);
     const remaining = m.size - m.pos - m.client;
     if (remaining > reachEndOffset) armed.current = true;
-    else if (armed.current && reachEnd.current) {
+    else if (reachEnd.current && (armed.current || m.size > firedSize.current)) {
       armed.current = false;
+      firedSize.current = m.size;
       reachEnd.current();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

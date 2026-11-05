@@ -1,4 +1,4 @@
-import { Input, NumberInput, Textarea } from '@kivi';
+import { Button, Input, NumberInput, Textarea } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 
 // 输入框页的三个属性面板：所有样式、状态都在面板里切。参数表在 inputs.mdx
@@ -110,7 +110,7 @@ export function NumberInputPlayground() {
 
 // ---------- Textarea ----------
 
-type TextareaState = { state: string; count: boolean; placeholder: string; text: string };
+type TextareaState = { state: string; count: boolean; actions: boolean; placeholder: string; text: string };
 
 function renderTextarea(s: TextareaState, update: Update) {
   const value = hasValue(s.state) ? s.text : '';
@@ -123,6 +123,14 @@ function renderTextarea(s: TextareaState, update: Update) {
       invalid={s.state === 'error' || undefined}
       disabled={s.state === 'disabled' || undefined}
       counter={s.count ? Array.from(value).length + '/500' : undefined}
+      actions={
+        s.actions ? (
+          <>
+            <Button size={28} variant="light">取消</Button>
+            <Button size={28} variant="primary" disabled={!value.trim() || s.state === 'disabled'}>保存</Button>
+          </>
+        ) : undefined
+      }
       aria-label="描述"
     />
   );
@@ -136,6 +144,7 @@ export function TextareaPlayground() {
         controls={[
           { key: 'state', label: '状态', type: 'segment', value: 'default', options: STATES },
           { key: 'count', label: '字数', type: 'toggle', value: true },
+          { key: 'actions', label: '框内按钮', type: 'toggle', value: false },
           { key: 'placeholder', label: '占位文字', type: 'text', value: '请输入描述' },
           { key: 'text', label: '文字', type: 'text', value: SAMPLE },
         ]}

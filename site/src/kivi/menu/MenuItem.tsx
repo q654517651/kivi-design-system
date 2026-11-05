@@ -202,7 +202,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       {more != null && !editing && (
         <Dropdown
           className="kv-menu-item__more"
-          trigger={<IconButton icon="More" label={moreLabel} size={28} variant="light" />}
+          trigger={<IconButton tooltip={false} icon="More" label={moreLabel} size={28} variant="light" disabled={disabled} />}
           onClick={(e) => e.stopPropagation()}
         >
           {more}

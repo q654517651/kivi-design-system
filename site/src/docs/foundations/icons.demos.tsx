@@ -69,6 +69,7 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   FileJson: { means: 'JSON 数据', note: '参考格、附件里按扩展名换图标' },
   Image: { means: '图片', note: '拖文件进来的卡片' },
   Files: { means: '多份文件', note: '拖文件进来的卡片' },
+  NewWindow: { means: '在新窗口打开', note: '画布切换的「⋯」菜单' },
   MoveTo: { means: '移动到' },
   Remove: { means: '移出' },
   Stacking: { means: '堆叠、多选' },

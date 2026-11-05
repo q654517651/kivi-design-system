@@ -16,8 +16,8 @@ import {
   RATIOS,
   ProcessGroup,
   type ProcessStep,
-  ReferenceStack,
-  type ReferenceStackItem,
+  AttachmentStrip,
+  type AttachmentItem,
   ResultTile,
   Select,
   Slider,
@@ -33,19 +33,21 @@ import {
 import { TOOL_FLOW } from './business/agent-tools';
 import './home.css';
 
-// 首页：一行大标题、一行副标题，下面是一片真的、能点的组件。只用组件库已有的组件和演示数据
+// 首页：一行大标题，下面是一片真的、能点的组件。只用组件库已有的组件和演示数据
 
 const IMG = './placeholders/';
 
 // ---------- 左列 ----------
 
+// 字母头像拼出 KIVI，和图片头像一个隔一个
 const PEOPLE = [
-  { name: '小川', src: `${IMG}ip-peek-1x1.webp` },
-  { name: 'Mia' },
-  { name: '阿元', src: `${IMG}bunny-gouache-1x1.webp` },
   { name: 'Kai' },
+  { name: '小川', src: `${IMG}ip-peek-1x1.webp` },
+  { name: 'Ivy' },
+  { name: '阿元', src: `${IMG}bunny-gouache-1x1.webp` },
+  { name: 'Vic' },
   { name: '米粒', src: `${IMG}ip-gouache-1x1.webp` },
-  { name: '设计' },
+  { name: 'Iris' },
 ];
 
 function Duration() {
@@ -119,11 +121,14 @@ function LeftColumn() {
 
 // ---------- 中列 ----------
 
-const REFS: ReferenceStackItem[] = [
-  { id: 'r1', type: 'image', name: '图片1', src: `${IMG}kivi-future-1x1.webp` },
-  { id: 'r2', type: 'image', name: '图片2', src: `${IMG}monstera-dots-1x1.webp` },
-  { id: 'r3', type: 'video', name: '视频1', src: `${IMG}kiwi-light-1x1.webp`, duration: '5s' },
-  { id: 'r4', type: 'image', name: '图片3', src: `${IMG}ip-gouache-1x1.webp` },
+// 附件条一排 6 个刚好 360 宽，四种类型都放一个
+const ATTACHMENTS: AttachmentItem[] = [
+  { id: 'a1', type: 'image', name: '图片1', src: `${IMG}kivi-future-1x1.webp` },
+  { id: 'a2', type: 'video', name: '视频1', src: `${IMG}kiwi-light-1x1.webp`, duration: '0:05' },
+  { id: 'a3', type: 'image', name: '图片2', src: `${IMG}monstera-dots-1x1.webp` },
+  { id: 'a4', type: 'audio', name: '旁白.mp3', duration: '0:12' },
+  { id: 'a5', type: 'image', name: '图片3', src: `${IMG}ip-gouache-1x1.webp` },
+  { id: 'a6', type: 'file', name: '分镜脚本.pdf', ext: 'PDF' },
 ];
 
 /** 工具一个接一个调，调到最后一个从头再来，让这一行一直在滚 */
@@ -142,20 +147,17 @@ function RunningTools() {
 }
 
 function MiddleColumn() {
-  const [refs, setRefs] = useState(REFS);
+  const [items, setItems] = useState(ATTACHMENTS);
   const [auto, setAuto] = useState(true);
   const [agree, setAgree] = useState(true);
-  const add = () =>
-    setRefs((list) => [...list, { id: `r${Date.now()}`, type: 'image', name: `图片${list.length + 1}`, src: `${IMG}kiwi-glass-1x1.webp` }]);
+  // 删光了就放回去，首页这一块不留空
+  const remove = (id: string) => setItems((list) => (list.length > 1 ? list.filter((i) => i.id !== id) : ATTACHMENTS));
   return (
     <div className="home-col">
-      <div className="home-stack">
-        <ReferenceStack items={refs} onAdd={add} onRemove={(id) => setRefs((list) => list.filter((i) => i.id !== id))} />
-      </div>
+      <AttachmentStrip items={items} onRemove={remove} />
       <div className="home-buttons">
         <Button variant="primary">主要</Button>
         <Button variant="secondary">次要</Button>
-        <Button variant="text">无底</Button>
         <Button variant="light">轻</Button>
         <Button variant="danger">危险</Button>
         <GenerateButton cost={40} />
@@ -219,12 +221,7 @@ export function Home() {
   return (
     <div className="home">
       <header className="home-hero">
-        <h1 className="home-title">
-          好看是默认的。
-          <br />
-          改起来也简单。
-        </h1>
-        <div className="home-lead">设计、产品、研发共用的一套组件。能直接点着试，代码能直接复制。</div>
+        <h1 className="home-title">KIVI Design System</h1>
       </header>
       <div className="home-stage">
         <LeftColumn />

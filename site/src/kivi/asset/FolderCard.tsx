@@ -50,7 +50,7 @@ export const FolderCard = forwardRef<HTMLDivElement, FolderCardProps>(function F
         <Dropdown
           className="kv-folder-card__more"
           placement="bottom-end"
-          trigger={<IconButton icon="More" label="更多" variant="on-media" size={28} />}
+          trigger={<IconButton tooltip={false} icon="More" label="更多" variant="on-media" size={28} />}
         >
           <Menu>
             <MenuItem icon="Rename" onClick={onRename}>

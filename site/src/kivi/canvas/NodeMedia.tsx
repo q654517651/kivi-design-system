@@ -128,6 +128,7 @@ export const NodeMedia = forwardRef<HTMLDivElement, NodeMediaProps>(function Nod
           </span>
           <IconButton
             icon={player.playing ? 'Pause' : 'Play'}
+            tooltip={false}
             label={player.playing ? '暂停' : '播放'}
             size={32}
             variant="secondary"
