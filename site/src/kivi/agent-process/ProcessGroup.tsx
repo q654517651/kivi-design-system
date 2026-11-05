@@ -72,6 +72,13 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
     lastSwitch.current = performance.now();
   }, []);
 
+  // 开始新一轮调用（做完又来了新工具）：列表要卸载了，展开状态复位成收起，做完不会自己又展开
+  const wasRunning = useRef(running);
+  useEffect(() => {
+    if (running && !wasRunning.current && expanded) setExpanded(false);
+    wasRunning.current = running;
+  }, [running, expanded, setExpanded]);
+
   // 换到最新的那个：离上次换不到 0.3 秒就等够再换，等的时候又来了新的，直接换到新的
   useEffect(() => {
     if (target === shown) return;
@@ -135,7 +142,7 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
         </div>
       </div>
       {canExpand && (
-        <Collapse open={expanded} distance={listHeight} gap={6}>
+        <Collapse expanded={expanded} distance={listHeight} gap={6}>
           <div ref={list.ref} id={listId} className="kv-process-list" data-fade={list.fade} onScroll={list.onScroll}>
             {steps.map((s, i) => (
               <ProcessRow key={s.id ?? i} level="sub" icon={s.icon} action={s.action} object={s.object} status={s.status} />

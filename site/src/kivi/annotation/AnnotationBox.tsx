@@ -14,7 +14,7 @@ export interface AnnotationBoxProps extends Omit<HTMLAttributes<HTMLDivElement>,
   comment?: ReactNode;
   /** 点气泡 */
   onMarkerClick?: () => void;
-  /** 鼠标移进、移出气泡（悬停预览用） */
+  /** 鼠标移进、移出气泡，键盘聚焦、移开也触发（悬停预览用） */
   onMarkerPointerEnter?: () => void;
   onMarkerPointerLeave?: () => void;
   /** 在圆点上按下，开始拖：参数是哪个角。拖的逻辑自己写，固定对角那个点 */
@@ -43,7 +43,14 @@ export const AnnotationBox = forwardRef<HTMLDivElement, AnnotationBoxProps>(func
       )}
       {index != null && (
         <div className="kv-annotation-box__marker">
-          <AnnotationMarker onClick={onMarkerClick} onPointerEnter={onMarkerPointerEnter} onPointerLeave={onMarkerPointerLeave}>
+          <AnnotationMarker
+            onClick={onMarkerClick}
+            onPointerEnter={onMarkerPointerEnter}
+            onPointerLeave={onMarkerPointerLeave}
+            // 键盘聚焦和悬停一样出预览；鼠标点一下聚焦不算
+            onFocus={(e) => e.currentTarget.matches(':focus-visible') && onMarkerPointerEnter?.()}
+            onBlur={() => onMarkerPointerLeave?.()}
+          >
             {index}
           </AnnotationMarker>
         </div>

@@ -26,12 +26,12 @@ import { CalendarPlayground, DateRangeFilterPlayground } from './date.demos';
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `value` | `DateRange` | — | 当前范围 `{ preset?, start, end }`，传了就是受控。点预设：`preset` 是预设的 value，起止按今天往前推（「全部」起止都是空）；自己选日子：`preset` 是空 |
+| `value` | `DateRange` | — | 当前范围 `{ preset?, start, end }`，传了就是受控。点预设：`preset` 是预设的 value，起止按今天往前推（「全部」起止都是空），日期框里显示算出的起止；自己选日子：另一端保留，起止凑巧等于某个预设就算选中那个预设，否则 `preset` 是空 |
 | `defaultValue` | `DateRange` | 起止都空 | 非受控时的初始值 |
 | `onChange` | `(value: DateRange) => void` | — | 点了预设、或选了起止某一天 |
 | `open` | `boolean` | — | 展开（受控）。`defaultOpen`、`onOpenChange` 一套 |
-| `presets` | `DateRangePreset[]` | 全部 / 最近一周 / 最近一个月 / 最近三个月 | 预设 `{ value, label, days? }`，`days` 是往前推几天（含今天），不写就是「全部」 |
-| `placeholder` | `string` | `"时间筛选"` | 没选、或选了「全部」时触发器上的字。选了预设显示预设名，自己选的显示「26-10-01 ~ 26-11-03」，只有一头就只写一头 |
+| `presets` | `DateRangePreset[]` | 全部 / 最近一周 / 最近一个月 / 最近三个月 | 预设 `{ value, label, days?, months? }`。`days` 是往前推几天（含今天），一周是 7；`months` 是往前推几个日历月，从今天往前数这么多个月的同一号再加一天（11 月 5 日往前一个月是 10 月 6 日，没有这一天的月取月底），一个月是 1、三个月是 3；二选一，都不写就是「全部」。范围含今天，结束取当天的末尾（整天都算） |
+| `placeholder` | `string` | `"时间筛选"` | 没选、或选了「全部」时触发器上的字。选了预设显示预设名，自己选的显示「26-10-01 ~ 26-11-03」，只有一头时另一头留空，仍带 ~ |
 | `max` | `Date` | 今天 | 最晚能选到哪天。开始不能晚于结束，结束不能早于开始，不能选的日子变灰 |
 | `placement` | `"bottom-start"` `"bottom"` `"bottom-end"` `"top-start"` `"top"` `"top-end"` | `"bottom-start"` | 面板出在哪边：放在一行最右边时用右对齐；放不下翻到另一边 |
 | `disabled` | `boolean` | `false` | 禁用 |
@@ -42,10 +42,10 @@ import { CalendarPlayground, DateRangeFilterPlayground } from './date.demos';
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `value` | `Date \| null` | — | 选中的日子，传了就是受控。`defaultValue`、`onChange(date)` 一套 |
+| `value` | `Date \| null` | — | 选中的日子，传了就是受控。`defaultValue`、`onChange(date)` 一套；点已经选中的那天不再触发 `onChange` |
 | `month` | `Date` | 选中那天的月，没选是今天的月 | 显示哪个月，传了就是受控。`defaultMonth`、`onMonthChange(1 号)` 一套 |
 | `min` | `Date` | — | 最早能选的日子，再早的变灰，也翻不过去 |
 | `max` | `Date` | — | 最晚能选的日子，再晚的变灰，也翻不过去 |
 | `disabledDate` | `(date: Date) => boolean` | — | 另外不能选的日子 |
 
-一周从周日开始，6 行 42 格。头：« 上一年、‹ 上个月、「2026年11月」14 / 24 semibold、› 下个月、» 下一年，按钮是 IconButton 28 · 文字（年用双箭头 `DoubleLeftArrowSmall` / `DoubleRightArrowSmall`），翻不过去时 disabled。星期 13 secondary。日子 24 圆格，横向间距 4、竖向 12，网格宽 192，13 号字；不是这个月的 tertiary（能点）；不能选的 disabled 色；悬停白 14%（Light 1 hover），选中白 10%（常驻底色，Light 1 默认）。今天不画标记。方向键按天 / 按周移，PageUp / PageDown 翻月，Home / End 到这周头尾，Enter / 空格选中。其余原生 `<div>` 属性都能传。
+一周从周日开始，6 行 42 格。头：« 上一年、‹ 上个月、「2026年11月」14 / 24 semibold、› 下个月、» 下一年，按钮是 IconButton 28 · 文字（年用双箭头 `DoubleLeftArrowSmall` / `DoubleRightArrowSmall`），翻不过去时 disabled。星期 13 secondary。日子 24 圆格，横向间距 4、竖向 12，网格宽 192，13 号字；不是这个月的 tertiary（能点）；不能选的 disabled 色；悬停白 14%（Light 1 hover），选中白 10%（常驻底色，Light 1 默认；选中的日子悬停 14%、按下 18%）。今天不画标记。方向键按天 / 按周移，PageUp / PageDown 翻月，Home / End 到这周头尾，Enter / 空格选中。其余原生 `<div>` 属性都能传。

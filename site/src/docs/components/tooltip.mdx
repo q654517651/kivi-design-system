@@ -106,7 +106,7 @@ import { PopoverPlayground, TooltipPlayground } from './tooltip.demos';
 | `title` | `ReactNode` | — | 标题，不写就只有内容；长文没有标题。13 加粗，`--color-text-fill-primary`，和内容间距 4 |
 | `on` | `"hover"` `"click"` | `"hover"` | 悬停：停 `delay` 后出现，鼠标能挪进气泡里，键盘 Tab 聚焦（`:focus-visible`）也出，移开 150ms 后关。点击：点触发元素开关，点外面关；打开后焦点进气泡。两种都按 Esc 关闭、焦点回到触发元素 |
 | `placement` | `"top"` `"bottom"` `"left"` `"right"`，各可加 `-start` `-end` | `"bottom"` | 出在触发元素哪边，默认居中；`-start` / `-end` 对齐上下方向的左右边、左右方向的上下边。放不下自动翻到对面，不出屏幕 |
-| `offset` | `number` | `10` | 离触发元素的距离：箭头 6 + 空 4；长文没有箭头，默认 8 |
+| `offset` | `number` | `10` | 离触发元素的距离：箭头 6 + 空 4；长文没有箭头，默认 8；面板没有箭头，悬停出的默认 8、点开的默认 4 |
 | `open` / `defaultOpen` / `onOpenChange` | `boolean` | 关 | 显示。受控时仍按 `on` 触发，通过 `onOpenChange` 通知 |
 | `delay` | `number` | `200` | 悬停多久后出现，毫秒，只有悬停型用 |
 | `disabled` | `boolean` | `false` | 禁用：不出现，触发元素照常 |

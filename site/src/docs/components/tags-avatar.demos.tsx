@@ -69,7 +69,6 @@ function renderThumb(s: ThumbState) {
   const size = Number(s.size) as AssetThumbSize;
   const type = s.type as AssetThumbType;
   if (type === 'image') return <AssetThumb size={size} type="image" src={THUMB} />;
-  if (type === 'audio') return <AssetThumb size={size} type="audio" />;
   return <AssetThumb size={size} type="icon" icon={s.icon as IconName} />;
 }
 
@@ -77,9 +76,9 @@ export function AssetThumbPlayground() {
   return (
     <Playground<ThumbState>
       controls={[
-        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['audio', '音频'], ['icon', '图标']] },
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['icon', '图标']] },
         { key: 'size', label: '尺寸', type: 'segment', value: '56', options: [['16', '16'], ['24', '24'], ['56', '56'], ['72', '72']] },
-        { key: 'icon', label: '图标', type: 'segment', value: 'Message', options: [['Message', 'Message'], ['Canvas', 'Canvas']] },
+        { key: 'icon', label: '图标', type: 'segment', value: 'Message', options: [['Message', 'Message'], ['Canvas', 'Canvas'], ['Music', 'Music']] },
       ]}
       // 图标只有「图标」类型可换
       rules={(s) => (s.type === 'icon' ? {} : { icon: true })}

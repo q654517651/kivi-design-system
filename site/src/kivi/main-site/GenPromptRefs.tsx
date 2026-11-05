@@ -27,7 +27,8 @@ export const GenPromptRefs = forwardRef<HTMLDivElement, GenPromptRefsProps>(func
 ) {
   const overflow = items.length > 5;
   const shown = items.slice(0, 5);
-  const thumb = (item: GenPromptRefItem) => <AssetThumb size={16} type={item.type === 'audio' ? 'audio' : 'image'} src={item.src} />;
+  const thumb = (item: GenPromptRefItem) =>
+    item.type === 'audio' ? <AssetThumb size={16} type="icon" icon="Music" /> : <AssetThumb size={16} type="image" src={item.src} />;
 
   return (
     <div ref={ref} className={cx('kv-gen-prompt-refs', className)} tabIndex={0} {...rest}>

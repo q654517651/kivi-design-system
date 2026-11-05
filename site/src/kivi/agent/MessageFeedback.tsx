@@ -18,7 +18,7 @@ export interface MessageFeedbackProps extends Omit<HTMLAttributes<HTMLDivElement
   /** 赞 / 踩：非受控的初始值，默认都没选 */
   defaultValue?: MessageFeedbackValue;
   /** 点了赞 / 踩 / 取消时触发 */
-  onValueChange?: (value: MessageFeedbackValue) => void;
+  onChange?: (value: MessageFeedbackValue) => void;
   /** 点了踩之后下面出原因输入框，默认出。不要原因就传 false */
   reason?: boolean;
   /** 提交了踩的原因（回车或点框里的提交；没写字时提交按钮不可点。Shift + 回车换行） */
@@ -33,10 +33,10 @@ export interface MessageFeedbackProps extends Omit<HTMLAttributes<HTMLDivElement
  * 点赞、再点踩、提交、Esc 都会收起。生成中不显示这一条（调用方控制）。交互照线上，Figma 还没有。
  */
 export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(function MessageFeedback(
-  { text, traceId, value: valueProp, defaultValue = null, onValueChange, reason = true, onSubmitReason, onCopied, className, ...rest },
+  { text, traceId, value: valueProp, defaultValue = null, onChange, reason = true, onSubmitReason, onCopied, className, ...rest },
   ref,
 ) {
-  const [value, setValue] = useControllable<MessageFeedbackValue>(valueProp, defaultValue, onValueChange);
+  const [value, setValue] = useControllable<MessageFeedbackValue>(valueProp, defaultValue, onChange);
   const [asking, setAsking] = useState(false);
   const [draft, setDraft] = useState('');
   // 变成踩就出原因输入，变成别的就收起（关闭、提交只收起，不改踩）
@@ -88,7 +88,7 @@ export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(
         <IconButton icon={value === 'dislike' ? 'ThumbsDownFill' : 'ThumbsDown'} label="踩" variant="light" selected={value === 'dislike'} onClick={() => choose('dislike')} />
       </div>
       {reason && (
-        <Collapse className="kv-message-feedback__reason" open={asking} distance={104} gap={6}>
+        <Collapse className="kv-message-feedback__reason" expanded={asking} distance={104} gap={6}>
           <Textarea
             aria-label="踩的原因"
             placeholder="哪里不好？告诉我们"

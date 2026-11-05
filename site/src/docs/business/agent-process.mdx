@@ -1,6 +1,6 @@
 import { Demo, PageHeader } from '@shell';
 import {
-  MediaGroupDemo,
+  MediaGroupPlayground,
   ProcessGroupPlayground,
   ProcessGroupSim,
   ProcessRowPlayground,
@@ -56,7 +56,7 @@ import {
 
 生成结果组：Agent 一次生成的多张图或视频，叠成一摞，点开看全部。
 
-<Demo noCode scope={{ MediaGroupDemo }} code={`<MediaGroupDemo />`} />
+<MediaGroupPlayground />
 
 ## 分组
 
@@ -111,7 +111,7 @@ Agent 两段话之间连续调的工具算一组。进行中只占一行，显�
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `thinking` | `boolean` | `false` | 思考中：自动展开、原文自动滚到底、标题扫光、不能点；变成 `false` 时自动收起 |
-| `children` | `ReactNode` | — | 思考的原文，流式输出时一直追加。14 / 20 tertiary，保留换行，最高 160 内部滚动，渐隐跟着滑的方向（同工具列表） |
+| `children` | `ReactNode` | — | 思考的原文，流式输出时一直追加。14 / 22 tertiary，保留换行，最高 160 内部滚动，渐隐跟着滑的方向（同工具列表） |
 | `title` | `ReactNode` | 按状态 | 标题，默认思考中「思考中」、完成「思考完成」。图标固定 `Lightbulb` |
 | `expanded` | `boolean` | — | 展开：受控。思考中一直展开，这个只管思考完成之后 |
 | `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
@@ -131,7 +131,7 @@ Agent 两段话之间连续调的工具算一组。进行中只占一行，显�
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
 | `onItemClick` | `(item: MediaGroupItem) => void` | — | 展开后点某一张。画布里用来定位到节点 |
 
-叠放：封面取第一张成功的，比例跟封面；后两层往右错开 4、8，旋转 2°、4°，底白 18% `container-light-1-pressed`。展开是两列瀑布流（列最小宽 182、间距 12），展开收起只动 transform、缓动 `--motion-ease-expand`；展开 400 起每张 +10、最多 700，收起固定 300。
+叠放：封面取第一张成功的，比例跟封面；后两层往右错开 4、8，旋转 2°、4°，底白 18% `container-light-1-pressed`。展开是瀑布流，至少两列，宽了列数增加（列最小宽 182、间距 12），展开收起卡片只动 transform，容器高度用同一条缓动 `--motion-ease-expand`、同一个时长；展开 400 起每张 +10、最多 700，收起固定 300。
 
 ## 对照表
 

@@ -2,7 +2,7 @@
   KIVI · 画布
   Figma「画布」页：NodeCard、NodeMedia（视频用 VideoPlayer 卡片）、AudioWave、ConnectorDot、NodeWrapper、
   Connector、ConnectorRemove、CropHandles、NodeStack、Minimap。
-  「模板 · 画布」页里的生成面板是模板（不发布），这里只给拼它用的外框样式（templates.tsx）。节点工具栏、画布工具栏用 ButtonGroup variant="glass"。
+  「模板 · 画布」页里的生成面板是模板（不发布），这里只给拼它用的外框样式（templates.tsx）。节点工具栏 glass 44，画布工具栏 surface 56（都是 ButtonGroup）。
   依赖 tokens.css、base.css、button.css；
   引导项用 menu 的 kv-menu-item；倒计时和时长用 tags-avatar 的 kv-tag--on-media（Figma 的 Tag「覆盖」）。
   参考图、@ 标签、提示词输入、参数面板在 generation 文件夹（generation.css）。
@@ -183,7 +183,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-in);
 }
 
-.kv-node-card--hover-actions:where(:hover, :focus-within, .is-hover) .kv-node-card__actions {
+.kv-node-card--hover-actions:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-node-card__actions {
   opacity: 1;
   pointer-events: auto;
   transition-timing-function: var(--motion-ease-out);
@@ -194,7 +194,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
-.kv-node-card--hover-actions:where(:hover, :focus-within, .is-hover) .kv-node-card__pin {
+.kv-node-card--hover-actions:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-node-card__pin {
   opacity: 0;
   transition-timing-function: var(--motion-ease-in);
 }
@@ -474,6 +474,12 @@
   overflow: visible;
 }
 
+/* 命中范围只在线上：外框和 svg 不接鼠标，只有透明的粗描边（__hit）接，包围盒空白处、重叠的另一条线不会被抢 */
+.kv-connector,
+.kv-connector > svg {
+  pointer-events: none;
+}
+
 /* 只管线本身，别碰删除按钮里的图标 */
 .kv-connector > svg path {
   fill: none;
@@ -488,9 +494,17 @@
 
 /* 激活：悬停、点击、选中节点的关联线 */
 .kv-connector--active > svg path,
-.kv-connector:where(:hover, .is-hover):not(.kv-connector--drawing, .kv-connector--flowing) > svg path {
+.kv-connector:where(:hover, :focus-visible, :has(:focus-visible), .is-hover):not(.kv-connector--drawing, .kv-connector--flowing) > svg path {
   stroke: var(--g-workflow-line-color-active);
   stroke-width: 2px;
+}
+
+/* 命中区：看不见的粗描边，宽 16（不跟着缩放） */
+.kv-connector > svg path.kv-connector__hit {
+  stroke: transparent;
+  stroke-width: 16px;
+  stroke-dasharray: none;
+  pointer-events: stroke;
 }
 
 /* 拖拽中：虚线 6 / 6 */
@@ -559,8 +573,22 @@
   backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-text-fill-primary);
   cursor: pointer;
+  pointer-events: auto; /* 外层连线不接鼠标，按钮自己接 */
   opacity: 1;
   transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 悬停、按下：玻璃底上叠 Light 1 的 hover / pressed，和玻璃按钮条里的「无底」按钮一样 */
+.kv-connector-remove:where(:hover, .is-hover) {
+  background:
+    linear-gradient(var(--color-bg-fill-container-light-1-hover) 0 0),
+    var(--color-bg-fill-glass);
+}
+
+.kv-connector-remove:where(:active, .is-active) {
+  background:
+    linear-gradient(var(--color-bg-fill-container-light-1-pressed) 0 0),
+    var(--color-bg-fill-glass);
 }
 
 .kv-connector-remove > .kv-icon {
@@ -638,7 +666,7 @@
 
 /* ---------- 模板外框：生成面板 ----------
    这个是模板，由 AttachmentStrip、PromptInput 等拼成，不发布成组件。这里只给外框的样子。
-   节点工具栏、画布工具栏不在这里：都是 ButtonGroup variant="glass"（size 44 / 56），样式在 button.css。 */
+   节点工具栏 glass 44，画布工具栏 surface 56：都不在这里，是 ButtonGroup，样式在 button.css。 */
 /* 生成面板：节点下方 */
 .kv-node-panel {
   position: relative;

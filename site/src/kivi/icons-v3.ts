@@ -3,6 +3,7 @@
   从 Figma「_图标对照」页第三列导出（2026-11-02）：Hugeicons 免费版（MIT）缩到 21、线宽 1.6，
   比例和几个视频剪辑按 Hugeicons 量出来的规格自己画的，模型 Logo 是 LobeHub 重下的 Mono 版，分割线沿用 V2。
   是描边不是轮廓，颜色跟文字走（currentColor）。不要手改；对照页改了就重新导出。
+  11-05 手动补了两个：DoubleLeftArrowSmall、DoubleRightArrowSmall（Hugeicons arrow-left-double / arrow-right-double，缩放和 LeftArrowSmall 一样，Figma「_图标对照」页还没有，同步时补）。
   这里没有的用 icons.ts 里的：Kiwi、Logo 沿用 V2，11-04 起新补的图标（文件类型、Image、Files 等）直接按 V3 规格写在 icons.ts。
   V2 的数据（icons.ts）留着不删，网站不再切换。
 */
@@ -10,12 +11,15 @@
 import type { IconName } from './icons';
 
 export const ICONS_V3: Partial<Record<IconName, string>> = {
-  // 方向（11）
+  // 方向（13）
   LeftArrow: '<path d="M14.62 17.25C14.62 17.25 9.38 13.38 9.38 12C9.38 10.62 14.62 6.75 14.62 6.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   RightArrow: '<path d="M9.38 17.25C9.38 17.25 14.62 13.38 14.62 12C14.62 10.62 9.38 6.75 9.38 6.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   DownArrow: '<path d="M17.25 9.38C17.25 9.38 13.38 14.62 12 14.62C10.62 14.62 6.75 9.38 6.75 9.38" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   LeftArrowSmall: '<path d="M14.13 16.25C14.13 16.25 9.87 13.12 9.87 12C9.87 10.88 14.13 7.75 14.13 7.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   RightArrowSmall: '<path d="M9.87 16.25C9.87 16.25 14.13 13.12 14.13 12C14.13 10.88 9.87 7.75 9.87 7.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  // 双箭头（日历翻年）：11-05 补，Hugeicons arrow-left-double / arrow-right-double，按 LeftArrowSmall 同样的缩放（21 × 0.81）、线宽 1.6
+  DoubleLeftArrowSmall: '<path d="M11.65 16.25C11.65 16.25 7.39 13.12 7.39 12C7.39 10.88 11.65 7.75 11.65 7.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.61 16.25C16.61 16.25 12.35 13.12 12.35 12C12.35 10.88 16.61 7.75 16.61 7.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  DoubleRightArrowSmall: '<path d="M12.35 16.25C12.35 16.25 16.61 13.12 16.61 12C16.61 10.88 12.35 7.75 12.35 7.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.39 16.25C7.39 16.25 11.65 13.12 11.65 12C11.65 10.88 7.39 7.75 7.39 7.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   DownArrowSmall: '<path d="M16.25 9.87C16.25 9.87 13.12 14.13 12 14.13C10.88 14.13 7.75 9.87 7.75 9.87" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   UpArrowSmall: '<path d="M16.25 14.13C16.25 14.13 13.12 9.87 12 9.87C10.88 9.87 7.75 14.13 7.75 14.13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   FullScreen: '<path d="M8.5 4.21C8.5 4.21 5.03 3.9 4.46 4.46C3.9 5.03 4.21 8.5 4.21 8.5M8.5 19.79C8.5 19.79 5.03 20.1 4.46 19.54C3.9 18.97 4.21 15.5 4.21 15.5M15.5 4.21C15.5 4.21 18.97 3.9 19.54 4.46C20.1 5.03 19.79 8.5 19.79 8.5M15.5 19.79C15.5 19.79 18.97 20.1 19.54 19.54C20.1 18.97 19.79 15.5 19.79 15.5M13.76 10.25L19.06 4.95M10.25 13.75L4.69 19.33M10.25 10.25L4.87 4.88M13.73 13.75L19.46 19.44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',

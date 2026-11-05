@@ -6,7 +6,7 @@ import { Skeleton } from '../feedback/Skeleton';
 import './media.css';
 
 export type ImageFit = 'cover' | 'contain';
-export type ImageStatus = 'loading' | 'loaded' | 'error';
+export type ImageStatus = 'loading' | 'loaded' | 'failed';
 
 export interface ImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'onLoad' | 'onError'> {
   /** 图片地址。换了地址就重新加载；不写（结果还没出来）一直是加载中 */
@@ -43,7 +43,7 @@ const LABEL_MIN_SIDE = 160;
 
 /**
  * 图片：加载中是骨架屏扫光，加载完淡入，失败是深色底 + 居中的 IP 失败插图。
- * 状态写在根元素 `data-status`（loading / loaded / error）。外面定宽（再配 `ratio`），或者定宽高。
+ * 状态写在根元素 `data-status`（loading / loaded / failed）。外面定宽（再配 `ratio`），或者定宽高。
  * 传了 `onRetry`，失败时整块是一个按钮，点了重新加载。
  * className、style 给外层；ref 和其余 `<img>` 属性（`loading`、`crossOrigin`、`srcSet`…）给里面的 `<img>`。Figma「反馈」页还没有，待确认
  */
@@ -59,15 +59,17 @@ export const Image = forwardRef<HTMLImageElement, ImageProps>(function Image(
   const setImg = useMergedRef(imgRef, ref);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const url = src && attempt > 0 ? `${src}${src.includes('?') ? '&' : '?'}retry=${attempt}` : src;
+  // blob: / data: 地址加参数会失效，重试时原样用；其余加 retry=次数 避开缓存
+  const cacheable = !!src && !/^(blob|data):/i.test(src);
+  const url = src && attempt > 0 && cacheable ? `${src}${src.includes('?') ? '&' : '?'}retry=${attempt}` : src;
 
   // 换地址、重试：回到加载中；没有地址（结果还没出来）一直是加载中。
   // 图片已经在缓存里时，浏览器可能不再触发 load，所以挂上后看一眼 complete
   useLayoutEffect(() => {
     setStatus('loading');
     const el = imgRef.current;
-    if (url && el?.complete) setStatus(el.naturalWidth > 0 ? 'loaded' : 'error');
-  }, [url]);
+    if (url && el?.complete) setStatus(el.naturalWidth > 0 ? 'loaded' : 'failed');
+  }, [url, attempt]);
 
   // 量短边：失败插图的大小、要不要写「重试」都看它
   useEffect(() => {
@@ -87,7 +89,7 @@ export const Image = forwardRef<HTMLImageElement, ImageProps>(function Image(
   }, [onRetry]);
 
   const illustration = Math.max(MIN_ILLUSTRATION, Math.min(side * 0.5, MAX_ILLUSTRATION));
-  const failed = status === 'error';
+  const failed = status === 'failed';
   const content = (
     <>
       {fallback ?? <img className="kv-image__failed" src={EMPTY_STATE_IMAGES.failed} alt="" style={{ width: illustration, height: illustration }} />}
@@ -110,7 +112,7 @@ export const Image = forwardRef<HTMLImageElement, ImageProps>(function Image(
           src={url}
           alt={alt}
           onLoad={composeHandlers(onLoad, () => setStatus('loaded'))}
-          onError={composeHandlers(onError, () => setStatus('error'))}
+          onError={composeHandlers(onError, () => setStatus('failed'))}
           {...rest}
         />
       )}

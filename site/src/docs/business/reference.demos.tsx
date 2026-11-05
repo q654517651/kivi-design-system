@@ -3,7 +3,10 @@ import {
   AttachmentStrip,
   Button,
   MentionChip,
+  Popover,
+  PreviewCard,
   PreviewPopover,
+  type PreviewCardType,
   PromptBox,
   ReferenceItem,
   ReferenceStack,
@@ -11,7 +14,7 @@ import {
   type ReferenceStackItem,
   type MentionChipType,
 } from '@kivi';
-import { Playground } from '@shell';
+import { Playground, type PlaygroundState } from '@shell';
 import './canvas.demos.css';
 
 // 「参考和引用」页的属性面板和演示：参考区、附件条、参考格、@ 引用胶囊。参数表在 reference.mdx
@@ -162,7 +165,7 @@ type MentionChipState = { type: MentionChipType; text: string; index: string };
 const CHIP_TEXT: Record<MentionChipType, string> = {
   image: '图片1',
   video: '视频1',
-  music: '音乐1',
+  audio: '音频1',
   skill: '分镜脚本',
   node: '文本节点',
   annotation: '把这个猕猴桃换成切开的',
@@ -178,7 +181,7 @@ export function MentionChipPlayground() {
           label: '类型',
           type: 'segment',
           value: 'image',
-          options: [['image', '图片'], ['video', '视频'], ['music', '音乐'], ['skill', '技能'], ['node', '节点'], ['annotation', '标注'], ['model', '模型']],
+          options: [['image', '图片'], ['video', '视频'], ['audio', '音频'], ['skill', '技能'], ['node', '节点'], ['annotation', '标注'], ['model', '模型']],
         },
         { key: 'text', label: '名字', type: 'text', value: '' },
         { key: 'index', label: '序号', type: 'text', value: '1' },
@@ -210,5 +213,88 @@ export function AnnotationChipDemo() {
         </MentionChip>
       </PreviewPopover>
     </div>
+  );
+}
+
+// ---------- PreviewCard ----------
+
+type PreviewCardState = { type: PreviewCardType; name: string; description: string; duration: string; ext: string; box: boolean; open: boolean };
+
+const PREVIEW_SRC = `${IMG}kiwi-light-1x1.webp`;
+
+export function PreviewCardPlayground() {
+  return (
+    <Playground<PreviewCardState>
+      controls={[
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频'], ['audio', '音频'], ['file', '文件']] },
+        { key: 'name', label: '名字', type: 'text', value: '图片1' },
+        { key: 'description', label: '说明', type: 'text', value: '' },
+        { key: 'duration', label: '时长', type: 'text', value: '0:12' },
+        { key: 'ext', label: '扩展名', type: 'text', value: 'PDF' },
+        { key: 'box', label: '标注框', type: 'toggle', value: false },
+        { key: 'open', label: '展开', type: 'toggle', value: true },
+      ]}
+      // 时长只有视频、音频用，扩展名只有文件用，标注框只画在图片、视频的大图上
+      rules={(s) => ({ duration: s.type !== 'video' && s.type !== 'audio', ext: s.type !== 'file', box: s.type !== 'image' && s.type !== 'video' })}
+      render={(s, update: (patch: Partial<PlaygroundState>) => void) => (
+        // 预览卡只是内容，放在悬停预览的玻璃底里看；浮层向上开，台子留够高度
+        <div style={{ paddingTop: 260 }}>
+          <Popover
+            variant="panel"
+            placement="top-start"
+            offset={8}
+            open={s.open}
+            onOpenChange={(open) => update({ open })}
+            content={
+              <PreviewCard
+                type={s.type}
+                src={s.type === 'image' || s.type === 'video' ? PREVIEW_SRC : undefined}
+                name={s.name || undefined}
+                description={s.description || undefined}
+                duration={(s.type === 'video' || s.type === 'audio') && s.duration ? s.duration : undefined}
+                ext={s.type === 'file' && s.ext ? s.ext : undefined}
+                box={s.box ? { x: 0.12, y: 0.18, width: 0.3, height: 0.34 } : undefined}
+              />
+            }
+          >
+            <ReferenceItem size={56} type={s.type} src={s.type === 'image' || s.type === 'video' ? PREVIEW_SRC : undefined} ext={s.type === 'file' ? s.ext : undefined} />
+          </Popover>
+        </div>
+      )}
+    />
+  );
+}
+
+// ---------- PreviewPopover ----------
+
+type PreviewPopoverState = { type: PreviewCardType; disabled: boolean };
+
+export function PreviewPopoverPlayground() {
+  return (
+    <Playground<PreviewPopoverState>
+      controls={[
+        { key: 'type', label: '触发元素', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频'], ['audio', '音频'], ['file', '文件']] },
+        { key: 'disabled', label: '禁用', type: 'toggle', value: false },
+      ]}
+      render={(s) => (
+        // 鼠标移到缩略图上才出预览，浮层向上开
+        <div style={{ paddingTop: 260 }}>
+          <PreviewPopover
+            disabled={s.disabled}
+            preview={{
+              type: s.type,
+              src: s.type === 'image' || s.type === 'video' ? PREVIEW_SRC : undefined,
+              name: s.type === 'file' ? '活动策划案.pdf' : s.type === 'audio' ? '配乐.mp3' : s.type === 'video' ? '视频1' : '图片1',
+              duration: s.type === 'video' || s.type === 'audio' ? '0:12' : undefined,
+              ext: s.type === 'file' ? 'PDF' : undefined,
+            }}
+          >
+            <span style={{ display: 'inline-block' }}>
+              <ReferenceItem size={56} type={s.type} src={s.type === 'image' || s.type === 'video' ? PREVIEW_SRC : undefined} ext={s.type === 'file' ? 'PDF' : undefined} />
+            </span>
+          </PreviewPopover>
+        </div>
+      )}
+    />
   );
 }

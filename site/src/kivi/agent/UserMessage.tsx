@@ -1,5 +1,6 @@
-import { forwardRef, useLayoutEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { Button } from '../button';
+import { Collapse } from '../collapse';
 import { cx } from '../utils';
 import { useControllable } from '../hooks';
 import './agent.css';
@@ -34,7 +35,7 @@ export const UserMessage = forwardRef<HTMLDivElement, UserMessageProps>(function
   const limit = maxLines * LINE;
   const overflow = height > limit + 1;
 
-  // 字多高（宽度变了、字变了都重新量），展开 / 收起的高度动画靠它
+  // 字多高（宽度变了、字变了都重新量），判断超没超过 maxLines 靠它
   useLayoutEffect(() => {
     const el = text.current;
     if (!el) return;
@@ -46,17 +47,16 @@ export const UserMessage = forwardRef<HTMLDivElement, UserMessageProps>(function
     return () => ro.disconnect();
   }, []);
 
-  const clipStyle: CSSProperties | undefined = overflow ? { maxHeight: expanded ? height : limit } : undefined;
-
   return (
     <div ref={ref} className={cx('kv-user-message', className)} {...rest}>
       {assets && <div className="kv-user-message__assets">{assets}</div>}
       <div className="kv-user-message__bubble">
-        <div className="kv-user-message__clip" style={clipStyle}>
+        {/* 超过 maxLines 行只露 maxLines 行，展开 / 收起走 Collapse（300ms ease-in-out） */}
+        <Collapse expanded={expanded || !overflow} collapsedSize={limit} distance={height}>
           <div ref={text} className="kv-user-message__text">
             {children}
           </div>
-        </div>
+        </Collapse>
         {overflow && (
           <Button
             className="kv-user-message__toggle"

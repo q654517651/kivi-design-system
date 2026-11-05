@@ -21,6 +21,7 @@ import { cx } from '../utils';
 import './media.css';
 
 export type VideoPlayerVariant = 'card' | 'preview';
+export type VideoPlayerFit = 'cover' | 'contain';
 
 export interface VideoPlayerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'onPlay' | 'onPause' | 'onVolumeChange' | 'onError'> {
   /** 视频地址 */
@@ -29,8 +30,8 @@ export interface VideoPlayerProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   poster?: string;
   /** 样子：卡片放卡片里（节点、主站结果、资产、历史），预览放预览弹窗，默认卡片 */
   variant?: VideoPlayerVariant;
-  /** 画面完整显示，留黑边；默认铺满、居中裁切。预览默认完整 */
-  fit?: boolean;
+  /** 填充：铺满、居中裁切 / 完整显示留黑边。卡片默认铺满，预览默认完整显示 */
+  fit?: VideoPlayerFit;
   /** 悬停播放：鼠标进来立刻静音播放，移开暂停。卡片默认开 */
   hoverPlay?: boolean;
   /** 打开就播：预览款默认开 */
@@ -173,7 +174,7 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
     src,
     poster,
     variant = 'card',
-    fit = variant === 'preview',
+    fit = variant === 'preview' ? 'contain' : 'cover',
     hoverPlay = variant === 'card',
     autoPlay = variant === 'preview',
     loop = true,
@@ -241,7 +242,13 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
     });
   }, []);
   const pause = useCallback(() => videoRef.current?.pause(), []);
-  const toggle = () => (videoRef.current?.paused ? play() : pause());
+  // 用户自己点了播放才算「正在播」、才让别的暂停
+  const toggle = () => {
+    if (videoRef.current?.paused) {
+      hoverStarted.current = false;
+      play();
+    } else pause();
+  };
 
   // 音量、静音跟着状态走
   useEffect(() => {
@@ -251,11 +258,22 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
     v.volume = volume / 100;
   }, [muted, volume]);
 
-  // 悬停播放：鼠标进来立刻播（和平台一致，不等），离开就停（停在原地，不回到开头）
+  // 悬停播放：鼠标进来立刻播（和平台一致，不等），离开就停（停在原地，不回到开头）。
+  // 只在「进来 / 离开」变化时动，挂载时不 pause（卡片款显式 autoPlay 不能被停掉）。
+  // 悬停播的是静音预览，不走 exclusivePlayback：不把正在播的别的视频、音频顶掉
+  const hoverStarted = useRef(false);
+  const wasInside = useRef(false);
   useEffect(() => {
     if (!hoverPlay) return;
-    if (hover.inside) play();
-    else pause();
+    if (hover.inside === wasInside.current) return;
+    wasInside.current = hover.inside;
+    if (hover.inside) {
+      hoverStarted.current = true;
+      play();
+    } else {
+      hoverStarted.current = false;
+      pause();
+    }
   }, [hoverPlay, hover.inside, play, pause]);
 
   // 播放中进度用 rAF 刷，timeupdate 一秒才 4 次，进度条会一跳一跳
@@ -358,7 +376,7 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
   return (
     <div
       ref={mergedRef}
-      className={cx('kv-video-player', `kv-video-player--${variant}`, fit && 'kv-video-player--fit', className)}
+      className={cx('kv-video-player', `kv-video-player--${variant}`, fit === 'contain' && 'kv-video-player--fit', className)}
       data-controls={controlsOn ? '' : undefined}
       data-playing={playing ? '' : undefined}
       data-buffering={buffering ? '' : undefined}
@@ -410,7 +428,7 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
           setCurrent(e.currentTarget.currentTime);
         }}
         onPlay={(e) => {
-          exclusivePlayback.start(e.currentTarget);
+          if (!hoverStarted.current) exclusivePlayback.start(e.currentTarget);
           setPlaying(true);
           onPlay?.(e);
         }}
@@ -437,7 +455,7 @@ export const VideoPlayer = forwardRef<HTMLDivElement, VideoPlayerProps>(function
 
       {failed && (
         <div className="kv-video-player__status" role="alert">
-          <EmptyState scene="failed" size={96} title={errorText} />
+          <EmptyState type="failed" size={96} title={errorText} />
         </div>
       )}
 

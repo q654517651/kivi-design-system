@@ -115,6 +115,8 @@
   border-left: 4px solid var(--color-border);
   border-radius: 0 var(--border-radius-6) var(--border-radius-6) 0;
   background: var(--color-bg-fill-container-light-1);
+  /* 自己是 Light 1 底，里面的行内代码、代码块叠在上面用 Light 2 */
+  --kv-nested-fill: var(--color-bg-fill-container-light-2);
   transition: background-color var(--motion-duration-200) var(--motion-ease-in-out);
 }
 
@@ -132,7 +134,7 @@
   padding: 2px var(--spacing-6);
   border: var(--border-width-1) solid var(--color-border);
   border-radius: var(--border-radius-4);
-  background: var(--color-bg-fill-container-light-1);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* Figma 没变量 */
   font-size: var(--font-size-14);
 }
@@ -197,7 +199,7 @@
   margin: 0;
   padding: var(--spacing-16) 52px var(--spacing-16) var(--spacing-16);
   border-radius: var(--border-radius-6);
-  background: var(--color-bg-fill-container-light-1);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
   color: var(--color-text-fill-primary);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* Figma 没变量 */
   font-size: var(--font-size-14);

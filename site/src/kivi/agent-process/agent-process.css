@@ -156,8 +156,8 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   }
 }
 
-/* 失败：图标和动作文字红色，对象 tertiary */
-.kv-process-row[aria-invalid="true"] {
+/* 失败：图标和动作文字红色，对象 tertiary。写两遍类名把权重抬过上面的悬停规则，带箭头的失败行悬停也还是红的 */
+.kv-process-row.kv-process-row[aria-invalid="true"] {
   --kv-row-icon: var(--color-status-danger);
   --kv-row-action: var(--color-status-danger);
 }
@@ -202,7 +202,7 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
 
 /* ---------- ThinkingBlock：思考块 ----------
    一行「灯泡 + 思考中 / 思考完成」，下面是思考原文（Collapse 往下推着展开）。思考中自动展开、滚到底、标题扫光、不能点；
-   完成自动收起，点标题再看。原文 14 / 20 tertiary，保留换行，最高 160 内部滚动，滚动条和渐隐同 kv-process-list */
+   完成自动收起，点标题再看。原文 14 / 22 tertiary，保留换行，最高 160 内部滚动，滚动条和渐隐同 kv-process-list */
 .kv-thinking-block {
   display: flex;
   flex-direction: column;
@@ -217,7 +217,7 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
 .kv-thinking-block__text {
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-20);
+  line-height: var(--font-line-height-22);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -356,15 +356,14 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   pointer-events: none;
 }
 
-/* 收起时藏到封面后面：一起飞就开始淡，200ms 淡完（比飞行 300 短），快到封面时已经看不见，不会整张钻进封面。
-   用 ease-out 不用 ease-in：ease-in 开头不淡，看着还是钻进去 */
+/* 收起时藏到封面后面：一起飞就开始淡，200ms 淡完（比飞行 300 短）。消失用 ease-in，和规则一致，没有例外 */
 .kv-media-group__card[data-hidden] {
   z-index: 0;
   opacity: 0;
   pointer-events: none;
   transition:
     transform var(--kv-media-group-duration) var(--motion-ease-expand),
-    opacity var(--motion-duration-200) var(--motion-ease-out);
+    opacity var(--motion-duration-200) var(--motion-ease-in);
 }
 
 .kv-media-group__media {
@@ -429,7 +428,6 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   box-sizing: border-box;
   width: 32px;
   height: 32px;
-  border: var(--border-width-1) solid var(--color-border);
   border-radius: var(--border-radius-8);
   background: var(--color-on-media-fill);
   color: var(--color-on-media-text);

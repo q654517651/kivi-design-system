@@ -59,36 +59,6 @@ import { InputPlayground, NumberInputPlayground, TextareaPlayground } from './in
 }
 `} />
 
-### 提示词输入框（模板）
-
-<Demo code={`
-<div style={{ display: 'flex', flexDirection: 'column', gap: 12, boxSizing: 'border-box', width: 560, maxWidth: '100%', padding: 16, borderRadius: 24, background: 'var(--color-bg-fill-surface)' }}>
-  <textarea
-    className="kv-textarea__field"
-    rows={3}
-    placeholder="输入想法、剧本或上传参考，和 Agent 一起创作"
-    aria-label="提示词"
-    style={{ display: 'block', width: '100%', resize: 'none', fontSize: 14, lineHeight: '22px' }}
-  />
-  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-    <Tooltip content="上传">
-      <IconButton icon="Upload" label="上传" size={32} variant="secondary" />
-    </Tooltip>
-    <Select
-      variant="plain"
-      placement="top-start"
-      aria-label="模型"
-      defaultValue="a"
-      options={[{ value: 'a', label: '模型 A' }, { value: 'b', label: '模型 B' }]}
-    />
-    <span style={{ flex: 1 }} />
-    <Tooltip content="发送">
-      <IconButton icon="Send" label="发送" size={36} variant="primary" />
-    </Tooltip>
-  </div>
-</div>
-`} />
-
 ## 参数
 
 ### Input

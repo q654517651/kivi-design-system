@@ -71,6 +71,7 @@ Foo.displayName = 'Foo';
 - `onChange` 直接给新的值，不给事件对象，所以要 `Omit` 掉原生的 `onChange`。
   - 例外：Input、Textarea 外面就是原生输入框，`onChange` 照原生给事件对象，值在 `e.target.value`。
 - 事件名 `on` 加动作：`onRemove`、`onPreview`；值变了是 `onXxxChange`。
+- 三个「去掉」的回调分工：真删数据用 `onDelete`，只摘掉引用、数据还在用 `onRemove`，关浮层用 `onClose`。
 - 状态写在元素上，CSS 按它选：
   - 先用原生属性和 `aria-*`：`disabled`、`aria-pressed`、`aria-expanded`、`aria-selected`、`aria-checked`、`aria-current`。
   - 没有对应的，用 `data-*`：有就是 `data-playing=""`，没有就不写；几种状态之间切换用 `data-state="open"`。
@@ -101,12 +102,12 @@ Foo.displayName = 'Foo';
 | `useHoverIntent` | 离开后等一会儿才算离开，鼠标挪到浮层的路上不断 |
 | `useMergedRef` | 合并组件自己的 ref 和外面传的 ref |
 | `composeHandlers` | 合并组件自己的事件和外面传的事件 |
-| `useCopy` | 复制到剪贴板：返回 `copy` 和「已复制」状态（默认 1.5 秒后恢复）；`writeClipboard` 在 http 内网地址这类没有 `navigator.clipboard` 的环境退到老办法 |
+| `useCopy` | 复制到剪贴板：返回 `copy` 和「已复制」状态（默认 1.5 秒后恢复）：成功只换对勾、不弹 Toast，失败统一弹 Toast「复制失败」；`writeClipboard` 在 http 内网地址这类没有 `navigator.clipboard` 的环境退到老办法 |
 | `useScrollFade` | 滚动列表的渐隐：跟着滑的方向走，往下滑下面渐隐、往上滑上面渐隐，到头换另一边；返回 `fade`（写到列表的 `data-fade`）和 `onScroll` |
 | `useAudioPlayer` | 音频播放：播放、暂停、进度、时长、加载状态，同一时间只播一个（走 `exclusivePlayback`）；`seek`、`seekBy` 用来拖进度条、按方向键 |
 | `exclusivePlayback` | 同一时间只播一个视频或音频 |
 | `useScrollLock` | 锁背景滚动：body 不能滚，补滚动条宽度防跳动，多层弹窗最后一个关掉才恢复 |
-| `useFileDrop` | 拖文件进来：数 dragenter / dragleave 次数，里面的子元素之间移动不闪；按 `accept`、`maxSize` 检查，返回 `dragging`、`rejected`、`bind`（四个拖拽事件，铺到根元素上）、`receive`（点选文件走同一套检查）。PromptBox、画布 Agent 输入框都用它；`composeDropHandlers` 把组件的和外面传的合并 |
+| `useFileDrop` | 拖文件进来：数 dragenter / dragleave 次数，里面的子元素之间移动不闪；按 `accept`、`maxSize` 检查（拒收原因 `type` / `size`；`duration` / `resolution` / `ratio` 要读了媒体信息才知道，由业务自己判断后传给 `rejectMessage`，文案带数字照线上），返回 `dragging`、`rejected`、`bind`（四个拖拽事件，铺到根元素上）、`receive`（点选文件走同一套检查）。PromptBox、画布 Agent 输入框都用它；`composeDropHandlers` 把组件的和外面传的合并 |
 
 ## 检查
 

@@ -145,7 +145,7 @@ function renderMessageFeedback(s: MessageFeedbackState, update: Update) {
       traceId={s.trace ? 'trace-8f3a21' : undefined}
       reason={s.reason}
       value={s.value === 'none' ? null : (s.value as 'like' | 'dislike')}
-      onValueChange={(v) => update({ value: v ?? 'none' })}
+      onChange={(v) => update({ value: v ?? 'none' })}
     />
   );
 }
@@ -170,10 +170,12 @@ type QuestionPanelState = {
   pager: boolean;
   other: boolean;
   skip: boolean;
+  aiDecide: boolean;
   disabled: boolean;
   title: string;
   pagerText: string;
   skipText: string;
+  aiDecideText: string;
   submitText: string;
 };
 
@@ -185,13 +187,15 @@ export function QuestionPanelPlayground() {
         { key: 'pager', label: '显示分页', type: 'toggle', value: true },
         { key: 'other', label: '显示其他输入', type: 'toggle', value: true },
         { key: 'skip', label: '显示忽略', type: 'toggle', value: true },
+        { key: 'aiDecide', label: '显示全部由 AI 决策', type: 'toggle', value: true },
         { key: 'disabled', label: '提交中（禁用）', type: 'toggle', value: false },
         { key: 'title', label: '题目', type: 'text', value: '1. 你喜欢小猫吗？（2 个选项）' },
         { key: 'pagerText', label: '分页', type: 'text', value: '1/5' },
         { key: 'skipText', label: '忽略文字', type: 'text', value: '忽略' },
+        { key: 'aiDecideText', label: '全部由 AI 决策文字', type: 'text', value: '全部由 AI 决策' },
         { key: 'submitText', label: '提交文字', type: 'text', value: '确认提交' },
       ]}
-      rules={(s) => ({ ...(s.pager ? {} : { pagerText: true }), ...(s.skip ? {} : { skipText: true }) })}
+      rules={(s) => ({ ...(s.pager ? {} : { pagerText: true }), ...(s.skip ? {} : { skipText: true }), ...(s.aiDecide ? {} : { aiDecideText: true }) })}
       render={(s) => (
         <QuestionPanel
           key={s.mode}
@@ -200,6 +204,8 @@ export function QuestionPanelPlayground() {
           multiple={s.mode === 'multi' || undefined}
           skip={s.skip ? undefined : false}
           skipText={s.skipText === '忽略' ? undefined : s.skipText}
+          aiDecide={s.aiDecide ? undefined : false}
+          aiDecideText={s.aiDecideText === '全部由 AI 决策' ? undefined : s.aiDecideText}
           submitText={s.submitText === '确认提交' ? undefined : s.submitText}
           disabled={s.disabled || undefined}
           defaultValue={s.mode === 'multi' ? ['1', '2'] : ['1']}
@@ -216,11 +222,13 @@ export function QuestionPanelPlayground() {
 /** 追问的来回：问的时候面板停在输入框的位置，消息里是「询问中」；提交后面板消失，留「已询问」，忽略了留「询问」 */
 export function QuestionFlowDemo() {
   const [phase, setPhase] = useState<'asking' | 'sending' | 'answered' | 'skipped'>('asking');
+  const [byAi, setByAi] = useState(false);
   const text = { color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' };
   const question = '1. 你喜欢小猫吗？（2 个选项）';
 
   // 假提交：禁用 600ms 再收起
-  const finish = (result: 'answered' | 'skipped') => {
+  const finish = (result: 'answered' | 'skipped', ai = false) => {
+    setByAi(ai);
     setPhase('sending');
     window.setTimeout(() => setPhase(result), 600);
   };
@@ -233,7 +241,7 @@ export function QuestionFlowDemo() {
           <div style={text}>好的，马上为你同时生成 10 张小狗图片！</div>
           {phase === 'answered' || phase === 'skipped' ? (
             <>
-              <AskRecord status={phase} items={[{ question, answer: '喜欢' }]} />
+              <AskRecord status={phase} items={[{ question, answer: '喜欢' }]} skippedText={byAi ? '交给 AI 决策' : undefined} />
               <Button onClick={() => setPhase('asking')}>重新演示</Button>
             </>
           ) : (
@@ -242,10 +250,12 @@ export function QuestionFlowDemo() {
               <QuestionPanel
                 title={question}
                 pager="1/5"
+                prevDisabled
                 defaultValue={['1']}
                 disabled={phase === 'sending'}
                 onSubmit={() => finish('answered')}
                 onSkip={() => finish('skipped')}
+                onAiDecide={() => finish('skipped', true)}
               >
                 <QuestionOption value="1">喜欢</QuestionOption>
                 <QuestionOption value="2">不喜欢</QuestionOption>
@@ -256,6 +266,39 @@ export function QuestionFlowDemo() {
         </div>
       </div>
     </figure>
+  );
+}
+
+/** 多题翻页：上一题、下一题能翻，第一题上一题、最后一题下一题不可点，每题的选择各自记着 */
+const PAGER_QUESTIONS = [
+  { title: '1. 想要什么风格？', options: ['水彩', '插画', '写实'] },
+  { title: '2. 画面里放几只小狗？', options: ['1 只', '3 只'] },
+  { title: '3. 要不要加文字？', options: ['要', '不要'] },
+];
+
+export function QuestionPagerDemo() {
+  const [page, setPage] = useState(0);
+  const [answers, setAnswers] = useState<string[][]>(() => PAGER_QUESTIONS.map(() => []));
+  const q = PAGER_QUESTIONS[page];
+  const last = PAGER_QUESTIONS.length - 1;
+  return (
+    <QuestionPanel
+      key={page}
+      title={q.title}
+      pager={`${page + 1}/${PAGER_QUESTIONS.length}`}
+      prevDisabled={page === 0}
+      nextDisabled={page === last}
+      onPrev={() => setPage(page - 1)}
+      onNext={() => setPage(page + 1)}
+      value={answers[page]}
+      onChange={(v) => setAnswers((a) => a.map((x, i) => (i === page ? v : x)))}
+    >
+      {q.options.map((o) => (
+        <QuestionOption key={o} value={o}>
+          {o}
+        </QuestionOption>
+      ))}
+    </QuestionPanel>
   );
 }
 

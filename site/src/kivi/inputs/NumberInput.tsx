@@ -59,7 +59,9 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
         onChange={(e: ChangeEvent<HTMLInputElement>) => setValue(clean(e.target.value, precision, Number(min) < 0))}
         onBlur={composeHandlers(onBlur, () => {
           let n = Number(current);
-          if (current === '' || Number.isNaN(n)) return;
+          if (current === '') return;
+          // 只剩「-」「.」这种不是数字的，清空，不留着符号
+          if (Number.isNaN(n)) return setValue('');
           if (min !== undefined && n < Number(min)) n = Number(min);
           if (max !== undefined && n > Number(max)) n = Number(max);
           const next = n.toFixed(precision);

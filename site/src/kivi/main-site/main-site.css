@@ -163,7 +163,7 @@
   height: var(--spacing-8);
 }
 
-.kv-gen-prompt-refs:where(:hover, :focus-within, .is-hover) > .kv-gen-prompt-refs__popover {
+.kv-gen-prompt-refs:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) > .kv-gen-prompt-refs__popover {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -228,7 +228,7 @@
   left: var(--spacing-8);
 }
 
-.kv-result-tile:where(:hover, :focus-within, .is-hover) > .kv-result-tile__actions {
+.kv-result-tile:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) > .kv-result-tile__actions {
   opacity: 1;
   visibility: visible;
   transition:
@@ -244,7 +244,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
-.kv-result-tile:where(:hover, :focus-within, .is-hover) > .kv-result-tile__pin {
+.kv-result-tile:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) > .kv-result-tile__pin {
   opacity: 0;
   transition-timing-function: var(--motion-ease-in);
 }

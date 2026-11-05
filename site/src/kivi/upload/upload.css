@@ -56,20 +56,20 @@
 }
 
 /* ---------- UploadRing ---------- */
-/* 进度环 28：盖在暗色遮罩上，颜色跟文字走（白）。底圈白 30%，弧线圆头 */
+/* 进度环 36：盖在暗色遮罩上，颜色跟文字走（白）。底圈白 30%，弧线圆头 */
 .kv-upload-ring {
   display: grid;
   flex: none;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   color: var(--color-on-media-text);
 }
 
 .kv-upload-ring > svg {
   grid-area: 1 / 1;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
 }
 
 .kv-upload-ring__ring,
@@ -88,10 +88,10 @@
   stroke-linecap: round;
 }
 
-/* 9 号字：Figma 里是 9 / 粗，变量里没有这一档 */
+/* 字号只用变量：10 号（11-05 从 9 改）；环里放得下「100%」，所以环从 28 放大到 36 */
 .kv-upload-ring__text {
   grid-area: 1 / 1;
-  font-size: 9px;
+  font-size: var(--font-size-10);
   font-weight: var(--font-weight-medium);
   font-variant-numeric: tabular-nums;
 }

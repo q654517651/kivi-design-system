@@ -1,4 +1,4 @@
-import { Calendar, DateRangeFilter, DATE_RANGE_PRESETS, formatShortDate, type DateRange } from '@kivi';
+import { Calendar, DateRangeFilter, DATE_RANGE_PRESETS, formatShortDate, presetRange, startOfDay, type DateRange } from '@kivi';
 import { Playground } from '@shell';
 
 // 日期页的两个属性面板。参数表在 date.mdx
@@ -9,6 +9,13 @@ function parse(s: string): Date | null {
   if (!m) return null;
   const d = new Date(2000 + Number(m[1]), Number(m[2]) - 1, Number(m[3]));
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** 选了预设：起止是算出来的，日期框里显示它们 */
+function presetValue(preset: string): DateRange {
+  const p = DATE_RANGE_PRESETS.find((x) => x.value === preset);
+  const r = p && presetRange(p, startOfDay(new Date()));
+  return { preset, start: r?.start ?? null, end: r?.end ?? null };
 }
 
 type CalendarState = { value: string; limit: string };
@@ -57,7 +64,7 @@ export function DateRangeFilterPlayground() {
             ? { start: parse(s.start), end: parse(s.end) }
             : s.preset === 'none'
               ? { start: null, end: null }
-              : { preset: s.preset, start: null, end: null };
+              : presetValue(s.preset);
         return (
           <div style={{ minHeight: 420, width: 520, display: 'flex', alignItems: 'flex-start', justifyContent: s.placement === 'bottom-end' ? 'flex-end' : 'flex-start' }}>
             <DateRangeFilter

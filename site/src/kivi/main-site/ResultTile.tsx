@@ -122,7 +122,7 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
   if (status === 'failed') {
     return (
       <div ref={ref} className={cls} aria-invalid="true" tabIndex={topActions?.length ? 0 : undefined} {...rest}>
-        <EmptyState scene="failed" size={96} title={failedTitle} description={failedDescription} />
+        <EmptyState type="failed" size={96} title={failedTitle} description={failedDescription} />
         <Actions list={topActions} position="top" />
         {children}
       </div>
@@ -132,7 +132,7 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
   return (
     <div ref={ref} className={cls} tabIndex={0} {...rest}>
       {src && type === 'image' && <img className="kv-result-tile__media" src={src} alt="" />}
-      {src && type === 'video' && <VideoPlayer src={src} poster={poster} fit={fit} onFullscreen={onPreview} />}
+      {src && type === 'video' && <VideoPlayer src={src} poster={poster} fit={fit ? 'contain' : undefined} onFullscreen={onPreview} />}
       <Actions
         list={topActions}
         position="top"

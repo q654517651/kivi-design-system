@@ -4,7 +4,7 @@
   依赖 tokens.css、base.css。都照线上（ai-design-web 的 MyAssets、InfiniteCanvas/Manage）的结构和尺寸，颜色换成变量。
 
   状态
-    悬停    :hover、:focus-within（键盘进到卡里）；文档摆静态的用 .is-hover
+    悬停    :hover、:focus-visible、:has(:focus-visible)（键盘进到卡里）；文档摆静态的用 .is-hover
     空      FolderCard 封面没有图：data-empty
 */
 
@@ -19,7 +19,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--color-bg-fill-container-light-1);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1)); /* 放在带 Light 1 底的卡里（ProjectCard）是 Light 2 */
 }
 
 .kv-cover-grid__cell {
@@ -65,8 +65,8 @@
     visibility 0s linear var(--motion-duration-150);
 }
 
-.kv-folder-card:where(:hover, :focus-within, .is-hover) .kv-folder-card__more,
-.kv-project-card:where(:hover, :focus-within, .is-hover) .kv-project-card__more,
+.kv-folder-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-folder-card__more,
+.kv-project-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-project-card__more,
 .kv-folder-card__more:has([aria-expanded="true"]),
 .kv-project-card__more:has([aria-expanded="true"]) {
   opacity: 1;
@@ -99,7 +99,7 @@
 }
 
 /* 悬停：和画布卡、新建卡一样，卡的底变 Light 1 悬停，「⋯」悬停才出（11-05 统一）。文件夹卡的「卡」就是封面这块 */
-.kv-folder-card:where(:hover, :focus-within, .is-hover) .kv-folder-card__cover {
+.kv-folder-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-folder-card__cover {
   background: var(--color-bg-fill-container-light-1-hover);
 }
 
@@ -175,13 +175,14 @@
   outline: var(--border-width-1) solid var(--color-border);
   outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-container-light-1);
+  --kv-nested-fill: var(--color-bg-fill-container-light-2); /* 自己是 Light 1 底，里面的封面拼图（没图时的空底）叠在上面用 Light 2 */
   font-family: var(--font-family);
   -webkit-user-select: none;
   user-select: none;
   transition: background-color var(--motion-duration-150) var(--motion-ease-out);
 }
 
-.kv-project-card:where(:hover, .is-hover) {
+.kv-project-card:where(:hover, :has(:focus-visible), .is-hover) {
   background: var(--color-bg-fill-container-light-1-hover);
 }
 
@@ -260,7 +261,7 @@
   transition: background-color var(--motion-duration-150) var(--motion-ease-out);
 }
 
-.kv-create-card:where(:hover, .is-hover) {
+.kv-create-card:where(:hover, :focus-visible, .is-hover) {
   background: var(--color-bg-fill-container-light-1-hover);
 }
 

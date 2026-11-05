@@ -57,7 +57,7 @@ export const AskRecord = forwardRef<HTMLDivElement, AskRecordProps>(function Ask
         onExpandedChange={setExpanded}
         aria-controls={bodyId}
       />
-      <Collapse id={bodyId} open={expanded} distance={distance} gap={6}>
+      <Collapse id={bodyId} expanded={expanded} distance={distance} gap={6}>
         <div className="kv-ask-record__list">
           {items.map((item, i) => (
             <div key={i} className="kv-ask-record__item">

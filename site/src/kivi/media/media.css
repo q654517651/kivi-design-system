@@ -20,7 +20,7 @@
       </button>
     </div>
 
-  状态  data-status="loading" 骨架屏扫光 / "loaded" 图片 200ms ease-out 淡入 / "error" 深色底 + IP 失败插图
+  状态  data-status="loading" 骨架屏扫光 / "loaded" 图片 200ms ease-out 淡入 / "failed" 深色底 + IP 失败插图
   大小  外面定宽高，或者宽加 ratio。圆角默认 8（和 Skeleton 矩形一样），外层要裁切时在 className 里改。
   失败插图  短边的一半，最大 120，最小 32，大小由脚本写；短边 ≥ 160 且能重试时，插图下面写「重试」12 secondary，间距 8。
 */
@@ -147,7 +147,7 @@ button.kv-image__error:hover {
     大：浮在控制行下面，左右留 16、离底 8，带 10 的拖拽点，热区 12。
 
   按钮
-    IconButton 浮层无底（on-media-ghost），平时没有底，图标直接压在渐变上；悬停出浮层底（黑 60%），圆角跟 IconButton（28 是 6，32 是 8）。
+    IconButton 浮层无底（on-media-ghost），平时没有底，图标直接压在渐变上；悬停出浮层底（黑 40%），按下 60%，圆角跟 IconButton（28 是 6，32 是 8）。
     播放、暂停用实心图标，音量、全屏用描边。
   时间
     00:03 / 00:15，总时长 50%；超过一小时 1:02:03。

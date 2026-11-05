@@ -61,9 +61,9 @@ import { AssetThumbPlayground, AvatarPlayground, TagPlayground } from './tags-av
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `size` | `16` `24` `56` `72` | `16` | 圆角 4 / 4 / 8 / 8（`--border-radius-4` · `--border-radius-8`），音符、占位图标 12 / 12 / 24 / 24 |
-| `type` | `"image"` `"audio"` `"icon"` | `"image"` | 图片（图片、视频首帧，铺满）/ 音频（渐变 #89A0BE → #7286AA + 白色 Music）/ 图标（白 10% 底 + 图标，不透明度 30%）。三种都有 1 的内描边 `--color-border-subtle` |
+| `size` | `16` `24` `56` `72` | `16` | 圆角 4 / 4 / 8 / 8（`--border-radius-4` · `--border-radius-8`），占位图标 12 / 12 / 24 / 24 |
+| `type` | `"image"` `"icon"` | `"image"` | 图片（图片、视频首帧，铺满）/ 图标（白 10% 底 + 图标，不透明度 30%；音频用它，图标 `Music`）。两种都有 1 的内描边 `--color-border-subtle` |
 | `src` | `string` | — | 图片类型的图片地址 |
-| `icon` | `IconName` | `"Message"` | 图标类型的图标：对话用 `Message`，画布用 `Canvas`。音频固定是 `Music` |
+| `icon` | `IconName` | `"Message"` | 图标类型的图标：对话用 `Message`，画布用 `Canvas`，音频用 `Music` |
 
 其余原生 `<span>` 属性都能传。

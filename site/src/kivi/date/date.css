@@ -83,6 +83,15 @@
   background: var(--color-bg-fill-container-light-1);
 }
 
+/* 选中的日子悬停、键盘聚焦、按下：比选中亮一档（hover / pressed），选择器比上面选中那条更具体 */
+.kv-calendar__day[aria-selected="true"]:where(:hover, :focus-visible, .is-hover):not([aria-disabled="true"]) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-calendar__day[aria-selected="true"]:active:not([aria-disabled="true"]) {
+  background: var(--color-bg-fill-container-light-1-pressed);
+}
+
 .kv-calendar__day[aria-disabled="true"] {
   color: var(--color-text-fill-disabled);
   cursor: not-allowed;
@@ -165,7 +174,7 @@
 
 /* 日历：第二层浮层，浮在点的那个日期框下面，和框左对齐、离 4（点开的浮层都离 4），压在预设上、可以伸出面板。
    和面板并排挂在弹出层（kv-popup，fixed）里、按它定位，不嵌在面板里：面板有背景模糊，嵌在里面的模糊不生效，预设的字会透上来。
-   和面板一样是玻璃：底 glass + 模糊 32 + 描边 border-subtle，圆角 16，内边距 8。出现同菜单（淡入 + 96% 放大、从上往下移 4，200ms ease-out） */
+   和面板一样是玻璃：底 glass + 模糊 32 + 描边 border-subtle，圆角 16，内边距 8。出现同菜单（淡入 + 96% 放大、从上往下移 4，200ms ease-out），消失 150ms ease-in */
 .kv-date-range__calendar {
   position: absolute;
   top: calc(var(--spacing-8) + 36px + var(--spacing-4)); /* 面板内边距 8 + 日期框 36 + 离 4 */
@@ -181,6 +190,12 @@
   backdrop-filter: blur(var(--effect-glass-blur));
   transform-origin: 0 0;
   animation: kv-popup-in var(--motion-duration-200) var(--motion-ease-out) both;
+}
+
+/* 消失：150ms ease-in，同菜单（淡出 + 缩到 96%、往上移 4）；这时不再响应点击 */
+.kv-date-range__calendar[data-state="closed"] {
+  pointer-events: none;
+  animation: kv-popup-out var(--motion-duration-150) var(--motion-ease-in) both;
 }
 
 /* 结束日期：面板宽 272，两个框各占一半、中间间距 8，结束框的左边在 50% + 4 */

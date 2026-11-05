@@ -37,7 +37,6 @@ export const TOKEN_GROUPS = {
     rows: [
       { token: '--color-brand-solid', desc: '选中、开关、进度', figma: 'color/brand/solid', use: '选中指示、开关打开、进度、勾选框选中。不要用于大面积背景、正文' },
       { token: '--color-brand-hover', desc: '品牌色悬停', figma: 'color/brand/hover', use: '品牌色控件的悬停态' },
-      { token: '--color-brand-pressed', desc: '品牌色按下', figma: 'color/brand/pressed', use: '品牌色控件的按下态' },
       { token: '--color-brand-subtle', desc: '选中的浅底', figma: 'color/brand/subtle', use: '选中态的浅底：选中的模型、选中的卡片、选中的图标按钮' },
       { token: '--color-brand-gradient-1', desc: '主要按钮渐变起点', figma: 'color/brand/gradient-1', use: '品牌渐变起点（左）' },
       { token: '--color-brand-gradient-2', desc: '主要按钮渐变终点', figma: 'color/brand/gradient-2', use: '品牌渐变终点（右）。主要按钮：`linear-gradient(90deg, gradient-1, gradient-2)`' },
@@ -73,7 +72,7 @@ export const TOKEN_GROUPS = {
       { token: '--color-bg-fill-container-light-2', desc: '浅底上的容器', figma: 'color/bg/fill/container-light-2', use: '= fill-1。浅底（相对亮度 ≥ 0.015：叠在一层 Light 1 上、popup）上有底色的东西和常驻底色。深底上不用' },
       { token: '--color-bg-fill-container-light-2-hover', desc: '浅底上的悬停', figma: 'color/bg/fill/container-light-2-hover', use: '= fill-2。浅底上的悬停（比如分段里的项、菜单行里的「⋯」）' },
       { token: '--color-bg-fill-container-light-2-pressed', desc: '浅底上的按下', figma: 'color/bg/fill/container-light-2-pressed', use: '= fill-3。浅底上的按下。选中用默认' },
-      { token: '--color-bg-fill-container-dark', desc: '凹下去的：上传框、图片垫底', figma: 'color/bg/fill/container-dark', use: '凹下去的区域：上传框、图片和视频的垫底' },
+      { token: '--color-bg-fill-container-dark', desc: '凹下去的：遮罩、图片垫底', figma: 'color/bg/fill/container-dark', use: '凹下去的区域：遮罩、图片和视频的垫底' },
       { token: '--color-bg-fill-container-dark-hover', desc: '悬停', figma: 'color/bg/fill/container-dark-hover', use: 'container-dark 的悬停态' },
     ],
   },
@@ -128,14 +127,12 @@ export const TOKEN_GROUPS = {
       { token: '--g-workflow-line-color-drawing', desc: '拖拽创建中', figma: 'color/canvas/connector-drawing', use: '拖拽创建中，1.5px 虚线 6/6' },
       { token: '--g-workflow-line-color-active', desc: '选中、悬停', figma: 'color/canvas/connector-active', use: '选中或悬停，2px' },
       { token: '--g-workflow-line-color-flowing', desc: '执行中', figma: 'color/canvas/connector-flowing', use: '执行中，1.5px + 流光' },
-      { token: '--g-workflow-line-color-error', desc: '出错', figma: 'color/canvas/connector-error', use: '执行出错' },
     ],
   },
   spacing: {
     title: '间距',
     kind: 'space',
     rows: [
-      { token: '--spacing-0', figma: 'spacing/0' },
       { token: '--spacing-2', figma: 'spacing/2' },
       { token: '--spacing-4', figma: 'spacing/4' },
       { token: '--spacing-6', figma: 'spacing/6' },
@@ -155,7 +152,7 @@ export const TOKEN_GROUPS = {
       { token: '--border-radius-8', figma: 'border/radius/8', use: '按钮、输入框、菜单项、Tooltip，最常用' },
       { token: '--border-radius-12', figma: 'border/radius/12', use: '卡片、画布节点、菜单容器、Toast' },
       { token: '--border-radius-16', figma: 'border/radius/16', use: '弹窗、大面板' },
-      { token: '--border-radius-24', figma: 'border/radius/24', use: '大容器：首页提示词输入框、大卡片、Banner。弹窗和面板仍用 16' },
+      { token: '--border-radius-24', figma: 'border/radius/24', use: '主站输入框。弹窗和面板仍用 16' },
       { token: '--border-radius-round', figma: 'border/radius/round', use: '开关、头像、圆形图标按钮、胶囊' },
     ],
   },
@@ -164,8 +161,7 @@ export const TOKEN_GROUPS = {
     kind: 'stroke',
     rows: [
       { token: '--border-width-1', figma: 'border/width/1', use: '默认描边' },
-      { token: '--border-width-1-25', figma: 'border/width/1-25', use: '需要稍微加强的描边' },
-      { token: '--border-width-1-5', figma: 'border/width/1-5', use: '线性图标线宽、选中和聚焦描边' },
+      { token: '--border-width-1-5', figma: 'border/width/1-5', use: '选中描边' },
     ],
   },
   'font-size': {

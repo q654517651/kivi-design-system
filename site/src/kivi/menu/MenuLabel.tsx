@@ -89,7 +89,7 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
     <div className="kv-menu__group">
       {label}
       {collapsible ? (
-        <Collapse id={bodyId} open={expanded} distance={200}>
+        <Collapse id={bodyId} expanded={expanded} distance={200}>
           <div className="kv-menu__group-items">{items}</div>
         </Collapse>
       ) : (

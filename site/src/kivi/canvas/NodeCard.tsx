@@ -177,7 +177,7 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
         </>
       )}
 
-      {status === 'failed' && <EmptyState scene="failed" size={96} title={failedTitle} description={failedDescription} />}
+      {status === 'failed' && <EmptyState type="failed" size={96} title={failedTitle} description={failedDescription} />}
     </div>
   );
 });

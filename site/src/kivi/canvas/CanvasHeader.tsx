@@ -30,7 +30,7 @@ export interface CanvasHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 
   /** 默认的当前画布（非受控），不写是第一个 */
   defaultValue?: string;
   /** 切到别的画布 */
-  onValueChange?: (id: string) => void;
+  onChange?: (id: string) => void;
   /** 一个工作区最多几个画布，默认 30。到了上限新建、复制都不做，出 Toast「画布已达到上限」 */
   max?: number;
   /** Agent 正在工作：这时切画布先弹窗确认 */
@@ -60,7 +60,7 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
     onCanvasesChange,
     value: valueProp,
     defaultValue,
-    onValueChange,
+    onChange,
     max = 30,
     agentWorking,
     onOpenInNewWindow,
@@ -71,7 +71,7 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
   ref,
 ) {
   const [canvases, setCanvases] = useControllable(canvasesProp, defaultCanvases, onCanvasesChange);
-  const [value, setValue] = useControllable(valueProp, defaultValue ?? defaultCanvases[0]?.id ?? '', onValueChange);
+  const [value, setValue] = useControllable(valueProp, defaultValue ?? (canvasesProp ?? defaultCanvases)[0]?.id ?? '', onChange);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [removing, setRemoving] = useState<CanvasItem | null>(null);

@@ -9,7 +9,7 @@
     <Toast type="loading" action="取消">正在上传 3 张图片</Toast>   只摆样子（文档里的示意）
     <Loading size={16}>加载中…</Loading>
     <Skeleton variant="rect" width={160} height={90} />
-    <EmptyState scene="empty" title="还没有作品" description="在左侧写下描述，生成第一张作品" />
+    <EmptyState type="empty" title="还没有作品" description="在左侧写下描述，生成第一张作品" />
   渲染出来的结构
     <div class="kv-toast kv-toast--success">
       <span class="kv-toast__icon"></span>
@@ -112,6 +112,13 @@
   color: var(--color-text-fill-secondary);
   font: inherit;
   cursor: pointer;
+}
+
+/* 悬停、按下变 primary（和「轻」按钮一致）；键盘聚焦和悬停一样，不加描边 */
+.kv-toast__action:hover,
+.kv-toast__action:active,
+.kv-toast__action:focus-visible {
+  color: var(--color-text-fill-primary);
 }
 
 /* 类型：每种改这两个值，状态图标圆的颜色、镂空符号。信息是默认 */
@@ -237,7 +244,7 @@
 }
 
 .kv-banner--info {
-  --kv-banner-bg: var(--color-bg-fill-container-light-1);
+  --kv-banner-bg: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
 }
 
 .kv-banner--success {
@@ -457,7 +464,7 @@
   position: relative;
   display: block;
   overflow: hidden;
-  background: var(--color-bg-fill-container-light-1);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
   border-radius: var(--border-radius-8);
 }
 

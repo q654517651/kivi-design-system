@@ -41,6 +41,7 @@ import {
   type ResultTileStatus,
 } from '@kivi';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../business/skill-data';
+import { demoCost } from '../business/gen-demo-cost';
 import { useControllable } from '../../kivi/hooks';
 import { TemplateFrame } from './frame';
 
@@ -410,17 +411,20 @@ const PLACEHOLDER: Record<string, string> = {
 };
 
 /** 任务类型后面那一组：Agent 是模型、技能、模式；图片、视频、音频是各自的模型和参数（kivi/generation 那一份） */
-const TOOLBAR: Record<string, () => JSX.Element> = {
+const TOOLBAR: Record<string, (model: string, setModel: (m: string) => void) => JSX.Element> = {
   agent: () => <AgentControls skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />,
-  image: () => <ImageModelControls />,
-  video: () => <VideoModelControls />,
-  audio: () => <AudioModelControls />,
+  image: (model, setModel) => <ImageModelControls model={model} onModelChange={setModel} />,
+  video: (model, setModel) => <VideoModelControls model={model} onModelChange={setModel} />,
+  audio: (model, setModel) => <AudioModelControls model={model} onModelChange={setModel} />,
 };
 
 function Composer() {
   const [task, setTask] = useState('agent');
   const [text, setText] = useState('');
-  const [audioModel, setAudioModel] = useState(DEFAULT_MODEL.audio);
+  // 每种任务各记一个模型，生成按钮的消耗跟着它走
+  const [models, setModels] = useState<Record<string, string>>({ image: DEFAULT_MODEL.image, video: DEFAULT_MODEL.video, audio: DEFAULT_MODEL.audio });
+  const setModel = (m: string) => setModels((old) => ({ ...old, [task]: m }));
+  const audioModel = models.audio;
   const [items, setItems] = useState<ReferenceStackItem[]>([
     { id: 'c1', type: 'image', name: '图片1', src: img('kiwi-glass', '1:1') },
     { id: 'c2', type: 'image', name: '图片2', src: img('kiwi-light', '1:1') },
@@ -449,14 +453,14 @@ function Composer() {
       toolbar={
         <>
           <TaskSelect value={task} onChange={setTask} />
-          {task === 'audio' ? <AudioModelControls model={audioModel} onModelChange={setAudioModel} /> : TOOLBAR[task]()}
+          {TOOLBAR[task](models[task], setModel)}
         </>
       }
       actions={
         // 主站一律用猕猴桃生成按钮（圆形发送按钮只给画布 Agent）。音频没有张数，换成字数 / 上限。只能看，点了不生成
         <>
           {task === 'audio' ? <AudioCharCount count={text.length} model={audioModel} /> : <CountSelect />}
-          <GenerateButton cost={task === 'image' ? 4 : task === 'audio' ? 2 : 99} />
+          <GenerateButton cost={demoCost(task, models[task])} />
         </>
       }
     />

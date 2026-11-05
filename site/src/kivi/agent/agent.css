@@ -22,7 +22,7 @@
 /* ---------- AskRecord：询问记录 ----------
    一行「询问中 / 已询问 / 询问」，下面收起的是问了什么、怎么答的。默认收起，悬停出箭头，点开往下推（Collapse）。
    询问中：等用户回答，问题面板在输入框位置，这一行扫光；已询问：回答了；询问：跳过了（交给 AI 决策，或用户直接发了新消息）。
-   问题 14 / 20 secondary，回答和说明 12 / 16 tertiary，一题里间距 4，题和题之间 8 */
+   问题 14 / 22 secondary，回答和说明 12 / 20 tertiary，一题里间距 4，题和题之间 8 */
 .kv-ask-record {
   display: flex;
   flex-direction: column;
@@ -45,14 +45,14 @@
 .kv-ask-record__question {
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-20);
+  line-height: var(--font-line-height-22);
 }
 
 .kv-ask-record__answer,
 .kv-ask-record__note {
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
+  line-height: var(--font-line-height-20);
 }
 
 /* ---------- UserMessage：用户消息 ---------- */
@@ -83,12 +83,8 @@
   overflow-wrap: anywhere;
 }
 
-/* 折叠：超过 maxLines 行，高度被 clip 限住（组件里写 max-height），展开时放开，高度走 300ms ease-in-out；
+/* 折叠：超过 maxLines 行，用 Collapse 的「露一截」（collapsedSize）只露 maxLines 行，展开时高度走 300ms ease-in-out；
    「显示更多 / 收起」是 Button 文字 sm，紧贴字下面，箭头展开时转 180° */
-.kv-user-message__clip {
-  overflow: hidden;
-  transition: max-height var(--motion-duration-300) var(--motion-ease-in-out);
-}
 
 /* 保留文字里的换行（行为，不改样子） */
 .kv-user-message__text {
@@ -219,8 +215,8 @@
   min-width: 0;
 }
 
-/* 悬停：底色 container-light-2-hover，文字变 primary */
-.kv-question-option:where(:hover, .is-hover):not([aria-checked="true"], .kv-question-option--other) {
+/* 悬停：底色 container-light-1-hover，文字变 primary；禁用（提交中）不变 */
+.kv-question-option:where(:hover, .is-hover):not([aria-checked="true"], .kv-question-option--other, :disabled, [data-disabled]) {
   background: var(--color-bg-fill-container-light-1-hover);
   color: var(--color-text-fill-primary);
 }
@@ -495,7 +491,7 @@
   display: none;
 }
 
-.kv-file-card:where(:hover, :focus-within, .is-hover) .kv-file-card__action--reveal {
+.kv-file-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-file-card__action--reveal {
   display: inline-flex;
   animation: kv-file-card-in var(--motion-duration-150) var(--motion-ease-out);
 }

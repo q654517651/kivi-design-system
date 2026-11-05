@@ -5,6 +5,7 @@ import {
   FileCardPlayground,
   MessageFeedbackPlayground,
   QuestionPanelPlayground,
+  QuestionPagerDemo,
   SendButtonPlayground,
   SkillCardPlayground,
   UserMessagePlayground,
@@ -56,6 +57,10 @@ import {
 追问面板：Agent 追问时让用户选答案。
 
 <QuestionPanelPlayground />
+
+### 翻页
+
+<Demo noCode scope={{ QuestionPagerDemo }} code={`<QuestionPagerDemo />`} />
 
 ## ActionCard
 
@@ -120,7 +125,7 @@ import {
 
 ### AskRecord
 
-Agent 问用户（问题卡）或生成前确认，在对话里留的一行，不进工具调用组。图标 `Message`，默认收起，悬停出箭头，点开往下推（和工具调用组一样）。询问中：等用户回答，问题面板在输入框位置，这一行扫光；已询问：回答了；询问：跳过了。展开后问题 14 / 20 secondary，回答和说明 12 / 16 tertiary，一题里间距 4 `--spacing-4`，题和题之间 8 `--spacing-8`。其余原生 `<div>` 属性都能传。
+Agent 问用户（问题卡）或生成前确认，在对话里留的一行，不进工具调用组。图标 `Message`，默认收起，悬停出箭头，点开往下推（和工具调用组一样）。询问中：等用户回答，问题面板在输入框位置，这一行扫光；已询问：回答了；询问：跳过了。展开后问题 14 / 22 secondary，回答和说明 12 / 20 tertiary，一题里间距 4 `--spacing-4`，题和题之间 8 `--spacing-8`。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
@@ -139,7 +144,7 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `assets` | `ReactNode` | — | 素材行：一排 ReferenceItem 56（缩略图 AssetThumb 56），间距 8，图片、带时长的视频、音频都放这里。不传没有素材行 |
-| `children` | `ReactNode` | — | 气泡里的字：14 / 22 常规，primary，最宽 340，超出换行，文字里的换行保留。里面可以夹 `MentionChip`（技能、图片、视频、音乐、节点引用），和输入框里是同一个。气泡底 container-light-1（白 10%），圆角 12 `--border-radius-12`，内边距 12 / 16 `--spacing-12`、`--spacing-16`，和素材间距 8 `--spacing-8` |
+| `children` | `ReactNode` | — | 气泡里的字：14 / 22 常规，primary，最宽 340，超出换行，文字里的换行保留。里面可以夹 `MentionChip`（技能、图片、视频、音频、节点引用），和输入框里是同一个。气泡底 container-light-1（白 10%），圆角 12 `--border-radius-12`，内边距 12 / 16 `--spacing-12`、`--spacing-16`，和素材间距 8 `--spacing-8` |
 | `maxLines` | `number` | `12` | 最多显示几行，超过的折叠，气泡底部出「显示更多」（Button 文字 sm + `DownArrowSmall`），点了往下推展开，300ms ease-in-out，按钮变「收起」、箭头转 180°。没超过不出按钮 |
 | `expanded` | `boolean` | — | 展开：受控 |
 | `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
@@ -152,10 +157,10 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `text` | `string` | — | 复制按钮要复制的回复内容。不传没有复制按钮 |
-| `traceId` | `string` | — | 复制 TraceID 按钮要复制的 ID。不传没有这个按钮 |
+| `traceId` | `string` | — | 复制 TraceID 按钮要复制的 ID。不传没有这个按钮。页脚在完成、取消、失败等状态且有 traceId 时出现 |
 | `value` | `'like' \| 'dislike' \| null` | — | 赞 / 踩：受控，`null` 是都没选。赞、踩互斥，再点一次取消，选中换实心图标（`ThumbsUpFill`、`ThumbsDownFill`） |
 | `defaultValue` | `'like' \| 'dislike' \| null` | `null` | 赞 / 踩：非受控的初始值 |
-| `onValueChange` | `(value) => void` | — | 点了赞、踩、取消时触发 |
+| `onChange` | `(value) => void` | — | 点了赞、踩、取消时触发。点踩立即记录一次，不等原因提交；提交失败回滚并弹 Toast「反馈提交失败，请稍后再试」 |
 | `reason` | `boolean` | `true` | 踩了之后下面往下推出原因输入：Textarea 撑满，提交（Button 28 主要，没写字不可点）在框里右下角。回车提交、Shift + 回车换行、Esc 收起；点赞、再点踩、提交、Esc 都收起；按 Esc 只关原因，不会连外层弹窗一起关 |
 | `onSubmitReason` | `(reason: string) => void` | — | 提交了踩的原因 |
 | `onCopied` | `(text: string) => void` | — | 复制成功后触发。复制成功图标换 `CheckSmall`、提示变「已复制」，1.5 秒后换回 |
@@ -170,6 +175,8 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | `pager` | `ReactNode` | — | 分页文字，比如「1/5」，13 / 20 secondary。不传不显示分页；两边是 IconButton 28 · 文字（`LeftArrowSmall` `RightArrowSmall`），间距 4 |
 | `onPrev` | `() => void` | — | 点分页左边的「上一题」 |
 | `onNext` | `() => void` | — | 点分页右边的「下一题」 |
+| `prevDisabled` | `boolean` | `false` | 「上一题」不能点，第一题时用 |
+| `nextDisabled` | `boolean` | `false` | 「下一题」不能点，最后一题时用 |
 | `multiple` | `boolean` | `false` | 多选。默认单选，只有一项选中，选项和「其他」互斥：选了选项清掉「其他」里的字，在「其他」里打字清掉已选的选项 |
 | `value` | `string[]` | — | 选中的值：受控。值是 QuestionOption 的 `value`，单选最多一项 |
 | `defaultValue` | `string[]` | `[]` | 选中的值：非受控的初始值 |
@@ -177,6 +184,9 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | `skip` | `boolean` | `true` | 显示「忽略」（Button 中 · 文字，跳过这道题） |
 | `skipText` | `ReactNode` | `"忽略"` | 「忽略」的文字 |
 | `onSkip` | `() => void` | — | 点「忽略」 |
+| `aiDecide` | `boolean` | `true` | 显示「全部由 AI 决策」（Button 中 · 次要，不答了，都交给 AI 决定），在「忽略」和「确认提交」之间 |
+| `aiDecideText` | `ReactNode` | `"全部由 AI 决策"` | 「全部由 AI 决策」的文字 |
+| `onAiDecide` | `() => void` | — | 点「全部由 AI 决策」。消息里留的 AskRecord 用 `status="skipped"`、`skippedText="交给 AI 决策"` |
 | `submitText` | `ReactNode` | `"确认提交"` | 「确认提交」的文字 |
 | `onSubmit` | `() => void` | — | 点「确认提交」（Button 中 · 主要）。底部操作靠右，间距 8。一项都没选、「其他」也没填字时按钮不能点 |
 | `disabled` | `boolean` | `false` | 整个面板禁用：选项、分页、两个按钮都不能点，「其他」不能输入。提交中用 |
@@ -218,7 +228,7 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `generating` | `boolean` | `false` | 生成中：图标换成停止方块 12 × 12，圆角 4 `--border-radius-4`，点了停止生成；悬停、按下照常 |
-| `disabled` | `boolean` | `false` | 禁用，还没输入内容。底 container-light-1（白 10%），图标 disabled（白 20%） |
+| `disabled` | `boolean` | `false` | 禁用，还没输入内容。底 container-light-1（白 10%），图标 disabled（白 20%）。发送条件：Enter 发送、Shift + Enter 换行；输入法组字中不发；上传中、生成中不能发；只有附件、没有文字也能发 |
 | `aria-label` | `string` | `"发送"` | 只有图标，读屏靠它。生成中默认「停止生成」 |
 
 ### SkillCard

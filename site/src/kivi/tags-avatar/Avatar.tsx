@@ -1,4 +1,4 @@
-import { forwardRef, type HTMLAttributes } from 'react';
+import { forwardRef, useEffect, useState, type HTMLAttributes } from 'react';
 import { cx } from '../utils';
 import './tags-avatar.css';
 
@@ -18,17 +18,20 @@ export interface AvatarProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'chil
   initial?: string;
 }
 
-/** 圆形的用户头像，没有头像图时显示用户名首字。Figma「选项卡、标签和头像」页 Avatar */
+/** 圆形的用户头像，没有头像图（或图加载失败）时显示用户名首字。Figma「选项卡、标签和头像」页 Avatar */
 export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
   { name, size = 16, src, type, initial, className, ...rest },
   ref,
 ) {
-  const image = (type ?? (src ? 'image' : 'text')) === 'image' && Boolean(src);
+  // 图片加载失败：回落成首字，不显示破图。换了地址重新试
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [src]);
+  const image = (type ?? (src ? 'image' : 'text')) === 'image' && Boolean(src) && !broken;
   const cls = cx('kv-avatar', `kv-avatar--${size}`, `kv-avatar--${image ? 'image' : 'text'}`, className);
   if (image) {
     return (
       <span ref={ref} className={cls} {...rest}>
-        <img src={src} alt={name} />
+        <img src={src} alt={name} onError={() => setBroken(true)} />
       </span>
     );
   }

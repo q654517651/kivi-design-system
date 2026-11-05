@@ -12,7 +12,7 @@ import {
   notify,
   toast,
   type BannerType,
-  type EmptyStateScene,
+  type EmptyStateType,
   type EmptyStateSize,
   type LoadingSize,
   type NotificationType,
@@ -232,15 +232,15 @@ export function SkeletonPlayground() {
 
 // ---------- EmptyState ----------
 
-type EmptyStateState = { scene: EmptyStateScene; size: string; title: string; showDesc: boolean; desc: string; action: boolean };
+type EmptyStateState = { type: EmptyStateType; size: string; title: string; showDesc: boolean; desc: string; action: boolean };
 
-const SCENES: [EmptyStateScene, string][] = [['empty', '暂无内容'], ['favorite', '暂无收藏'], ['offline', '无网络'], ['failed', '生成失败']];
+const EMPTY_TYPES: [EmptyStateType, string][] = [['empty', '暂无内容'], ['favorite', '暂无收藏'], ['offline', '无网络'], ['failed', '生成失败']];
 
 export function EmptyStatePlayground() {
   return (
     <Playground<EmptyStateState>
       controls={[
-        { key: 'scene', label: '场景', type: 'segment', value: 'empty', options: SCENES },
+        { key: 'type', label: '类型', type: 'segment', value: 'empty', options: EMPTY_TYPES },
         { key: 'size', label: '尺寸', type: 'segment', value: '160', options: [['160', '大'], ['96', '小']] },
         { key: 'title', label: '标题', type: 'text', value: '标题文字' },
         { key: 'showDesc', label: '显示描述', type: 'toggle', value: true },
@@ -250,7 +250,7 @@ export function EmptyStatePlayground() {
       rules={(s) => (s.showDesc ? {} : { desc: true })}
       render={(s) => (
         <EmptyState
-          scene={s.scene}
+          type={s.type}
           size={Number(s.size) as EmptyStateSize}
           title={s.title}
           description={s.showDesc ? s.desc : undefined}

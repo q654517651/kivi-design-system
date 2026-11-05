@@ -57,7 +57,7 @@ export const ThinkingBlock = forwardRef<HTMLDivElement, ThinkingBlockProps>(func
         onExpandedChange={setExpanded}
         aria-controls={bodyId}
       />
-      <Collapse open={open} distance={200} gap={6}>
+      <Collapse expanded={open} distance={200} gap={6}>
         <div ref={body.ref} id={bodyId} className="kv-thinking-block__body" data-fade={body.fade} onScroll={body.onScroll}>
           <div className="kv-thinking-block__text">{children}</div>
         </div>

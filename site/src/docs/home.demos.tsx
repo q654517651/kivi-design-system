@@ -200,7 +200,7 @@ function RightColumn() {
       <MessageFeedback
         text="已按你的参考图生成 4 张主视觉。"
         value={feedback}
-        onValueChange={setFeedback}
+        onChange={setFeedback}
         reason={false}
       />
       <div className="home-tags">

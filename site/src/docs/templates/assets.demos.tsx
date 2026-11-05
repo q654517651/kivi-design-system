@@ -210,7 +210,7 @@ function AssetsPage() {
 
         {list.length === 0 ? (
           <EmptyState
-            scene={onlyCollected ? 'favorite' : 'empty'}
+            type={onlyCollected ? 'favorite' : 'empty'}
             size={160}
             title={onlyCollected ? '暂无符合条件的收藏' : '没有找到相关生成记录'}
             action={

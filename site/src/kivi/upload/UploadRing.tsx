@@ -2,8 +2,8 @@ import { forwardRef, type HTMLAttributes } from 'react';
 import { cx } from '../utils';
 import './upload.css';
 
-// 上传进度环：直径 28，线宽 3，白 30% 的底圈加白色的弧，中间写百分比
-const RING_R = 12.5;
+// 上传进度环：直径 36，线宽 3，白 30% 的底圈加白色的弧，中间写百分比
+const RING_R = 16.5;
 const RING_LEN = 2 * Math.PI * RING_R;
 
 export interface UploadRingProps extends HTMLAttributes<HTMLSpanElement> {
@@ -33,16 +33,16 @@ export const UploadRing = forwardRef<HTMLSpanElement, UploadRingProps>(function 
       aria-valuemax={100}
       {...rest}
     >
-      <svg viewBox="0 0 28 28" aria-hidden="true">
-        <circle className="kv-upload-ring__ring" cx="14" cy="14" r={RING_R} />
+      <svg viewBox="0 0 36 36" aria-hidden="true">
+        <circle className="kv-upload-ring__ring" cx="18" cy="18" r={RING_R} />
         <circle
           className="kv-upload-ring__arc"
-          cx="14"
-          cy="14"
+          cx="18"
+          cy="18"
           r={RING_R}
           strokeDasharray={RING_LEN}
           strokeDashoffset={RING_LEN * (1 - value / 100)}
-          transform="rotate(-90 14 14)"
+          transform="rotate(-90 18 18)"
         />
       </svg>
       <span className="kv-upload-ring__text">{Math.round(value)}%</span>

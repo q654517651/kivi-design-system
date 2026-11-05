@@ -127,6 +127,13 @@
   padding: 60px var(--spacing-24) var(--spacing-32);
 }
 
+/* 节点外框：节点名在上、连接点在左右各伸出 8，周围留白；窄了左右滚，不裁 */
+.cv-pg-wrapper.shell-pg-stage {
+  justify-content: safe center;
+  overflow-x: auto;
+  padding: 60px var(--spacing-32) var(--spacing-32);
+}
+
 /* 工具栏、面板比较宽：窄了左右滚，不裁 */
 .cv-pg-wide.shell-pg-stage {
   justify-content: safe center;

@@ -112,7 +112,7 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 | `description` | `ReactNode` | — | 说明：写了就是两行，第二行 12，secondary，一行省略。两行时左图标 24，选中不加底、在右边打勾 |
 | `shortcut` | `string` | — | 快捷键文字，比如 ⌘C，12，tertiary。和 `submenu`、`checked` 三选一 |
 | `submenu` | `boolean` | `false` | 子菜单箭头 `RightArrowSmall`，16，tertiary；同时加 `aria-haspopup="menu"` |
-| `selected` | `boolean` | — | 选中：白 10% 底（常驻底色，Light 1 默认；悬停 14%），不打勾，单选标当前项。自动是 `role="option"`，外层 Menu 要写 `role="listbox"`；非当前项传 `false` |
+| `selected` | `boolean` | — | 选中：白 10% 底（常驻底色，Light 1 默认；悬停 14%，按下 18%），不打勾，单选标当前项。自动是 `role="option"`，外层 Menu 要写 `role="listbox"`；非当前项传 `false` |
 | `checked` | `boolean` | — | 勾选：右边 `CheckSmall`，16，`--color-brand-solid`，只给多选。自动是 `role="menuitemcheckbox"`；没勾的传 `false` |
 | `disabled` | `boolean` | `false` | 禁用，文字、图标、快捷键 disabled，不响应悬停和点击；带 `more` 时「⋯」也禁用 |
 | `more` | `ReactNode` | — | 右边悬停、选中、菜单开着时才出现的「⋯」（IconButton 28 轻，`More` 图标）：写了就出，点开弹出这里的菜单，一般是一个 Menu，由 Dropdown 管开关。写了之后外层改用 `<div>`（里面有按钮）。「⋯」离右边 6，里面的图标离边 12 |
@@ -127,7 +127,7 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 放进平铺的 Menu（`variant="plain"`）里：
 
 - 带图标的是导航：图标 20，左右内边距 8、间距 8（图标四周离边 8）；带缩略图的是列表：缩略图 24，左右 6、间距 6（四周离边 6），文字默认 secondary，悬停、选中变 primary。两种的图标中心都在左数 18，文字都从 36 开始。
-- `selected` 写 `aria-current="page"`，底白 10%（`--color-bg-fill-container-light-1`，常驻底色），悬停白 14%；不是 `role="option"`。同一时间只有一项。
+- `selected` 写 `aria-current="page"`，底白 10%（`--color-bg-fill-container-light-1`，常驻底色），悬停白 14%、按下白 18%；不是 `role="option"`。同一时间只有一项。
 - 不带图标也不带缩略图的条目就是「更多」：12，tertiary，高 36，左 8，没有悬停底色（键盘聚焦才出），点了看这一组剩下的。收起后文字淡出，换成向下的箭头 `DownArrow`（和导航图标一样大），在图标栏格子正中。
 - 收起时内边距跟着侧栏一起变，300ms ease-in-out。
 

@@ -33,8 +33,9 @@ import { CollapsePlayground, DividerPlayground } from './layout.demos';
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `open` | `boolean` | — | 展开（受控）。触发行（按钮、箭头）和展开状态由外面写，触发行加 `aria-expanded`、`aria-controls` |
+| `expanded` | `boolean` | — | 展开（受控）。触发行（按钮、箭头）和展开状态由外面写，触发行加 `aria-expanded`、`aria-controls` |
 | `distance` | `number` | `0` | 展开后大约多高，按距离取时长：100 以内 200ms，再长 300ms，ease-in-out |
-| `gap` | `number` | `0` | 展开后离上面一行的间距，取 `--spacing-N` 的 N。放在会被收起的这块里，收起后不留空 |
+| `gap` | `0` `2` `4` `6` `8` `12` `16` `24` `32` | `0` | 展开后离上面一行的间距，取 `--spacing-N` 的 N，只有间距变量有的档。放在会被收起的这块里，收起后不留空 |
+| `collapsedSize` | `number` | — | 收起后还露出多高（px）。不写，收起后整块藏起来；写了是「长文只露前几行」：收起不淡出、不藏，高度压到这个值，超出的裁掉，展开长到内容高。用户消息超过 12 行只露 12 行（264）用它 |
 
 展开时高度从 0 推到内容高、把下面的内容往下推，同时淡入；收起倒着走。收起后藏起来，Tab 不进去。ThinkingBlock、ProcessGroup、AskRecord、MessageFeedback、侧栏分组都用它。其余原生 `<div>` 属性都能传。

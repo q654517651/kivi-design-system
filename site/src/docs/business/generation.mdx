@@ -1,6 +1,7 @@
 import { Demo, PageHeader } from '@shell';
 import { Toaster } from '@kivi';
 import {
+  GenModelPickerPlayground,
   GenerateButtonPlayground,
   LoraCardPlayground,
   LoraFieldPlayground,
@@ -9,6 +10,7 @@ import {
   PromptBoxLab,
   PromptBoxPlayground,
   PromptInputDemo,
+  SkillPanelPlayground,
 } from './generation.demos';
 
 <PageHeader
@@ -127,11 +129,75 @@ Lora 卡：选 Lora 时的一张卡。
 
 <LoraPickerPlayground />
 
+## DropOverlay
+
+拖入提示：把文件拖到输入框上时，提示「松手上传」或「不支持这种文件」。
+
+## ParamPicker
+
+参数选择：点开面板，一起调比例、时长、分辨率这类参数。
+
+## 生成下拉
+
+生成下拉：填好选项的下拉，选任务类型、参考方式、尺寸、比例、背景、张数、Agent 模式。
+
+## ModelSelect
+
+模型下拉：选生成用的模型。
+
+## VoiceSelect
+
+音色下拉：选音频的音色，可以试听。
+
+## VideoParams
+
+视频参数：调视频的比例、时长、分辨率和生成音频。
+
+## AudioParams
+
+音频参数：调语速、音高等高级设置，内容跟着模型变。
+
+## VideoModelControls
+
+视频控件：选视频模型，后面跟着它能用的参考方式和参数。
+
+## ImageModelControls
+
+图片控件：选图片模型，后面跟着分辨率、比例。
+
+## AudioModelControls
+
+音频控件：选音频模型，后面跟着音色和高级设置。
+
+## AudioCharCount
+
+字数计数：音频生成按钮左边的「字数 / 上限」。
+
+## GenModelPicker
+
+选择模型：在 Agent 输入框里挑要用的生图、生视频模型。
+
+<GenModelPickerPlayground />
+
+## SkillPicker
+
+技能选择：点技能按钮，弹出技能面板挑一个技能。
+
+## SkillPanel
+
+技能面板：搜索、浏览并挑一个技能。
+
+<SkillPanelPlayground />
+
+## AgentControls
+
+Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
+
 ## 参数
 
 ### PromptBox
 
-外框是玻璃：底 glass `--color-bg-fill-glass` + 背景模糊 32 `--effect-glass-blur`，浮在生成记录上、下面的内容透出来；描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`；内容区和工具条间距 12 `--spacing-12`。宽度跟着外面走，最宽 1040；最窄是工具条所有控件按原宽排成一行时的宽度，工具条不折行、控件不压缩，再窄就不缩了，由外面的页面横向滚动。提示词 14 / 20 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32，左右两组间距至少 8。其余原生 `<div>` 属性都能传。
+外框是玻璃：底 glass `--color-bg-fill-glass` + 背景模糊 32 `--effect-glass-blur`，浮在生成记录上、下面的内容透出来；描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`；内容区和工具条间距 12 `--spacing-12`。宽度跟着外面走，最宽 1040；最窄是工具条所有控件按原宽排成一行时的宽度，工具条不折行、控件不压缩，再窄就不缩了，由外面的页面横向滚动。提示词 14 / 22 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32，左右两组间距至少 8。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
@@ -175,7 +241,7 @@ Lora 卡：选 Lora 时的一张卡。
 
 ### PromptInput
 
-提示词输入。无底、无内边距，14 号；空的时候高 68，占位文字 `--color-text-fill-placeholder`；最高 120，超出滚动。表单里的多行输入用 Textarea。其余原生 `<div>` 属性都能传。
+提示词输入。无底、无内边距，14 / 22；默认 4 行高（88），随字长高，最多 6 行（132），再多滚动；占位文字 `--color-text-fill-placeholder`。表单里的多行输入用 Textarea。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
@@ -214,7 +280,7 @@ Lora 卡：选 Lora 时的一张卡。
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `name` | `string` | — | Lora 名字，14 / 22，`--color-text-fill-primary`，一行省略 |
-| `triggerWords` | `string` | — | 触发词。不传就不显示这一块。框里一行省略，右边复制按钮，点了复制并弹 Toast「复制成功」，失败弹「复制失败」（页面上要放一个 `<Toaster />`） |
+| `triggerWords` | `string` | — | 触发词。不传就不显示这一块。框里一行省略，右边复制按钮，点了复制，图标换成对勾；失败弹 Toast「复制失败」（页面上要放一个 `<Toaster />`） |
 | `template` | `string` | — | 提示词模版。不传就不显示这一块。框最高 60，多了在里面滚动，复制按钮同上 |
 | `weight` / `defaultWeight` / `onWeightChange` | `number` | `1` | 权重 0–2，步长 0.1。滑块和数字框同步；数字框输入时最多一位小数，失焦时夹进 0–2 并补成「1.0」 |
 
@@ -225,15 +291,15 @@ Lora 卡：选 Lora 时的一张卡。
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `name` | `string` | — | 名字。平时在底部（14 加粗），悬停后在信息条里；也是读屏的名字 |
-| `description` | `string` | — | 描述，悬停信息条里 12 / 16 secondary，最多两行 |
+| `description` | `string` | — | 描述，悬停信息条里 12 / 20 secondary，最多两行 |
 | `cover` | `string` | — | 封面地址，铺满（cover） |
 | `base` | `string` | — | 底模名，左上角 `Tag variant="on-media"`，比如 `SDXL`、`FLUX` |
 | `isNew` | `boolean` | `false` | 底模标签旁多一个 `Tag variant="brand"`「New」 |
-| `selected` | `boolean` | `false` | 选中：2px 白 40% 描边（同节点选中），画在里面。由外面管，点卡片时 `onClick` 通知 |
+| `checked` | `boolean` | `false` | 勾选：2px 白 40% 描边（同节点选中），画在里面。由外面管，点卡片时 `onClick` 通知 |
 | `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 收藏。右上角 `ButtonGroup` 里一个收藏 `IconButton`（`Collect` / `CollectSolid`，收藏了是 IconButton 选中 + `data-collected`，图标品牌绿）；平时隐藏，悬停、聚焦或已收藏时显示 |
-| `onClick` | `MouseEventHandler` | — | 点卡片（切换选中）。点收藏按钮不会触发 |
+| `onClick` | `MouseEventHandler` | — | 点卡片（切换勾选）。点收藏按钮不会触发 |
 
-宽跟着网格，比例 3:4，圆角 12，封面裁切铺满。整张卡是 `role="checkbox"` + `aria-checked`，`tabIndex=0`，Space、Enter 切换。悬停：封面 1.05 放大，名字淡出，底部浮出信息条（名字 + 描述，`--color-bg-fill-glass` 底，模糊 `--effect-glass-blur`，内边距 12，从下 8px 往上淡入）；出现 200ms ease-out，收回 150ms ease-in。底部名字渐变：从下往上，黑 60% 到透明。其余原生 `<div>` 属性都能传。
+宽跟着网格，比例 3:4，圆角 12，封面裁切铺满。外壳里并排放卡片本体和收藏按钮：本体是 `role="checkbox"` + `aria-checked`，`tabIndex=0`，Space、Enter 切换；收藏按钮在复选框外面，不嵌在里面。收藏按钮悬停或键盘聚焦（`:focus-visible`）时显示，鼠标点一下选中不会一直亮着。悬停：封面 1.05 放大，名字淡出，底部浮出信息条（名字 + 描述，`--color-bg-fill-glass` 底，模糊 `--effect-glass-blur`，内边距 12，从下 8px 往上淡入）；出现 200ms ease-out，收回 150ms ease-in。底部名字渐变：从下往上，黑 60% 到透明。其余原生 `<div>` 属性都能传。
 
 ### LoraPicker
 
@@ -245,7 +311,7 @@ Lora 卡：选 Lora 时的一张卡。
 | `max` | `number` | `4` | 最多选几个。满了再选，弹 Toast「最多只能添加 N 个 Lora 模型」（警告） |
 | `collectedIds` / `defaultCollectedIds` / `onCollectedIdsChange` | `string[]` | 取 `items[].collected` | 收藏的 id。取消收藏时「收藏」页里的卡片当场消失 |
 
-`Dialog size={1024}`，标题「Lora 模型」。标题下一行：左 `Tabs`（全部 / 收藏），右 `Select`（底模：全部类型 / SDXL / FLUX / SD1.5，宽 160）。下面网格 `repeat(auto-fill, minmax(180px, 1fr))`，间距 12，在里面滚动，高度 `min(560px, 100vh - 240px)`，切「全部 / 收藏」弹窗不跳。收藏页没有内容用 `EmptyState scene="favorite"`，筛选后没有结果用默认的空。其余 `Dialog` 属性（`closeOnMaskClick`、`closeOnEsc` 等）都能传。
+`Dialog size={1024}`，标题「Lora 模型」。标题下一行：左 `Tabs`（全部 / 收藏），右 `Select`（底模：全部类型 / SDXL / FLUX / SD1.5，宽 160）。下面网格 `repeat(auto-fill, minmax(180px, 1fr))`，间距 12，在里面滚动，高度 `min(560px, 100vh - 240px)`，切「全部 / 收藏」弹窗不跳。收藏页没有内容用 `EmptyState type="favorite"`，筛选后没有结果用默认的空。其余 `Dialog` 属性（`closeOnMaskClick`、`closeOnEsc` 等）都能传。
 
 ### 生成下拉
 
@@ -292,7 +358,7 @@ Lora 卡：选 Lora 时的一张卡。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `model` | `string` | `"seed-audio-1.0"` | 音频模型的值：`minimax-speech-2.8-hd` 多「情绪」、没有「生成字幕」；`eleven-v4` 多「稳定性」；Seed 和 Eleven 有「生成字幕」 |
+| `model` | `string` | `"seed-audio-1.0"` | 音频模型的值：`minimax-speech-2.8-hd` 多「情绪」（自动、开心、悲伤、愤怒、害怕、厌恶、惊讶、中性共 8 项）、没有「生成字幕」；`eleven-v4` 多「稳定性」；Seed 和 Eleven 有「生成字幕」。面板里的控件按模型出 |
 | 其余 | `ParamPickerProps` | — | 去掉 `summary`、`children` |
 
 ### VideoModelControls
@@ -301,7 +367,9 @@ Lora 卡：选 Lora 时的一张卡。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `defaultModel` | `string` | `"seedance-2.0"` | 一开始选哪个视频模型 |
+| `model` | `string` | — | 视频模型的值。传了就是受控；外面要按模型算生成按钮的消耗就传 |
+| `defaultModel` | `string` | `"seedance-2.0"` | 非受控时一开始选哪个视频模型 |
+| `onModelChange` | `(model: string) => void` | — | 换了模型时触发，参数是新的模型值 |
 | `refMode` | `ReactNode` | `<RefModeSelect />` | 参考方式那一格。要跟着切参考区就自己传一个受控的 |
 
 ### ImageModelControls
@@ -310,7 +378,9 @@ Lora 卡：选 Lora 时的一张卡。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `defaultModel` | `string` | `"gpt-image-2"` | 一开始选哪个图片模型 |
+| `model` | `string` | — | 图片模型的值。传了就是受控；外面要按模型算生成按钮的消耗就传 |
+| `defaultModel` | `string` | `"gpt-image-2"` | 非受控时一开始选哪个图片模型 |
+| `onModelChange` | `(model: string) => void` | — | 换了模型时触发，参数是新的模型值 |
 
 ### AudioModelControls
 
@@ -340,7 +410,8 @@ Lora 卡：选 Lora 时的一张卡。
 | `onPick` | `(model: SelectOption, type: "image" \| "video") => void` | — | 点了一个模型：插进输入框，面板关上 |
 | `trigger` | `ReactElement` | 方块图标按钮 `Mdoel` | 触发器。画布 Agent 用默认的，主站 Agent 工具条传一个无底按钮 |
 | `placement` | `DropdownPlacement` | `"top-start"` | 面板位置 |
-| 其余 | `DropdownProps` | — | 去掉 `open` 一套、`closeOnSelect`、`haspopup` 等面板自己管的 |
+| `open` / `defaultOpen` / `onOpenChange` | `boolean` | `false` | 面板展开（受控 / 非受控 / 回调） |
+| 其余 | `DropdownProps` | — | 去掉 `closeOnSelect`、`haspopup` 等面板自己管的 |
 
 ### SkillPicker
 
@@ -351,7 +422,8 @@ Lora 卡：选 Lora 时的一张卡。
 | `items` | `SkillItem[]` | — | 技能，传给面板 |
 | `categories` | `string[]` | — | 分类，传给面板 |
 | `onPick` | `(skill: SkillItem) => void` | — | 点了一个技能：插进输入框，面板关上 |
-| `defaultOpen` | `boolean` | `false` | 一开始是否展开 |
+| `onRetry` / `onCreate` / `onImport` / `onViewAll` / `onDetail` | — | — | 传给面板，说明见 `SkillPanel` |
+| `open` / `defaultOpen` / `onOpenChange` | `boolean` | `false` | 面板展开（受控 / 非受控 / 回调） |
 | `trigger` | `ReactElement` | 图标按钮 `Skill` | 触发器。主站 Agent 工具条传一个无底按钮 |
 | `placement` | `DropdownPlacement` | `"top-start"` | 面板位置 |
 | 其余 | `DropdownProps` | — | 同 `GenModelPicker` |
@@ -368,6 +440,11 @@ Lora 卡：选 Lora 时的一张卡。
 | `defaultTab` | `string` | `"recommend"` | 一开始在哪个页签：`recommend`、分类名或 `mine` |
 | `defaultSearch` | `string` | — | 一开始就是搜索、搜的字 |
 | `onPick` | `(skill: SkillItem) => void` | — | 点了一个技能 |
+| `onRetry` | `() => void` | — | 加载失败时点「点击重试」 |
+| `onCreate` | `() => void` | — | 点「创建」下拉里的「创建新的技能」，或「我的」空状态里的「创建技能」 |
+| `onImport` | `() => void` | — | 点「创建」下拉里的「导入已有技能」 |
+| `onViewAll` | `() => void` | — | 点头部的「全部技能」 |
+| `onDetail` | `(skill: SkillItem) => void` | — | 点某一行悬停出的「详情」，参数是那个技能 |
 
 `items` 每一项（`SkillItem`）：
 
