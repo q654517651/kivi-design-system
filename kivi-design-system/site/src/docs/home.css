@@ -1,0 +1,183 @@
+/* 首页：大标题（特效在 home-fx.tsx、home-ascii.tsx）+ 三列真组件。框宽照 HeroUI 首页，没有对应变量 */
+
+.home {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 背景（AsciiGlow）：铺满正文区上半截，往下淡掉；下面的组件不加底，直接叠在上面 */
+main.doc:has(> .home),
+main.doc:has(.home) {
+  position: relative;
+  overflow: hidden;
+}
+
+.home-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 640px;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+}
+
+.home-bg > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.home-hero,
+.home-stage {
+  position: relative;
+}
+
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-16) 0 var(--spacing-32);
+}
+
+main.doc .home-title {
+  width: 100%;
+  margin: 0;
+  color: var(--color-text-fill-primary);
+}
+
+/* 标题画在 canvas 上（TechTitle）：高 200，字母拖出去也画得下 */
+.home-tech {
+  display: block;
+  width: 100%;
+  height: 200px;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 读屏读这一份字 */
+.home-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.home-stage {
+  display: grid;
+  grid-template-columns: 256px 360px 340px;
+  justify-content: center;
+  align-items: start;
+  gap: var(--spacing-32);
+  box-sizing: border-box;
+  padding: 56px var(--spacing-32);
+  /* 不加底和描边：组件直接摆在页面上，背景字符画往下淡掉 */
+}
+
+.home-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 40px;
+  min-width: 0;
+}
+
+/* 中间一列比两边矮，在大框里上下居中，免得下面空一块 */
+.home-stage > .home-col:nth-child(2) {
+  align-self: center;
+}
+
+/* 左列 */
+.home-avatars {
+  display: flex;
+  justify-content: center;
+}
+
+.home-avatars > * + * {
+  margin-left: calc(var(--spacing-6) * -1);
+  box-shadow: 0 0 0 2px var(--color-bg-fill-base);
+}
+
+.home-col > .kv-menu {
+  align-self: center;
+}
+
+/* 卡片：少数组件用它包一层 */
+.home-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+}
+
+.home-card__label {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+.home-duration {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-12);
+}
+
+.home-duration .kv-slider {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 中列 */
+.home-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-8);
+}
+
+.home-tile {
+  width: 280px;
+  align-self: center;
+}
+
+.home-switches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-16) var(--spacing-24);
+}
+
+/* 右列 */
+.home-video {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--border-radius-12);
+}
+
+.home-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-8);
+}
+
+.home-col > .kv-message-feedback {
+  align-self: center;
+}
+
+/* 窄屏：变成一列 */
+@media (max-width: 1100px) {
+  .home-stage {
+    grid-template-columns: minmax(0, 360px);
+    padding: var(--spacing-32) var(--spacing-16);
+  }
+}
+

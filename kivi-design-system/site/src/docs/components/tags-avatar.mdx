@@ -1,0 +1,69 @@
+import { PageHeader } from '@shell';
+import { AssetThumbPlayground, AvatarPlayground, TagPlayground } from './tags-avatar.demos';
+
+<PageHeader
+  eyebrow="展示"
+  title="标签和头像"
+  figma={['标签和头像', '183:627']}
+  code="kivi/tags-avatar"
+/>
+
+## Tag
+
+标签：展示参数和状态，比如模型名、比例、生成中。
+
+<TagPlayground />
+
+## Avatar
+
+头像：显示用户，比如主站右上角。
+
+<AvatarPlayground />
+
+## AssetThumb
+
+素材缩略图：在小地方显示一个素材，比如 @ 引用、菜单项、参考格。
+
+<AssetThumbPlayground />
+
+## 参数
+
+### Tag
+
+不能点，没有悬停、按下、禁用。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 文字，12 / 20 常规 |
+| `variant` | `"default"` `"on-media"` `"brand"` | `"default"` | 默认（白 10% 底，文字 secondary）/ 覆盖（黑 40% 底，白字，盖在图片、视频上，离边缘 8，没有背景模糊）/ 品牌（品牌绿 12% 底，品牌色字） |
+| `thumb` | `string` | — | 缩略图地址，16，圆角 2，放参考图 |
+| `icon` | `IconName` | — | 左图标 16，比如模型 Logo。默认类型的图标白 50% |
+
+高 24，左右内边距 6（`--spacing-6`），元素间距 4（`--spacing-4`），圆角 6（`--border-radius-6`）。其余原生 `<span>` 属性都能传。
+
+### Avatar
+
+没有悬停、按下、禁用。会员头像框是运营装饰，不放进组件。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `name` | `string` | — | 用户名，必填。图片的 `alt`，文字的 `aria-label` |
+| `size` | `16` `24` `32` | `16` | 16 卡片作者（首字 10）/ 24 列表、对话（首字 12）/ 32 详情作者、导航（首字 14）。和名字间距 8 |
+| `src` | `string` | — | 头像图地址，加载前垫白 10% |
+| `type` | `"image"` `"text"` | 有 `src` 是图片，没有是文字 | 图片 / 文字。文字类型底白 18%，首字 primary，粗 500 |
+| `initial` | `string` | `name` 第一个字 | 首字，文字类型用 |
+
+圆角 `--border-radius-round`。其余原生 `<span>` 属性都能传。
+
+### AssetThumb
+
+序号、时长这类角标由外层叠加，不放进来。没有悬停、按下、禁用。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `16` `24` `56` `72` | `16` | 圆角 4 / 4 / 8 / 8（`--border-radius-4` · `--border-radius-8`），占位图标 12 / 12 / 24 / 24 |
+| `type` | `"image"` `"icon"` | `"image"` | 图片（图片、视频首帧，铺满）/ 图标（白 10% 底 + 图标，不透明度 30%；音频用它，图标 `Music`）。两种都有 1 的内描边 `--color-border-subtle` |
+| `src` | `string` | — | 图片类型的图片地址 |
+| `icon` | `IconName` | `"Message"` | 图标类型的图标：对话用 `Message`，画布用 `Canvas`，音频用 `Music` |
+
+其余原生 `<span>` 属性都能传。

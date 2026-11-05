@@ -1,175 +1,108 @@
 ---
 name: kivi-design-system
-description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范：设计原则、底色层级、颜色/间距/圆角/字号变量、图标、通用组件、画布节点、Agent 和页面结构。凡是做 KIVI 产品里的界面都先用它——写前端页面或组件、没有设计稿要临时补一个页面、产品出 HTML 原型或可点击 demo、后端做内部页面、评审设计稿或样式、拿不准该用哪个颜色/字号/圆角/图标/组件时——即使用户没提「规范」也要用。编辑 Figma 组件库本身（加组件、改变体、改名、整理页面）时也用它。不用于活动 H5、Banner、品牌和 IP 运营视觉，也不用于节点数据结构、Agent 工具调用这类逻辑。
+description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 React 组件库：变量、动效、图标、占位图、通用组件、画布、Agent、主站。凡是做 KIVI 产品里的界面都先用它——写前端页面或组件、没有设计稿要临时补一个页面、产品做可点击原型、后端做内部页面、UI 设计师验收开发稿（对照 Figma、前端代码、交互、状态、动效）、审查设计稿或已开发页面是否合规、拿不准该用哪个颜色/字号/圆角/动效/图标/组件时——即使用户没提「规范」也要用。编辑 Figma 组件库本身（加组件、改变体、改名、整理页面）时也用它。不用于活动 H5、Banner、品牌和 IP 运营视觉，也不用于节点数据结构、Agent 工具调用这类逻辑。
 ---
 
 # KIVI 设计规范
 
-这份规范来自 Figma「KIVI UI KIT V2」（v0.1），设计、产品、研发共用。它只讲「界面应该是什么样」，不绑定技术栈。以 Figma 为准，Figma 里没定的不写。
+来自 Figma「KIVI UI KIT V2」，设计、产品、研发共用。以 Figma 为准，Figma 里没定的不写。
 
-多数组件还是草稿。按下面的规则做，不要自己发明新值。
+## 先更新
 
-## 先确定交付物
+每次开始用这个技能，先在本文件所在目录跑 `git pull --ff-only`，拉到更新就重新读一遍本文件再干活。
 
-| 用户要的 | 怎么做 |
+- 没网、拉不下来（比如本地改过）：跳过，跟用户说一句「规范没能更新，用的是本地版本」，照常干活。
+- 不是 git 仓库（技能是复制过来的，没法自动更新）：照常干活，干完跟用户说一句「这份技能是复制装的，没法自动更新，要改成能更新的装法吗」。用户同意后，删掉本文件所在的文件夹，在原位置重新装：
+
+  ```bash
+  git clone -b skill --single-branch https://github.com/q654517651/kivi-design-system.git <本文件所在文件夹的完整路径>
+  ```
+
+  `skill` 分支只有技能本身，仓库是公开的，不用登录。
+
+## 规范在哪
+
+规范只有一份，就是 `site/` 里的网站。这个文件只管「先读哪页、怎么做」，不写具体数值。
+
+- **规范文字**：`site/src/docs/**/*.mdx`。每页最下面「参数」表有组件的属性和关键数值。
+- **组件**：`site/src/kivi/<页>/`，`.tsx` 看属性，`.css` 看实际尺寸和用了哪些变量。
+- **数值**：只在 `site/src/kivi/tokens.css`。要哪个值，查这里的变量名。
+- 本文件和网站对不上时，以网站为准。
+- 想看效果：在 `site/` 下 `npm install`、`npm run dev`，打开 `http://localhost:4173/`。
+
+## 先分清是哪种任务
+
+一个技能包里有几个子技能，按任务挑一个读。子技能都在本文件所在目录下的 `workflows/`。
+
+| 任务 | 读哪个 |
 |---|---|
-| 写代码（React、Vue、纯 HTML，任何栈） | 样式全部用 CSS 变量，变量名和取值见「变量」。项目里已有对应组件就用组件，没有就按组件规格实现。 |
-| HTML 原型、可点击 demo | 读「原型做法」，做成单文件 HTML。 |
-| 评审设计稿或样式 | 逐条对照下面的规则和组件规格，指出哪里不对、应改成哪个变量或组件。看到旧变量名、旧组件名，读「旧名对照」。 |
-| 在 Figma 里搭 | 用已发布的「KIVI UI KIT V2」库组件；颜色、间距、圆角、字号都绑定变量，不手填数值。 |
-| 编辑 Figma 组件库本身 | 读「组件库维护」。只有加组件、改变体、改名、整理页面时才读，其他场景不用。 |
+| 写前端代码（任何栈） | 先读「设计规则」页。样式只用 `tokens.css` 的变量。网站里有的组件，照它的属性、尺寸、状态实现；React 项目可以直接用 `src/kivi/` 的组件。再看下面「路由」 |
+| 可点击原型、没有设计稿要补页面 | `workflows/build-page.md` |
+| 验收开发稿，审查设计稿或代码是否合规 | `workflows/acceptance.md` |
+| 查组件、变量、动效、图标 | 「设计规则」页和下面「路由」，再读网站对应页 |
+| 在 Figma 里搭 | 用已发布的「KIVI UI KIT V2」库组件，颜色、间距、圆角、字号都绑变量。用户作品的位置放 PlaceholderImage 实例：先选图片，再选比例 |
+| 编辑 Figma 组件库本身 | `references/figma-kit.md`。只有加组件、改变体、改名、整理页面时才读 |
+| 加图标、打包图标字体 | 还没做（Figma 导出 → 打包字体 → 提交 GitLab 图标仓库）。先照「图标」页手动补，跟用户说一句 |
 
 ## 核心规则
 
-### 1. 只用语义变量
-- 颜色、间距、圆角、字号、行高、字重都用变量，不写死数值，不用吸管取色。变量全表和可复制的 CSS 块在「变量」。
-- Figma 变量名把 `/` 换成 `-`、前面加 `--` 就是 CSS 变量：`color/text/fill/secondary` → `--color-text-fill-secondary`。画布连线例外，Figma 里给它们设的代码名是 `--g-workflow-line-color-*`。
-- 只用 color、scale 两组语义变量，不用原始色（`white/8`、`gray/900` 这类）。
-- 只有深色一套主题，不做浅色版本。
+规则只有一份：网站「设计规则」页 `site/src/docs/foundations/rules.mdx`。**任何任务开始前先读完它**，写代码、搭页面、验收都照它判断；它和别的页对不上时，以它为准。
 
-### 2. 底色分层
-界面从下往上分层，每层只用对应的颜色：
+用户在对话里定了新的设计规则（不是这个项目怎么干活的约定），写进这一页对应的分节，不要只记在别处。
 
-| 层 | 变量 | 值 | 用在哪 |
+## 规范没覆盖时
+
+先判断这件事属于哪一档，再决定怎么做、怎么下结论：
+
+| 档 | 是什么 | 做的时候 | 验收的时候 |
 |---|---|---|---|
-| 页面底 | `bg/fill/base` | #0F1012 | 外框、画布、各页面的底 |
-| 页面里的区域 | `container-light-2` | 白 4% | 面板、卡片、侧栏、分组底、列表项 |
-| 可点的东西 | `container-light-1` | 白 8% | 按钮、输入框、可点击卡片 |
-| 凹下去的区域 | `container-dark` | 黑 40% | 上传框、图片视频的垫底 |
-| 必须不透明的 | `surface` | #191A1B | 盖在画布上的节点卡片、浮动面板、模态弹窗、首页提示词输入框 |
-| 浮层 | `popup` | #2C2D2E | 菜单、下拉列表、Tooltip、Toast |
-| 遮罩 | `mask` | 黑 60% | 模态弹窗下面 |
+| 已定 | 网站上写明了：变量、组件属性、参数表数值、「设计规则」页 | 照做 | 不符合就是**不一致** |
+| 能组合 | 没有现成组件，但能用现有组件和变量拼出来 | 用现有组件拼，交付时说明怎么拼的 | 写成**建议**，不算不一致 |
+| 没覆盖 | 网站上没有依据（比如整页布局、新的业务模块） | 按最像的现有页面给方案，标「规范未覆盖，待设计确认」 | 写成**建议**，标「规范未覆盖」，不判对错 |
 
-- 叠加只用 4 / 8 / 12 / 16% 四档。4% 只用来区分大面积区域；能点的从 8% 起：默认 8%、悬停 12%、按下 16%。
-- 叠加最多两层：light-2 的卡片里放 light-1 的按钮可以，再往里就换成实色。
-- 叠在图片、视频上的按钮和标签用 on-media（黑 40% 底 + 白字，悬停黑 60%）。画面颜色不可控，白色叠加在亮图上会看不清。
+- 不要把自己的审美偏好当规范。说不出依据在网站哪一页，就不是「已定」。
 
-### 3. 浮层的做法
-- **模态弹窗**：surface 底，下面一层 mask（黑 60%，不模糊），圆角 16，不加描边和阴影。二级弹窗再叠一层 mask，最多两级。
-- **菜单、下拉列表、右键菜单**：popup 实色，圆角 12，不加描边和模糊。
-- **Tooltip、Toast**：popup 实色，不加描边和模糊。
-- 画布上的节点工具栏、生成面板有自己的样式，见「画布」各篇。
+## 搭页面、验收
 
-所有浮层都不加投影。
-
-### 4. 字号：界面 13，阅读 14
-
-| 字号/行高 | 用在哪 |
-|---|---|
-| 10/16 | 角标、数字徽标、缩放百分比 |
-| 12/20 | 次要信息（时间、尺寸、数量）、标签、Tooltip、小号按钮 |
-| 13/20 | 界面主文字：工具栏、导航、菜单项、按钮、输入框、分段选择器、节点标题 |
-| 14/22 | 需要阅读的内容：对话、AI 回复、提示词、说明文字、多行输入、Toast |
-| 16/24 | 面板标题、分区标题、弹窗标题 |
-| 20/28 | 引导页、空状态这类醒目的大标题 |
-| 24/32 | 页面标题 |
-
-- 字重只常用常规 400 和粗 500。按钮、标题、选中项用 500；600 很少用。
-- 字体是 PingFang SC。
-- 文字颜色由强到弱：primary（白）→ secondary（白 60%）→ tertiary（白 40%）→ placeholder（白 30%，只给占位文字）→ disabled（白 20%）。品牌色上的文字用 on-brand（黑）。图标用同一套颜色。
-
-### 5. 尺寸档位
-- 间距：4 / 6 / 8 / 12 / 16 / 24 / 32（xxs 到 xxl）。组件内部用 4–12，组件之间用 12–32；面板内边距 16，弹窗内边距 24。
-- 圆角：
-  - 4：标签
-  - 6：小按钮
-  - 8：按钮、输入框、菜单项，最常用
-  - 12：卡片、节点、菜单、Toast
-  - 16：弹窗、大面板
-  - 24：首页提示词输入框这类大容器
-  - 999：开关、头像、胶囊
-- 控件高度：28 / 32 / 36，默认 32；弹窗底栏和表单用 36。不再有 40、44、48，纯图标按钮也一样。
-- 图标：
-  - 16：按钮、菜单、输入框里
-  - 20：工具栏、面板标题
-  - 24：大入口、竖向工具栏
-  - 40 / 64：空状态
-
-### 6. 品牌色要省着用
-- 品牌绿只给最重要的：主操作、选中指示、开关打开、进度。不做大面积背景，不做正文。
-- 主要按钮是品牌渐变（#CEFF5D → #2BFF75，从左到右）配黑字，一屏只放一个。「生成」也用这个按钮，不做胶囊。
-- 选中态：浅底 brand/subtle（品牌绿 12%），图标或文字用 brand/solid。
-
-### 7. 先分清「做动作」还是「选值」
-- 做一个动作 → Button / IconButton
-- 2–6 个值、一眼看完，选一个 → 分段选择器
-- 值更多，或文字很长 → 下拉选择
-- 开 / 关，点了立刻生效 → 开关
-- 在一个范围里调数值 → 滑块 + 数字输入框
-- 可以多选 → 勾选框
-- 切换下面一整块内容 → 选项卡
-- 只展示，不能点 → 标签
-
-### 8. 状态要画全
-可交互的东西至少要有默认、悬停、按下、禁用四个状态；需要时再加选中、加载中、错误。
-- **悬停 / 按下**：底色升一档（8 → 12 → 16%）。主要按钮和危险按钮例外：悬停叠一层白 12%，按下整体透明度 80%。
-- **禁用**：底色白 8%（文字型按钮保持透明），文字和图标用 disabled（白 20%）。开关、滑块、勾选框禁用时整体透明度 30%。
-- **错误**：输入框加 1px danger 描边，下面的提示文字换成 danger 色，并写清原因。
-- **聚焦**：输入框聚焦不加描边，只出现光标。
-
-### 9. 只有图标的按钮要加 Tooltip
-写清楚它是做什么的；有快捷键就带上，比如「撤销 ⌘Z」。按钮上已经有文字的不用加。
-
-### 10. 组件、模板、业务页面分开
-- **组件**（已发布）：Button、IconButton、MenuItem、Input、Switch、Dialog 等。状态和规则是固定的，直接用，不改样式。
-- **模板**（不发布）：菜单、参数面板、节点工具栏、提示词输入框、表单行。容器样式固定，里面放组件，条目随便增删。
-- **业务页面**：用组件和模板拼，不要为某个页面再造一个「新按钮」「新菜单」。
-- **现成的做不到时**：先用模板拼；还不够，就用变量按同样的尺寸档位自己实现，交付时注明「规范里没有，这里是临时做法」。
-
-### 11. 占位值照用，但要标出来
-功能色 danger、warning、success，以及品牌色的 hover 和 pressed，取值还是占位。照用，交付时注明用了占位值。
-
-## 没有设计稿时，怎么补一个页面
-
-1. **放进哪个页面、哪个区块**：查「页面」，照最像的现有页面来摆。
-2. **拆层**：页面底 base → 区域 light-2 → 可点的 light-1。会盖在别的内容上的，按第 3 条选浮层做法。
-3. **挑组件**：按第 7 条判断控件类型，在下面的组件索引里找到组件，读对应文件拿尺寸和状态。
-4. **定字号和间距**：按第 4、5 条。
-5. **补状态**：空状态、加载（知道内容长什么样用骨架屏，不知道就用转圈）、错误、禁用。
-6. **自查**：
-   - 没有写死的颜色、圆角、字号（布局宽度除外）。
-   - 控件高度只有 28 / 32 / 36。
-   - 一屏只有一个主要按钮。
-   - 浮层没有投影。
-   - 只有图标的按钮都有 Tooltip。
-
-## 组件索引
-
-| 组件 | 用途 | 规格在 |
-|---|---|---|
-| Button、IconButton | 做动作 | 按钮 |
-| Input、NumberInput、Select、Textarea、表单行、提示词输入框 | 输入 | 输入控件 |
-| SegmentItem、Switch、Slider、Checkbox | 切换、选值 | 选择控件 |
-| Tooltip、MenuItem、MenuLabel、MenuDivider、菜单模板 | 悬停说明、菜单、右键菜单、下拉列表 | 菜单和提示 |
-| Dialog | 模态弹窗 | 弹窗 |
-| Toast、Loading、Skeleton、EmptyState | 操作反馈、加载、空状态 | 反馈 |
-| TabItem、Tag、Avatar | 选项卡、标签、头像 | 选项卡、标签和头像 |
-| NodeCard、NodeMedia、NodeWrapper、ConnectorDot、Connector | 画布节点和连线 | 画布 · 节点 |
-| NodeToolbar、ToolbarItem、CropHandles | 节点上方的工具栏 | 画布 · 节点顶部工具栏 |
-| NodePanel、PanelPrompt、MentionChip | 节点下方的生成面板 | 画布 · 节点底部生成面板 |
-| CanvasToolbar、快捷菜单 | 画布左侧工具栏、右键菜单 | 画布 · 画布工具栏和快捷菜单 |
+- 原型和没有设计稿时怎么搭：`workflows/build-page.md`。
+- 验收和审查（材料、清单、分级、报告）：`workflows/acceptance.md`。
+- `site/` 下的 `npm run check` 只查组件库 `src/kivi/` 的写法和写死颜色，不能代替验收。
 
 ## 路由
 
-文件按 Figma 的页来分：基础（变量、图标）、通用组件、画布、Agent、页面。Figma 改了哪一页，就改对应的文件。
+按网站目录的分组。下面的路径都相对 `site/src/`。
 
-| 文件展示名 | 文件路径 | 触发场景 |
-|---|---|---|
-| 变量 | references/foundations/tokens.md | 要具体变量名、取值、可复制的 CSS 变量块，或核对某个值该用哪个变量 |
-| 图标 | references/foundations/icons.md | 选图标、确认图标名、加新图标，或在原型里找替代图形 |
-| 按钮 | references/components/buttons.md | 用到 Button、IconButton，或判断按钮尺寸、类型、状态 |
-| 输入控件 | references/components/inputs.md | 做输入框、数字输入框、下拉选择、多行输入、表单、提示词输入框 |
-| 选择控件 | references/components/selection.md | 做开关、分段选择器、滑块、勾选框这类切换和选值；选项卡见「选项卡、标签和头像」 |
-| 菜单和提示 | references/components/menus-tooltip.md | 做菜单、右键菜单、下拉列表、Tooltip |
-| 弹窗 | references/components/dialog.md | 做确认弹窗、表单弹窗、列表或编辑器弹窗 |
-| 反馈 | references/components/feedback.md | 做 Toast、加载、骨架屏、空状态 |
-| 选项卡、标签和头像 | references/components/tabs-tags-avatar.md | 做选项卡、参数和状态标签、图片角标、头像 |
-| 画布 · 节点 | references/canvas/node.md | 做画布节点、节点外框、连接点、连线 |
-| 画布 · 节点顶部工具栏 | references/canvas/node-toolbar.md | 做选中节点后上方的工具栏、裁剪框 |
-| 画布 · 节点底部生成面板 | references/canvas/node-panel.md | 做节点下方的提示词、参考图、模型选择面板 |
-| 画布 · 画布工具栏和快捷菜单 | references/canvas/canvas-toolbar.md | 做画布左侧工具栏、画布右键菜单和快捷菜单 |
-| Agent | references/agent/agent.md | 做 Agent 对话的气泡、思考、回复、工具调用、状态同步（还没写） |
-| 页面 | references/pages/index.md | 新做或补一个页面，要知道放在哪页、哪个区块（还没写） |
-| 原型做法 | references/prototype.md | 做 HTML 原型或可点击 demo |
-| 旧名对照 | references/legacy-names.md | 遇到旧变量名、旧组件名、旧图标名 |
-| 组件库维护 | references/figma-kit.md | 只在编辑 Figma 组件库本身时读：加组件、改变体、改名、整理页面和 Section |
+| 页 | 规范 | 组件 | 什么时候读 |
+|---|---|---|---|
+| 页面模板 | `docs/templates/main-site.mdx`、`canvas.mdx`、`canvas-tools.mdx`、`skills.mdx`、`assets.mdx` | `docs/templates/*.demos.tsx` | 一整页怎么拼：主站生成页（侧栏、生成记录、主站 Agent、输入框）、画布 + Agent 侧栏、画布工具（节点工具栏、工具面板、裁剪扩图、视频封装、画布底部工具栏）、技能面板、资产管理 |
+| 设计规则 | `docs/foundations/rules.mdx` | — | 每个任务都先读：所有硬规则（变量、底色、浮层、按钮、提示、状态、动效、图标、组件命名） |
+| 变量 | `docs/foundations/tokens.mdx` | `kivi/tokens.css` | 要变量名、取值，或核对某个值该用哪个变量 |
+| 动效 | `docs/foundations/motion.mdx`、`motion-generating.mdx` | `kivi/generating/` | 做任何过渡和动画；生成中的点阵动效 |
+| 图标 | `docs/foundations/icons.mdx` | `kivi/Icon.tsx`、`kivi/icons-v3.ts`（默认用的 V3 数据）、`kivi/icons.ts`（V2 数据和新补的图标） | 选图标、确认图标名、补模型厂 Logo |
+| 占位图 | `docs/foundations/placeholder-images.mdx` | `kivi/placeholder-image/` | 用户作品的位置要放图 |
+| 按钮 | `docs/components/button.mdx` | `kivi/button/` | Button、IconButton、ButtonGroup |
+| 菜单 | `docs/components/menu.mdx` | `kivi/menu/` | 菜单、下拉、右键菜单 |
+| 导航 | `docs/components/navigation.mdx` | `kivi/navigation/` | 选项卡、分段 |
+| 输入框 | `docs/components/inputs.mdx` | `kivi/inputs/` | 输入框、数字输入、多行输入 |
+| 选择 | `docs/components/selection.mdx` | `kivi/selection/` | 下拉选择、开关、滑块、勾选框 |
+| 日期 | `docs/components/date.mdx` | `kivi/date/` | 日期范围筛选、日历 |
+| 上传 | `docs/components/upload.mdx` | `kivi/upload/` | 添加素材格（AddTile）、上传进度环（UploadRing）；拖文件进输入框用 DropOverlay（`kivi/generation/`），见「生成」页 |
+| 标签和头像 | `docs/components/tags-avatar.mdx` | `kivi/tags-avatar/` | 标签、头像、素材缩略图 |
+| 正文排版 | `docs/components/prose.mdx` | `kivi/prose/` | 正文、代码块 |
+| 滚动条 | `docs/components/scroll-area.mdx` | `kivi/scroll-area/` | 自画滚动条、滚动渐隐、触底回调 |
+| 布局 | `docs/components/layout.mdx` | `kivi/divider/`、`kivi/collapse/` | 分割线、展开收起 |
+| 图片和视频 | `docs/components/media.mdx` | `kivi/media/` | 图片（加载、失败、重试）、卡片里和预览里的视频 |
+| 提示 | `docs/components/tooltip.mdx` | `kivi/tooltip/` | Tooltip、Popover |
+| 弹窗 | `docs/components/dialog.mdx` | `kivi/dialog/` | 确认、表单、列表、编辑器弹窗 |
+| 反馈 | `docs/components/feedback.mdx` | `kivi/feedback/` | Toast、加载、骨架屏、空状态 |
+| 生成 | `docs/business/generation.mdx` | `kivi/generation/` | 创作输入框、提示词输入、生成按钮、参数面板、Lora |
+| 参考和引用 | `docs/business/reference.mdx` | `kivi/reference/` | 主站参考区、参考格、首尾帧、附件条（画布生成面板、发给 Agent 的附件）、所有 @ 引用胶囊、悬停预览 |
+| 画布 | `docs/business/canvas.mdx` | `kivi/canvas/` | 节点、多图节点、连线、生成面板、小地图（节点工具栏、画布工具栏在模板「画布工具」） |
+| 标注 | `docs/business/annotation.mdx` | `kivi/annotation/` | 标注框、标注点、标注评论 |
+| Agent 对话 | `docs/business/agent.mdx` | `kivi/agent/` | 对话里的询问记录、用户消息、追问、确认卡片、技能卡、发送按钮 |
+| Agent 过程 | `docs/business/agent-process.mdx` | `kivi/agent-process/`、`docs/business/agent-tools.ts` | 过程行、工具调用组、思考块、结果叠放；Agent 调的每个工具出不出一行、用什么图标 |
+| 主站 | `docs/business/main-site.mdx` | `kivi/main-site/` | 生成记录、结果格 |
+| 资产 | `docs/business/asset.mdx` | `kivi/asset/` | 封面格、文件夹卡、项目卡、新建卡 |
+| 生成控件 | `docs/business/generation.mdx` | `kivi/generation/` | 画布和主站共用的类型、模型、参考类型、参数下拉，模型偏好、技能面板 |
+| 旧名对照 | `docs/legacy-names.mdx` | — | 遇到旧变量名、旧组件名、旧图标名 |
+| 组件写法 | `docs/component-api.mdx` | `kivi/hooks/` | 写或改 React 组件：forwardRef、受控、事件合并 |

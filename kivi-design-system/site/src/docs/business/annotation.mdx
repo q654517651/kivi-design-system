@@ -1,0 +1,85 @@
+import { Demo, PageHeader } from '@shell';
+import { AnnotationBoxPlayground, AnnotationCommentPlayground, AnnotationDemo, AnnotationMarkerPlayground } from './annotation.demos';
+
+<PageHeader
+  eyebrow="业务组件"
+  title="标注"
+  figma={['标注', '1083:7820']}
+  code="kivi/annotation"
+/>
+
+## AnnotationBox
+
+标注框：在图片上框出一块。
+
+<AnnotationBoxPlayground />
+
+### 在图片节点上框选
+
+<Demo noCode scope={{ AnnotationDemo }} code={`<AnnotationDemo />`} />
+
+## AnnotationMarker
+
+标注序号：标注框旁边的序号气泡，点开看评论。
+
+<AnnotationMarkerPlayground />
+
+## AnnotationComment
+
+标注评论：给标注写评论，能发到对话里。
+
+<AnnotationCommentPlayground />
+
+## 参数
+
+### AnnotationBox
+
+标注框：盖在图片上，位置、大小由外面用 `style` 给（`left` / `top` / `width` / `height`，百分比最方便，随图缩放）。3px 品牌色虚线（8 实 4 空），左上、右下各一个 16 的品牌色圆点（光标 `nwse-resize`），右下角往右 10、往下 6 挂序号气泡，评论浮层在气泡右边 8、和气泡顶对齐。气泡、浮层会伸出图片，外层不要裁剪。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `index` | `number` `string` | — | 序号，写在右下角的气泡里。不传没有气泡（正在画的那个框） |
+| `handles` | `boolean` | `true` | 左上、右下两个拖动圆点，常驻显示。正在画的框不要 |
+| `comment` | `ReactNode` | — | 评论浮层：放 `AnnotationComment` |
+| `onMarkerClick` | `() => void` | — | 点气泡：进入编辑 |
+| `onMarkerPointerEnter` / `onMarkerPointerLeave` | `() => void` | — | 鼠标移进、移出气泡，键盘聚焦、移开也触发：悬停出一行预览 |
+| `onHandlePointerDown` | `(corner: "tl" \| "br", event) => void` | — | 在圆点上按下：开始拖，固定对角那个点，拖的逻辑自己写 |
+
+### AnnotationMarker
+
+序号气泡：28 见方，品牌色底、on-brand 字，1.5px 白描边（`--color-text-fill-primary`），序号 14 中等；三个角全圆、左下是尖角（4）。任何模式下都能悬停、点击；读屏读「标注 N」。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `number` `string` | — | 序号，必填。按画在图上的先后给 |
+
+### AnnotationComment
+
+评论浮层。玻璃底（`--color-bg-fill-glass`、背景模糊 32、1px `--color-border-subtle`），宽 240，圆角 12，内边距 8，间距 6。编辑：输入框 12 / 20 无边框，最少 34、最多 5 行（100）再滚动，占位「添加描述」；底栏左边删除（IconButton 28），右边「发送」（Button 小 · 次要）和「添加到对话」（Button 小 · 主要），没写字两个都不可点；添加过之后「添加到对话」换成「更新」，描述没改过不可点。悬停预览：一行 12 号，超出省略，不能操作。回车换行不发送，Esc 收起；键盘事件不往上冒。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `value` | `string` | — | 描述：受控 |
+| `defaultValue` | `string` | `""` | 描述：非受控的初始值 |
+| `onChange` | `(value: string) => void` | — | 描述变化时触发 |
+| `collapsed` | `boolean` | `false` | 悬停预览：只显示一行描述，不能操作 |
+| `added` | `boolean` | `false` | 已经添加到对话：主按钮变成「更新」 |
+| `changed` | `boolean` | `false` | 已添加后，描述和对话里的不一样了，「更新」才能点 |
+| `autoFocus` | `boolean` | — | 出现时聚焦输入框，光标放在末尾：新画完框、点气泡进入编辑时用 |
+| `placeholder` | `string` | `"添加描述"` | 占位文字 |
+| `onDelete` | `() => void` | — | 点删除 |
+| `onSend` | `() => void` | — | 点「发送」：直接把这条标注和描述发给 Agent |
+| `onAddToChat` | `() => void` | — | 点「添加到对话」：把这条标注作为引用放进对话输入框 |
+| `onUpdate` | `() => void` | — | 点「更新」：用新的描述更新对话输入框里的引用 |
+| `onCollapse` | `() => void` | — | 焦点在面板里任何一处按 Esc：只收起，不发送 |
+
+### 提示条
+
+进入标注态后，图片上方的工具栏换成提示条。不是组件：`ButtonGroup variant="glass" size={44}` 里放一个 `IconButton`（`Close`，说明「退出框选」，点了退出标注态，已画的标注保留）和一句话「在图像上拖拽选区添加评论」（14 / 20 tertiary，不换行），间距 8，右边留 8。
+
+### 其他约定
+
+- 画框：标注态下在图上按住拖，松手出框，没有面积（单击）不创建；新画完的框立刻进入编辑。光标：标注态是黑色十字加白描边，悬停气泡是白色气泡形，圆点是 `nwse-resize`。
+- 编辑中点图片以外的地方、按 Esc 都收起；点「添加到对话」「更新」「发送」后也收起。
+- 清除全部标注：`Dialog` 小号（宽 400），确认按钮用危险类型，删除中按钮显示加载中、点遮罩不能关。
+- 引用标签（`MentionChip`，见「参考和引用」页）：输入框、用户消息里写成 `MentionChip type="annotation"`（缩略图 + 序号小气泡 + 描述），悬停出预览卡 `PreviewCard`，带标注框和描述，和附件的预览是同一个。

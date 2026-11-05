@@ -1,0 +1,43 @@
+import { PageHeader } from '@shell';
+import { AddTilePlayground, UploadRingPlayground } from './upload.demos';
+
+<PageHeader
+  eyebrow="录入"
+  title="上传"
+  figma={['上传', '1083:7705']}
+  code="kivi/upload"
+/>
+
+## AddTile
+
+添加格：添加素材，从素材库选、从电脑上传都用它，比如加参考图、加 Lora。
+
+<AddTilePlayground />
+
+## UploadRing
+
+上传进度环：显示上传进度，比如参考图、附件上传中。
+
+<UploadRingPlayground />
+
+## 参数
+
+### AddTile
+
+56 见方，圆角 8（`--border-radius-8`），底白 10%（`--color-bg-fill-container-light-1`，深底用 Light 1），悬停白 14%（`-hover`），按下白 18%（`-pressed`）。只有这一档。点了打开素材库还是选电脑文件，由用的地方定；传上去之后显示成参考格（`ReferenceItem`），上传中用 `UploadRing`。其余原生 `<button>` 属性都能传，`ref` 指向按钮。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `icon` | `IconName` | `"AddSmall"` | 图标，固定 20，`--color-text-fill-primary`；带文字时是 `--color-text-fill-tertiary` |
+| `label` | `ReactNode` | — | 图标下面的一行字，12 / 16 号，`--color-text-fill-tertiary`，和图标间距 2（`--spacing-2`），比如「Lora」。不传就只有图标 |
+| `disabled` | `boolean` | `false` | 禁用：图标和文字 `--color-text-fill-disabled`，不能点 |
+| `aria-label` | `string` | 有文字用文字，否则「添加」 | 读屏用，比如「添加参考素材」「添加 Lora」 |
+
+### UploadRing
+
+上传进度环：直径 36，线宽 3，底圈白 30%，弧线白色圆头，中间 10 号字（`--font-size-10`）写百分比。盖在暗色遮罩（`--color-bg-fill-container-dark`）上用，参考区和附件条的上传中是同一个。其余原生 `<span>` 属性都能传，`ref` 指向最外层。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `progress` | `number` | `0` | 进度 0–100，超出的夹住 |
+| `aria-label` | `string` | `"上传中"` | 读屏用，说明是什么在上传，比如「图片1上传中」。最外层有 `role="progressbar"` |

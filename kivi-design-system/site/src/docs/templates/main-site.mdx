@@ -1,0 +1,32 @@
+import { PageHeader } from '@shell';
+import { PreviewHost } from '../components/media.demos';
+import { MainSiteTemplate, Sidebar } from './main-site.demos';
+
+<PageHeader
+  eyebrow="页面模板"
+  title="主站"
+  lead="主站的生成页：侧栏、生成记录（自己生成的和主站 Agent 的混在一起）、底部输入框。组件在「业务组件 · 主站」「业务组件 · 生成」「业务组件 · Agent 对话」。"
+  figma={['模板 · 主站', '389:1509']}
+/>
+
+<PreviewHost />
+
+## 生成页
+
+<MainSiteTemplate />
+
+## 侧栏
+
+<div className="tpl-frame" style={{ aspectRatio: 'auto', width: 'fit-content', height: 640, minHeight: 0 }}>
+  <Sidebar />
+</div>
+
+## 参数
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| 侧栏宽 | 数值 | `240` | 收起 60（左右 12 + 条目 36），300ms ease-in-out |
+| 收起按钮 | IconButton | `28` · 轻 | Logo 行高 28，Logo 左 8；展开时在右边，收起时叠在 Logo 上，悬停 Logo 才换出来 |
+| 记录流最宽 | 数值 | `1040` | 和输入框同宽，居中 |
+| 轮与轮间距 | 数值 | `48` | 照即梦；左右内边距 24 |
+| 第一条内容离顶 | 数值 | `104` | 照即梦 |

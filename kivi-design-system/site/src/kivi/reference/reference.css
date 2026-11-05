@@ -1,0 +1,664 @@
+/*
+  KIVI · 参考和引用
+  参考格 ReferenceItem、首尾帧 ReferenceFramePair、主站输入框的参考区 ReferenceStack、附件条 AttachmentStrip、
+  @ 引用胶囊 MentionChip、悬停预览 PreviewCard / PreviewPopover。
+  依赖 tokens.css、base.css、button.css；缩略图用 tags-avatar 的 kv-asset-thumb。
+  ReferenceStack 的结构、状态说明在 generation.css 的「KIVI · 主站输入框」那段。
+
+  状态
+    互换中  ReferenceFramePair 写 data-swapping
+*/
+
+/* 删除：展开后悬停或聚焦到某一张，右上角标换成删除（序号隐藏），三处共用这一份（Lora 栏的样式在 generation.css 里引用，LoraField 用到 ReferenceItem，会一起引入本文件） */
+
+.kv-reference-stack__remove,
+.kv-attachment-strip__remove,
+.kv-lora-field__remove {
+  /* 删除是右上角的小圆：离边 4，18 的圆，黑 40% + 模糊 32，图标 14（11-04 用户定改回原来的圆，不用角标），同时那张的序号隐藏 */
+  position: absolute;
+  top: var(--spacing-4);
+  right: var(--spacing-4);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-round);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-on-media-text);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  /* 移开时直接消失、不淡出，序号同时淡入；和序号交叉淡化会叠出重影（11-04） */
+  transition: none;
+}
+
+.kv-reference-stack__remove > .kv-icon,
+.kv-attachment-strip__remove > .kv-icon,
+.kv-lora-field__remove > .kv-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- MentionChip：提示词里的 @ 引用标签 ---------- */
+.kv-mention-chip {
+  --kv-nested-fill: var(--color-bg-fill-container-light-2); /* 自己是 Light 1 底，里面的缩略图、标签、按钮叠在上面用 Light 2 */
+  --kv-nested-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-nested-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  height: 20px; /* 11-04 从 17 改：缩略图 16 上下左右都留 2 */
+  padding: 0 var(--spacing-4) 0 var(--spacing-2);
+  overflow: hidden;
+  border-radius: var(--border-radius-4);
+  /* 1px 描边画在里面 */
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* 缩略图用 kv-asset-thumb--16（图片或音频），和文字之间的间距 4 在 gap 里 */
+/* ---------- ReferenceItem：参考图一格 ---------- */
+.kv-reference-item {
+  --kv-nested-fill: var(--color-bg-fill-container-light-2); /* 自己是 Light 1 底，里面的缩略图、标签、按钮叠在上面用 Light 2 */
+  --kv-nested-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-nested-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  position: relative;
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+  font-family: var(--font-family);
+}
+
+.kv-reference-item--72 {
+  width: 72px;
+  height: 72px;
+}
+
+.kv-reference-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* 缩略图用 kv-asset-thumb（56 或 72，和外框一致），铺满外框。
+   只留外框那圈 12%：缩略图自己的 8% 描边和它压在同一个像素上会叠成约 19%（11-05） */
+.kv-reference-item .kv-asset-thumb::after {
+  content: none;
+}
+/* 右上角标：序号或首帧 / 尾帧，最小 20 × 20，左右留 4（2026-10-29 用户在 Figma 里加的，不然「首帧」贴边）。
+   左下圆角 4；右上也要跟外框一样做 8 的圆角：角标带背景模糊，Chrome 里外框的圆角裁不掉它，不写就会露出直角 */
+.kv-reference-item__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--spacing-4);
+  border-radius: 0 var(--border-radius-8) 0 var(--border-radius-4);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+}
+
+/* 左下视频时长 */
+.kv-reference-item__duration {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  padding: 0 var(--spacing-6);
+  border-radius: var(--border-radius-6);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+}
+
+/* 底部通栏：Lora 权重。底下两个角跟外框一样圆 8，理由同角标 */
+.kv-reference-item__weight {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 0 0 var(--border-radius-8) var(--border-radius-8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+}
+
+/* ---------- ReferenceFramePair：首尾帧 ---------- */
+/* 两格参考图，中间 28 的互换按钮（图标 20），间距 4。角标「首帧」「尾帧」写在右上 */
+.kv-reference-frame-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.kv-reference-frame-pair__swap {
+  --kv-icon-size: 20px;
+}
+
+/* 互换：两张图各自滑到对方的位置，角标跟着图走；滑完再换回数据、去掉位移 */
+.kv-reference-frame-pair__first,
+.kv-reference-frame-pair__last {
+  transition: none;
+}
+
+.kv-reference-frame-pair[data-swapping] .kv-reference-frame-pair__first,
+.kv-reference-frame-pair[data-swapping] .kv-reference-frame-pair__last {
+  transition: transform var(--motion-duration-200) var(--motion-ease-in-out);
+}
+
+.kv-reference-frame-pair[data-swapping] .kv-reference-frame-pair__first {
+  transform: translateX(var(--kv-frame-distance));
+}
+
+.kv-reference-frame-pair[data-swapping] .kv-reference-frame-pair__last {
+  transform: translateX(calc(var(--kv-frame-distance) * -1));
+}
+
+/* ---------- PreviewCard：悬停预览卡的内容 ----------
+   附件条、参考图、标注点悬停时看大图、类型、详情用同一个。一律用 PreviewPopover 包（玻璃底、上方左对齐、间距 8、200ms），不自己包 Popover。
+   大图（图片、视频）：160 见方，圆角 8，图按比例完整放进去（contain），底 container-light-1；下面名字 12 secondary 一行，说明 12 / 20 tertiary 最多 4 行，间距 8、4。
+   一行式（音频、文件）：56 缩略图 + 右边名字、类型 / 时长、说明，宽 220。标注框 1.5px 品牌色。 */
+.kv-preview-card {
+  display: flex;
+  box-sizing: border-box;
+  font-family: var(--font-family);
+}
+
+.kv-preview-card--big {
+  flex-direction: column;
+  gap: var(--spacing-8);
+  width: 160px;
+}
+
+.kv-preview-card--row {
+  align-items: center;
+  gap: var(--spacing-12);
+  width: 220px;
+}
+
+.kv-preview-card__media {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.kv-preview-card__media > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.kv-preview-card__box {
+  position: absolute;
+  box-sizing: border-box;
+  border: var(--border-width-1-5) solid var(--color-brand-solid);
+  pointer-events: none;
+}
+
+.kv-preview-card__duration {
+  position: absolute;
+  bottom: var(--spacing-4);
+  left: var(--spacing-4);
+  display: flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 var(--spacing-6);
+  border-radius: var(--border-radius-6);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+}
+
+.kv-preview-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.kv-preview-card__name {
+  overflow: hidden;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-preview-card__meta {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.kv-preview-card__description {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+/* MentionChip 标注点：缩略图后面跟一个 12 的序号小气泡（品牌色，左下尖角），再跟描述，三样间距都是 4。
+   照 Figma 旧版 KIVI 3.5-3.14（13713:25552）：气泡是单独一格，不压在缩略图上（11-04 用户定）；那边是 20 的缩略图 + 14 的气泡，这里按库里 16 的缩略图缩小 */
+.kv-mention-chip__marked {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.kv-mention-chip__marker {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 12px;
+  height: 12px;
+  border-radius: var(--border-radius-round) var(--border-radius-round) var(--border-radius-round) 0;
+  background: var(--color-brand-solid);
+  color: var(--color-text-fill-on-brand);
+  font-size: var(--font-size-10);
+  font-weight: var(--font-weight-medium);
+}
+
+/* MentionChip 只有图标的类型（音频、技能、节点、模型、没封面的视频）：图标 16，白色不透明，不加底框、不加背景（11-04 用户定统一） */
+.kv-mention-chip__icon {
+  flex: none;
+  color: var(--color-text-fill-primary);
+}
+
+/* ---------- 参考区 ---------- */
+
+/* 占位：72 见方，提示词让出这一块。展开的部分在 tray 里，浮在提示词上面 */
+
+.kv-reference-stack {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  font-family: var(--font-family);
+}
+
+/* 悬停区：收起 72，展开时变宽。z-index 让它盖在提示词上。
+   展开、收起的时长由 JS 写进 --kv-reference-stack-duration（400ms 起，每多一张加 10ms，最多 700ms），缓动 --motion-ease-expand */
+
+.kv-reference-stack__tray {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  outline: none;
+  transition: width var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+/* 往右、往下多出 10，和上传按钮探出去的一样多 */
+
+.kv-reference-stack__hit {
+  position: absolute;
+  top: 0;
+  right: -10px;
+  bottom: -10px;
+  left: 0;
+  z-index: -2;
+}
+
+/* 展开层不加底色：被盖住的字由输入框用遮罩藏起来，卡片直接浮在输入框的底上。
+   输入框的底是半透明的，再垫一层颜色会多出一块矩形（参考区演示里垫的就是输入框自己的颜色，看不出来） */
+
+/* 收起时叠放的卡片、上传按钮会露在 72 外面，不裁；展开动画播的时候也不裁，卡片要从叠放飞出来。
+   播完（data-settled）超出了才横向滚动，不换行，滚动条藏起来（有渐隐提示，滚轮也能滚） */
+
+.kv-reference-stack__scroller {
+  position: relative;
+  width: 100%;
+  height: 72px;
+}
+
+.kv-reference-stack__tray[data-settled] .kv-reference-stack__scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.kv-reference-stack__tray[data-settled] .kv-reference-stack__scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/* 超出输入框宽度时，右边 40 渐隐，提示还能往右滚；滚到头渐隐去掉。同样用遮罩，不盖颜色 */
+
+.kv-reference-stack__tray[data-settled][data-full]:not([data-at-end]) .kv-reference-stack__scroller {
+  -webkit-mask-image: linear-gradient(90deg, black calc(100% - 40px), transparent);
+  mask-image: linear-gradient(90deg, black calc(100% - 40px), transparent);
+}
+
+.kv-reference-stack__track {
+  position: relative;
+  height: 72px;
+}
+
+/* 添加：一个按钮两个样子，展开收起时直接变形过去。
+   空的、展开时：添加格，72 见方，白 10% 底（深底用 Light 1），圆角 8，中间 AddSmall 20，排在最前。
+   有素材又没展开时（data-compact）：小圆加号，24 见方，popup 底，描边 border，AddSmall 16，挂在 72 的右下角，往右、往下各探出 10。
+   变形和卡片同一个时长（--kv-reference-stack-duration），都是加减速，不用匀速（2026-10-29 用户定）。
+   位置、大小、圆角、底色都用 --motion-ease-expand（11-03 用户定：曲线只从变量里选，不另写） */
+
+.kv-reference-stack__trigger {
+  --kv-trigger-duration: var(--kv-reference-stack-duration, var(--motion-duration-400));
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: var(--border-width-1) solid transparent;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    left var(--kv-trigger-duration) var(--motion-ease-expand),
+    top var(--kv-trigger-duration) var(--motion-ease-expand),
+    width var(--kv-trigger-duration) var(--motion-ease-expand),
+    height var(--kv-trigger-duration) var(--motion-ease-expand),
+    border-radius var(--kv-trigger-duration) var(--motion-ease-expand),
+    border-color var(--kv-trigger-duration) var(--motion-ease-expand),
+    background-color var(--kv-trigger-duration) var(--motion-ease-expand);
+}
+
+.kv-reference-stack__trigger[data-compact] {
+  top: 58px;
+  left: 58px;
+  width: 24px;
+  height: 24px;
+  border-color: var(--color-border);
+  /* 圆：写 50% 不写 999，才能和圆角 8 之间平滑过渡 */
+  border-radius: 50%;
+  background: var(--color-bg-fill-popup);
+  transition:
+    top var(--kv-trigger-duration) var(--motion-ease-expand),
+    left var(--kv-trigger-duration) var(--motion-ease-expand),
+    width var(--kv-trigger-duration) var(--motion-ease-expand),
+    height var(--kv-trigger-duration) var(--motion-ease-expand),
+    border-radius var(--kv-trigger-duration) var(--motion-ease-expand),
+    border-color var(--kv-trigger-duration) var(--motion-ease-expand),
+    background-color var(--kv-trigger-duration) var(--motion-ease-expand);
+}
+
+/* 加号：添加格里 20，小圆里 16，跟着一起缩放 */
+
+.kv-reference-stack__trigger-icon {
+  width: 20px;
+  height: 20px;
+  transition:
+    width var(--kv-trigger-duration) var(--motion-ease-expand),
+    height var(--kv-trigger-duration) var(--motion-ease-expand);
+}
+
+.kv-reference-stack__trigger[data-compact] > .kv-reference-stack__trigger-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 卡片：一直是 72 见方，位置、转角、缩放由 JS 写在 transform 上，这里只管过渡。
+   叠放时缩到 56（0.78），转角 3° / -12° / 8°；展开后不缩不转，间距 6。
+   移动、缩放、旋转、透明度都用参考区的时长和 --motion-ease-expand */
+
+.kv-reference-stack__card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  /* 序号角标、时长带背景模糊，卡片旋转时只靠 overflow 裁不住圆角，再用 clip-path 裁一次 */
+  clip-path: inset(0 round var(--border-radius-8));
+  transform-origin: 50% 50%;
+  transition:
+    transform var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    opacity var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    border-radius var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    clip-path var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+/* 叠放时卡片缩小了，圆角按比例放大，看上去还是 8 */
+
+.kv-reference-stack__tray[data-stacked] .kv-reference-stack__card {
+  border-radius: calc(var(--border-radius-8) / var(--kv-reference-stack-scale));
+  clip-path: inset(0 round calc(var(--border-radius-8) / var(--kv-reference-stack-scale)));
+}
+
+/* 卡片里的 ReferenceItem 和缩略图铺满卡片，圆角跟着卡片 */
+
+.kv-reference-stack__card .kv-popover__anchor,
+.kv-reference-stack__card .kv-reference-item,
+.kv-reference-stack__card .kv-asset-thumb {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.kv-reference-stack__card[data-clickable] {
+  cursor: pointer;
+}
+
+/* 叠放里看不见的、和被删掉的（aria-hidden）：不响应鼠标 */
+
+.kv-reference-stack__card[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+/* 被删掉：缩小到 80%、淡出，150ms ease-in */
+
+.kv-reference-stack__card[data-leaving] {
+  transition:
+    transform var(--motion-duration-150) var(--motion-ease-in),
+    opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+/* 右上角序号：只有最上面那张、单张、展开时才显示，和画布的 ReferenceItem 一样（线上逻辑）。出现 150ms ease-out，消失 100ms ease-in。
+   叠放时卡片缩小了，角标的尺寸、内边距、圆角、字号按比例放大，看上去还是 20 高、12 号字；和卡片缩放同一个节奏变，过程中大小基本不变 */
+
+.kv-reference-stack__card .kv-reference-item__badge {
+  opacity: 0;
+  transition:
+    opacity var(--motion-duration-100) var(--motion-ease-in),
+    min-width var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    height var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    padding var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    border-radius var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    font-size var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    line-height var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+.kv-reference-stack__card[data-labeled] .kv-reference-item__badge {
+  opacity: 1;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-out),
+    min-width var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    height var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    padding var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    border-radius var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    font-size var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    line-height var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+.kv-reference-stack__tray[data-stacked] .kv-reference-item__badge {
+  min-width: calc(20px / var(--kv-reference-stack-scale));
+  height: calc(20px / var(--kv-reference-stack-scale));
+  padding: 0 calc(var(--spacing-4) / var(--kv-reference-stack-scale));
+  border-radius: 0 calc(var(--border-radius-8) / var(--kv-reference-stack-scale)) 0 calc(var(--border-radius-4) / var(--kv-reference-stack-scale));
+  font-size: calc(var(--font-size-12) / var(--kv-reference-stack-scale));
+}
+
+/* 上传中不写序号，Figma 的上传中状态只有暗色和进度环 */
+
+.kv-reference-stack__card[data-uploading] .kv-reference-item__badge {
+  opacity: 0;
+}
+
+/* 展开后鼠标移到某一张上：序号隐藏，换成删除，两个不同时出现（线上逻辑）。
+   序号直接消失、删除淡入；移开时删除直接消失、序号淡入。两个形状不同，交叉淡化会叠出重影（11-04） */
+
+.kv-reference-stack__tray[data-open] .kv-reference-stack__card[data-removable]:where(:hover, :focus-visible, :has(:focus-visible)) .kv-reference-item__badge {
+  opacity: 0;
+  transition: none;
+}
+
+/* 视频、音频的时长：展开后显示在左下角，和 ReferenceItem 一样。展开时等卡片挪开 150ms 再 150ms ease-out 出现 */
+
+.kv-reference-stack__duration {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  padding: 0 var(--spacing-6);
+  border-radius: var(--border-radius-6);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-on-media-text);
+  font-size: var(--font-size-12);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.kv-reference-stack__tray[data-open] .kv-reference-stack__duration {
+  opacity: 1;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out) var(--motion-duration-150);
+}
+
+.kv-reference-stack__tray[data-open] .kv-reference-stack__card:where(:hover, :focus-visible, :has(:focus-visible)) .kv-reference-stack__remove {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 上传中：盖一层黑 40%，中间是 UploadRing（进度环 36 和百分比，样式在 upload.css），上传完 JS 去掉 */
+
+.kv-reference-stack__upload,
+.kv-attachment-strip__upload {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: var(--color-bg-fill-container-dark);
+  color: var(--color-on-media-text);
+}
+
+/* ---------- AttachmentStrip：附件条 ----------
+   一排平铺的 56 缩略图，间距 4，超出横向滚动（细滚动条）。删除、上传中的样子和上面的参考卡片一样（上面的规则共用），
+   这里只管排列和显示：鼠标移上去或聚焦到某一格，右上角出删除；上传中不出删除 */
+
+.kv-attachment-strip {
+  display: flex;
+  gap: var(--spacing-4);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-fill-disabled) transparent;
+}
+
+.kv-attachment-strip::-webkit-scrollbar {
+  height: 4px;
+}
+
+.kv-attachment-strip::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background: var(--color-text-fill-disabled);
+}
+
+.kv-attachment-strip__item {
+  position: relative;
+  flex: none;
+  border-radius: var(--border-radius-8);
+}
+
+.kv-attachment-strip__item[data-clickable] {
+  cursor: pointer;
+}
+
+.kv-attachment-strip__item:where(:hover, :focus-visible, :has(:focus-visible)):not([data-uploading]) .kv-attachment-strip__remove {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 出删除时序号隐藏，和参考区一样：序号直接消失，移开后淡入 */
+
+.kv-attachment-strip__item .kv-reference-item__badge {
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-attachment-strip__item[data-removable]:where(:hover, :focus-visible, :has(:focus-visible)):not([data-uploading]) .kv-reference-item__badge {
+  opacity: 0;
+  transition: none;
+}

@@ -1,0 +1,20 @@
+import { PageHeader } from '@shell';
+import { PreviewHost } from '../components/media.demos';
+import { CanvasTemplate } from './canvas.demos';
+
+<PageHeader
+  eyebrow="页面模板"
+  title="画布"
+  lead="画布和右侧的 Agent 侧栏：对话里点结果缩略图，画布移到那个节点并选中。组件在「业务组件 · 画布」「业务组件 · 生成」「业务组件 · Agent 对话」，工具图标在「业务组件 · Agent 过程」。"
+  figma={['模板 · 画布', '367:2877']}
+/>
+
+<PreviewHost />
+
+<CanvasTemplate />
+
+## 参数
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| Agent 侧栏宽 | 数值 | `500` | 照线上，默认 500，可拖 360–720（`ChatPanel` 的默认 / 最小 / 最大宽）。网站模板固定 500，不做拖动。左边有 `border-subtle` 描边 |

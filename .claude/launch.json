@@ -1,0 +1,21 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kivi-site",
+      "url": "http://localhost:4173",
+      "port": 4173
+    },
+    {
+      "name": "kivi-site-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "kivi-design-system/site",
+        "run",
+        "dev"
+      ],
+      "port": 4173
+    }
+  ]
+}

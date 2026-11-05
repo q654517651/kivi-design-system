@@ -1,0 +1,180 @@
+/*
+  KIVI · 滚动条
+  通用组件 ScrollArea。依赖 tokens.css。
+
+  写法（React，见 ScrollArea.tsx）
+    <ScrollArea maxHeight={320}>…内容…</ScrollArea>
+    <ScrollArea orientation="both" fade onReachEnd={loadMore}>…</ScrollArea>
+  渲染出来的结构
+    <div class="kv-scroll-area" data-orientation="vertical" data-scrollable-y>
+      <div class="kv-scroll-area__viewport" data-fade="bottom">   真正在滚的，原生滚动，原生滚动条藏起来
+        <div class="kv-scroll-area__content">…内容…</div>
+      </div>
+      <div class="kv-scroll-area__bar kv-scroll-area__bar--vertical" data-state="visible" data-active>
+        <div class="kv-scroll-area__track"><div class="kv-scroll-area__thumb"></div></div>
+      </div>
+    </div>
+
+  状态
+    滚动条  data-state="visible" / "hidden"；鼠标靠近或拖动时多一个 data-active
+    滑块    拖动中 data-dragging
+    根      data-scrollable-x / -y：那个方向有得滚
+
+  滑块平时不显示：滚动时淡入 150ms ease-out，停下 600ms 后淡出 300ms ease-in；
+  鼠标靠近滚动条（离边 12 以内）出来，宽 6 → 8；滑块白 20%，悬停、拖动白 40%；离边 2；最短 24；圆角 round。
+*/
+
+.kv-scroll-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 视口：原生滚动，藏起原生滚动条。外面定了高度或最大高度，它就在里面滚 */
+.kv-scroll-area__viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  scrollbar-width: none;
+}
+
+.kv-scroll-area__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.kv-scroll-area__viewport[data-orientation="vertical"] {
+  overflow: hidden auto;
+}
+
+.kv-scroll-area__viewport[data-orientation="horizontal"] {
+  overflow: auto hidden;
+}
+
+.kv-scroll-area__viewport[data-orientation="both"] {
+  overflow: auto;
+}
+
+/* 内容外壳：量内容尺寸用。横向要让内容撑开宽度，才有得横着滚 */
+.kv-scroll-area__viewport[data-orientation="horizontal"] > .kv-scroll-area__content {
+  width: max-content;
+  min-width: 100%;
+}
+
+.kv-scroll-area__viewport[data-orientation="both"] > .kv-scroll-area__content {
+  display: table;
+  min-width: 100%;
+}
+
+/* 渐隐：跟着滑的方向（data-fade 由 useScrollFade 写）。用 mask，不盖底色，渐隐 24 */
+.kv-scroll-area__viewport[data-fade="bottom"] {
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - var(--spacing-24)), transparent);
+  mask-image: linear-gradient(to bottom, black calc(100% - var(--spacing-24)), transparent);
+}
+
+.kv-scroll-area__viewport[data-fade="top"] {
+  -webkit-mask-image: linear-gradient(to top, black calc(100% - var(--spacing-24)), transparent);
+  mask-image: linear-gradient(to top, black calc(100% - var(--spacing-24)), transparent);
+}
+
+/* 滚动条：盖在视口上，12 宽（离边 2 + 滑块最宽 8 + 空 2），平时不拦鼠标；
+   两个方向都有时，纵向让出下面 12，横向让出右边 12，别在角上叠起来 */
+.kv-scroll-area__bar {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  box-sizing: border-box;
+  padding: var(--spacing-2);
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* 淡出：ease-in */
+  transition: opacity var(--motion-duration-300) var(--motion-ease-in);
+}
+
+.kv-scroll-area__bar[hidden] {
+  display: none;
+}
+
+.kv-scroll-area__bar[data-state="visible"] {
+  opacity: 1;
+  pointer-events: auto;
+  /* 淡入：ease-out */
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-scroll-area__bar--vertical {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 12px; /* Figma 没变量 */
+}
+
+.kv-scroll-area__bar--horizontal {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 12px; /* Figma 没变量 */
+}
+
+.kv-scroll-area[data-scrollable-x] > .kv-scroll-area__bar--vertical {
+  bottom: 12px; /* Figma 没变量 */
+}
+
+.kv-scroll-area[data-scrollable-y] > .kv-scroll-area__bar--horizontal {
+  right: 12px; /* Figma 没变量 */
+}
+
+/* 轨道：滑块能走的范围（扣掉离边的 2） */
+.kv-scroll-area__track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 滑块：长度和位置由脚本写（height / width、transform）。没有对应 Figma 变量的颜色：
+   白 20%、40% 借用 --color-text-fill-disabled、--color-text-fill-tertiary 的值 */
+.kv-scroll-area__thumb {
+  position: absolute;
+  border-radius: var(--border-radius-round);
+  background: var(--color-text-fill-disabled);
+  touch-action: none;
+  will-change: transform;
+  transition: background-color var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-scroll-area__bar--vertical .kv-scroll-area__thumb {
+  top: 0;
+  right: 0;
+  width: 6px; /* Figma 没变量 */
+  transition:
+    width var(--motion-duration-150) var(--motion-ease-in-out),
+    background-color var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-scroll-area__bar--horizontal .kv-scroll-area__thumb {
+  bottom: 0;
+  left: 0;
+  height: 6px; /* Figma 没变量 */
+  transition:
+    height var(--motion-duration-150) var(--motion-ease-in-out),
+    background-color var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-scroll-area__bar--vertical[data-active] .kv-scroll-area__thumb {
+  width: 8px; /* Figma 没变量 */
+}
+
+.kv-scroll-area__bar--horizontal[data-active] .kv-scroll-area__thumb {
+  height: 8px; /* Figma 没变量 */
+}
+
+.kv-scroll-area__thumb:hover,
+.kv-scroll-area__thumb[data-dragging] {
+  background: var(--color-text-fill-tertiary);
+}

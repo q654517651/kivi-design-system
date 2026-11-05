@@ -1,0 +1,19 @@
+/* 生成页里 Lora 属性面板的预览区，只给文档演示用，不属于组件库 */
+
+/* 悬停设置面板出在格子上方：预览区留出高度，格子靠下 */
+.lora-pg-field.shell-pg-stage {
+  align-items: flex-end;
+  justify-content: flex-start;
+  min-height: 360px;
+}
+
+/* 设置面板摆在预览区里：Popover 的面板是 position: fixed，这里改成跟着文档流，不要进场动画 */
+.lora-pg-frame.kv-popover {
+  position: relative;
+  animation: none;
+}
+
+/* 卡片宽 200 摆在预览区中间 */
+.lora-pg-card.shell-pg-stage {
+  min-height: 360px;
+}

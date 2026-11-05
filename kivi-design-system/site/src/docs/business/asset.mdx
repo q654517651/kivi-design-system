@@ -1,0 +1,80 @@
+import { PageHeader } from '@shell';
+import { CoverGridPlayground, CreateCardPlayground, FolderCardPlayground, ProjectCardPlayground } from './asset.demos';
+
+<PageHeader eyebrow="业务组件" title="资产" code="kivi/asset" />
+
+## CoverGrid
+
+封面拼图：文件夹和画布项目的封面，最多拼 4 张。
+
+<CoverGridPlayground />
+
+## FolderCard
+
+文件夹卡：我的资产页「我的素材」那排文件夹。
+
+<FolderCardPlayground />
+
+## ProjectCard
+
+画布项目卡：画布管理页里的一个画布。
+
+<ProjectCardPlayground />
+
+## CreateCard
+
+新建卡：新建项目、创建文件夹，放在格子第一位。
+
+<CreateCardPlayground />
+
+## 参数
+
+### CoverGrid
+
+大小跟着外层走（`width: 100%; height: 100%`），底 container-light-1。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `images` | `string[]` | `[]` | 图片地址，只用前 4 张，居中裁切，图之间隔 1。1 张铺满；2 张左右各一列；3 张左边一张占 2 / 3 宽、整列高，右边两张上下排；4 张 2 × 2。没有图就是一块空底 |
+
+### FolderCard
+
+封面 223:155，圆角 8，描边 `--color-border`，底 container-light-1；下面「名字 (数量)」一行，和封面间距 8。整块封面点了进文件夹。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `name` | `string` | — | 文件夹名，最多 20 字。14 / 22，primary，一行省略 |
+| `count` | `number` | — | 素材数量，跟在名字后面「(12)」，不省略 |
+| `covers` | `string[]` | `[]` | 封面，用 CoverGrid。没有就是空文件夹：浅底正中 `Folder` 图标 40，tertiary |
+| `pinned` | `boolean` | `false` | 置顶：封面右上 6 挂 Tag · 媒体上「置顶」；菜单那一项变「取消置顶」 |
+| `onOpen` | `() => void` | — | 点封面：进文件夹 |
+| `onRename` | `() => void` | — | 菜单「重命名」（图标 `Rename`），打开 Dialog 400 改名 |
+| `onPinnedChange` | `(pinned: boolean) => void` | — | 菜单「置顶 / 取消置顶」（`StickyOnTop`） |
+| `onDelete` | `() => void` | — | 菜单「删除」（危险，`Delete`，上面隔一条 Divider） |
+
+悬停（或键盘进到卡里）封面的底变 container-light-1-hover（150ms ease-out，和画布卡、新建卡一样），封面右下 6 出「⋯」：IconButton 28 · 媒体上，150ms 淡入，点了出菜单。
+
+### ProjectCard
+
+圆角 12，描边 `--color-border`，底 container-light-1，悬停 container-light-1-hover。封面 257:157，下面名字和时间：左 8、右 4、下 8，和封面间距 8。整张卡点了打开画布。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `name` | `string` | — | 画布名，最多 20 字。14 / 22，primary，一行省略 |
+| `covers` | `string[]` | `[]` | 封面，用 CoverGrid。没有就是空底 |
+| `updatedAt` | `Date` `number` | — | 最后修改时间，写成「刚刚修改」「n分钟前修改」「n小时前修改」「2026年11月4日修改」（`formatUpdatedAt`）。12 / 20，secondary，一行省略 |
+| `meta` | `ReactNode` | — | 名字下面那行，传了就不用 `updatedAt` 算 |
+| `onOpen` | `() => void` | — | 点卡片：打开画布（新标签页） |
+| `onShare` | `() => void` | — | 菜单「分享」（`Share`）：复制分享链接 |
+| `onRename` | `() => void` | — | 菜单「重命名」（`Rename`） |
+| `onDelete` | `() => void` | — | 菜单「删除」（危险，`Delete`） |
+
+悬停卡片右下出「⋯」：IconButton 32 · 文字，150ms 淡入。
+
+### CreateCard
+
+和 ProjectCard 一个外观：圆角 12，描边，底 container-light-1，悬停 hover、按下 pressed；正中加号 `AddSmall` 24 + 文字 14 / 22，间距 2。大小填满所在格子：画布页和 ProjectCard 一样高，文件夹区和 FolderCard 一格一样高（封面 + 名字）。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `label` | `string` | — | 文字：「新建项目」「创建文件夹」 |

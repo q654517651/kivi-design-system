@@ -1,0 +1,164 @@
+import { Demo, PageHeader } from '@shell';
+import {
+  MediaGroupPlayground,
+  ProcessGroupPlayground,
+  ProcessGroupSim,
+  ProcessRowPlayground,
+  ThinkingBlockPlayground,
+  ThinkingSim,
+  ToolGroups,
+} from './agent-process.demos';
+
+<style>{`
+  /* 这一页的演示用 */
+
+  /* Agent 面板的底色是 base，演示台也用 base，不用网站默认的浅灰 */
+  .shell-demo-preview:not([data-stage="media"]),
+  .shell-pg-stage:not(.is-media) {
+    background: var(--color-bg-fill-base);
+  }
+`}</style>
+
+<PageHeader
+  eyebrow="业务组件"
+  title="Agent 过程"
+  figma={['Agent 过程', '1083:7843']}
+  code="kivi/agent-process"
+/>
+
+## ProcessRow
+
+过程行：Agent 每一步在干什么，比如「创建节点」「生成图片」。
+
+<ProcessRowPlayground />
+
+## ProcessGroup
+
+工具调用组：Agent 连续调的工具收成一行，比如「调用了 5 个工具」。
+
+<ProcessGroupPlayground />
+
+### 调用过程：一行滚动
+
+<Demo noCode scope={{ ProcessGroupSim }} code={`<ProcessGroupSim />`} />
+
+## ThinkingBlock
+
+思考块：Agent 的思考过程，能展开看原文。
+
+<ThinkingBlockPlayground />
+
+### 思考中，流式输出
+
+<Demo noCode scope={{ ThinkingSim }} code={`<ThinkingSim />`} />
+
+## MediaGroup
+
+生成结果组：Agent 一次生成的多张图或视频，叠成一摞，点开看全部。
+
+<MediaGroupPlayground />
+
+## 分组
+
+<Demo noCode scope={{ ToolGroups }} code={`<ToolGroups />`} />
+
+## 参数
+
+### ProcessRow
+
+一行，行高 20，各部分间距 4 `--spacing-4`。其余原生 `<div>` 属性都能传，带箭头的一级整行是 `<button>`，悬停、键盘聚焦时亮一档：图标和动作 secondary → primary，对象 tertiary → secondary，箭头 tertiary → secondary，100ms ease-in-out。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `action` | `ReactNode` | — | 动作文字，必填。14 / 20 常规 `--font-size-14`、`--font-line-height-20`，比如「创建节点」 |
+| `object` | `ReactNode` | — | 对象文字，比如「活动标题」，比动作淡一档，不加引号。不传不显示 |
+| `level` | `"main"` `"sub"` | `"main"` | 一级 / 子项。子项是展开列表里的行，没有头像和箭头，不能点 |
+| `status` | `"running"` `"done"` `"failed"` | `"done"` | 进行中：颜色和完成一样（不变白），停留超过 0.5 秒动作文字上走一道 primary 亮光（1.4s 一圈）/ 完成 / 失败：图标和动作文字用 status/danger |
+| `icon` | `IconName` | — | 图标 20，常用 `UseCanvas` `Skill` `Message` `ImageGeneration`。不传不显示 |
+| `avatar` | `string` | — | 头像地址，Avatar 24 · 图片，圆形。不传不显示，子项没有 |
+| `arrow` | `boolean` | `true` | 箭头 16，tertiary，只放 `DownArrowSmall`，展开时转 180°。平时不显示，鼠标移上去、键盘聚焦、展开时才出（150ms ease-out），位置一直留着；手机一直显示。子项没有 |
+| `expanded` | `boolean` | — | 展开：受控。没有箭头的行没有展开状态 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+
+### ProcessGroup
+
+Agent 两段话之间连续调的工具算一组。进行中只占一行，显示当前在调的工具；换下一个时往上滚：新的从下面进来、旧的往上出去，各 200ms（出现 ease-out、消失 ease-in）。每个工具最少停 0.3 秒，这期间又来了新的直接跳到最新那个。全部做完换成「调用了 N 个工具」，不自动展开；做完才能点开，展开后列出每个工具，行距 6 `--spacing-6`，最高 160，超出能滚，渐隐 24 跟着滑的方向走（往下滑下面渐隐、往上滑上面渐隐，那一边到头就换到另一边，照线上）；展开时列表从 0 推到内容高、把下面的内容往下推，同时淡入，收起倒着走，ease-in-out，列表 100 以内 200ms、再长 300ms。只调了 1 个就直接显示那一个，不能展开。生成、询问、确认不放进组里，各自出自己的块。Agent 的文字回复不折叠。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `steps` | `ProcessStep[]` | — | 这一组调的工具，必填，按调用顺序，最后一个是当前在调的。每项见下表 |
+| `running` | `boolean` | 看最后一个是不是进行中 | 还在调用中。做完了传 `false`，或者最后一个不再是进行中 |
+| `icon` | `IconName` | `"Tool"` | 做完后汇总行的图标 |
+| `expanded` | `boolean` | — | 展开：受控。只有做完、调了 2 个及以上才能展开 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+
+`steps` 每一项：
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `id` | `string` | 下标 | 唯一标识 |
+| `icon` | `IconName` | — | 图标，常用 `UseCanvas` `Skill` `Message` |
+| `action` | `ReactNode` | — | 动作文字，必填，比如「创建节点」 |
+| `object` | `ReactNode` | — | 对象文字，比如「分镜脚本」，不加引号 |
+| `status` | `"running"` `"done"` `"failed"` | `"done"` | 状态。有失败的，汇总写「调用了 N 个工具，M 个失败」，「M 个失败」用 status/danger |
+
+### ThinkingBlock
+
+思考块：一行「灯泡 + 思考中 / 思考完成」，下面是思考原文。放在工具调用组前面，不进工具组。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `thinking` | `boolean` | `false` | 思考中：自动展开、原文自动滚到底、标题扫光、不能点；变成 `false` 时自动收起 |
+| `children` | `ReactNode` | — | 思考的原文，流式输出时一直追加。14 / 22 tertiary，保留换行，最高 160 内部滚动，渐隐跟着滑的方向（同工具列表） |
+| `title` | `ReactNode` | 按状态 | 标题，默认思考中「思考中」、完成「思考完成」。图标固定 `Lightbulb` |
+| `expanded` | `boolean` | — | 展开：受控。思考中一直展开，这个只管思考完成之后 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+
+### MediaGroup
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `items` | `MediaGroupItem[]` | — | 这一组结果，按生成顺序。每项 `id`、`src`（视频传封面）、`ratio`（数字或「16:9」，限制 9:16–16:9，默认 1:1）、`status`（`done` / `failed`）、`name`（悬停显示在左下） |
+| `type` | `"image"` `"video"` | `"image"` | 产出类型，决定标题行的图标和文字 |
+| `title` | `ReactNode` | 按结果算 | 标题行，比如「图片已生成 ×2，图片生成失败 ×3」 |
+| `failedTitle` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败的那几张：标题。失败态就是 EmptyState 生成失败 · 96，和结果格、节点一样；格子矮于 170（16:9 这类）放不下插图，只留文字 |
+| `failedDescription` | `ReactNode` | — | 失败的那几张：副标题 |
+| `expanded` | `boolean` | — | 展开：受控。只有一张时不叠放，直接平铺 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+| `onItemClick` | `(item: MediaGroupItem) => void` | — | 展开后点某一张。画布里用来定位到节点 |
+
+叠放：封面取第一张成功的，比例跟封面；后两层往右错开 4、8，旋转 2°、4°，底白 18% `container-light-1-pressed`。展开是瀑布流，至少两列，宽了列数增加（列最小宽 182、间距 12），展开收起卡片只动 transform，容器高度用同一条缓动 `--motion-ease-expand`、同一个时长；展开 400 起每张 +10、最多 700，收起固定 300。
+
+## 对照表
+
+工具调用组里每一行用 `ProcessRow`，图标传给 `ProcessStep.icon`；做完的汇总行「调用了 N 个工具」用 `Tool`。
+
+| 后端名 | 显示 | 图标 | 怎么显示 |
+|---|---|---|---|
+| `inputNode` | 输入节点 | `UseCanvas` | 工具组一行 |
+| `deleteNode` | 删除节点 | `UseCanvas` | 工具组一行 |
+| `createEdge` | 节点连线 | `UseCanvas` | 工具组一行，对象写「A → B」 |
+| `deleteEdge` | 删除节点连线 | `UseCanvas` | 工具组一行，对象写「A → B」 |
+| `get_workflow_schema` | 查看画布 | `ScanEye` | 工具组一行 |
+| `get_workflow_nodes` | 查看画布节点信息 | `ScanEye` | 工具组一行 |
+| `understand_workflow_node_content` | 查看节点内容 | `ScanEye` | 工具组一行 |
+| `understand_url_content` | 查看链接内容 | `ScanEye` | 工具组一行，对象写素材名，不写网址 |
+| `search_knowledge` | 搜索知识库 | `SquareLibrary` | 工具组一行 |
+| `remember` | 更新记忆 | `Brain` | 工具组一行，不显示记住了什么 |
+| `skill` | 加载技能 | `Skill` | 工具组一行 |
+| `lark_cli` | 执行飞书命令 | `Tool` | 工具组一行 |
+| `askUser` | 询问中 / 已询问 / 询问 | `Message` | 不进工具组：询问记录 `AskRecord` + 问题面板 `QuestionPanel` |
+| `imageGenerationNode`、`imageRemoveBgNode`、`imageEnhanceNode`、`imageCuttingNode` | — | `ImageGeneration` | 不出工具行，只出结果块 |
+| `videoGenerationNode`、`videoSeamlessLoopNode`、`videoEnhanceNode`、`videoStitchNode`、`motionControlNode`、`lipSyncNode` | — | `VideoGeneration` | 不出工具行，只出结果块 |
+| `textGenerationNode` | — | `Text` | 不出工具行，只出结果块 |
+| `audioGenerationNode` | — | `Audio` | 不出工具行，只出结果块 |
+| `executeNode` | — | 按执行的节点 | 不出工具行，只出结果块 |
+| `save_skill` | — | — | 不出工具行，出技能卡 `SkillCard` |
+| `read_skill_file`、`read_lark_cli_skill`、`load_memory`、`list_session_turns`、`read_session_history`、`list_tools`、`submitPlan`、`write_todos` | — | — | 不显示 |
+
+- 对象文字不加「」，颜色已经比动作淡一档。
+- 对象是两个节点时写「A → B」，箭头两边空格。

@@ -1,0 +1,109 @@
+import { Demo, PageHeader } from '@shell';
+import { InputPlayground, NumberInputPlayground, TextareaPlayground } from './inputs.demos';
+
+<PageHeader
+  eyebrow="录入"
+  title="输入框"
+  figma={['输入框', '169:1439']}
+  code="kivi/inputs"
+/>
+
+## Input
+
+输入框：输入一行文字，比如搜索、重命名。
+
+<InputPlayground />
+
+### 表单行：标签 + 输入框 + 提示
+
+<Demo code={`
+() => {
+  const [name, setName] = useState('未命名画布');
+  const n = Array.from(name).length;
+  const bad = n > 50;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 320 }}>
+      <span style={{ color: 'var(--color-text-fill-secondary)', fontSize: 13, lineHeight: '20px' }}>画布名称</span>
+      <Input aria-label="画布名称" value={name} onChange={(e) => setName(e.target.value)} counter={n + '/50'} invalid={bad} />
+      <span style={{ color: bad ? 'var(--color-status-danger)' : 'var(--color-text-fill-tertiary)', fontSize: 12, lineHeight: '20px' }}>
+        {bad ? '名称不能超过 50 个字' : '最多 50 个字'}
+      </span>
+    </div>
+  );
+}
+`} />
+
+## NumberInput
+
+数字输入框：输入参数数值，比如时长、Lora 权重。
+
+<NumberInputPlayground />
+
+## Textarea
+
+多行输入框：输入大段文字，比如表单里的描述。
+
+<TextareaPlayground />
+
+### 描述：字数实时变化
+
+<Demo code={`
+() => {
+  const [text, setText] = useState('');
+  const n = Array.from(text).length;
+  return (
+    <div style={{ width: 320 }}>
+      <Textarea aria-label="描述" placeholder="请输入描述" value={text} onChange={(e) => setText(e.target.value)} counter={n + '/500'} invalid={n > 500} />
+    </div>
+  );
+}
+`} />
+
+## 参数
+
+### Input
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `leftIcon` | `IconName` | — | 左图标，16，`--color-text-fill-tertiary`。搜索框用 `Search` |
+| `counter` | `ReactNode` | — | 字数，框内右侧，12 号 tertiary，比如 `"0/50"`。传什么显示什么，超没超限自己算 |
+| `clearable` | `boolean` | `false` | 可清空：有字时右边出清空按钮（`CloseSmall` 16，tertiary，悬停 primary），点了清空、焦点回到输入框，照常触发 `onChange`（值是空）。禁用、只读时不出。搜索框用：`leftIcon="Search" clearable`。|
+| `onClear` | `() => void` | — | 点了清空按钮 |
+| `invalid` | `boolean` | `false` | 错误：1px `--color-status-danger` 描边，向里画，框大小不变。等于写 `aria-invalid` |
+| `placeholder` | `string` | — | 占位文字，`--color-text-fill-placeholder` |
+| `disabled` | `boolean` | `false` | 禁用：底和平时一样，文字、图标、字数 `--color-text-fill-disabled`，不响应悬停 |
+| `aria-label` | `string` | — | 没有可见文字标签时必须写 |
+| `className` | `string` | — | 加在最外层的框上。高 32，圆角 8（`--border-radius-8`），左右内边距 12，元素间距 8，文字 13 / 行高 20；底白 10%，悬停白 14%，聚焦只出现光标；宽度默认填满，要固定自己设 |
+
+`style` 加在最外层的框上，其余原生 `<input>` 属性（`value`、`defaultValue`、`onChange`……）都给里面的 `<input>`，`ref` 也指向它。
+
+### NumberInput
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `value` | `string` `number` | — | 数值，空是 `""`。传了就是受控，要自己在 `onChange` 里更新 |
+| `defaultValue` | `string` `number` | `""` | 非受控时的初始值 |
+| `onChange` | `(value: string) => void` | — | 输入时触发，参数是只剩数字的新值。自动去掉非数字，默认只支持非负数，`min` 小于 0 时开头可以打一个负号；科学计数法不支持。失焦被 `min` / `max` 夹住、按小数位补齐时也触发 |
+| `precision` | `number` | `0` | 小数位：0 只能输整数；比如 Lora 权重写 1，输入时最多留 1 位，失焦补齐成「1.0」。|
+| `min` | `number` `string` | — | 最小值。失焦时小于它就改成它；输入过程中不夹，空着也不夹。小于 0 时允许打负号 |
+| `max` | `number` `string` | — | 最大值。失焦时大于它就改成它 |
+| `unit` | `ReactNode` | — | 单位，12 号 tertiary，和数值间距 4，比如 `"秒"` |
+| `disabled` | `boolean` | `false` | 禁用：数值和单位都是 `--color-text-fill-disabled` |
+| `aria-label` | `string` | — | 没有可见标签时必须写 |
+| `className` | `string` | — | 加在最外层的框上。高 32，最小宽 64（跟着内容走），圆角 8，左右内边距 8，数值 13；底色状态同输入框，没有已输入和错误 |
+
+`style` 加在最外层的框上，其余原生 `<input>` 属性都给里面的 `<input>`，`ref` 也指向它。
+
+### Textarea
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `counter` | `ReactNode` | — | 字数，右下角，12 号 tertiary，和正文间距 8，比如 `"0/500"`。传什么显示什么，超没超限自己算 |
+| `actions` | `ReactNode` | — | 框内按钮：放在框里右下角，字数在它左边，间距 8。按钮用 28，比如取消 / 保存、提交 |
+| `invalid` | `boolean` | `false` | 错误：1px `--color-status-danger` 描边，字数也变 danger。等于写 `aria-invalid` |
+| `placeholder` | `string` | — | 占位文字 |
+| `disabled` | `boolean` | `false` | 禁用：底和平时一样，字数 `--color-text-fill-disabled` |
+| `aria-label` | `string` | — | 没有可见标签时必须写 |
+| `className` | `string` | — | 加在最外层的框上。默认 320 × 104，右下角可以拖着改高度，宽度默认填满；圆角 8，内边距 12，文字 14 / 行高 22 |
+
+`style` 加在最外层的框上，其余原生 `<textarea>` 属性都给里面的 `<textarea>`，`ref` 也指向它。

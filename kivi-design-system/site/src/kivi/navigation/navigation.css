@@ -1,0 +1,166 @@
+/*
+  KIVI · 导航
+  Figma「导航」页的 TabItem（选项卡 / 分段），加 Tabs（一组选项）。依赖 tokens.css、base.css。
+  侧栏（原来的三个侧栏组件）在 11-04 并进了菜单页的 Menu variant="plain"，样式在 menu 文件夹。
+
+  写法（React，见 TabItem.tsx、Tabs.tsx）
+    选项卡：<Tabs value onChange><TabItem value="all">全部</TabItem>…</Tabs>
+    分段：  <Tabs variant="segment" aria-label="分辨率"><TabItem value="2k">2K</TabItem>…</Tabs>
+  渲染出来的结构
+    选项卡：一组放进 role="tablist"，选中的那项 aria-selected="true"
+      <div class="kv-tab-group" role="tablist">
+        <button class="kv-tab-item kv-tab-item--36 kv-tab-item--tab" role="tab" aria-selected="true">全部</button>
+        <button class="kv-tab-item kv-tab-item--36 kv-tab-item--tab" role="tab" aria-selected="false">图片</button>
+      </div>
+    分段：放进底槽 kv-tab-group--segment，选的是一个参数值，用 role="radiogroup"，选中 aria-checked="true"
+      <div class="kv-tab-group kv-tab-group--segment" role="radiogroup" aria-label="分辨率">
+        <button class="kv-tab-item kv-tab-item--32 kv-tab-item--segment" role="radio" aria-checked="true">2K</button>
+        <button class="kv-tab-item kv-tab-item--32 kv-tab-item--segment" role="radio" aria-checked="false">4K</button>
+      </div>
+
+  状态（只有 TabItem 有）
+    选中    aria-selected="true"（选项卡）或 aria-checked="true"（分段）
+    禁用    disabled
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+  Figma 没定按下和焦点样式：不加按下态，焦点用浏览器默认。
+  选中的一项 tabindex=0，其他 -1；左右方向键移动选中，由 Tabs 处理。
+*/
+
+/* ---------- TabItem ---------- */
+.kv-tab-item {
+  /* 样式（选项卡 / 分段）改这几个值 */
+  --kv-tab-fill-hover: transparent;
+  --kv-tab-fill-selected: var(--color-bg-fill-container-light-1);
+  --kv-tab-content-hover: var(--color-text-fill-primary);
+  --kv-tab-icon-size: 16px;
+
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  gap: var(--spacing-6);
+  height: 32px;
+  margin: 0;
+  padding: 0 var(--spacing-12);
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: transparent;
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular); /* 选中也不加粗，免得切换时宽度跳动 */
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--motion-duration-100) var(--motion-ease-in-out),
+    color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-tab-item > .kv-icon {
+  flex: none;
+  width: var(--kv-tab-icon-size);
+  height: var(--kv-tab-icon-size);
+}
+
+/* 放不下时（分段被压窄）：文字末尾省略号，内边距不让（设计规则 · 状态）；悬停的全文 Tooltip 在 TabItem.tsx */
+.kv-tab-item > .kv-tab-item__label {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 样式：选项卡是默认。悬停只有字变白；选中白 10% */
+.kv-tab-item--tab {
+  --kv-tab-fill-hover: transparent;
+  --kv-tab-fill-selected: var(--color-bg-fill-container-light-1);
+  --kv-tab-content-hover: var(--color-text-fill-primary);
+}
+
+/* 样式：分段。项叠在分段的底（白 10%）上，是浅底，用 Light 2：悬停 hover（白 10%），字不变；选中是常驻底色，用默认（白 6%） */
+.kv-tab-item--segment {
+  --kv-tab-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-tab-fill-selected: var(--color-bg-fill-container-light-2);
+  --kv-tab-content-hover: var(--color-text-fill-secondary);
+}
+
+/* 尺寸：中是默认 */
+.kv-tab-item--32 {
+  height: 32px;
+  padding: 0 var(--spacing-12);
+  font-size: var(--font-size-13);
+}
+
+.kv-tab-item--36 {
+  height: 36px;
+  padding: 0 var(--spacing-16);
+  font-size: var(--font-size-14);
+}
+
+/* 布局：竖排（图标 20 + 12 号字，56×56），只有分段、中号用 */
+.kv-tab-item--vertical {
+  --kv-tab-icon-size: 20px;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  font-size: var(--font-size-12);
+}
+
+/* 状态：悬停 */
+.kv-tab-item:where(:hover, .is-hover):not(:disabled, [aria-selected="true"], [aria-checked="true"]) {
+  background: var(--kv-tab-fill-hover);
+  color: var(--kv-tab-content-hover);
+}
+
+/* 状态：选中 */
+.kv-tab-item:is([aria-selected="true"], [aria-checked="true"]) {
+  background: var(--kv-tab-fill-selected);
+  color: var(--color-text-fill-primary);
+}
+
+/* 状态：禁用。没有底，字白 20% */
+.kv-tab-item:disabled {
+  background: transparent;
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+/* ---------- 选项卡组、分段选择（来自 Figma「模板 · 通用」页，不是组件） ---------- */
+/* 选项卡组：没有底槽，选项卡之间间距 4 */
+.kv-tab-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+/*
+  分段选择：底槽内边距 4、圆角 12、底白 10%；选项等宽平分，选项之间没有间距。
+  用网格等分：宽度跟着内容走时，每项都和最长那项一样宽，文字不会被压；宽度给定、放不下时才截断（11-05）。
+  原来用 flex 平分，条的宽度是各项文字宽相加再平分，最长那项一定放不下
+*/
+.kv-tab-group--segment {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  box-sizing: border-box;
+  gap: 0;
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 竖排的项自己是 56 宽，放进分段里跟着格子铺满 */
+.kv-tab-group--segment > .kv-tab-item {
+  width: auto;
+  min-width: 0;
+}
+
+.kv-tab-group--segment > .kv-tab-item--vertical {
+  min-width: 56px;
+}

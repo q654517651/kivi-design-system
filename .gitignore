@@ -1,2 +1,7 @@
 .DS_Store
 *.skill
+node_modules/
+dist/
+.vite/
+kivi-design-system-workspace/
+review/

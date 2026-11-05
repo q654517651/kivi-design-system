@@ -1,0 +1,1018 @@
+/*
+  KIVI · 生成
+  生成相关的一组，画布和主站共用：
+  提示词输入：PromptInput（Figma「画布」页）；参考格、附件条、@ 引用胶囊、悬停预览挪到了 kivi/reference/reference.css；
+  参数面板：ParamPanel、ParamField、ParamPicker（Figma「模板 · 画布」页「参数面板」，滑块用 selection 的 Slider，数值用 inputs 的 NumberInput）；
+  主站输入框：PromptBox、ReferenceStack、GenerateButton 等（下面接着是它原来的说明）；
+  Lora：LoraField、LoraSettings、LoraCard、LoraPicker（下面接着是它原来的说明）。
+  依赖 tokens.css、base.css、button.css。
+
+  状态
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+*/
+
+/* ---------- PromptInput：提示词输入 ---------- */
+.kv-prompt-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  /* 照线上：默认 4 行，随字长高，最多 6 行，再多就滚动。按行高乘行数，总是整行 */
+  min-height: calc(var(--font-line-height-22) * 4);
+  max-height: calc(var(--font-line-height-22) * 6);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-22); /* 比 @ 标签（20）高，有标签的行不会被撑开 */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* 未输入显示占位文字。输入后又删光，浏览器会留一个 <br>，也算空。
+   占位文字浮在框上、不占位置，光标才会在最前面，不跑到占位文字后面 */
+.kv-prompt-input:is(:empty, :has(> br:only-child)) {
+  position: relative;
+}
+
+.kv-prompt-input:is(:empty, :has(> br:only-child))::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  color: var(--color-text-fill-placeholder);
+  pointer-events: none;
+}
+
+/* 参数摘要后面跟的图标（比如生成音频开着时的音量），和文字垂直居中 */
+.kv-param-picker__summary > .kv-icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 参数面板：点参数摘要弹出来的玻璃浮层，和菜单一样的底、模糊、描边。圆角 16，内边距 12，块间距 12；
+   宽固定 368，视频、音频、高级设置都一样（11-03 用户定，Figma 没变量） */
+.kv-param-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 368px;
+  padding: var(--spacing-12);
+  border-radius: var(--border-radius-16);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+/* 一块：标题 14 号，和控件间距 4 */
+.kv-param-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.kv-param-field__label {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+}
+
+/* 控件撑满；滑块 + 数字输入框（NumberInput）横排，间距 12。带刻度数字的滑块比轨道高，数字输入框对齐轨道（高 20）的中线，不对齐整个滑块 */
+.kv-param-field__body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-12);
+}
+
+.kv-param-field__body > .kv-number-input {
+  flex: none;
+  margin-block: calc((20px - 32px) / 2);
+}
+
+.kv-param-field__body > .kv-tab-group {
+  flex: 1;
+}
+
+/*
+  KIVI · 主站输入框
+  Figma「模板 · 主站」页「输入框」分区：PromptBox 整体、ReferenceStack 参考区、GenerateButton 生成按钮。
+  依赖 tokens.css、base.css、button.css，参考卡片用上面的 kv-reference-item、tags-avatar.css 的 kv-asset-thumb。
+  主站 Agent 专用，Figma 里的用词是「模板」，这里做成组件，方便前端直接用。
+
+  写法（React，见 PromptBox.tsx、ReferenceStack.tsx、GenerateButton.tsx）
+    <PromptBox
+      placeholder="描述你想生成的视频，@ 引用参考素材"
+      references={<ReferenceStack items={items} onAdd={add} onRemove={remove} />}
+      toolbar={<>
+        <Select variant="plain" leftIcon="VideoGeneration" options={…} defaultValue="video" />
+        …
+      </>}
+      actions={<>
+        <Select variant="plain" options={…} defaultValue="1" />
+        <GenerateButton cost={99} />
+      </>}
+    />
+  渲染出来的结构
+    <div class="kv-prompt-box">
+      <div class="kv-prompt-box__content">
+        <div class="kv-prompt-box__refs"><div class="kv-reference-stack">…</div></div>
+        <textarea class="kv-prompt-box__input" />
+      </div>
+      <div class="kv-prompt-box__toolbar">
+        <div class="kv-prompt-box__toolbar-start">…</div>
+        <div class="kv-prompt-box__toolbar-end">…</div>
+      </div>
+    </div>
+
+  参考区
+    <div class="kv-reference-stack">                    72 × 72 的占位，提示词让出这块
+      <div class="kv-reference-stack__tray" data-open>  展开时变宽，浮在提示词上面
+        <span class="kv-reference-stack__hit" />
+        <div class="kv-reference-stack__scroller"><div class="kv-reference-stack__track">
+          <button class="kv-reference-stack__trigger">      添加格；收起时 data-compact，缩成右下角的小圆加号
+          <div class="kv-reference-stack__card" data-labeled>…</div>
+        </div></div>
+      </div>
+    </div>
+
+  状态（写在元素上，有就是开，没有就是关）
+    参考区 tray
+      data-open       展开（鼠标移上去、聚焦或固定展开）
+      data-stacked    两个及以上素材、没展开：叠放
+      data-settled    展开动画播完了，超出时才能横向滚动
+      data-full       展开后超出输入框宽度，横向滚动
+      data-at-end     滚动到头了
+    添加格 trigger
+      data-compact    缩成右下角的小圆加号
+    卡片 card
+      data-labeled    右上角显示序号
+      data-uploading  上传中
+      data-leaving    被删掉，正在播消失动画
+      data-clickable  传了 onItemClick，鼠标变手型
+      aria-hidden     叠放里看不见的、被删掉的，不响应鼠标
+    PromptBox
+      data-dragover   文件拖到输入框上，盖一层 DropOverlay
+      data-rejected   拖来的类型不收（DropOverlay 变 danger 色）
+    DropOverlay
+      <div class="kv-drop-overlay" data-active data-rejected>
+        <div class="kv-drop-overlay__card">
+          <span class="kv-drop-overlay__icons"><span class="kv-icon" data-icon="Image"></span>…Files…Folder</span>
+          <span class="kv-drop-overlay__text">松手上传</span>
+        </div>
+      </div>
+*/
+
+/* ---------- PromptBox ---------- */
+
+/* 玻璃（11-02 用户定：浮在生成记录上，下面的内容透出来，不在边缘裁切）：底 glass + 背景模糊 32，描边 border-subtle，圆角 24，内边距 16，内容区和工具条间距 12。
+   宽度（11-04 用户定，照即梦）：外面给多宽就多宽，最宽 1040；最窄不是固定值，是工具条所有控件按原宽排成一行（不折行）时的宽度，再窄就不缩了，由外面的页面横向滚动 */
+
+.kv-prompt-box {
+  position: relative; /* DropOverlay 盖在它上面 */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: min-content;
+  max-width: 1040px;
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-24);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+/* 内容区：最矮 120。参考区在左，提示词在右，从顶端对齐。
+   间距 24：叠放的卡片转角、右下的小圆加号都会探出 72 外 10 左右，12 贴得太近（2026-10-29 用户定） */
+
+.kv-prompt-box__content {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-24);
+  min-height: 120px;
+}
+
+.kv-prompt-box__refs {
+  display: flex;
+  flex: none;
+  gap: var(--spacing-12);
+}
+
+/* 提示词：14 / 22，无底无描边，聚焦也不加描边。高度由 JS 随内容撑，最矮 120，超过 maxHeight 就滚 */
+
+.kv-prompt-box__input {
+  /* 参考区展开时盖住的宽度（含渐隐），由 JS 写。没盖住是 0 */
+  --kv-prompt-cover: 0px;
+  /* 盖住的高度：参考区 72 高，按 22 的行高是 3.3 行，整行盖住取 4 行，不切半行字 */
+  --kv-prompt-cover-height: calc(var(--font-line-height-22) * 4);
+
+  flex: 1 1 0;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 120px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-22);
+  resize: none;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  /* 用遮罩把左上角被参考区盖住的一块藏起来：整张挖掉一个矩形，右边 40 渐隐。
+     遮罩宽度跟着参考区的宽度走，时长由参考区写进 --kv-prompt-cover-duration，缓动同参考区，两边同步 */
+  -webkit-mask-image:
+    linear-gradient(black 0 0),
+    linear-gradient(90deg, black calc(100% - 40px), transparent);
+  mask-image:
+    linear-gradient(black 0 0),
+    linear-gradient(90deg, black calc(100% - 40px), transparent);
+  -webkit-mask-size: 100% 100%, var(--kv-prompt-cover) var(--kv-prompt-cover-height);
+  mask-size: 100% 100%, var(--kv-prompt-cover) var(--kv-prompt-cover-height);
+  -webkit-mask-position: 0 0, 0 0;
+  mask-position: 0 0, 0 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition:
+    -webkit-mask-size var(--kv-prompt-cover-duration, var(--motion-duration-400)) var(--motion-ease-expand),
+    mask-size var(--kv-prompt-cover-duration, var(--motion-duration-400)) var(--motion-ease-expand);
+}
+
+.kv-prompt-box__input::placeholder {
+  color: var(--color-text-fill-placeholder);
+  opacity: 1;
+}
+
+/* 工具条：高 32。左边任务类型、模型、参考方式、参数，间距 6；右边张数和生成，间距 8；两边撑开。
+   不折行、控件不压缩：它排成一行的宽度就是整个输入框的最窄宽度（见上面 PromptBox） */
+
+.kv-prompt-box__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  min-height: 32px;
+}
+
+.kv-prompt-box__toolbar-start,
+.kv-prompt-box__toolbar-end {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+
+.kv-prompt-box__toolbar-start > *,
+.kv-prompt-box__toolbar-end > * {
+  flex: none;
+}
+
+.kv-prompt-box__toolbar-start {
+  gap: var(--spacing-6);
+}
+
+.kv-prompt-box__toolbar-end {
+  gap: var(--spacing-8);
+  margin-left: auto;
+}
+
+/* ---------- 拖文件进来：DropOverlay ---------- */
+
+/* 照 Claude 桌面端的拖入（11-04 用户定）：框本身加一圈 1.5 描边（border-strong，不用品牌绿），里面铺遮罩（mask 黑 60%），不模糊；
+   正中浮一张 popup 实色小卡（圆角 16，内边距 16 / 24），三个 24 的图标（图片、多份文件、文件夹）+ 13 / 20 的字，都是品牌绿，间距 12。
+   出现：整层 150ms ease-out 淡入，小卡从 96% 放大；三个图标从中间叠在一起展开——左右两个往外、各歪 12°，中间那个往上浮 6，弹簧 400ms，依次晚 40ms。
+   消失：100ms ease-in 淡出，图标收回中间。不挡鼠标，拖拽事件还是落在下面的输入框上，不会因为它出现而闪 */
+
+.kv-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border: var(--border-width-1-5) solid var(--color-border-strong);
+  border-radius: inherit;
+  background: var(--color-bg-fill-mask); /* 11-04 用户要加遮罩：用弹窗那层的 mask，黑 60% */
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-duration-100) var(--motion-ease-in),
+    visibility 0s var(--motion-duration-100);
+}
+
+.kv-drop-overlay[data-active] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-drop-overlay__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-12);
+  padding: var(--spacing-16) var(--spacing-24);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-popup);
+  transform: scale(0.96);
+  transition: transform var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.kv-drop-overlay[data-active] .kv-drop-overlay__card {
+  transform: none;
+  transition: transform var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 三个图标叠在中间（收起），展开后左右分开、歪着，中间的往上浮 */
+.kv-drop-overlay__icons {
+  display: flex;
+  color: var(--color-brand-solid);
+  gap: var(--spacing-8);
+}
+
+.kv-drop-overlay__icon {
+  transform: translate(var(--kv-drop-x, 0), 4px) scale(0.8);
+  transition: transform var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.kv-drop-overlay__icon:nth-child(1) {
+  --kv-drop-x: 32px;
+}
+
+.kv-drop-overlay__icon:nth-child(3) {
+  --kv-drop-x: -32px;
+}
+
+.kv-drop-overlay[data-active] .kv-drop-overlay__icon {
+  transition: transform var(--motion-duration-400) var(--motion-ease-spring);
+}
+
+.kv-drop-overlay[data-active] .kv-drop-overlay__icon:nth-child(1) {
+  transform: translateY(2px) rotate(-12deg);
+}
+
+.kv-drop-overlay[data-active] .kv-drop-overlay__icon:nth-child(2) {
+  transform: translateY(-6px);
+  transition-delay: 40ms;
+}
+
+.kv-drop-overlay[data-active] .kv-drop-overlay__icon:nth-child(3) {
+  transform: translateY(2px) rotate(12deg);
+  transition-delay: 80ms;
+}
+
+.kv-drop-overlay__text {
+  color: var(--color-brand-solid); /* 图标和字用品牌绿（11-04 用户定） */
+  font-size: var(--font-size-13);
+}
+
+/* 不收：描边、图标和字换 danger */
+
+.kv-drop-overlay[data-rejected] {
+  border-color: var(--color-status-danger);
+}
+
+.kv-drop-overlay[data-rejected] .kv-drop-overlay__icons,
+.kv-drop-overlay[data-rejected] .kv-drop-overlay__text {
+  color: var(--color-status-danger);
+}
+
+/*
+  Lora 业务组件：LoraField（一排已选 + 添加格）、LoraSettings（悬停设置面板内容）、LoraCard（选择弹窗里的卡）、LoraPicker（选择弹窗）。
+  
+
+  结构
+    <div class="kv-lora-field">
+      <div class="kv-lora-field__item" role="group" tabindex="0">
+        <div class="kv-reference-item">…底部通栏写权重…</div>
+        <button class="kv-lora-field__remove" aria-label="删除…">…</button>
+      </div>
+      <button class="kv-add-tile" data-labeled><span class="kv-icon"></span><span class="kv-add-tile__label">Lora</span></button>   添加格 AddTile（upload 文件夹）
+    </div>
+
+    <div class="kv-lora-settings">
+      <div class="kv-lora-settings__name">名字</div>
+      <div class="kv-lora-settings__block">
+        <div class="kv-lora-settings__label">触发词</div>
+        <div class="kv-lora-settings__box"><div class="kv-lora-settings__text">…</div><button class="kv-lora-settings__copy">…</button></div>
+      </div>
+      <div class="kv-lora-settings__weight">权重 + Slider + NumberInput</div>
+    </div>
+
+    <div class="kv-lora-card">
+      <div class="kv-lora-card__body" role="checkbox" aria-checked="false" tabindex="0">
+        <img class="kv-lora-card__cover"> <div class="kv-lora-card__tags">…</div>
+        <div class="kv-lora-card__name"></div> <div class="kv-lora-card__info">…</div>
+      </div>
+      <div class="kv-lora-card__actions">…</div>   收藏按钮在复选框外面
+    </div>
+
+    <div class="kv-lora-picker">
+      <div class="kv-lora-picker__bar">Tabs + Select</div>
+      <div class="kv-lora-picker__grid">卡片…</div>   没有内容时换成 <div class="kv-lora-picker__empty">
+    </div>
+
+  状态
+    勾选      data-checked（外壳上，本体 aria-checked="true"）
+    已收藏    data-collected（卡片上）
+*/
+
+/* ================= LoraField ================= */
+
+/* 一排：已选的格子（56）和添加格，间距 4，和画布参考图区一样 */
+
+.kv-lora-field {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  font-family: var(--font-family);
+}
+
+.kv-lora-field__item {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--border-radius-8);
+  outline: none;
+}
+
+/* 删除：悬停或聚焦到这一格，右上角出现，样子同参考区的删除（右上角标） */
+
+.kv-lora-field__item:where(:hover, :focus-visible, :has(:focus-visible)) > .kv-lora-field__remove {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* ================= LoraSettings ================= */
+
+/* 宽 234，竖排，块间距 12。放在 Popover variant="panel" 里（内边距 12 由 Popover 给） */
+
+.kv-lora-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 234px; /* Figma 没变量 */
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.kv-lora-settings__name {
+  overflow: hidden;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-lora-settings__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.kv-lora-settings__label {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+/* 内容框：白 10% 底（玻璃是深底，用 Light 1），圆角 6，内边距 6，文字 12 secondary。复制按钮 28 贴在右边，用负外边距抵掉内边距，框高才是 28 */
+
+.kv-lora-settings__box {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--spacing-6);
+  border-radius: var(--border-radius-6);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.kv-lora-settings__box[data-scroll] {
+  align-items: flex-start;
+}
+
+.kv-lora-settings__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 提示词模版：能换行，12 / 20，最多 3 行（60），多了滚动 */
+
+.kv-lora-settings__box[data-scroll] > .kv-lora-settings__text {
+  max-height: calc(var(--font-line-height-20) * 3); /* 最多 3 行，多了滚动 */
+  line-height: var(--font-line-height-20);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  text-overflow: clip;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.kv-lora-settings__copy {
+  flex: none;
+  margin: calc(var(--spacing-6) * -1) calc(var(--spacing-6) * -1) calc(var(--spacing-6) * -1) 0;
+}
+
+/* 权重：标签 13 secondary + 滑块 + 数字框 56 宽 */
+
+.kv-lora-settings__weight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.kv-lora-settings__weight-label {
+  flex: none;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+}
+
+.kv-lora-settings__slider {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.kv-lora-settings__weight-input {
+  flex: none;
+  width: 56px; /* Figma 没变量 */
+  min-width: 56px; /* Figma 没变量 */
+}
+
+.kv-lora-settings__weight-input > .kv-number-input__field {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ================= LoraCard ================= */
+
+/* 宽跟着网格，3:4，圆角 12，封面铺满，裁切。悬停：封面放大 1.05、名字淡出、信息条从下往上淡入（出现 200ms ease-out，收回 150ms ease-in） */
+
+.kv-lora-card {
+  --kv-nested-fill: var(--color-bg-fill-container-light-2); /* 自己是 Light 1 底，里面的缩略图、标签、按钮叠在上面用 Light 2 */
+  --kv-nested-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-nested-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  position: relative;
+  box-sizing: border-box;
+  aspect-ratio: 3 / 4;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+/* 复选框本体：铺满外壳；收藏按钮和它并排，在它外面 */
+
+.kv-lora-card__body {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kv-lora-card__cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1);
+  transition: transform var(--motion-duration-150) var(--motion-ease-in);
+  user-select: none;
+}
+
+.kv-lora-card:where(:hover, .is-hover) .kv-lora-card__cover,
+.kv-lora-card__body:focus-visible > .kv-lora-card__cover {
+  transform: scale(1.05);
+  transition: transform var(--motion-duration-200) var(--motion-ease-out);
+}
+
+/* 左上：底模标签（和 New） */
+
+.kv-lora-card__tags {
+  position: absolute;
+  top: var(--spacing-8);
+  left: var(--spacing-8);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+/* 右上：按钮条里一个收藏，在复选框外面。平时隐藏，悬停、键盘聚焦（:focus-visible）或已收藏时显示，鼠标点一下选中不算 */
+
+.kv-lora-card__actions {
+  position: absolute;
+  top: var(--spacing-8);
+  right: var(--spacing-8);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+.kv-lora-card:where(:hover, :has(:focus-visible)) > .kv-lora-card__actions,
+.kv-lora-card[data-collected] > .kv-lora-card__actions {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-duration-200) var(--motion-ease-out);
+}
+
+/* 底部名字：14 加粗，底下往上渐变到黑 60% */
+
+.kv-lora-card__name {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  padding: var(--spacing-24) var(--spacing-12) var(--spacing-12);
+  overflow: hidden;
+  background: linear-gradient(to top, color-mix(in srgb, black 60%, transparent), transparent);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+.kv-lora-card:where(:hover, .is-hover) .kv-lora-card__name,
+.kv-lora-card__body:focus-visible > .kv-lora-card__name {
+  opacity: 0;
+}
+
+/* 信息条：玻璃底，名字 + 两行描述，悬停时从下往上淡入 */
+
+.kv-lora-card__info {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  padding: var(--spacing-12);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(var(--spacing-8));
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-in),
+    transform var(--motion-duration-150) var(--motion-ease-in);
+}
+
+.kv-lora-card:where(:hover, .is-hover) .kv-lora-card__info,
+.kv-lora-card__body:focus-visible > .kv-lora-card__info {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--motion-duration-200) var(--motion-ease-out),
+    transform var(--motion-duration-200) var(--motion-ease-out);
+}
+
+.kv-lora-card__info-name {
+  overflow: hidden;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-lora-card__info-desc {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* 选中：2px 白 40% 描边（同节点选中），画在里面，盖在封面和信息条上 */
+
+.kv-lora-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid #FFFFFF66; /* 和节点选中一样白 40%（11-05 用户定），Figma 没变量 */
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-lora-card[data-checked]::after {
+  opacity: 1;
+}
+
+/* ================= LoraPicker ================= */
+
+/* 弹窗内容：上面一行选项卡 + 底模筛选，下面卡片网格 */
+
+.kv-lora-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  min-width: 0;
+}
+
+.kv-lora-picker__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+}
+
+/* 网格：列宽至少 180，自动铺满，间距 12；高度跟着弹窗走，最高 560，多了在里面滚动。
+   高度固定（不随卡片多少变），切「全部 / 收藏」弹窗不跳 */
+
+.kv-lora-picker__grid,
+.kv-lora-picker__empty {
+  box-sizing: border-box;
+  height: min(560px, calc(100vh - 240px));
+}
+
+.kv-lora-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  align-content: start;
+  gap: var(--spacing-12);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.kv-lora-picker__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ================= 生成用的下拉和参数 ================= */
+
+/* 音频生成按钮左边的「字数 / 上限」 */
+.kv-audio-char-count {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 超过上限：字变红（11-05 用户定），不挡生成 */
+.kv-audio-char-count[data-over] {
+  color: var(--color-status-danger);
+}
+
+/* ================= 选择模型 GenModelPicker ================= */
+
+/* 选择模型（GenModelPicker）：玻璃菜单里放头部、分段和一段能滚的列表。
+   宽 320（两行菜单的最宽），列表最高 320 自己滚，头部和分段不跟着滚 */
+.kv-gen-model-picker {
+  width: 320px;
+  max-width: 320px;
+  max-height: none;
+  overflow: hidden;
+}
+
+.kv-gen-model-picker__head {
+  padding: var(--spacing-4) var(--spacing-8) 0;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+.kv-gen-model-picker > .kv-tab-group--segment {
+  margin: 0 var(--spacing-4);
+}
+
+.kv-gen-model-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.kv-gen-model-picker__list > * {
+  flex: none;
+}
+
+/* 选满变灰的行包了一层 Popover（说明不是工具名），外壳要撑满一行 */
+.kv-gen-model-picker__tip {
+  display: flex;
+}
+
+.kv-gen-model-picker__tip > .kv-menu-item {
+  flex: 1;
+}
+
+/* ================= 技能面板 SkillPanel ================= */
+
+/* 技能面板（SkillPanel）：浮在页面上，用玻璃（11-03 浮层规则；线上是写死的 #222326 实色）。
+   宽 400、高 440、内边距 8、圆角 16（条目 8 + 内边距 8），竖排间距 8。照线上 406 × 440 取整 */
+.kv-skill-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  width: 400px;
+  height: 440px;
+  padding: var(--spacing-8);
+  border-radius: var(--border-radius-16);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.kv-skill-panel__head,
+.kv-skill-panel__tabs,
+.kv-skill-panel__search {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  min-height: 32px;
+  padding: 0 var(--spacing-4) 0 var(--spacing-12);
+}
+
+.kv-skill-panel__title {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+.kv-skill-panel__actions {
+  display: flex;
+  gap: var(--spacing-8);
+}
+
+/* 分类多了在一行里横着滚，不换行 */
+.kv-skill-panel__tabs > .kv-tab-group {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.kv-skill-panel__search {
+  padding-left: var(--spacing-4);
+}
+
+.kv-skill-panel__search > .kv-input {
+  flex: 1;
+}
+
+.kv-skill-panel__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.kv-skill-panel__scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.kv-skill-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* 加载中、失败、空：在列表区正中 */
+.kv-skill-panel__state {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-12);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+}
+
+/* 一行：外壳撑满，「详情」叠在右边，悬停、键盘进到这一行才出现 */
+.kv-skill-panel__row,
+.kv-skill-panel__row-inner {
+  position: relative;
+  display: flex;
+}
+
+.kv-skill-panel__row > *,
+.kv-skill-panel__row .kv-menu-item {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 左边的扳手（照线上，不要外框）减弱一档：secondary，比名字暗，11-04 用户定 */
+.kv-skill-panel__row .kv-menu-item > .kv-icon {
+  color: var(--color-text-fill-secondary);
+}
+
+.kv-skill-panel__row .kv-menu-item__label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.kv-skill-panel__badge {
+  flex: none;
+}
+
+.kv-skill-panel__detail {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-8);
+  opacity: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-skill-panel__row-inner:is(:hover, :focus-visible, :has(:focus-visible)) > .kv-skill-panel__detail {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 鼠标在「详情」上也算悬停在这一行：按钮是叠在菜单项旁边的，不在菜单项里，不写这条底色会掉。颜色同菜单项悬停 */
+.kv-skill-panel__row-inner:hover > .kv-menu-item {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+/* 有「详情」时字给它让位 */
+.kv-skill-panel__row-inner:is(:hover, :focus-visible, :has(:focus-visible)) .kv-menu-item__text {
+  padding-right: 56px;
+}
+
+/* 悬停预览：Popover 面板（内边距 12）里放宽 256 的内容，整卡 280；图 16:9 圆角 8，名字 14 中粗，说明最高 96 自己滚 */
+.kv-skill-panel__preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  width: 256px;
+}
+
+.kv-skill-panel__preview-cover {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+}
+
+.kv-skill-panel__preview-title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+.kv-skill-panel__preview-desc {
+  max-height: 96px;
+  margin: 0;
+  overflow-y: auto;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}

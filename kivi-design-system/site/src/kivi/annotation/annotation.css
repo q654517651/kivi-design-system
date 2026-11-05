@@ -1,0 +1,171 @@
+/*
+  KIVI · 标注（图片框选评论）
+  线上画布图片节点的批注：框、序号气泡、评论浮层，加图片工具栏位置的提示条（提示条是 ButtonGroup variant="glass" size={44} + IconButton，不是组件）。
+  样式照线上，颜色换成 KIVI 变量。依赖 tokens.css、base.css、button.css（ButtonGroup、IconButton）。
+
+  写法（React，见各 .tsx）
+    <AnnotationBox
+      style={{ left: '20%', top: '30%', width: '40%', height: '35%' }}
+      index={1}
+      comment={<AnnotationComment collapsed value="把这里的猕猴桃换成切开的" />}
+    />
+  渲染出来的结构
+    <div class="kv-annotation-box">
+      <svg class="kv-annotation-box__rect"><rect/></svg>
+      <span class="kv-annotation-box__handle" data-corner="tl" />
+      <span class="kv-annotation-box__handle" data-corner="br" />
+      <div class="kv-annotation-box__marker"><button class="kv-annotation-marker">1</button></div>
+      <div class="kv-annotation-box__comment"><div class="kv-annotation-comment">…</div></div>
+    </div>
+
+  状态
+    AnnotationComment  悬停预览 .kv-annotation-comment--collapsed；发送、添加到对话、更新没写字时 disabled
+*/
+
+/* ---------- AnnotationMarker：序号气泡 ----------
+   28 × 28，品牌色底、on-brand 字（线上是 #2bc661 底白字），1.5px 白描边，序号 14 中等；
+   三个角全圆，左下是尖角（线上是 2，库里最小的圆角是 4）。悬停、按下没有额外样式，光标换成气泡形（线上写的自定义光标） */
+.kv-annotation-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: var(--border-width-1-5) solid var(--color-text-fill-primary);
+  border-radius: var(--border-radius-round) var(--border-radius-round) var(--border-radius-round) var(--border-radius-4);
+  background: var(--color-brand-solid);
+  color: var(--color-text-fill-on-brand);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ---------- AnnotationBox：标注框 ----------
+   位置、大小由外面给（absolute）。虚线 3px 品牌色，8 实 4 空；圆点 16 品牌色，左上、右下，光标 nwse-resize。
+   气泡摆在右下角右边 10、往下 6 的位置（它的右下贴着圆点），评论浮层在气泡右边 8、和气泡顶对齐 */
+.kv-annotation-box {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.kv-annotation-box__rect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.kv-annotation-box__rect > rect {
+  fill: none;
+  stroke: var(--color-brand-solid);
+  stroke-width: calc(var(--border-width-1-5) * 2);
+  stroke-dasharray: 8 4;
+}
+
+.kv-annotation-box__handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--border-radius-round);
+  background: var(--color-brand-solid);
+  cursor: nwse-resize;
+  touch-action: none;
+  transform: translate(-50%, -50%);
+}
+
+.kv-annotation-box__handle[data-corner="tl"] {
+  top: 0;
+  left: 0;
+}
+
+.kv-annotation-box__handle[data-corner="br"] {
+  top: 100%;
+  left: 100%;
+}
+
+.kv-annotation-box__marker {
+  position: absolute;
+  top: calc(100% - 22px);
+  left: calc(100% + 10px);
+}
+
+.kv-annotation-box__comment {
+  position: absolute;
+  top: calc(100% - 22px);
+  left: calc(100% + 10px + 28px + var(--spacing-8));
+  z-index: 1;
+}
+
+/* ---------- AnnotationComment：评论浮层 ----------
+   玻璃底（glass + 背景模糊 + 1px border-subtle，会浮动、面积不大，同菜单），宽 240，圆角 12，内边距 8，间距 6。
+   输入框 12 / 20 无边框，最少 34、最多 5 行（100）再滚动；底栏高 28：左删除，右「发送」（次要）「添加到对话 / 更新」（主要），都是 Button 小。
+   悬停预览：一行 12 / 17，超出省略，不挡鼠标 */
+.kv-annotation-comment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  box-sizing: border-box;
+  width: 240px;
+  padding: var(--spacing-8);
+  border-radius: var(--border-radius-12);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.kv-annotation-comment--collapsed {
+  pointer-events: none;
+}
+
+.kv-annotation-comment__preview {
+  overflow: hidden;
+  font-size: var(--font-size-12);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-annotation-comment__field {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  max-height: 100px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font-family: inherit;
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+  resize: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-fill-disabled) transparent;
+}
+
+.kv-annotation-comment__field::placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+.kv-annotation-comment__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+}
+
+.kv-annotation-comment__spacer {
+  flex: 1;
+}

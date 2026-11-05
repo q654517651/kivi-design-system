@@ -1,0 +1,173 @@
+import { Demo, PageHeader } from '@shell';
+import {
+  AnnotationChipDemo,
+  AttachmentStripPlayground,
+  MentionChipPlayground,
+  PreviewCardPlayground,
+  PreviewPopoverPlayground,
+  ReferenceItemPlayground,
+  ReferenceStackPlayground,
+} from './reference.demos';
+
+<PageHeader
+  eyebrow="业务组件"
+  title="参考和引用"
+  code="kivi/reference"
+/>
+
+## ReferenceStack
+
+参考区：输入框里放参考图、视频、音频。
+
+<ReferenceStackPlayground />
+
+## AttachmentStrip
+
+附件条：一排参考素材，比如画布 Agent 输入框、生成面板里的参考图。
+
+<AttachmentStripPlayground />
+
+## ReferenceItem
+
+参考格：参考区、附件条里的一格素材，比如带序号、时长、权重的参考图。
+
+<ReferenceItemPlayground />
+
+## MentionChip
+
+@ 引用标签：在提示词和消息里引用素材、技能、节点、标注、模型。
+
+<MentionChipPlayground />
+
+### 标注：悬停看预览
+
+<Demo noCode scope={{ AnnotationChipDemo }} code={`<AnnotationChipDemo />`} />
+
+## PreviewCard
+
+预览卡：悬停素材时看大图、名字、时长或说明。
+
+<PreviewCardPlayground />
+
+## PreviewPopover
+
+悬停预览：鼠标移到缩略图、引用标签上，弹出预览卡。
+
+<PreviewPopoverPlayground />
+
+## ReferenceFramePair
+
+首尾帧：视频的首帧、尾帧两格参考图，中间可以互换。
+
+## 参数
+
+### ReferenceStack
+
+放进 `PromptBox` 的 `references` 里用。72 见方，圆角 8。空：只有添加格（白 10%）；一个：卡片正放，右下角 24 的圆形上传按钮；多个：卡片缩到 56 叠放，最后加的在最上面，露 3 张，右上角写最上面那张的序号。鼠标移上去向右展开，卡片 72，间距 6，右上角写序号（和画布一样），鼠标移到哪张，那张的序号换成删除；展开收起 400ms 起每多一张加 10ms、最多 700ms，缓动 `--motion-ease-expand`；移开收回。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `items` | `ReferenceStackItem[]` | — | 参考素材，必填，按添加顺序排，最后一个是叠放时最上面那张。每项见下表 |
+| `onAdd` | `() => void` | — | 点添加格、右下角圆形上传按钮时触发：弹出选文件，选完把素材加进 `items` |
+| `onRemove` | `(id: string) => void` | — | 点卡片右上角的删除时触发（鼠标移到卡片上才出现，同时序号隐藏），参数是素材的 `id`：从 `items` 里去掉它。不传就没有删除按钮，序号悬停时也不隐藏 |
+| `onItemClick` | `(item: ReferenceStackItem) => void` | — | 点卡片时触发，预览大图用 |
+| `expanded` | `boolean` | — | 展开（受控）：传 `true` 一直展开。不传是鼠标移上去展开、移开收起，键盘聚焦也展开 |
+| `defaultExpanded` | `boolean` | `false` | 非受控时的初始状态 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开、收起时触发，参数是展开了没有 |
+| `maxWidth` | `number` | 输入框内容区宽度 | 展开后最宽多宽，超过横向滚动 |
+| `max` | `number` | 不限 | 最多放几个：放满了添加格和右下角的小圆加号隐藏，展开后卡片从最左边排起 |
+
+`items` 每一项：
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `id` | `string` | — | 唯一标识，增删时用它认哪一张 |
+| `type` | `"image"` `"video"` `"audio"` | — | 类型。视频用封面当缩略图，音频和文件一个样子：图标占位底加音符 |
+| `name` | `string` | — | 名字，比如「图片1」：提示词里 @ 引用和读屏用，要和 @ 出来的一致，`referenceName(items, type)` 按类型给出下一个编号。卡片上不写名字，右上角写序号（按添加顺序 1、2、3…） |
+| `src` | `string` | — | 缩略图地址：图片、视频封面。音频不用 |
+| `duration` | `string` | — | 时长，视频、音频用，比如 `"8s"` `"15s"`，展开后显示在卡片左下角 |
+| `progress` | `number` | — | 上传进度 0–100。不传就是已经上传完；传了卡片盖一层黑 40%，中间是进度环 36 |
+
+展开后鼠标移到某一张（上传中、没有图的除外）出预览卡：`PreviewCard`，放在 `Popover` 面板（玻璃底）里，出在卡片上方、左对齐，距离 8，和附件条是同一个。
+
+### AttachmentStrip
+
+一排平铺的附件：画布 Agent 输入框、画布生成面板的参考图用；和 ReferenceStack 是同一套缩略图（`ReferenceItem`）、角标、删除、上传进度环和悬停预览，只是平铺不叠放。缩略图固定 56，间距固定 4（`--spacing-4`），超出一排横向滚动，滚动条 4 高。鼠标移上去或聚焦到某一格：右上角出删除（传了 `onRemove` 才有，上传中不出），同时出预览卡：图片、视频看大图，音频、文件看名字、类型。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `items` | `AttachmentItem[]` | — | 附件，必填，按添加顺序排。每项见下表 |
+| `onRemove` | `(id: string) => void` | — | 点右上角删除时触发，参数是附件的 `id`：从 `items` 里去掉它。不传就没有删除按钮，序号悬停时也不隐藏（画布生成面板的参考图是连线连进来的，不能在这里删） |
+| `onItemClick` | `(item: AttachmentItem) => void` | — | 点缩略图时触发，预览大图用。传了缩略图能键盘聚焦，Enter、Space 触发 |
+
+`items` 每一项：
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `id` | `string` | — | 唯一标识 |
+| `type` | `"image"` `"video"` `"audio"` `"file"` | — | 类型。图片、视频用缩略图（视频传封面）；音频是音符图标，文件按扩展名换图标（见 ReferenceItem），两个一个样子（图标占位底，左下写时长或扩展名），不分文件类型换颜色 |
+| `name` | `string` | — | 名字，悬停预览里显示，读屏用 |
+| `src` | `string` | — | 缩略图地址：图片、视频封面。图片、视频没有地址就没有悬停预览 |
+| `duration` | `string` | — | 时长，视频、音频用，左下角 |
+| `ext` | `string` | — | 文件扩展名，文件用，比如 `"PDF"`，左下角 |
+| `badge` | `ReactNode` | — | 右上角序号，比如 `"1"`：画布生成面板的参考图按连线顺序写。不传就没有；悬停出删除时被盖住 |
+| `progress` | `number` | — | 上传进度 0–100。不传是上传完；传了盖一层黑 40% + 进度环，没有悬停预览 |
+
+### ReferenceItem
+
+参考图里的一格：缩略图加几个角标。1px `--color-border` 盖在缩略图上，圆角 8。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `56` `72` | `56` | 56 用在节点面板的参考图区；72 用在主站输入框参考区（展开时）和生成记录参考区的悬停浮层 |
+| `type` | `"image"` `"video"` `"audio"` `"file"` | `"image"` | 类型。视频用封面当缩略图；音频和文件一个样子：图标占位底（AssetThumb 图标类型）加图标，左下写时长或扩展名。文件按 `ext` 换图标（`fileIcon(ext)`）：PDF `FilePdf`、DOC/DOCX `FileDoc`、PPT/PPTX/KEY `FilePpt`、TXT/MD/RTF `FileTxt`、XLS/XLSX/NUMBERS `FileXls`、CSV/TSV `FileCsv`、ZIP/RAR/7Z/TAR/GZ `FileZip`、JSON `FileJson`，认不出的是通用 `File` |
+| `src` | `string` | — | 缩略图地址，图片、视频封面用 |
+| `ext` | `string` | — | 文件扩展名，比如 `"PDF"`，文件类型写在左下角（和时长同一个位置） |
+| `badge` | `ReactNode` | — | 右上角标 20 × 20，只有左下圆角 4，on-media 底（`--color-on-media-fill` + 模糊 32）：序号，或「首帧」「尾帧」 |
+| `duration` | `ReactNode` | — | 左下的时长，视频、音频用，高 16，比如 `"12s"` |
+| `weight` | `ReactNode` | — | 底部通栏：Lora 权重。名字不写在卡片上（序号在右上角，名字只给 @ 引用和读屏用） |
+
+### PreviewCard
+
+悬停预览卡的内容：附件条、参考图（含画布生成面板）、标注点悬停时看大图、类型、详情，用同一个。只是内容，不带底；悬停出预览一律用 `PreviewPopover` 包住触发元素：`<PreviewPopover preview={{ type, src, name, duration }}>{缩略图}</PreviewPopover>`，玻璃底（Popover panel），在上方左对齐、间距 8、悬停 200ms 出现，圆角 16、内边距 12。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"video"` `"audio"` `"file"` | `"image"` | 类型。图片、视频是 160 见方的大图（圆角 8，图按比例完整放进去，不裁）；音频、文件是 56 缩略图加右边的字，宽 220 |
+| `src` | `string` | — | 大图地址：图片、视频封面 |
+| `name` | `ReactNode` | — | 名字，12 号 secondary，一行，超出省略 |
+| `description` | `ReactNode` | — | 说明，12 / 20 tertiary，最多 4 行。标注点的描述写这里 |
+| `duration` | `ReactNode` | — | 时长：视频写在大图左下角，音频写在名字下面 |
+| `ext` | `ReactNode` | — | 文件扩展名，文件用，写在名字下面 |
+| `box` | `{ x, y, width, height }` | — | 标注框：在大图上画 1.5px 品牌色的框，四个值是相对 160 见方大图的 0–1 比例 |
+
+### PreviewPopover
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `preview` | `{ type, src, name, description, duration, ext, box }` | — | 预览卡的内容，同 PreviewCard |
+| `disabled` | `boolean` | `false` | 不出预览：上传中、没有图的时候 |
+| `children` | `ReactElement` | — | 触发元素：缩略图、引用标签、标注点 |
+
+### ReferenceFramePair
+
+首尾帧：两格参考图，右上角标「首帧」「尾帧」，中间 28 的互换按钮（Switch，图标 20），间距 4。点互换，两张图各自滑到对方的位置（200ms ease-in-out）再对调。画布视频面板参考方式选「首尾帧」时、主站输入框首尾帧模式都用它。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `56` `72` | `56` | 画布生成面板 56，主站输入框 72 |
+| `first` | `{ src }` | — | 首帧。外面换图（`src` 变了）就跟着变，之前的互换作废 |
+| `last` | `{ src }` | — | 尾帧，同上 |
+| `onSwap` | `(first, last) => void` | — | 互换后触发，参数是换过来的首帧、尾帧；不传组件也能自己换。外面收到后把 `first` / `last` 换成这两个也行，不会换两次 |
+
+### MentionChip
+
+提示词里的 @ 引用，输入框里和用户消息里是同一个。高 20（缩略图 16 上下左右都留 2），圆角 4，底 `--color-bg-fill-container-light-1`，1px `--color-border-subtle`；左 2 右 4；缩略图或图标 16 + 名字 14 / 20 `--color-text-fill-secondary`，间距 4。有图的（图片、视频封面、标注）放缩略图；只有图标的（音频、技能、节点、模型、没封面的视频）直接放 16 的图标，白色 `--color-text-fill-primary`，不加底框、不加背景。整体不可编辑。其余原生 `<span>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"video"` `"audio"` `"skill"` `"node"` `"annotation"` `"model"` | `"image"` | 图片 / 视频 / 音频 / 技能 / 节点 / 标注点。前三种是素材，技能、节点是技能和画布节点，标注点是图上框出来的一块（见「标注」页），悬停出预览卡（`PreviewCard` 带标注框）；模型是模型偏好里选的模型，前面是厂商 Logo |
+| `src` | `string` | — | 缩略图地址，图片、视频用（视频传封面），标注传所在图片。音频、技能、节点、模型不用传 |
+| `icon` | `IconName` | — | 前面的图标（16、白色、不加底框）。音乐默认 `Music`，技能默认 `Skill`，节点默认 `Text`（文本节点；别的节点传自己类型的图标，比如 `ImageGeneration`），视频没传 `src` 时是 `Video`，一般不用传；模型必传，是模型自带的厂商 Logo（16、白色不透明） |
+| `index` | `number` `string` | — | 标注点的序号，只有标注点用：缩略图后面单独一格 12 的品牌色小气泡（左下是尖角），缩略图、气泡、文字间距都是 4 |
+| `children` | `ReactNode` | — | 名字，和参考图区里的名字对应，比如「图片1」「音频1」；标注点写描述 |

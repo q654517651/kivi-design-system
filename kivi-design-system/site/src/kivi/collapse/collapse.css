@@ -1,0 +1,61 @@
+/*
+  KIVI · 展开收起
+  Collapse：触发行下面能收起的那一块（组件库内部通用，Figma 里没有）。依赖 tokens.css。
+
+  写法（React，见 Collapse.tsx）
+    <button aria-expanded={open} aria-controls={id} onClick={…}>标题</button>
+    <Collapse id={id} expanded={open} distance={200} gap={6}>…</Collapse>
+  渲染出来的结构
+    <div class="kv-collapse" data-open aria-hidden>
+      <div class="kv-collapse__inner"><div class="kv-collapse__body">…</div></div>
+    </div>
+
+  展开时高度从 0 推到内容高、把下面的内容往下推，同时淡入；收起倒着走。
+  时长按距离（组件里写 --kv-collapse-duration：100 以内 200ms，再长 300ms），ease-in-out。
+  收起后 visibility 藏起来，Tab 不进去。离上面一行的间距 --kv-collapse-gap 放在会被收起的 body 里，收起后不留空。
+*/
+.kv-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  align-self: stretch;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--kv-collapse-duration) var(--motion-ease-in-out),
+    opacity var(--kv-collapse-duration) var(--motion-ease-in-out),
+    visibility 0s linear var(--kv-collapse-duration);
+}
+
+.kv-collapse[data-open] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--kv-collapse-duration) var(--motion-ease-in-out),
+    opacity var(--kv-collapse-duration) var(--motion-ease-in-out),
+    visibility 0s linear 0s;
+}
+
+.kv-collapse__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.kv-collapse__body {
+  padding-top: var(--kv-collapse-gap, 0px);
+}
+
+/* 露一截（collapsedSize）：收起不淡出、不藏，高度在 --kv-collapse-size 和内容高 --kv-collapse-full 之间走，超出的裁掉。
+   不用 grid：grid 的收起是 0 到内容高，露一截时前一段会停在原地不动 */
+.kv-collapse[data-partial] {
+  display: block;
+  max-height: var(--kv-collapse-size);
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+  transition: max-height var(--kv-collapse-duration) var(--motion-ease-in-out);
+}
+
+.kv-collapse[data-partial][data-open] {
+  max-height: var(--kv-collapse-full);
+}

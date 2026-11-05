@@ -1,0 +1,149 @@
+import { PageHeader } from '@shell';
+import { ColorCards, CopyAllTokens, TokenChip, TokenTable, TokenValue } from './tokens.demos';
+
+<PageHeader
+  eyebrow="基础"
+  title="变量"
+  lead="颜色、间距、圆角、文字、动效都用变量，不写死数值。点变量名复制 var(--…)。"
+  figma={['变量', '6:2']}
+  code="kivi/tokens.css"
+/>
+
+<CopyAllTokens />
+
+## 色彩
+
+只有深色一套主题。变量两层：填充色阶在底下，其余是语义变量；没有原始色层。
+
+### 主色
+
+品牌绿。只给主操作、选中、开关打开、进度，不用于大面积背景和正文。主要按钮用品牌渐变，一屏一个。
+
+<ColorCards group="brand" />
+
+### 中性色
+
+界面的大部分。靠明暗分层：底色在最下，填充叠在上面，能点的悬停、按下各升一档。
+
+#### 底色
+
+每层只用对应的颜色。
+
+<ColorCards group="bg" />
+
+#### 填充色阶
+
+白色叠透明度的一条色阶，四档越往上越亮，下面的 Container 都引用它。组件里先用 Container；Container 语义不符、又找不到合适变量时才直接用，能用的地方见「设计规则 · 颜色和底色」。
+
+<ColorCards group="fillScale" />
+
+#### 填充与状态
+
+Light 1 和 Light 2 按背景亮度选：背景相对亮度低于 0.015 是深底，用 Light 1（默认 10%、悬停 14%、按下 18%）；0.015 及以上是浅底（叠在一层 Light 1 上、popup），用 Light 2（默认 6%、悬停 10%、按下 14%）。相邻两层对比度不低于 1.12。细则见「设计规则 · 颜色和底色」。叠加最多两层。
+
+<ColorCards group="fill" />
+
+#### 文字与图标
+
+图标和文字用同一套颜色。由强到弱：primary → secondary → tertiary → placeholder → disabled。
+
+<ColorCards group="text" />
+
+#### 描边
+
+<ColorCards group="border" />
+
+### 功能色
+
+表示成功、警告、错误。文字和图标用实色，提示条和报错底色用对应的 subtle。
+
+<ColorCards group="status" />
+
+### 遮罩和叠加
+
+遮罩垫在模态弹窗下面。贴在图片、视频上的控件（按钮、按钮条、标签、播放器控件）用 on-media，只限图片、视频，不加描边：画面颜色不可控，白色叠加在亮图上看不清。悬浮在页面上的浮层用 glass，下面是图片也一样。
+
+<ColorCards group="overlay" />
+
+### 画布连线
+
+代码名是 Figma 里单独设的，不按 `/` 换 `-` 转换。
+
+<ColorCards group="connector" />
+
+## 尺寸
+
+### 间距
+
+同一组比组和组之间紧：同一组的并列项 4，一个组件的几部分之间 12，块和块之间 16–24。
+
+| 变量 | CSS 变量 | 值 | padding | gap |
+|---|---|---|---|---|
+| spacing/2 | <TokenChip token="--spacing-2" /> | <TokenValue token="--spacing-2" /> | ButtonGroup 四周 | — |
+| spacing/4 | <TokenChip token="--spacing-4" /> | <TokenValue token="--spacing-4" /> | Menu 四周<br />分段选择四周 | 图标和文字：Button、Tag、Select<br />并列项：菜单条目、分段选项、ButtonGroup 按钮、追问选项、参考图、侧栏组内<br />参数标题和控件 |
+| spacing/6 | <TokenChip token="--spacing-6" /> | <TokenValue token="--spacing-6" /> | Tag 左右<br />Tooltip 上下<br />节点工具栏四周 | 图标和文字：侧栏条目、选项卡<br />工具条左侧控件：输入框、生成面板<br />过程列表各行 |
+| spacing/8 | <TokenChip token="--spacing-8" /> | <TokenValue token="--spacing-8" /> | Button 小左右<br />Toast 上下 | 图标和文字：菜单项、输入框、Toast、勾选框<br />Tooltip 文字和快捷键<br />一排按钮：弹窗底部、确认卡片、节点工具栏、输入框工具条右侧 |
+| spacing/12 | <TokenChip token="--spacing-12" /> | <TokenValue token="--spacing-12" /> | 控件左右：Button 中、Select、菜单项、选项卡、侧栏条目、Tooltip<br />参数面板四周<br />画布工具栏、对话气泡上下<br />侧栏左右 | 一个组件的几部分：输入框、参数面板、追问面板、确认卡片、生成记录 |
+| spacing/16 | <TokenChip token="--spacing-16" /> | <TokenValue token="--spacing-16" /> | 控件左右：Button 大、选项卡大<br />面板四周：输入框、生成面板、确认卡片、追问面板<br />Toast、画布工具栏、对话气泡左右<br />侧栏上下 | 弹窗的标题、正文、底部<br />生成面板各段、画布工具栏分组<br />空状态插图和文字<br />侧栏组和组 |
+| spacing/24 | <TokenChip token="--spacing-24" /> | <TokenValue token="--spacing-24" /> | 弹窗四周<br />节点失败态、引导态四周<br />页面左右 | 生成记录之间<br />空状态文字和按钮 |
+| spacing/32 | <TokenChip token="--spacing-32" /> | <TokenValue token="--spacing-32" /> | — | 页面大分区之间 |
+
+### 圆角
+
+<TokenTable group="radius" />
+
+### 描边粗细
+
+<TokenTable group="stroke" />
+
+## 文字
+
+界面 13，阅读 14。字重只常用常规 400 和粗 500；按钮、标题、选中项用 500，600 很少用。字体是 PingFang SC。
+
+### 文字样式
+
+Figma 文字样式按「文字/字号 字重」命名：`文字/13 常规`、`文字/13 粗`……字号 10–16 都有常规、粗、加粗三档。
+
+下表的行高只给多行文字。单行文字不设行高，用自动（代码里是 1.4）。
+
+| 样子 | 字号 / 行高 | 变量 | 用在哪 |
+|---|---|---|---|
+| <span style={{ fontSize: 'var(--font-size-10)', lineHeight: 'var(--font-line-height-16)' }}>角标 99+</span> | 10 / 16 | `--font-size-10` `--font-line-height-16` | 角标、数字徽标、缩放百分比 |
+| <span style={{ fontSize: 'var(--font-size-12)', lineHeight: 'var(--font-line-height-20)' }}>次要信息 1024×1024</span> | 12 / 20 | `--font-size-12` `--font-line-height-20` | 次要信息、标签、Tooltip、小号按钮、单位 |
+| <span style={{ fontSize: 'var(--font-size-13)', lineHeight: 'var(--font-line-height-20)' }}>界面主文字</span> | 13 / 20 | `--font-size-13` `--font-line-height-20` | 工具栏、导航、菜单项、按钮、输入框 |
+| <span style={{ fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>需要阅读的内容</span> | 14 / 22 | `--font-size-14` `--font-line-height-22` | 对话、AI 回复、提示词、说明文字、多行输入、Toast。不要用于按钮和工具栏 |
+| <span style={{ fontSize: 'var(--font-size-16)', lineHeight: 'var(--font-line-height-24)', fontWeight: 'var(--font-weight-medium)' }}>面板标题</span> | 16 / 24 | `--font-size-16` `--font-line-height-24` | 面板标题、分区标题、弹窗标题 |
+| <span style={{ fontSize: 'var(--font-size-20)', lineHeight: 'var(--font-line-height-28)', fontWeight: 'var(--font-weight-medium)' }}>醒目标题</span> | 20 / 28 | `--font-size-20` `--font-line-height-28` | 引导页、空状态的醒目标题 |
+| <span style={{ fontSize: 'var(--font-size-24)', lineHeight: 'var(--font-line-height-32)', fontWeight: 'var(--font-weight-medium)' }}>页面标题</span> | 24 / 32 | `--font-size-24` `--font-line-height-32` | 页面标题 |
+
+### 字号
+
+<TokenTable group="font-size" />
+
+### 行高
+
+<TokenTable group="line-height" />
+
+### 字重和字体
+
+<TokenTable group="weight" />
+
+## 透明度、动效、效果
+
+### 透明度
+
+图层整体透明度，用于禁用的图片、拖拽中的元素。颜色本身的透明度直接用颜色变量。
+
+<TokenTable group="opacity" />
+
+### 动效
+
+怎么选、怎么用，看 [动效](/foundations/motion)。
+
+<TokenTable group="motion" />
+
+### 效果
+
+浮层都不加阴影，只有多图节点的卡片用叠放、展开两个阴影。玻璃浮层的背景模糊是 32，和底色 glass、描边 border-subtle 一起用。
+
+<TokenTable group="effect" />

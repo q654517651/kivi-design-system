@@ -1,0 +1,514 @@
+/*
+  KIVI · Agent 对话
+  Figma「Agent」页的对话部分：UserMessage、QuestionPanel（QuestionOption）、ActionCard、SendButton、FileCard。
+  SkillCard（技能卡）照旧版 KIVI 3.14 做。
+  AskRecord（询问记录，能收起）交互照 Codex、Claude；用 Collapse 收起（在 collapse 文件夹）。
+  依赖 tokens.css、base.css、button.css（按钮用 kv-button、kv-icon-button）。
+  别的页的组件：头像用 tags-avatar 的 Avatar；
+  用户消息里的素材用 generation 的 ReferenceItem（里面是 AssetThumb）。
+  助手正文、顶栏、建议操作、消息操作都在模板里拼，不是组件。
+
+  写法（React，见各 .tsx）
+    <UserMessage assets={…}>帮我生成 10 个小狗的图片</UserMessage>
+
+  状态
+    QuestionOption 选中 aria-checked="true"（单选 role="radio"，多选 role="checkbox"）；禁用 disabled（「其他」写 data-disabled）
+    QuestionPanel  禁用（提交中）data-disabled + aria-busy="true"；一项都没选时「确认提交」是 disabled
+    SendButton     禁用 disabled；生成中 data-generating，里面换成 kv-send-button__stop（还能点，悬停、按下照常）
+    FileCard       生成中 aria-busy="true"
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+*/
+
+/* ---------- AskRecord：询问记录 ----------
+   一行「询问中 / 已询问 / 询问」，下面收起的是问了什么、怎么答的。默认收起，悬停出箭头，点开往下推（Collapse）。
+   询问中：等用户回答，问题面板在输入框位置，这一行扫光；已询问：回答了；询问：跳过了（交给 AI 决策，或用户直接发了新消息）。
+   问题 14 / 22 secondary，回答和说明 12 / 20 tertiary，一题里间距 4，题和题之间 8 */
+.kv-ask-record {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+.kv-ask-record__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.kv-ask-record__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.kv-ask-record__question {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-ask-record__answer,
+.kv-ask-record__note {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}
+
+/* ---------- UserMessage：用户消息 ---------- */
+.kv-user-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-8);
+  width: 100%;
+}
+
+/* 素材：气泡上方一排 ReferenceItem 56 */
+.kv-user-message__assets {
+  display: flex;
+  gap: var(--spacing-8);
+}
+
+/* 气泡：宽度跟文字走，最宽 340，超出换行 */
+.kv-user-message__bubble {
+  box-sizing: border-box;
+  max-width: 340px;
+  padding: var(--spacing-12) var(--spacing-16);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+  overflow-wrap: anywhere;
+}
+
+/* 折叠：超过 maxLines 行，用 Collapse 的「露一截」（collapsedSize）只露 maxLines 行，展开时高度走 300ms ease-in-out；
+   「显示更多 / 收起」是 Button 文字 sm，紧贴字下面，箭头展开时转 180° */
+
+/* 保留文字里的换行（行为，不改样子） */
+.kv-user-message__text {
+  line-height: var(--font-line-height-22);
+  white-space: pre-wrap;
+}
+
+.kv-user-message__toggle {
+  margin: var(--spacing-8) calc(var(--spacing-8) * -1) calc(var(--spacing-8) * -1);
+}
+
+.kv-user-message__toggle > .kv-icon {
+  transition: transform var(--motion-duration-200) var(--motion-ease-in-out);
+}
+
+.kv-user-message__toggle[aria-expanded="true"] > .kv-icon {
+  transform: rotate(180deg);
+}
+
+/* ---------- MessageFeedback：消息反馈条 ----------
+   一排 IconButton「轻」；点踩后下面用 Collapse 往下推出原因输入：Textarea 撑满，提交在框里右下角 */
+.kv-message-feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+.kv-message-feedback__bar {
+  display: flex;
+}
+
+.kv-message-feedback__reason {
+  align-self: stretch;
+}
+
+/* ---------- QuestionPanel：追问面板 ---------- */
+.kv-question-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+  color: var(--color-text-fill-primary);
+}
+
+.kv-question-panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-height: 28px;
+}
+
+.kv-question-panel__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-question-panel__pager {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-4);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+}
+
+.kv-question-panel__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.kv-question-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+}
+
+/* ---------- _QuestionOption：选项（不发布，只在 QuestionPanel 里用） ---------- */
+.kv-question-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--spacing-8);
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: transparent;
+  color: var(--color-text-fill-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-100) var(--motion-ease-in-out),
+    color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+/* 编号框 20，圆角 6 */
+.kv-question-option__index {
+  display: grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--border-radius-6);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  transition: border-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-question-option__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 悬停：底色 container-light-1-hover，文字变 primary；禁用（提交中）不变 */
+.kv-question-option:where(:hover, .is-hover):not([aria-checked="true"], .kv-question-option--other, :disabled, [data-disabled]) {
+  background: var(--color-bg-fill-container-light-1-hover);
+  color: var(--color-text-fill-primary);
+}
+
+/* 选中：底色 container-light-1，文字 primary，编号框描边 border-strong */
+.kv-question-option[aria-checked="true"] {
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+}
+
+.kv-question-option[aria-checked="true"] .kv-question-option__index {
+  background: var(--color-bg-fill-container-light-2); /* 叠在选中选项的底（白 10%）上，是浅底，用 Light 2 */
+  border-color: var(--color-border-strong);
+  color: var(--color-text-fill-primary);
+}
+
+/* 禁用（面板提交中）：不能点，整体变淡 */
+.kv-question-option:disabled,
+.kv-question-option[data-disabled] {
+  opacity: var(--opacity-50);
+  cursor: not-allowed;
+}
+
+/* 其他：可直接输入，占位文字 placeholder */
+.kv-question-option--other {
+  cursor: text;
+}
+
+.kv-question-option__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font: inherit;
+}
+
+.kv-question-option__input::placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+/* ---------- ActionCard：确认卡片 ---------- */
+.kv-action-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+}
+
+.kv-action-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.kv-action-card__title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-action-card__desc {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+/* 说明里可点的那段：同色，加下划线。<button> 或 <a> 都行 */
+.kv-action-card__link {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.kv-action-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+}
+
+/* 出错：只有一行说明，描边、不填底 */
+.kv-action-card--error {
+  padding: var(--spacing-12) var(--spacing-16);
+  border-color: var(--color-border);
+  background: none;
+}
+
+.kv-action-card--error .kv-action-card__desc {
+  color: var(--color-text-fill-secondary);
+}
+
+/* ---------- SkillCard：技能卡 ----------
+   外框和 ActionCard 一样：内边距 16，圆角 16，surface 底，描边 border-subtle；上下两块间距 12。
+   上面：封面 100 × 56（圆角 8，里面描一圈 border，用户没设封面用技能专用的占位封面）+ 技能名 14 中等 / 说明 13 tertiary，间距 12，都是一行省略；
+   下面：按钮靠右，间距 8，「编辑」次要、「使用技能」主要，都是 Button 中 */
+.kv-skill-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+  font-family: var(--font-family);
+}
+
+.kv-skill-card__main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  min-width: 0;
+}
+
+.kv-skill-card__cover {
+  position: relative;
+  flex: none;
+  width: 100px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.kv-skill-card__cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.kv-skill-card__cover > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kv-skill-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.kv-skill-card__title,
+.kv-skill-card__desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-skill-card__title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-skill-card__desc {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+.kv-skill-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+}
+
+/* ---------- SendButton：发送按钮 ----------
+   样子全用按钮体系：IconButton 主要 · 36 · 圆形（kv-icon-button--primary / --36 / --round），悬停、按下、禁用都跟按钮走。
+   这里只管停止方块 */
+.kv-send-button {
+  flex: none;
+}
+
+/* 生成中：换成停止方块 12×12，圆角 4，点了停止生成 */
+.kv-send-button__stop {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--border-radius-4);
+  background: currentColor;
+}
+
+/* ---------- FileCard：文件卡 ----------
+   外框、字号和技能卡（SkillCard）一样（11-02 用户定）：内边距 16，圆角 16，surface 底，描边 border-subtle，间距 12；
+   文件名 14 中等，信息 13 tertiary */
+.kv-file-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+  font-family: var(--font-family);
+}
+
+/* 左边图标块 40，圆角 8，图标 20 */
+.kv-file-card__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+}
+
+.kv-file-card__icon > .kv-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.kv-file-card__info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 文件名 14 中等，一行省略；信息 13 tertiary */
+.kv-file-card__name {
+  overflow: hidden;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-file-card__meta {
+  overflow: hidden;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右边操作：IconButton 28 轻。默认不显示，悬停才出；音频的播放常显（不加 --reveal） */
+.kv-file-card__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.kv-file-card__action--reveal {
+  display: none;
+}
+
+.kv-file-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-file-card__action--reveal {
+  display: inline-flex;
+  animation: kv-file-card-in var(--motion-duration-150) var(--motion-ease-out);
+}
+
+@keyframes kv-file-card-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 生成中：右边换成 Loading 小（16，转圈） */
+.kv-file-card__loading {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-primary);
+}
+
+.kv-file-card[aria-busy="true"] .kv-file-card__actions {
+  display: none;
+}

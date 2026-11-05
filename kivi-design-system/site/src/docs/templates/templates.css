@@ -1,0 +1,801 @@
+/*
+  页面模板的外框和两张整页的布局。只给网站演示用，不属于组件库：
+  组件库里有的零件（侧栏项、记录头、结果格、输入框、过程行…）都直接用组件，这里只管怎么摆。
+*/
+
+/* ---------- 外框：16:9，里面自己滚；能全屏看 ---------- */
+
+.tpl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  margin: 0 0 var(--spacing-24);
+}
+
+.tpl-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+}
+
+.tpl-frame {
+  position: relative;
+  min-height: 600px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-base);
+  color: var(--color-text-fill-primary);
+}
+
+/* 全屏：盖住整个网站，Esc 或按钮退出 */
+.tpl[data-full] {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  margin: 0;
+  padding: var(--spacing-12) var(--spacing-16) var(--spacing-16);
+  background: var(--color-bg-fill-base);
+}
+
+.tpl[data-full] .tpl-frame {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+/* ---------- 主站生成页：左侧栏 240，右边记录流 + 底部输入框 ---------- */
+
+/* 左边侧栏的宽度由侧栏自己定（240 / 收起 60），记录流占剩下的，侧栏收起时跟着变宽 */
+.tpl-ms {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+/* 侧栏收起：宽 240 → 60（12 + 条目 36 + 12），屏幕内移动，300ms ease-in-out。
+   里面的条目、标题、「更多」（Menu variant="plain" 的零件）自己同时收到 36（组件的 collapsed），条目变成 36 的正方形 */
+.tpl-ms__side-wrap {
+  box-sizing: content-box; /* 描边另算，里面正好 240 / 60 */
+  width: 240px;
+  min-height: 0;
+  overflow: hidden;
+  border-right: var(--border-width-1) solid var(--color-border-subtle);
+  transition: width var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+.tpl-ms__side-wrap[data-collapsed] {
+  width: 60px;
+}
+
+/* 单独摆的侧栏：外框自己有描边 */
+.tpl-frame > .tpl-ms__side-wrap {
+  height: 100%;
+  border-right: 0;
+}
+
+.tpl-ms__side-wrap > .tpl-ms__side {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-right: 0;
+}
+
+.tpl-ms__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-height: 0;
+  padding: var(--spacing-12);
+  overflow: hidden auto;
+  border-right: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+/* 侧栏内容比框高时整条滚动，条目不被压扁 */
+.tpl-ms__side > * {
+  flex: none;
+}
+
+/* Logo 行：Logo 左 8，收起按钮（IconButton 28）在右边；行高 28（11-03 照 Figma，原来 32） */
+.tpl-ms__brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 0 var(--spacing-12) var(--spacing-8);
+}
+
+.tpl-ms__brand > .kv-icon {
+  width: 54px;
+  height: 24px;
+  margin-left: 0;
+  transition:
+    width var(--motion-duration-300) var(--motion-ease-in-out),
+    height var(--motion-duration-300) var(--motion-ease-in-out),
+    margin-left var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.tpl-ms__toggle {
+  position: absolute;
+  display: flex;
+  top: 0;
+  right: 0;
+  transition:
+    right var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 收起：Logo 缩到宽 24（高 24 × 24 / 54 ≈ 10.7，照 3.14 收起侧栏 1:2231），在 36 的格子里居中；按钮跟着侧栏右边滑过来，停在 Logo 正中，平时藏着。
+   位移写死，不用百分比：侧栏宽度也在变，按百分比算 Logo 会先往外冲再回来。
+   悬停 Logo（或键盘 Tab 到按钮）时 Logo 淡出、换成「展开侧栏」 */
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand > .kv-icon {
+  width: 24px;
+  height: calc(24px * 24 / 54);
+  margin-left: calc((36px - 24px) / 2 - var(--spacing-8));
+}
+
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__toggle {
+  right: var(--spacing-4); /* 36 宽的格子里放 28 的按钮，两边各 4 */
+  opacity: 0;
+  transition:
+    right var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand:where(:hover, :has(:focus-visible)) > .kv-icon {
+  opacity: 0;
+  transition:
+    width var(--motion-duration-300) var(--motion-ease-in-out),
+    height var(--motion-duration-300) var(--motion-ease-in-out),
+    margin-left var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand:where(:hover, :has(:focus-visible)) .tpl-ms__toggle {
+  opacity: 1;
+  transition:
+    right var(--motion-duration-300) var(--motion-ease-in-out),
+    opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 导航和「对话」「画布」两段之间空一点 */
+.tpl-ms__gap {
+  height: var(--spacing-12);
+  flex: none;
+}
+
+.tpl-ms__main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tpl-ms__feed {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 记录流和输入框同宽，最宽 1040，居中（照 Figma「主站首页 · 创作」） */
+.tpl-ms__column,
+.tpl-ms__composer > * {
+  box-sizing: border-box;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.tpl-ms__column {
+  display: flex;
+  flex-direction: column;
+  gap: 48px; /* Figma 没变量 */
+  padding: 104px var(--spacing-24) var(--spacing-32); /* 第一条内容离顶 104，照即梦 */
+}
+
+/* 输入框浮在记录流上（玻璃），记录从它下面滚过去；记录流底部留出输入框的高度 */
+.tpl-ms__composer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: 0 var(--spacing-24) var(--spacing-24);
+  pointer-events: none;
+}
+
+.tpl-ms__composer > * {
+  pointer-events: auto;
+}
+
+.tpl-ms__column {
+  padding-bottom: calc(var(--tpl-composer-h, 220px) + var(--spacing-32));
+}
+
+/* 右上角：猕猴桃余额 + 头像。离边 16、内边距 4 / 12、间距 8、头像 24；玻璃（和菜单一样：glass + 模糊 32 + 描边 border-subtle），11-03 用户定 */
+.tpl-ms__wallet {
+  position: absolute;
+  top: var(--spacing-16);
+  right: var(--spacing-16);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-4) var(--spacing-12);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-brand-solid);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+/* 一条记录：记录头 + 结果网格 + 底部按钮，间距 12 */
+.tpl-record {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+}
+
+/* 结果网格：4 列，间距 4；格子高按比例，最小 120、最大 474 */
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  align-items: start;
+}
+
+.tpl-grid[data-cols="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tpl-grid > .kv-result-tile {
+  min-height: 120px;
+  max-height: 474px;
+}
+
+.tpl-grid > [data-span="2"] {
+  grid-column: span 2;
+}
+
+.tpl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8);
+}
+
+/* Agent 的回复文字 */
+.tpl-text {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.tpl-turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+}
+
+/* ---------- 画布页：左边画布，右边 Agent 侧栏 ---------- */
+
+.tpl-cv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 500px; /* 照线上：默认 500，可拖 360–720；网站不做拖动 */
+  height: 100%;
+}
+
+.tpl-cv__main {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden; /* 画布窄的时候左上角的条不盖到 Agent 侧栏上 */
+}
+
+.tpl-cv__canvas {
+  height: 100%;
+}
+
+/* 画布左上角的 CanvasHeader：离左上各 16，盖在画布上 */
+.tpl-cv__header {
+  position: absolute;
+  top: var(--spacing-16);
+  left: var(--spacing-16);
+  z-index: 1;
+}
+
+.tpl-cv__agent {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: var(--border-width-1) solid var(--color-border-subtle);
+  background: var(--color-bg-fill-base);
+}
+
+.tpl-cv__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-12) var(--spacing-12) var(--spacing-16);
+}
+
+.tpl-cv__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-width: 0;
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-20);
+}
+
+.tpl-cv__title > .kv-icon {
+  color: var(--color-text-fill-tertiary);
+}
+
+.tpl-cv__stream {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  flex: 1;
+  min-height: 0;
+  padding: var(--spacing-8) var(--spacing-16) var(--spacing-16);
+  overflow: auto;
+}
+
+.tpl-cv__composer {
+  position: relative; /* DropOverlay 盖在它上面 */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  margin: 0 var(--spacing-16) var(--spacing-16);
+  padding: var(--spacing-16);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-surface);
+}
+
+.tpl-cv__composer textarea {
+  min-height: 68px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: none;
+  color: var(--color-text-fill-primary);
+  font: inherit;
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.tpl-cv__composer textarea::placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+.tpl-cv__tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+}
+
+.tpl-cv__tools > div {
+  display: flex;
+  gap: var(--spacing-4);
+}
+
+/* ---------- 技能面板 ---------- */
+
+/* 输入框放底部正中，面板摆开在它上面、和「技能」按钮左对齐（输入框内边距 16 + 前两个按钮 64） */
+.tpl-sk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--spacing-24);
+  background: var(--color-bg-fill-base);
+}
+
+.tpl-sk__dock {
+  display: flex;
+  margin-top: auto;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  width: 560px;
+  max-width: 100%;
+}
+
+.tpl-sk__composer {
+  margin: 0;
+}
+
+.tpl-sk__states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-16);
+}
+
+/* ---------- 画布工具 ---------- */
+
+/* 画布底：点阵，节点和工具条摆在上面 */
+.tpl-tool {
+  display: flex;
+  align-items: flex-start;
+  justify-content: safe center;
+  gap: var(--spacing-24);
+  box-sizing: border-box;
+  height: 100%;
+  overflow: auto;
+  padding: var(--spacing-24);
+  background-color: var(--color-bg-fill-base);
+  background-image: radial-gradient(circle, var(--color-border) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.tpl-tool--crop {
+  flex-wrap: wrap;
+  align-content: safe center;
+  align-items: center;
+}
+
+.tpl-tool--dialog {
+  align-items: safe center;
+  background-image: none;
+  background-color: var(--color-bg-fill-base);
+}
+
+/* 一个节点：节点在上，工具面板 / 工具条在下，间距 12，水平居中 */
+.tpl-tool__node {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-12);
+}
+
+/* 工具面板：线上宽 420（生成面板是 620），只有一两个参数 */
+.tpl-tool__panel {
+  width: 420px;
+}
+
+.tpl-tool__slider {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--spacing-12);
+  width: 100%;
+}
+
+.tpl-tool__slider > .kv-slider {
+  flex: 1;
+}
+
+.tpl-tool__bar-title {
+  padding: 0 var(--spacing-4);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+  white-space: nowrap;
+}
+
+.tpl-tool__bar-hint {
+  padding-right: var(--spacing-8);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+  white-space: nowrap;
+}
+
+.tpl-tool__size {
+  width: 80px;
+}
+
+.tpl-tool__times {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-14);
+}
+
+/* 裁剪：图上盖暗色，裁剪框里是亮的 */
+.tpl-tool__crop {
+  position: relative;
+  width: 256px;
+  height: 256px;
+  overflow: hidden;
+  border-radius: var(--border-radius-12);
+}
+
+.tpl-tool__crop > img,
+.tpl-tool__expand-box > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tpl-tool__crop-box {
+  position: absolute;
+  inset: 32px 24px 48px 40px;
+  box-shadow: 0 0 0 999px var(--color-bg-fill-mask);
+}
+
+.tpl-tool__crop-box > .kv-crop-handles,
+.tpl-tool__expand-box > .kv-crop-handles {
+  position: absolute;
+  inset: 0;
+}
+
+/* 扩图：外框比原图大，原图在中间，扩出去的地方是浅底 */
+.tpl-tool__expand {
+  display: grid;
+  place-items: center;
+  width: 320px;
+  height: 256px;
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.tpl-tool__expand-box {
+  position: relative;
+  width: 176px;
+  height: 176px;
+}
+
+/* 视频封装：左类型 160、中素材 248、右规格，间距 16 */
+.tpl-pack {
+  max-height: 100%;
+}
+
+.tpl-pack .kv-dialog__footer > .tpl-pack__meta {
+  margin-right: auto;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.tpl-pack .kv-dialog__body {
+  display: flex;
+  overflow: hidden;
+}
+
+/* 三栏各自滚动 */
+.tpl-pack__body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 160px 248px minmax(0, 1fr);
+  gap: var(--spacing-16);
+  min-height: 0;
+}
+
+.tpl-pack__body > * {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.tpl-pack__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.tpl-pack__materials {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+}
+
+.tpl-pack__materials > *,
+.tpl-pack__spec > * {
+  flex: none;
+}
+
+.tpl-pack__cover {
+  position: relative;
+  width: 120px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  aspect-ratio: 1;
+}
+
+.tpl-pack__edit {
+  position: absolute;
+  top: var(--spacing-8);
+  left: var(--spacing-8);
+}
+
+.tpl-pack__preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-12);
+  min-height: 320px;
+  padding: var(--spacing-16);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.tpl-pack__video {
+  width: 160px;
+  aspect-ratio: 9 / 16;
+}
+
+.tpl-pack__video--square {
+  aspect-ratio: 1;
+}
+
+.tpl-pack__spec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  min-width: 0;
+}
+
+.tpl-pack__spec-list {
+  display: grid;
+  gap: var(--spacing-4);
+  margin: 0;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+.tpl-pack__spec-list > div {
+  display: flex;
+  gap: var(--spacing-8);
+}
+
+.tpl-pack__spec-list dd {
+  margin: 0;
+  color: var(--color-text-fill-primary);
+}
+
+.tpl-pack__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.tpl-pack__size {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.tpl-pack__size > .kv-number-input {
+  flex: 1;
+}
+
+/* ---------- 资产管理 ---------- */
+
+/* 右边主区：自己滚，三块从上到下，块间距 32，左右 32。
+   上边距不放在滚动区上（放在第一块上）：吸顶按滚动区的内边距算，放上面会让筛选条停在离顶 32 的地方、上面漏出内容 */
+.tpl-as {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 0 var(--spacing-32);
+  background: var(--color-bg-fill-base);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.tpl-as__section {
+  margin-bottom: var(--spacing-32);
+}
+
+.tpl-as__section:first-child {
+  padding-top: var(--spacing-32);
+}
+
+/* 标题行：16 / 24 中粗，右边文字按钮 */
+.tpl-as__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+  min-height: 28px;
+  margin-bottom: var(--spacing-16);
+}
+
+.tpl-as__head h2 {
+  margin: 0;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-24);
+}
+
+.tpl-as__head-actions {
+  display: flex;
+  gap: var(--spacing-8);
+}
+
+/* 我的素材、我的画布：只放一排。每张最小 200，一排能放几个放几个（内容区 1452 时 6 个，屏越宽越多），
+   放不下的排到第二行、第二行高 0 藏起来，看更多点「查看全部」。工作站网站是全屏用的（11-04 用户定） */
+.tpl-as__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-rows: auto;
+  grid-auto-rows: 0;
+  column-gap: var(--spacing-16);
+  overflow: hidden;
+}
+
+/* 生成历史筛选条：来源、类型、收藏，搜索靠右；滚动时贴在主区顶上，底色 base + 下描边 */
+.tpl-as__filters {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  margin: 0 calc(var(--spacing-32) * -1) var(--spacing-24);
+  padding: var(--spacing-12) var(--spacing-32);
+  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
+  background: var(--color-bg-fill-base);
+}
+
+.tpl-as__filters > * {
+  flex: none;
+}
+
+.tpl-as__label {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  line-height: var(--font-line-height-20);
+}
+
+.tpl-as__label:not(:first-child) {
+  margin-left: var(--spacing-16);
+}
+
+.tpl-as__search {
+  flex: 0 1 240px;
+  min-width: 0;
+  margin-left: auto;
+}
+
+/* 按天分组：「今天」，下面正方形格子，最小 136、间距 4，一排能放几个放几个（内容区 1452 时 10 个），照即梦 */
+.tpl-as__day {
+  margin-bottom: var(--spacing-32);
+}
+
+.tpl-as__day > header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-8);
+  margin-bottom: var(--spacing-12);
+}
+
+.tpl-as__day h3 {
+  margin: 0;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--font-line-height-20);
+}
+
+.tpl-as__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: var(--spacing-4);
+}
+
+.tpl-as__empty {
+  padding: var(--spacing-32) 0;
+}
+

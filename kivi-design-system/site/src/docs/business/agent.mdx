@@ -1,0 +1,260 @@
+import { Demo, PageHeader, Tag } from '@shell';
+import {
+  ActionCardPlayground,
+  AskRecordPlayground,
+  FileCardPlayground,
+  MessageFeedbackPlayground,
+  QuestionPanelPlayground,
+  QuestionPagerDemo,
+  SendButtonPlayground,
+  SkillCardPlayground,
+  UserMessagePlayground,
+} from './agent.demos';
+
+<style>{`
+  /* 这一页的演示用 */
+
+  /* Agent 面板的底色是 base，演示台也用 base，不用网站默认的浅灰 */
+  .shell-demo-preview:not([data-stage="media"]),
+  .shell-pg-stage:not(.is-media) {
+    background: var(--color-bg-fill-base);
+  }
+
+  /* 组件在对话里宽度是拉满的，演示台里限成 Figma 的宽度 */
+  .shell-demo-preview > :is(.kv-action-card, .kv-question-panel, .kv-user-message, .kv-skill-card, .kv-file-card),
+  .shell-pg-stage > :is(.kv-action-card, .kv-question-panel, .kv-user-message, .kv-skill-card, .kv-file-card) {
+    max-width: 428px;
+  }
+`}</style>
+
+<PageHeader
+  eyebrow="业务组件"
+  title="Agent 对话"
+  figma={['Agent 对话', '340:658']}
+  code="kivi/agent"
+/>
+
+## AskRecord
+
+询问记录：Agent 问过用户的问题留在对话里，点开看问答。
+
+<AskRecordPlayground />
+
+## UserMessage
+
+用户消息：用户在对话里发的话。
+
+<UserMessagePlayground />
+
+## MessageFeedback
+
+回复反馈：Agent 回复下面的复制、赞、踩。
+
+<MessageFeedbackPlayground />
+
+## QuestionPanel
+
+追问面板：Agent 追问时让用户选答案。
+
+<QuestionPanelPlayground />
+
+### 翻页
+
+<Demo noCode scope={{ QuestionPagerDemo }} code={`<QuestionPagerDemo />`} />
+
+## ActionCard
+
+确认卡：Agent 动手前要用户确认、授权，或告诉用户出错了。
+
+<ActionCardPlayground />
+
+## SendButton
+
+发送按钮：发送消息，生成中变成停止。
+
+<SendButtonPlayground />
+
+### 输入框：发送按钮在工具条最右
+
+<Demo code={`
+<div
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    boxSizing: 'border-box',
+    width: 428,
+    maxWidth: '100%',
+    padding: 16,
+    border: '1px solid var(--color-border-subtle)',
+    borderRadius: 'var(--border-radius-16)',
+    background: 'var(--color-bg-fill-surface)',
+  }}
+>
+  <div style={{ minHeight: 68, color: 'var(--color-text-fill-placeholder)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' }}>
+    描述任何你想要生成的内容
+  </div>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+    <div style={{ display: 'flex', gap: 4 }}>
+      <IconButton icon="Add" label="添加" variant="text" />
+      <IconButton icon="Mdoel" label="模型偏好" variant="text" />
+      <IconButton icon="Skill" label="技能" variant="text" />
+      <IconButton icon="Hand" label="手" variant="text" />
+      <IconButton icon="Openai" label="切换对话模型（内部测试）" variant="text" />
+    </div>
+    <SendButton disabled />
+  </div>
+</div>
+`} />
+
+## SkillCard
+
+技能卡：Agent 新建或更新技能后给用户看，能编辑、使用。
+
+<SkillCardPlayground />
+
+## FileCard
+
+文件卡：Agent 写出的文件，比如剧本、字幕。
+
+<Tag kind="danger">废弃</Tag> 平台没有文件卡，不要用。组件先留着。
+
+<FileCardPlayground />
+
+## 参数
+
+### AskRecord
+
+Agent 问用户（问题卡）或生成前确认，在对话里留的一行，不进工具调用组。图标 `Message`，默认收起，悬停出箭头，点开往下推（和工具调用组一样）。询问中：等用户回答，问题面板在输入框位置，这一行扫光；已询问：回答了；询问：跳过了。展开后问题 14 / 22 secondary，回答和说明 12 / 20 tertiary，一题里间距 4 `--spacing-4`，题和题之间 8 `--spacing-8`。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `status` | `"asking"` `"answered"` `"skipped"` | `"answered"` | 询问中 / 已询问 / 询问（跳过：用户点了「全部交给 AI 决策」，或没回答直接发了新消息） |
+| `items` | `AskRecordItem[]` | — | 问了什么、怎么答的，必填，一题一项：`question` 问题，`answer` 回答（询问中、跳过时不传） |
+| `skippedText` | `ReactNode` | `"已跳过"` | 跳过时写在最后的说明；交给 AI 决策时传「交给 AI 决策」 |
+| `label` | `ReactNode` | 按状态 | 这一行的字，默认询问中 / 已询问 / 询问 |
+| `expanded` | `boolean` | — | 展开：受控 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+
+### UserMessage
+
+气泡靠右，宽度跟文字走。组件宽 428，放进对话里拉满。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `assets` | `ReactNode` | — | 素材行：一排 ReferenceItem 56（缩略图 AssetThumb 56），间距 8，图片、带时长的视频、音频都放这里。不传没有素材行 |
+| `children` | `ReactNode` | — | 气泡里的字：14 / 22 常规，primary，最宽 340，超出换行，文字里的换行保留。里面可以夹 `MentionChip`（技能、图片、视频、音频、节点引用），和输入框里是同一个。气泡底 container-light-1（白 10%），圆角 12 `--border-radius-12`，内边距 12 / 16 `--spacing-12`、`--spacing-16`，和素材间距 8 `--spacing-8` |
+| `maxLines` | `number` | `12` | 最多显示几行，超过的折叠，气泡底部出「显示更多」（Button 文字 sm + `DownArrowSmall`），点了往下推展开，300ms ease-in-out，按钮变「收起」、箭头转 180°。没超过不出按钮 |
+| `expanded` | `boolean` | — | 展开：受控 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+
+### MessageFeedback
+
+助手消息底部的反馈条。生成中不显示（调用方控制）。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `text` | `string` | — | 复制按钮要复制的回复内容。不传没有复制按钮 |
+| `traceId` | `string` | — | 复制 TraceID 按钮要复制的 ID。不传没有这个按钮。页脚在完成、取消、失败等状态且有 traceId 时出现 |
+| `value` | `'like' \| 'dislike' \| null` | — | 赞 / 踩：受控，`null` 是都没选。赞、踩互斥，再点一次取消，选中换实心图标（`ThumbsUpFill`、`ThumbsDownFill`） |
+| `defaultValue` | `'like' \| 'dislike' \| null` | `null` | 赞 / 踩：非受控的初始值 |
+| `onChange` | `(value) => void` | — | 点了赞、踩、取消时触发。点踩立即记录一次，不等原因提交；提交失败回滚并弹 Toast「反馈提交失败，请稍后再试」 |
+| `reason` | `boolean` | `true` | 踩了之后下面往下推出原因输入：Textarea 撑满，提交（Button 28 主要，没写字不可点）在框里右下角。回车提交、Shift + 回车换行、Esc 收起；点赞、再点踩、提交、Esc 都收起；按 Esc 只关原因，不会连外层弹窗一起关 |
+| `onSubmitReason` | `(reason: string) => void` | — | 提交了踩的原因 |
+| `onCopied` | `(text: string) => void` | — | 复制成功后触发。复制成功图标换 `CheckSmall`、提示变「已复制」，1.5 秒后换回 |
+
+### QuestionPanel
+
+外框底 surface，描边 border-subtle 1，圆角 16 `--border-radius-16`，内边距 16 `--spacing-16`，题目栏、选项、底部操作间距 12。其余原生 `<section>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `title` | `ReactNode` | — | 题目，必填。14 / 22 粗，primary |
+| `pager` | `ReactNode` | — | 分页文字，比如「1/5」，13 / 20 secondary。不传不显示分页；两边是 IconButton 28 · 文字（`LeftArrowSmall` `RightArrowSmall`），间距 4 |
+| `onPrev` | `() => void` | — | 点分页左边的「上一题」 |
+| `onNext` | `() => void` | — | 点分页右边的「下一题」 |
+| `prevDisabled` | `boolean` | `false` | 「上一题」不能点，第一题时用 |
+| `nextDisabled` | `boolean` | `false` | 「下一题」不能点，最后一题时用 |
+| `multiple` | `boolean` | `false` | 多选。默认单选，只有一项选中，选项和「其他」互斥：选了选项清掉「其他」里的字，在「其他」里打字清掉已选的选项 |
+| `value` | `string[]` | — | 选中的值：受控。值是 QuestionOption 的 `value`，单选最多一项 |
+| `defaultValue` | `string[]` | `[]` | 选中的值：非受控的初始值 |
+| `onChange` | `(value: string[]) => void` | — | 选中变化时触发 |
+| `skip` | `boolean` | `true` | 显示「忽略」（Button 中 · 文字，跳过这道题） |
+| `skipText` | `ReactNode` | `"忽略"` | 「忽略」的文字 |
+| `onSkip` | `() => void` | — | 点「忽略」 |
+| `aiDecide` | `boolean` | `true` | 显示「全部由 AI 决策」（Button 中 · 次要，不答了，都交给 AI 决定），在「忽略」和「确认提交」之间 |
+| `aiDecideText` | `ReactNode` | `"全部由 AI 决策"` | 「全部由 AI 决策」的文字 |
+| `onAiDecide` | `() => void` | — | 点「全部由 AI 决策」。消息里留的 AskRecord 用 `status="skipped"`、`skippedText="交给 AI 决策"` |
+| `submitText` | `ReactNode` | `"确认提交"` | 「确认提交」的文字 |
+| `onSubmit` | `() => void` | — | 点「确认提交」（Button 中 · 主要）。底部操作靠右，间距 8。一项都没选、「其他」也没填字时按钮不能点 |
+| `disabled` | `boolean` | `false` | 整个面板禁用：选项、分页、两个按钮都不能点，「其他」不能输入。提交中用 |
+| `children` | `ReactNode` | — | 选项：QuestionOption，间距 4，最后一个可以是 `type="other"`。没写编号的按顺序补 1、2、3 |
+
+- 单选是 `radiogroup`，组里只有一个 Tab 停点（选中的那项，没选就是第一项）；上、左 / 下、右方向键换到上一项 / 下一项，首尾相接，焦点到哪就选到哪。多选是 `group`，每项各自能 Tab，空格选。
+- 提交或忽略后面板消失，消息里留一行 AskRecord「已询问」。
+
+### QuestionOption
+
+追问面板里的一个选项，不发布，只在 QuestionPanel 里用。高 36，圆角 8 `--border-radius-8`，左右内边距 8 `--spacing-8`，14 / 22。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"option"` `"other"` | `"option"` | 选项 / 其他。「其他」没有文字，是输入框，只有默认状态 |
+| `index` | `ReactNode` | — | 编号，放进 QuestionPanel 里可以不写。编号框 20，圆角 6 `--border-radius-6`，12 / 16 |
+| `value` | `string` | 编号 | 选项的值，QuestionPanel 靠它记哪些选中 |
+| `disabled` | `boolean` | `false` | 禁用，变淡不能点。QuestionPanel 禁用时自动跟着禁用 |
+| `checked` | `boolean` | — | 选中：放进 QuestionPanel 里由它管，单独用时才需要写。渲染成 `aria-checked`，单选 `role="radio"`，多选 `role="checkbox"` |
+| `children` | `ReactNode` | — | 选项文字 |
+| `placeholder` | `string` | `"其他，请直接输入"` | 「其他」的占位文字 |
+| `inputProps` | `InputHTMLAttributes` | — | 「其他」里输入框的属性，比如 `value` `onChange` |
+
+### ActionCard
+
+三种：生成确认、授权、出错。其余原生 `<section>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"confirm"` `"auth"` `"error"` | `"confirm"` | 生成确认 / 授权 / 出错。前两种样子一样：底 surface，描边 border-subtle 1，圆角 16 `--border-radius-16`，内边距 16，间距 12；出错只有一行说明，描边 border（白 12%）1，不填底，内边距 12 / 16 |
+| `title` | `ReactNode` | — | 标题，14 / 22 粗，primary。出错没有 |
+| `description` | `ReactNode` | — | 说明，13 / 20，tertiary（出错用 secondary）。可点的一段用 `<button className="kv-action-card__link">` |
+| `actions` | `ReactNode` | — | 操作，靠右，间距 8：Button 中。生成确认是取消（次要）+ 确认生成（主要），授权是去授权（主要）。出错没有 |
+
+### SendButton
+
+就是 IconButton 主要 · 36 · 圆形（`round`，圆形只给专用按钮），悬停、按下、禁用都跟按钮体系走：默认品牌渐变底（gradient-1 → gradient-2，从左到右），`Send` 图标 20，on-brand；悬停叠一层白 14% 变亮；按下透明度 0.8。放在输入框工具条最右，是工具条里唯一实心的；左边的按钮用 IconButton 32 · 文字（平时无底，悬停才出底），间距 4 `--spacing-4`。其余原生 `<button>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `generating` | `boolean` | `false` | 生成中：图标换成停止方块 12 × 12，圆角 4 `--border-radius-4`，点了停止生成；悬停、按下照常 |
+| `disabled` | `boolean` | `false` | 禁用，还没输入内容。底 container-light-1（白 10%），图标 disabled（白 20%）。发送条件：Enter 发送、Shift + Enter 换行；输入法组字中不发；上传中、生成中不能发；只有附件、没有文字也能发 |
+| `aria-label` | `string` | `"发送"` | 只有图标，读屏靠它。生成中默认「停止生成」 |
+
+### SkillCard
+
+Agent 帮用户新建或更新了一个技能后出的卡，照旧版 KIVI 3.14「消息气泡」里的技能卡。外框和确认卡一样：宽度拉满消息，内边距 16，圆角 16 `--border-radius-16`，surface 底，描边 border-subtle，上下两块间距 12 `--spacing-12`。封面 100 × 56，圆角 8，里面描一圈 border；封面和文字间距 12。按钮靠右，间距 8，都是 Button 中。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `title` | `ReactNode` | — | 技能名，必填。14 / 22 中等，primary，一行，超出省略 |
+| `description` | `ReactNode` | — | 一句话说明。13 / 20 常规，tertiary，一行，超出省略。不传不显示 |
+| `cover` | `string` | 技能占位封面 | 封面图地址，铺满裁切。用户没设封面时不传，用技能专用的占位封面 `SKILL_DEFAULT_COVER`（`assets/skill-card/default-cover.png`，深绿底加 KIVI Logo，从 Figma 旧版技能卡导出） |
+| `onEdit` | `() => void` | — | 点「编辑」（次要） |
+| `onUse` | `() => void` | — | 点「使用技能」（主要） |
+| `editText` | `ReactNode` | `"编辑"` | 「编辑」按钮的字 |
+| `useText` | `ReactNode` | `"使用技能"` | 「使用技能」按钮的字 |
+
+### FileCard
+
+<Tag kind="danger">废弃</Tag> 平台没有，不要用。外框、字号和技能卡一样：宽度拉满消息，内边距 16，圆角 16 `--border-radius-16`，surface 底，描边 border-subtle，间距 12；图标块 40，圆角 8 `--border-radius-8`，图标 20。悬停右边出操作（IconButton 28 · 轻，音频的播放常显）。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"doc"` `"subtitle"` `"audio"` | `"doc"` | 废弃，平台没有。文档（md、txt，图标 `File`）/ 字幕（srt，`Subtitle`）/ 音频（mp3 等，`FileMusic`）。文档、字幕的操作是预览、下载，音频是播放、下载 |
+| `name` | `ReactNode` | — | 文件名，必填。14 / 22 粗，primary，一行，超出省略 |
+| `meta` | `ReactNode` | — | 信息：创建时间 / 条数 / 时长。13 / 20 常规，tertiary（和技能卡的说明一样） |
+| `generating` | `boolean` | `false` | 生成中：信息固定写「正在撰写…」，右边换成 Loading 小（16，转圈），没有操作 |
+| `onPreview` | `() => void` | — | 点「预览」（文档、字幕） |
+| `onPlay` | `() => void` | — | 点「播放」（音频） |
+| `onDownload` | `() => void` | — | 点「下载」 |

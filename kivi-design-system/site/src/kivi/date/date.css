@@ -1,0 +1,219 @@
+/*
+  日期：Calendar（单月日历）、DateRangeFilter（时间筛选）。照旧版 KIVI 3.5-3.14 和线上做。
+
+  Calendar          kv-calendar，头 kv-calendar__head（« ‹ 标题 › »，翻页用 IconButton 28，双箭头图标 Double…ArrowSmall），
+                    网格 kv-calendar__grid（role="grid"），每格 kv-calendar__day：
+                    选中 aria-selected="true"；不能选 aria-disabled="true"；不是这个月 data-outside；今天 aria-current="date"（不画标记，Figma 没定）
+  DateRangeFilter   触发器 kv-date-range-filter__trigger（文字按钮 + 下箭头），面板 kv-date-range（玻璃），
+                    日期框 kv-date-range__field（aria-expanded 是日历开着），日历 kv-date-range__calendar（第二层浮层，浮在点的日期框下面，--end 对齐结束框），
+                    预设 kv-date-range__presets 里是 MenuItem（选中用选中底色，不打勾）
+*/
+
+/* ---------- Calendar ---------- */
+
+/* 7 列 24 的圆格，横向间距 4，竖向 12：网格宽 192 */
+.kv-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  width: max-content;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+}
+
+.kv-calendar__head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+}
+
+.kv-calendar__title {
+  flex: 1;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.kv-calendar__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  width: 192px;
+  margin: 0 auto;
+}
+
+.kv-calendar__row {
+  display: grid;
+  grid-template-columns: repeat(7, 24px);
+  justify-content: space-between;
+}
+
+.kv-calendar__week {
+  color: var(--color-text-fill-secondary);
+  text-align: center;
+}
+
+.kv-calendar__day {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-round);
+  outline: none;
+  background: transparent;
+  color: var(--color-text-fill-primary);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-calendar__day[data-outside] {
+  color: var(--color-text-fill-tertiary);
+}
+
+/* 日历放在玻璃上（深底）：格子平时没底，悬停用 Light 1 hover 12%；选中是常驻底色，用 Light 1 默认 8% */
+.kv-calendar__day:where(:hover, :focus-visible, .is-hover):not([aria-disabled="true"]) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-calendar__day[aria-selected="true"] {
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 选中的日子悬停、键盘聚焦、按下：比选中亮一档（hover / pressed），选择器比上面选中那条更具体 */
+.kv-calendar__day[aria-selected="true"]:where(:hover, :focus-visible, .is-hover):not([aria-disabled="true"]) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-calendar__day[aria-selected="true"]:active:not([aria-disabled="true"]) {
+  background: var(--color-bg-fill-container-light-1-pressed);
+}
+
+.kv-calendar__day[aria-disabled="true"] {
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+/* ---------- DateRangeFilter ---------- */
+
+/* 面板：宽 272，玻璃底 + 描边，圆角 16（条目 8 + 内边距 8），内边距 8，间距 4 */
+.kv-date-range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  width: 272px;
+  padding: var(--spacing-8);
+  border-radius: var(--border-radius-16);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.kv-date-range__fields {
+  display: flex;
+  gap: var(--spacing-8);
+  padding-bottom: var(--spacing-4);
+}
+
+/* 日期框：高 36，底白 10%（玻璃是深底，用 Light 1），悬停白 14%（hover），日历开着时是常驻底色、用默认 8%，右边日历图标 16 */
+.kv-date-range__field {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-width: 0;
+  height: 36px;
+  padding: 0 var(--spacing-8);
+  border: 0;
+  border-radius: var(--border-radius-8);
+  outline: none;
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font-family: inherit;
+  font-size: var(--font-size-13);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-date-range__field:where(:hover, :focus-visible, .is-hover) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-date-range__field[aria-expanded="true"] {
+  background: var(--color-bg-fill-container-light-1); /* 展开是常驻底色，用默认；和平时一样，靠箭头和日历浮层区分 */
+}
+
+.kv-date-range__field > .kv-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-tertiary);
+}
+
+.kv-date-range__date {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-date-range__date--placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+/* 日历：第二层浮层，浮在点的那个日期框下面，和框左对齐、离 4（点开的浮层都离 4），压在预设上、可以伸出面板。
+   和面板并排挂在弹出层（kv-popup，fixed）里、按它定位，不嵌在面板里：面板有背景模糊，嵌在里面的模糊不生效，预设的字会透上来。
+   和面板一样是玻璃：底 glass + 模糊 32 + 描边 border-subtle，圆角 16，内边距 8。出现同菜单（淡入 + 96% 放大、从上往下移 4，200ms ease-out），消失 150ms ease-in */
+.kv-date-range__calendar {
+  position: absolute;
+  top: calc(var(--spacing-8) + 36px + var(--spacing-4)); /* 面板内边距 8 + 日期框 36 + 离 4 */
+  left: var(--spacing-8);
+  z-index: 1;
+  box-sizing: border-box;
+  padding: var(--spacing-8);
+  border-radius: var(--border-radius-16);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  transform-origin: 0 0;
+  animation: kv-popup-in var(--motion-duration-200) var(--motion-ease-out) both;
+}
+
+/* 消失：150ms ease-in，同菜单（淡出 + 缩到 96%、往上移 4）；这时不再响应点击 */
+.kv-date-range__calendar[data-state="closed"] {
+  pointer-events: none;
+  animation: kv-popup-out var(--motion-duration-150) var(--motion-ease-in) both;
+}
+
+/* 结束日期：面板宽 272，两个框各占一半、中间间距 8，结束框的左边在 50% + 4 */
+.kv-date-range__calendar--end {
+  left: calc(50% + var(--spacing-4));
+}
+
+.kv-date-range__presets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* 触发器箭头：展开时转上去，200ms ease-in-out */
+.kv-date-range-filter__trigger .kv-icon:last-child {
+  transition: transform var(--motion-duration-200) var(--motion-ease-in-out);
+}
+
+.kv-date-range-filter__trigger[aria-expanded="true"] .kv-icon:last-child {
+  transform: rotate(180deg);
+}

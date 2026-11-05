@@ -1,0 +1,32 @@
+import { PageHeader } from '@shell';
+import { InstallPrompt } from './install.demos';
+
+<PageHeader
+  eyebrow="开始"
+  title="安装技能"
+  lead="装上以后，让 AI 做 KIVI 的界面，它会照这套规范来。选好系统和你用的 AI 工具，复制下面这段发给它，它会自己装好。"
+/>
+
+## 安装
+
+<InstallPrompt />
+
+## 更新
+
+技能每次用之前会自己拉最新版本，不用手动更新。以前是直接复制文件夹装的，没法更新，照上面重装一次。
+
+## 怎么用
+
+- 让 AI 写 KIVI 的前端、搭页面和原型、验收开发稿，它会自己用这个技能。
+- Claude Code 里也可以直接输入 `/kivi-design-system`。
+
+## 里面有什么
+
+```text
+kivi-design-system/
+├── SKILL.md      # 入口：分任务、先读哪页
+├── workflows/    # 子技能：搭页面、验收
+├── references/   # 改 Figma 组件库时看
+├── site/         # 这个网站的源码：规范文字和组件
+└── assets/       # 占位图、空状态插图
+```

@@ -1,0 +1,275 @@
+/*
+  KIVI · 资产
+  资产页和画布管理页的卡片：CoverGrid（封面拼图）、FolderCard（文件夹卡）、ProjectCard（画布项目卡）、CreateCard（新建卡）。
+  依赖 tokens.css、base.css。都照线上（ai-design-web 的 MyAssets、InfiniteCanvas/Manage）的结构和尺寸，颜色换成变量。
+
+  状态
+    悬停    :hover、:focus-visible、:has(:focus-visible)（键盘进到卡里）；文档摆静态的用 .is-hover
+    空      FolderCard 封面没有图：data-empty
+*/
+
+/* ---------- CoverGrid ---------- */
+
+/* 2 × 2 的格子，间距 1。几张图怎么排看 data-count */
+.kv-cover-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: var(--border-width-1);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1)); /* 放在带 Light 1 底的卡里（ProjectCard）是 Light 2 */
+}
+
+.kv-cover-grid__cell {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: cover;
+}
+
+/* 1 张：铺满 */
+.kv-cover-grid[data-count="1"] > .kv-cover-grid__cell {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+}
+
+/* 2 张：左右各一列 */
+.kv-cover-grid[data-count="2"] > .kv-cover-grid__cell {
+  grid-row: 1 / 3;
+}
+
+/* 3 张：左边一张占 2 / 3 宽、整列高，右边两张上下排 */
+.kv-cover-grid[data-count="3"] {
+  grid-template-columns: 2fr 1fr;
+}
+
+.kv-cover-grid[data-count="3"] > .kv-cover-grid__cell:first-child {
+  grid-row: 1 / 3;
+}
+
+/* ---------- 卡片共用：悬停才出的「⋯」 ---------- */
+
+/* 出现 150ms ease-out，消失 150ms ease-in */
+.kv-folder-card__more,
+.kv-project-card__more {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-in),
+    visibility 0s linear var(--motion-duration-150);
+}
+
+.kv-folder-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-folder-card__more,
+.kv-project-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-project-card__more,
+.kv-folder-card__more:has([aria-expanded="true"]),
+.kv-project-card__more:has([aria-expanded="true"]) {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-out),
+    visibility 0s;
+}
+
+/* ---------- FolderCard ---------- */
+
+/* 一格：封面 + 名字和数量，间距 8。封面 223:155 */
+.kv-folder-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  min-width: 0;
+  font-family: var(--font-family);
+}
+
+.kv-folder-card__cover {
+  position: relative;
+  aspect-ratio: 223 / 155;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  outline: var(--border-width-1) solid var(--color-border);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-container-light-1);
+  transition: background-color var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 悬停：和画布卡、新建卡一样，卡的底变 Light 1 悬停，「⋯」悬停才出（11-05 统一）。文件夹卡的「卡」就是封面这块 */
+.kv-folder-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-folder-card__cover {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+/* 空文件夹：浅底正中一个文件夹图标（线上是一张小插图，11-04 改成图标） */
+.kv-folder-card__cover[data-empty] {
+  display: grid;
+  place-items: center;
+}
+
+.kv-folder-card__empty {
+  width: 40px;
+  height: 40px;
+  color: var(--color-text-fill-tertiary);
+}
+
+/* 点封面进文件夹：一层透明按钮盖满封面 */
+.kv-folder-card__open,
+.kv-project-card__open {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* 置顶标签：右上，离边 6 */
+.kv-folder-card__pin {
+  position: absolute;
+  top: var(--spacing-6);
+  right: var(--spacing-6);
+  pointer-events: none;
+}
+
+/* 「⋯」：右下，离边 6 */
+.kv-folder-card__more {
+  position: absolute;
+  right: var(--spacing-6);
+  bottom: var(--spacing-6);
+}
+
+/* 名字 (数量)：一行，14 / 22，primary，名字一行省略、数量跟在后面不省略，间距 4（照线上） */
+.kv-folder-card__meta {
+  display: flex;
+  gap: var(--spacing-4);
+  min-width: 0;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  white-space: nowrap;
+}
+
+.kv-folder-card__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- ProjectCard ---------- */
+
+/* 圆角 12，浅底 + 描边，悬停底色变亮。封面 257:157，下面名字和时间，左右 8、下 8，间距 8。
+   整张不定比例：封面按比例、下面两行按字高，卡窄了字不会被挤掉（线上固定 257:210，257 宽时差不多） */
+.kv-project-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  min-width: 0;
+  padding-bottom: var(--spacing-8);
+  overflow: hidden;
+  border-radius: var(--border-radius-12);
+  outline: var(--border-width-1) solid var(--color-border);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-container-light-1);
+  --kv-nested-fill: var(--color-bg-fill-container-light-2); /* 自己是 Light 1 底，里面的封面拼图（没图时的空底）叠在上面用 Light 2 */
+  font-family: var(--font-family);
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background-color var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-project-card:where(:hover, :has(:focus-visible), .is-hover) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-project-card__cover {
+  flex: none;
+  height: auto;
+  aspect-ratio: 257 / 157;
+  pointer-events: none;
+}
+
+.kv-project-card__meta {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-height: 0;
+  padding: 0 var(--spacing-4) 0 var(--spacing-8);
+  pointer-events: none;
+}
+
+.kv-project-card__more {
+  pointer-events: auto;
+}
+
+.kv-project-card__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.kv-project-card__name,
+.kv-project-card__time {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kv-project-card__name {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-project-card__time {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+}
+
+/* ---------- CreateCard ---------- */
+
+/* 和 ProjectCard 同一个外观：浅底 + 描边，圆角 12，悬停变亮。中间加号 24 + 文字 14，间距 2。大小填满所在格子 */
+.kv-create-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-12);
+  outline: var(--border-width-1) solid var(--color-border);
+  outline-offset: calc(var(--border-width-1) * -1);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background-color var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-create-card:where(:hover, :focus-visible, .is-hover) {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-create-card:active {
+  background: var(--color-bg-fill-container-light-1-pressed);
+}
+
+.kv-create-card > .kv-icon {
+  width: 24px;
+  height: 24px;
+}

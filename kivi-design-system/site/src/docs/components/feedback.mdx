@@ -1,0 +1,193 @@
+import { Demo, PageHeader } from '@shell';
+import {
+  EmptyStatePlayground,
+  BannerPlayground,
+  LoadingPlayground,
+  NotificationPlayground,
+  NotificationStage,
+  SkeletonPlayground,
+  ToastPlayground,
+  ToastStage,
+} from './feedback.demos';
+
+<PageHeader
+  eyebrow="反馈"
+  title="反馈"
+  figma={['反馈', '177:714']}
+  code="kivi/feedback"
+/>
+
+## Toast
+
+轻提示：操作完的一句结果，比如「已复制」。
+
+<ToastPlayground />
+
+### 点出来试试
+
+<ToastStage />
+
+## Notification
+
+通知：要用户留意的事，比如生成失败。
+
+<NotificationPlayground />
+
+### 点出来试试
+
+<NotificationStage />
+
+## Banner
+
+横幅：嵌在面板里的常驻提醒，比如上传要求。
+
+<BannerPlayground />
+
+## Loading
+
+加载：不知道内容长什么样时等待用，比如技能面板加载中。
+
+<LoadingPlayground />
+
+## Skeleton
+
+骨架屏：知道内容长什么样时等待用，比如图片加载中。
+
+<SkeletonPlayground />
+
+### 一条带头像的卡片
+
+<Demo code={`
+<div style={{ display: 'grid', gridTemplateColumns: '40px 1fr', gap: 'var(--spacing-12)', width: 320, maxWidth: '100%' }}>
+  <Skeleton variant="circle" width={40} height={40} />
+  <div style={{ display: 'grid', gap: 'var(--spacing-8)', alignContent: 'center' }}>
+    <Skeleton variant="text" width="60%" />
+    <Skeleton variant="text" />
+  </div>
+  <Skeleton variant="rect" height={160} style={{ gridColumn: '1 / -1' }} />
+</div>
+`} />
+
+## EmptyState
+
+空状态：没内容、没收藏、没网络、加载失败时占位，比如技能「我的」为空。
+
+<EmptyStatePlayground />
+
+## 参数
+
+### Toast
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"info"` `"success"` `"warning"` `"error"` `"loading"` | `"info"` | 信息 / 成功 / 警告 / 错误 / 加载中。状态图标 16：实心圆 + 镂空符号，圆色 `--color-text-fill-secondary` / `--color-status-success` / `--color-status-warning` / `--color-status-danger`；加载中不画圆，用转圈的 `Loading` 图标，1 秒一圈 |
+| `children` | `ReactNode` | — | 提示文字，一行说完，不加标题。14 / 22，primary |
+| `action` | `ReactNode` | — | 操作文字，比如「撤销」「取消」。14 / 22，secondary，和文字间距 8。不传就没有 |
+| `onAction` | `() => void` | — | 点操作文字 |
+
+高 40，内边距上下 8 左右 16（`--spacing-8` · `--spacing-16`），元素间距 8，圆角 12（`--border-radius-12`），底色 `--color-bg-fill-popup`，不加描边和阴影。
+
+其余原生 `<div>` 属性都能传。`Toast` 只管样子，弹出来用下面的 `Toaster` 和 `toast`。
+
+### Toaster 和 toast
+
+整个应用根上放一个 `<Toaster />`，之后在哪里都能调 `toast`，不用 Provider。`Toaster` 在页面顶部居中，距顶 24，同一时间只有一条，新的顶掉旧的。只放一个，多放几个每个里面都会出现同一条。
+
+| 方法 | 说明 |
+|---|---|
+| `toast.show({ type, text, action, onAction, duration })` | 弹出一条，返回它的 id。从上方移入，200ms ease-out |
+| `toast.update(id, options)` | 换成新的内容，参数同 `show`，没写的回到默认（「取消」换成成功时自然没了）。不重播移入动画；这一条已被顶掉或收起则什么也不做，返回 `false` |
+| `toast.hide(id?)` | 收起，淡出 150ms ease-in。不传 `id` 收当前这条；传了但这条已不是它则不动 |
+| `toast.info` `success` `warning` `error` `loading` | 简写：`toast.success('文字', { action, onAction, duration })`。`loading` 不自己消失，做完用 `update` 换成成功或错误 |
+
+| 参数 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | 同 Toast `type` | `"info"` | 类型 |
+| `text` | `ReactNode` | — | 提示文字 |
+| `action` | `ReactNode` | — | 操作文字，点了先调 `onAction`，再收起这一条 |
+| `onAction` | `() => void` | — | 点操作文字 |
+| `duration` | `number` | `3000` | 停留毫秒。`0` 是不自己消失；加载中不管填多少都不自己消失。鼠标停在 Toast 上、或键盘聚焦进去时暂停计时，离开后接着走剩下的时间 |
+
+`Toaster` 的 `className`、`ref` 和其余原生 `<div>` 属性落在外层 `.kv-toaster` 上。
+
+### Notification
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"info"` `"success"` `"warning"` `"error"` | — | 不传就没有前面的图标。图标和 Toast 一样：16 的实心圆 + 镂空符号，和第一行对齐（上面空 3） |
+| `title` | `ReactNode` | — | 标题，14 / 22，primary，最多两行，超出省略 |
+| `description` | `ReactNode` | — | 说明，14 / 22，secondary，能换行，最高 6 行（132），再多在里面滚 |
+| `onClose` | `() => void` | — | 传了才显示右上角关闭（`CloseSmall`，IconButton 28） |
+
+宽跟着外面，最宽 400；内边距上下 12、左 16、右 12（`--spacing-12` · `--spacing-16`），元素间距 8，标题和说明间距 4，圆角 12（`--border-radius-12`），底色 `--color-bg-fill-popup`，不加描边和阴影。文字多少不定，所以高度不固定，最高 = 标题 2 行 + 说明 6 行 + 内外边距 = 204。
+
+和 Toast 的区别：Toast 一行、3 秒自己消失、顶部居中只留一条；通知有标题和说明、不自己消失、在右上角能留很多条，等用户看完自己关。其余原生 `<div>` 属性都能传，`Notification` 只管卡片的样子，弹出来用下面的 `Notifier` 和 `notify`。
+
+### Notifier 和 notify
+
+整个应用根上放一个 `<Notifier />`，之后在哪里都能调 `notify`，不用 Provider。`Notifier` 在页面右上角，距顶、距右 24，宽 400，**条数不限**，新的放最上面。
+
+- 平时收起成一叠：最前面一张完整，后面的从下边探出 8，最多探出 2 张，每张再小 5%，里面的字不显示。
+- 鼠标停上去（或键盘聚焦进去）展开成一列，卡片间距 8；挪开又收起。展开后总高超出窗口时，整列在里面滚。
+- 排位、变高都是 300ms ease-in-out；新来的 200ms ease-out 从右边移入；关掉 150ms ease-in 淡出，后面的补上来。
+- 鼠标停在通知上时，自动消失的计时暂停。
+
+| 方法 | 说明 |
+|---|---|
+| `notify.show({ type, title, description, duration })` | 弹出一条，返回它的 id |
+| `notify.hide(id)` | 关掉这一条 |
+| `notify.clear()` | 全关 |
+| `notify.info` `success` `warning` `error` | 简写：`notify.error('生成失败', { description, duration })` |
+
+| 参数 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | 同 Notification `type` | — | 类型，不传没有图标 |
+| `title` | `ReactNode` | — | 标题 |
+| `description` | `ReactNode` | — | 说明 |
+| `duration` | `number` | `0` | 停留毫秒。`0` 是不自己消失，等用户关 |
+
+`Notifier` 的 `className`、`ref` 和其余原生 `<div>` 属性落在外层 `.kv-notifier` 上。
+
+### Banner
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"info"` `"success"` `"warning"` `"error"` | `"info"` | 信息 / 成功 / 警告 / 错误。底是状态色 12%（`--color-status-success-subtle` 等），信息用 `--color-bg-fill-container-light-1`；图标 16，同 Toast（实心圆 + 镂空符号），镂空是透明的 |
+| `children` | `ReactNode` | — | 文字，14 / 22，primary，能换多行 |
+| `onClose` | `() => void` | — | 传了才显示右边的关闭（`CloseSmall`，IconButton 28）。不传就一直在 |
+
+宽跟着外面，内边距上下 8、左右 12（`--spacing-8` · `--spacing-12`），元素间距 8，圆角 8（`--border-radius-8`），不加描边和阴影。
+
+横幅嵌在面板、弹窗里，常驻不消失，比如视频封装里「请上传符合规格的图片」。浮在屏幕角上的用 Notification，一行说完的用 Toast。其余原生 `<div>` 属性都能传。
+
+### Loading
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `16` `24` `40` | `16` | 图标大小。16：横排，字 12 / 20，间距 8。24：竖排，字 13 / 20，间距 8。40：竖排，字 14 / 22，间距 12 |
+| `children` | `ReactNode` | — | 文字，比如「加载中…」，不传就只有转圈。颜色 `--color-text-fill-secondary`，图标 `--color-text-fill-primary`。没有文字时读屏默认读「加载中」，自己传 `aria-label` 就用自己的 |
+
+图标是图标库的 `Loading`，1 秒一圈，匀速。按钮里的加载用 Button 的 `loading`，不用它。其余原生 `<div>` 属性都能传。
+
+### Skeleton
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `variant` | `"rect"` `"circle"` `"text"` | `"rect"` | 矩形（图片、卡片，圆角 8 `--border-radius-8`）/ 圆形（头像，`--border-radius-round`）/ 文字行（高 12，圆角 4 `--border-radius-4`） |
+| `width` | `number` `string` | — | 照真实内容，数字按 px，也可以写 `'60%'`。文字行不写就撑满一行 |
+| `height` | `number` `string` | — | 照真实内容。文字行默认 12，不用写 |
+
+底色 `--color-bg-fill-container-light-1`（白 10%）；扫光从左往右，白 14%（`--color-bg-fill-container-light-1-hover`），1.4 秒一轮，匀速；系统开了「减少动态效果」时只留底色。其余原生 `<div>` 属性都能传。
+
+### EmptyState
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"empty"` `"favorite"` `"offline"` `"failed"` | `"empty"` | 暂无内容 / 暂无收藏 / 无网络 / 生成失败。换的是 IP 图，样式一样 |
+| `size` | `160` `96` | `160` | 插图边长。160（页面、大面板）：间距 16，标题 16 / 24 粗 primary，描述 14 / 22 tertiary。96（下拉、侧栏）：间距 8，标题 14 / 22 粗 secondary，描述 12 / 20 tertiary。标题和描述间距都是 4 |
+| `title` | `ReactNode` | — | 标题，必填，一句话说清楚现在是什么情况 |
+| `description` | `ReactNode` | — | 说明，写清楚下一步做什么。下拉里不要 |
+| `action` | `ReactNode` | — | 引导操作，放一个 32 的轻 `Button`（占位处的按钮都减弱一档，文字灰），离文字 24 |
+| `image` | `string` | — | 换一张插图的地址；不传就按 `type` 取 `EMPTY_STATE_IMAGES` |
+
+四张 IP 图在 `assets/empty-state/`（`empty.png` · `no-favorites.png` · `offline.png` · `failed.png`，320×320），项目里放到自己的静态目录后改 `EMPTY_STATE_IMAGES`。插图背后有绿色光晕，脚下有地面阴影。其余原生 `<div>` 属性（除 `title`）都能传。

@@ -1,0 +1,478 @@
+/*
+  KIVI · 选择
+  Figma「选择控件」页：Switch（开关）、Slider（滑块）、Checkbox（勾选框）；加 Select（下拉选择，原来在「输入控件」页）。依赖 tokens.css、base.css。
+  Select 展开的列表用 menu 文件夹的 Dropdown + Menu + MenuItem（kv-popup、kv-menu、kv-menu-item）。
+  分段选择器不在这一页，用 TabItem 样式=分段，在 navigation 文件夹。
+
+  写法（React，见 Switch.tsx、Slider.tsx、Checkbox.tsx、Select.tsx）
+    <Switch defaultChecked>生成音频</Switch>        没有文字时写 aria-label="生成音频"
+    <Slider aria-label="时长" min={1} max={15} defaultValue={12} />
+    <Checkbox variant="square" defaultChecked="mixed">选项</Checkbox>
+    <Select variant="fill" placeholder="请选择" options={[{ value: 'png', label: 'PNG' }]} />
+  渲染出来的结构
+    <button class="kv-switch" role="switch" aria-checked="true">
+      <span class="kv-switch__label">生成音频</span><span class="kv-switch__track"></span>   文字可省，省了写 aria-label
+    </button>
+
+    <div class="kv-slider" role="slider" tabindex="0" aria-label="时长"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="--kv-value: 0.5">
+      <span class="kv-slider__track">
+        <span class="kv-slider__tick" style="--kv-at: 0"></span>…
+        <span class="kv-slider__fill"></span><span class="kv-slider__thumb"></span>
+      </span>
+      <span class="kv-slider__labels"><span class="kv-slider__label" style="--kv-at: 0">0</span>…</span>
+    </div>
+
+    <button class="kv-checkbox kv-checkbox--square" role="checkbox" aria-checked="false">
+      <span class="kv-checkbox__box"></span><span>选项</span>
+    </button>
+
+    <span class="kv-dropdown kv-select__wrap">
+      <button class="kv-select kv-select--fill" aria-haspopup="menu" aria-expanded="false">
+        <span class="kv-select__text kv-select__text--placeholder">请选择</span>
+        <span class="kv-icon" data-icon="DownArrowSmall"></span>
+      </button>
+    </span>
+    展开后，Dropdown 把列表挂在 body 上（出现 200ms ease-out，消失 150ms ease-in）：
+    <div class="kv-popup kv-popup--match">
+      <div class="kv-menu" role="listbox">
+        <button class="kv-menu-item" role="option" aria-selected="false"><span>选项一</span></button>
+      </div>
+    </div>
+
+  状态
+    开关、勾选框  aria-checked="true | false"，勾选框多一个 "mixed"（部分）
+    滑块          进度写在 --kv-value（0 到 1），同时更新 aria-valuenow；当前值对上的刻度数字（kv-slider__label）写 data-current
+    禁用          button 用 disabled，滑块用 aria-disabled="true"
+    悬停          开关没有悬停；滑块、勾选框由鼠标触发
+  下拉选择（Select）
+    展开    触发器上写 aria-expanded="true"（Dropdown 写），右边箭头换成 UpArrowSmall，列表出现
+            当前项：role="option" aria-selected="true"，白 10% 底，不打勾（MenuItem 的「选中」）
+    已选    文字用 kv-select__text；没选用 kv-select__text--placeholder；左图标（kv-select__lead）写 data-filled，变成和文字一样白
+            无底（工具条）没选时占位就是入口名（模型、技能），文字、左图标也是白的，不灰
+    禁用    disabled
+    位置    placement，默认在触发器下方 4、左对齐，放不下会自己翻到上方
+    is-hover 只给文档摆静态的悬停用，项目里不用写；Select 的静态悬停写在最外层的 kv-select__wrap 上
+    点击切换、拖动、方向键、展开收起、选中、点外面和 Esc 关闭都在组件里，受控、非受控都支持
+*/
+
+/* ---------- Switch ---------- */
+
+/* 整个按钮是一行：可选的文字 + 36×20 的胶囊（轨道 kv-switch__track），整行都能点。
+   文字 13 号常规，和轨道间距 8。
+   轨道：白色把手 16，四周留 2。关：白 18%；开：品牌绿 */
+
+.kv-switch {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kv-switch__label {
+  user-select: none;
+}
+
+.kv-switch__track {
+  position: relative;
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  width: 36px;
+  height: 20px;
+  border-radius: var(--border-radius-round);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1)); /* 控件的部件，按所在的底取 Container 默认档（11-05 从 pressed 改） */
+  transition: background-color var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-switch__track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--border-radius-round);
+  background: var(--color-text-fill-primary);
+  transition: transform var(--motion-duration-150) var(--motion-ease-in-out);
+}
+
+.kv-switch[aria-checked="true"] > .kv-switch__track {
+  background: var(--color-brand-solid);
+}
+
+.kv-switch[aria-checked="true"] > .kv-switch__track::after {
+  transform: translateX(16px);
+}
+
+/* 禁用：整体 30%，文字一起 */
+
+.kv-switch:is(:disabled, [aria-disabled="true"]) {
+  opacity: var(--opacity-30);
+  cursor: not-allowed;
+}
+
+/* ---------- Slider ---------- */
+
+/* 宽度拉伸，整体高 16。进度写在 --kv-value（0 到 1） */
+
+.kv-slider {
+  --kv-value: 0;
+  /* 数值在轨道上的可用范围离两端多远：把手宽的一半；有刻度数字时是数字框宽的一半，首尾数字才对得上两端 */
+  --kv-inset: 4px;
+
+  position: relative;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.kv-slider--labeled {
+  --kv-inset: 11px;
+}
+
+/* 轨道：高 20，圆角 4，白 10% */
+
+.kv-slider__track {
+  position: relative;
+  display: block;
+  height: 20px;
+  border-radius: var(--border-radius-4);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 刻度线：1 宽、6 高，白 20%，竖直居中 */
+
+.kv-slider__tick {
+  position: absolute;
+  top: 7px;
+  left: calc(var(--kv-inset) + var(--kv-at) * (100% - var(--kv-inset) * 2));
+  width: 1px;
+  height: 6px;
+  margin-left: -0.5px;
+  background: var(--color-text-fill-disabled);
+}
+
+/* 已选部分：从左端到把手中间，白 14% */
+
+.kv-slider__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--kv-inset) + var(--kv-value) * (100% - var(--kv-inset) * 2));
+  border-radius: inherit;
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+/* 把手：8 × 20 的白条，圆角 2，颜色 text-fill-primary */
+
+.kv-slider__thumb {
+  position: absolute;
+  top: 0;
+  left: calc(var(--kv-inset) + var(--kv-value) * (100% - var(--kv-inset) * 2) - 4px);
+  width: 8px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--color-text-fill-primary);
+}
+
+/* 刻度数字：轨道下面 4，22 高的小框，12 号白 50%；当前值对上的那个底白 10%、字变白 */
+
+.kv-slider__labels {
+  position: relative;
+  display: block;
+  height: 22px;
+  margin-top: var(--spacing-4);
+}
+
+.kv-slider__label {
+  position: absolute;
+  top: 0;
+  left: calc(var(--kv-inset) + var(--kv-at) * (100% - var(--kv-inset) * 2));
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--border-radius-4);
+  color: color-mix(in srgb, var(--color-text-fill-primary) 50%, transparent);
+  font-family: var(--font-family);
+  font-size: var(--font-size-12);
+  text-align: center;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.kv-slider__label[data-current] {
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+}
+
+/* 状态：禁用。整体 30% */
+
+.kv-slider[aria-disabled="true"] {
+  opacity: var(--opacity-30);
+  cursor: not-allowed;
+}
+
+/* ---------- Checkbox ---------- */
+
+/* 勾选框 = 16 的方框 + 可选的文字，整行都能点。方形圆角 4，圆形 999 */
+
+.kv-checkbox {
+  --kv-box-fill: var(--color-on-media-fill);
+  --kv-box-stroke: var(--color-border-strong);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 方框：没选时黑 40% 底（on-media）+ 1px 白 50% 描边。勾选框是媒体上的控件，放在别的底上也照用（11-05 用户定） */
+
+.kv-checkbox__box {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: var(--border-width-1) solid var(--kv-box-stroke);
+  border-radius: var(--border-radius-4);
+  background: var(--kv-box-fill);
+  transition:
+    background-color var(--motion-duration-100) var(--motion-ease-in-out),
+    border-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-checkbox--square .kv-checkbox__box {
+  border-radius: var(--border-radius-4);
+}
+
+.kv-checkbox--round .kv-checkbox__box {
+  border-radius: var(--border-radius-round);
+}
+
+/* 对勾和横线：黑色（on-brand），线宽 1.5，圆头。用遮罩画，颜色跟变量走 */
+
+.kv-checkbox__box::after {
+  content: "";
+  display: none;
+  position: absolute;
+  inset: -1px;
+  background: var(--color-text-fill-on-brand);
+  -webkit-mask: var(--kv-glyph) center / 16px 16px no-repeat;
+  mask: var(--kv-glyph) center / 16px 16px no-repeat;
+}
+
+/* 状态：悬停（没选）。描边变白 100% */
+
+.kv-checkbox:where(:hover, .is-hover):not(:disabled, [aria-disabled="true"]) {
+  --kv-box-stroke: var(--color-text-fill-primary);
+}
+
+/* 状态：选中、部分。底品牌绿，没有描边 */
+
+.kv-checkbox:is([aria-checked="true"], [aria-checked="mixed"]) {
+  --kv-box-fill: var(--color-brand-solid);
+  --kv-box-stroke: transparent;
+}
+
+.kv-checkbox:is([aria-checked="true"], [aria-checked="mixed"]) .kv-checkbox__box::after {
+  display: block;
+}
+
+.kv-checkbox[aria-checked="true"] {
+  --kv-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 8.2L6.9 10.5L11.5 5.8'/%3E%3C/svg%3E");
+}
+
+.kv-checkbox[aria-checked="mixed"] {
+  --kv-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8H11'/%3E%3C/svg%3E");
+}
+
+.kv-checkbox:is([aria-checked="true"], [aria-checked="mixed"]):where(:hover, .is-hover):not(:disabled, [aria-disabled="true"]) {
+  --kv-box-fill: var(--color-brand-hover);
+}
+
+/* 状态：禁用。整体 30%，文字一起 */
+
+.kv-checkbox:is(:disabled, [aria-disabled="true"]) {
+  opacity: var(--opacity-30);
+  cursor: not-allowed;
+}
+
+/* ---------- Select ---------- */
+/* 触发器：高 32，13 号字，左图标 16、右箭头 16，元素间距 4 */
+.kv-select {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  height: 32px;
+  margin: 0;
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: var(--kv-select-fill);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-select > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-fill-tertiary);
+}
+
+/* 左图标：选了值以后和文字一样白（Figma Select「已选」），没选时 tertiary */
+.kv-select > .kv-select__lead[data-filled] {
+  color: var(--color-text-fill-primary);
+}
+
+.kv-select__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 没选时的占位文字 */
+.kv-select__text--placeholder {
+  color: var(--color-text-fill-placeholder);
+}
+
+/* 填充：表单、面板里用。底白 10%，左右 12，宽度拉伸 */
+.kv-select--fill {
+  --kv-select-fill: var(--color-bg-fill-container-light-1);
+  --kv-select-fill-hover: var(--color-bg-fill-container-light-1-hover);
+  --kv-select-fill-open: var(--color-bg-fill-container-light-1);
+  width: 100%;
+  padding: 0 var(--spacing-12);
+}
+
+/* 无底：工具条上用，比如输入框里的模型选择。左右 8，宽度跟着内容走 */
+.kv-select--plain {
+  --kv-select-fill: transparent;
+  --kv-select-fill-hover: var(--color-bg-fill-container-light-1-hover); /* 平时没底，悬停用 Light 1 hover 12% */
+  --kv-select-fill-open: var(--color-bg-fill-container-light-1); /* 展开是常驻底色：Light 1 默认 8% */
+  display: inline-flex;
+  padding: 0 var(--spacing-8);
+}
+
+/* 无底没选值时：占位就是入口名（比如 Agent 工具条的「模型」「技能」），文字和左图标跟选了值一样白；
+   灰的放在工具条上像禁用（11-02 用户定）。填充（表单）还是灰的占位 */
+.kv-select--plain .kv-select__text--placeholder,
+.kv-select--plain > .kv-select__lead {
+  color: var(--color-text-fill-primary);
+}
+
+/* 悬停、展开。文档摆静态悬停时，is-hover 写在最外层 kv-select__wrap 上 */
+.kv-select:where(:hover, .is-hover):not(:disabled),
+:where(.kv-select__wrap.is-hover) > .kv-select:not(:disabled) {
+  background: var(--kv-select-fill-hover);
+}
+
+.kv-select[aria-expanded="true"] {
+  background: var(--kv-select-fill-open);
+}
+
+/* 禁用：底和平时一样（11-05，和按钮一致）；无底不加底。文字和箭头 disabled */
+.kv-select:disabled {
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}
+
+.kv-select--fill:disabled {
+  background: var(--kv-select-fill);
+}
+
+.kv-select:disabled > .kv-icon,
+.kv-select:disabled .kv-select__text--placeholder {
+  color: var(--color-text-fill-disabled);
+}
+
+/* 最外层的壳：就是 Dropdown 的壳（kv-dropdown），Dropdown 用它量触发器的位置。
+   填充撑满，无底跟着内容走。
+   展开的列表由 Dropdown 挂在 body 上：出现 200ms ease-out、消失 150ms ease-in；
+   填充的列表和触发器一样宽；无底的列表按内容撑宽，但不比触发器窄；
+   列表和触发器的间距 Figma 没定，暂用 4 */
+.kv-dropdown.kv-select__wrap {
+  display: flex;
+  width: 100%;
+}
+
+.kv-dropdown.kv-select__wrap--plain {
+  display: inline-flex;
+  width: auto;
+  vertical-align: top;
+}
+
+/* ---------- Select 试听（音色选择） ---------- */
+/* 24 见方、圆角 6（按钮一律方的，11-04 用户定），底白 10%，图标 16；悬停白 14%，播放中白 18%；没地址、加载失败是禁用色 */
+.kv-select-preview {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--border-radius-6);
+  background: var(--color-bg-fill-container-light-1);
+  color: var(--color-text-fill-primary);
+  cursor: pointer;
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-select-preview > .kv-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.kv-select-preview:hover {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+/* 播放中是常驻状态，用默认档（11-05 从 pressed 改） */
+.kv-select-preview[aria-pressed="true"] {
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.kv-select-preview[aria-disabled="true"] {
+  background: var(--color-bg-fill-container-light-1); /* 禁用底和平时一样，只变字色（11-05） */
+  color: var(--color-text-fill-disabled);
+  cursor: not-allowed;
+}

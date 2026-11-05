@@ -1,0 +1,69 @@
+import { Demo, PageHeader } from '@shell';
+import { ScrollAreaPlayground } from './scroll-area.demos';
+
+<PageHeader
+  eyebrow="展示"
+  title="滚动条"
+  figma={['滚动条', '1083:7751']}
+  code="kivi/scroll-area"
+/>
+
+## ScrollArea
+
+滚动区：内容超出时滚动，比如技能面板、模型偏好列表。
+
+<ScrollAreaPlayground />
+
+### 无限加载
+
+滚到离底部 200 以内调一次 `onReachEnd`，加载中在底部放一行 `Loading`。
+
+<Demo code={`
+() => {
+  const [count, setCount] = useState(20);
+  const [loading, setLoading] = useState(false);
+  const done = count >= 80;
+  const loadMore = () => {
+    if (loading || done) return;
+    setLoading(true);
+    setTimeout(() => {
+      setCount((n) => n + 20);
+      setLoading(false);
+    }, 1000);
+  };
+  return (
+    <ScrollArea maxHeight={280} style={{ width: 320 }} onReachEnd={loadMore}>
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} style={{ margin: '4px 0', padding: '8px 12px', borderRadius: 8, background: 'var(--color-bg-fill-container-light-2)', fontSize: 13, lineHeight: '20px' }}>
+          {i + 1}. 第 {i + 1} 张作品
+        </div>
+      ))}
+      {loading && <Loading style={{ justifyContent: 'center', padding: '12px 0' }}>加载中…</Loading>}
+      {done && <div style={{ padding: '12px 0', textAlign: 'center', fontSize: 12, color: 'var(--color-text-fill-tertiary)' }}>已经到底了</div>}
+    </ScrollArea>
+  );
+}
+`} />
+
+## 参数
+
+### ScrollArea
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `orientation` | `"vertical"` `"horizontal"` `"both"` | `"vertical"` | 纵向 / 横向 / 两个方向。两个方向都有得滚时，两条滚动条各让出角上 12，不叠在一起 |
+| `maxHeight` | `number` `string` | — | 最大高度，超过就在里面滚；数字按 px。外面已经定了高度的不用写 |
+| `fade` | `boolean` | `false` | 超出的那边渐隐，跟着滑的方向走：往下滑下面渐隐，往上滑上面渐隐，到头换到另一边。渐隐 24，用 mask，不盖底色。只有纵向有 |
+| `onReachEnd` | `() => void` | — | 滚到离末尾不到 `reachEndOffset` 时调用，每次「到了」只调一次：滚开到 offset 以外才会再调；加载后内容变长、还停在末尾（比如内容一开始不满一屏）也会再调一次。内容不够长、没有滚动条时挂上就会调一次。两个方向时只看纵向 |
+| `reachEndOffset` | `number` | `200` | 离末尾多少 px 算到了 |
+| `viewportRef` | `Ref<HTMLDivElement>` | — | 真正在滚的那个 div，要读 `scrollTop`、调 `scrollTo` 时用 |
+| `viewportProps` | `HTMLAttributes<HTMLDivElement>` | — | 透传给滚动视口，比如 `onScroll`、`aria-label`、`id`；`className`、`style`、`onScroll` 和组件自己的合并 |
+
+其余原生 `<div>` 属性都能传，`ref` 给最外层。
+
+滑块的样子：
+- 平时不显示。滚动时淡入 150ms ease-out，停下 600ms 后淡出 300ms ease-in。
+- 鼠标靠近滚动条（离右边、下边 12 以内）也会出来，滑块宽 6 变 8。触摸设备只在滚动时出现。
+- 离边 2，最短 24，圆角 `--border-radius-round`。颜色白 20%（`--color-text-fill-disabled`），悬停、拖动白 40%（`--color-text-fill-tertiary`）。
+- 能拖；点轨道朝点的那边翻一页（可视高度的 90%）。鼠标在滚动条上滚轮也照常滚。
+- 滚轮、触摸、键盘（方向键、空格、PageUp / PageDown）、惯性都是浏览器原生的，组件不接管。系统开了减少动态效果：淡入淡出直接切换，翻页不带滚动动画。
