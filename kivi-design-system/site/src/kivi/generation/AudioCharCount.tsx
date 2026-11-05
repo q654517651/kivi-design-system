@@ -15,9 +15,15 @@ export const AudioCharCount = forwardRef<HTMLSpanElement, AudioCharCountProps>(f
   { count = 0, model = DEFAULT_MODEL.audio, className, ...rest },
   ref,
 ) {
+  const limit = AUDIO_CHAR_LIMIT[model] ?? AUDIO_CHAR_LIMIT[DEFAULT_MODEL.audio];
   return (
-    <span ref={ref} className={cx('kv-audio-char-count', className)} {...rest}>
-      {count}/{AUDIO_CHAR_LIMIT[model] ?? AUDIO_CHAR_LIMIT[DEFAULT_MODEL.audio]}
+    <span
+      ref={ref}
+      className={cx('kv-audio-char-count', className)}
+      data-over={count > limit ? '' : undefined}
+      {...rest}
+    >
+      {count}/{limit}
     </span>
   );
 });

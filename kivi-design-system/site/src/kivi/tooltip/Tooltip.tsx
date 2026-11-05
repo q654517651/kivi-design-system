@@ -58,7 +58,7 @@ function Bubble({ content, shortcut, domRef, className, ...rest }: BubbleProps) 
 
 /**
  * 鼠标停留时出现的文字提示，移开就消失。包住触发元素用：
- * `<Tooltip content="下载"><IconButton icon="Download" label="下载" /></Tooltip>`。
+ * `<Tooltip content="重新生成"><Button>…</Button></Tooltip>`。IconButton 自带提示（内容是它的 label），不用再包。
  * ref 给包住触发元素的外壳 span；不包任何东西时给气泡本身。
  * Figma「菜单和提示」页 Tooltip
  */
@@ -109,42 +109,36 @@ export const Tooltip = forwardRef<HTMLElement, TooltipProps>(function Tooltip(
 });
 Tooltip.displayName = 'Tooltip';
 
-interface AnchoredProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
-  bubble: Pick<BubbleProps, 'content' | 'shortcut'>;
-  placement: TooltipPlacement;
+export interface UseTooltipOptions {
+  content: ReactNode;
+  shortcut?: string;
+  placement?: TooltipPlacement;
   open?: boolean;
-  defaultOpen: boolean;
+  defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  delay: number;
+  delay?: number;
   disabled?: boolean;
-  children: ReactElement;
 }
 
-const Anchored = forwardRef<HTMLSpanElement, AnchoredProps>(function Anchored(
-  {
-    bubble,
-    placement,
-    open: openProp,
-    defaultOpen,
-    onOpenChange,
-    delay,
-    disabled,
-    children,
-    className,
-    onMouseEnter,
-    onMouseLeave,
-    onFocus,
-    onBlur,
-    onPointerDown,
-    ...rest
-  },
-  ref,
-) {
+/**
+ * Tooltip 的行为：悬停 / 键盘聚焦出现，移开、按下、Esc 收起，气泡挂在 body 上、离目标 8。
+ * Tooltip 用它包住触发元素；IconButton 直接用在自己的按钮上（自带提示，不多包一层）。
+ * 返回：anchorRef 给目标元素，handlers 合到目标的事件上，describedBy 合到目标的 aria-describedby，bubble 渲染在目标旁边
+ */
+export function useTooltip({
+  content,
+  shortcut,
+  placement = 'bottom',
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  delay = 500,
+  disabled,
+}: UseTooltipOptions) {
   const [openState, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
   const open = openState && !disabled;
   const { mounted, state } = usePresence(open, EXIT_MS);
-  const anchorRef = useRef<HTMLSpanElement>(null);
-  const setAnchor = useMergedRef(anchorRef, ref);
+  const anchorRef = useRef<HTMLElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const id = useId();
@@ -161,37 +155,79 @@ const Anchored = forwardRef<HTMLSpanElement, AnchoredProps>(function Anchored(
   };
   useEffect(() => stop, []);
 
-  // 按 Esc 收起
+  // 按 Esc 收起。提示开着时在捕获阶段拦一下（preventDefault），弹窗靠它判断「Esc 已经有人处理了」，
+  // 这样在弹窗里按 Esc 先关提示，不连弹窗一起关
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      setOpen(false);
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
   }, [open, setOpen]);
 
   // 离目标 8px（--spacing-8），默认在下方、水平居中
   useFloating(mounted, bubbleRef, () => (anchorRef.current ? rectOf(anchorRef.current) : null), placement, 8);
 
+  return {
+    anchorRef,
+    handlers: {
+      onMouseEnter: show,
+      onMouseLeave: hide,
+      // 键盘 Tab 到的才出现，鼠标点进去的不用
+      onFocus: (e: FocusEvent<HTMLElement>) => {
+        if ((e.target as HTMLElement).matches(':focus-visible')) show();
+      },
+      onBlur: hide,
+      onPointerDown: hide,
+    },
+    describedBy: open ? id : undefined,
+    bubble: mounted
+      ? createPortal(
+          <Bubble content={content} shortcut={shortcut} id={id} domRef={bubbleRef} data-state={state} className="kv-tooltip--floating" />,
+          document.body,
+        )
+      : null,
+  };
+}
+
+interface AnchoredProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
+  bubble: Pick<BubbleProps, 'content' | 'shortcut'>;
+  placement: TooltipPlacement;
+  open?: boolean;
+  defaultOpen: boolean;
+  onOpenChange?: (open: boolean) => void;
+  delay: number;
+  disabled?: boolean;
+  children: ReactElement;
+}
+
+const Anchored = forwardRef<HTMLSpanElement, AnchoredProps>(function Anchored(
+  { bubble, placement, open, defaultOpen, onOpenChange, delay, disabled, children, className, onMouseEnter, onMouseLeave, onFocus, onBlur, onPointerDown, ...rest },
+  ref,
+) {
+  const tip = useTooltip({ ...bubble, placement, open, defaultOpen, onOpenChange, delay, disabled });
+  const setAnchor = useMergedRef(tip.anchorRef as Ref<HTMLSpanElement>, ref);
   return (
     <span
       ref={setAnchor}
       className={cx('kv-tooltip__anchor', className)}
-      onMouseEnter={composeHandlers(onMouseEnter, show)}
-      onMouseLeave={composeHandlers(onMouseLeave, hide)}
-      onFocus={composeHandlers(onFocus, (e: FocusEvent<HTMLSpanElement>) => {
-        // 键盘 Tab 到的才出现，鼠标点进去的不用
-        if ((e.target as HTMLElement).matches(':focus-visible')) show();
-      })}
-      onBlur={composeHandlers(onBlur, hide)}
-      onPointerDown={composeHandlers(onPointerDown, hide)}
+      onMouseEnter={composeHandlers(onMouseEnter, tip.handlers.onMouseEnter)}
+      onMouseLeave={composeHandlers(onMouseLeave, tip.handlers.onMouseLeave)}
+      onFocus={composeHandlers(onFocus, tip.handlers.onFocus)}
+      onBlur={composeHandlers(onBlur, tip.handlers.onBlur)}
+      onPointerDown={composeHandlers(onPointerDown, tip.handlers.onPointerDown)}
       {...rest}
     >
-      {cloneElement(children, open ? { 'aria-describedby': id } : {})}
-      {mounted &&
-        createPortal(
-          <Bubble {...bubble} id={id} domRef={bubbleRef} data-state={state} className="kv-tooltip--floating" />,
-          document.body,
-        )}
+      {cloneElement(
+        children,
+        tip.describedBy
+          ? { 'aria-describedby': [(children.props as { 'aria-describedby'?: string })['aria-describedby'], tip.describedBy].filter(Boolean).join(' ') }
+          : {},
+      )}
+      {tip.bubble}
     </span>
   );
 });

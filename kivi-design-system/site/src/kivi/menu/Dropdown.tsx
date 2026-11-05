@@ -1,14 +1,19 @@
 import {
   cloneElement,
+  createContext,
   forwardRef,
+  useCallback,
+  useContext,
   useEffect,
   useId,
   useRef,
+  type FocusEvent,
   type HTMLAttributes,
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../utils';
@@ -38,13 +43,23 @@ export interface DropdownProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'ch
   anchorPoint?: { x: number; y: number };
   /** 点了菜单项就关闭，默认开。多选菜单要保持展开时关掉 */
   closeOnSelect?: boolean;
-  /** 弹出的是菜单还是单选列表，写在触发器的 aria-haspopup 上，默认 menu。下拉选择用 listbox，弹出的是一块带输入的面板（时间筛选）用 dialog */
+  /** 弹出的是菜单还是单选列表，写在触发器的 aria-haspopup 上，默认 menu。下拉选择用 listbox，弹出的是一块带输入的面板（时间筛选、参数）用 dialog：Tab 在面板里正常走，走出面板才关闭 */
   haspopup?: 'menu' | 'listbox' | 'dialog';
 }
+
+/**
+ * 套着的弹出层：菜单项里「⋯」再弹出的菜单也挂在 body 上，不在外层弹出层的 DOM 里。
+ * 里层打开时往外层登记，外层点外面、按 Esc 时认得它：点里层不关外层，Esc 先关里层
+ */
+type Register = (popup: RefObject<HTMLDivElement>) => () => void;
+const NestContext = createContext<Register | null>(null);
 
 const ITEMS = '.kv-menu-item:not(:disabled):not([aria-disabled="true"])';
 const SELECTABLE = `${ITEMS}:not([aria-haspopup])`;
 const EXIT_MS = 150;
+/** 面板（haspopup="dialog"）里能用 Tab 走到的控件 */
+const TABBABLE =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * 把菜单弹出来：一个触发器 + 一个弹出的菜单。
@@ -78,6 +93,20 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
   const popupRef = useRef<HTMLDivElement>(null);
   const viaKeyboard = useRef(false);
   const id = useId();
+  const register = useContext(NestContext);
+  const nested = useRef(new Set<RefObject<HTMLDivElement>>());
+  // 里层登记到自己这里，也往上传给更外层
+  const registerNested = useCallback<Register>(
+    (popup) => {
+      nested.current.add(popup);
+      const off = register?.(popup);
+      return () => {
+        nested.current.delete(popup);
+        off?.();
+      };
+    },
+    [register],
+  );
   const match = Boolean(matchTriggerWidth && !anchorPoint);
 
   const close = (restoreFocus = false) => {
@@ -95,6 +124,12 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     anchorPoint && `${anchorPoint.x},${anchorPoint.y}`,
   );
 
+  // 自己是里层：弹出层挂着时登记到外层
+  useEffect(() => {
+    if (!mounted || !register) return;
+    return register(popupRef);
+  }, [mounted, register]);
+
   // 展开后把焦点放进菜单：键盘打开的落在第一项，鼠标打开的落在菜单上（再按方向键进入）
   useEffect(() => {
     if (!open) return;
@@ -111,10 +146,13 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
       if (popupRef.current?.contains(t) || anchorRef.current?.contains(t)) return;
+      for (const r of nested.current) if (r.current?.contains(t)) return;
       setOpen(false);
     };
     const onKey = (e: globalThis.KeyboardEvent) => {
       if (e.key !== 'Escape') return;
+      // 里层还开着，让里层先关
+      for (const r of nested.current) if (r.current) return;
       e.stopPropagation();
       close(true);
     };
@@ -134,10 +172,26 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
 
   const onPopupKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Tab') {
-      e.preventDefault();
-      close(true);
+      if (haspopup !== 'dialog') {
+        // 菜单、单选列表：Tab 关闭并回到触发器
+        e.preventDefault();
+        close(true);
+        return;
+      }
+      // 面板：Tab 在里面的控件之间正常走；走到头（往后到最后一个、往前到第一个）关闭并回到触发器
+      const tabbable = Array.from(e.currentTarget.querySelectorAll<HTMLElement>(TABBABLE)).filter((el) => el.getClientRects().length > 0);
+      const active = document.activeElement;
+      const atEnd = e.shiftKey
+        ? !tabbable.length || active === tabbable[0] || active === e.currentTarget
+        : !tabbable.length || active === tabbable[tabbable.length - 1];
+      if (atEnd) {
+        e.preventDefault();
+        close(true);
+      }
       return;
     }
+    // 在输入框里（原地重命名）打字，方向键、Home、End 留给输入框
+    if ((e.target as HTMLElement).closest('input, textarea')) return;
     const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>(ITEMS));
     if (!items.length) return;
     const i = items.indexOf(document.activeElement as HTMLElement);
@@ -151,6 +205,15 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     items[next].focus();
   };
 
+  // 面板：焦点移到面板和触发器之外（包括里层弹出层）就关闭，焦点留在它去的地方
+  const onPopupBlur = (e: FocusEvent<HTMLDivElement>) => {
+    if (haspopup !== 'dialog') return;
+    const to = e.relatedTarget as Node | null;
+    if (!to || e.currentTarget.contains(to) || anchorRef.current?.contains(to)) return;
+    for (const r of nested.current) if (r.current?.contains(to)) return;
+    setOpen(false);
+  };
+
   const popup =
     mounted &&
     createPortal(
@@ -161,6 +224,7 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
         data-state={state}
         tabIndex={-1}
         onKeyDown={onPopupKeyDown}
+        onBlur={onPopupBlur}
         onClick={onPopupClick}
         onContextMenu={(e) => {
           // 菜单上点右键：不出浏览器的菜单，也不传给外层的右键处理
@@ -168,7 +232,7 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
           e.stopPropagation();
         }}
       >
-        {children}
+        <NestContext.Provider value={registerNested}>{children}</NestContext.Provider>
       </div>,
       document.body,
     );

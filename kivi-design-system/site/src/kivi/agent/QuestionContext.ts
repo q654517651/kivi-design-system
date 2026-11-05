@@ -12,6 +12,10 @@ export interface QuestionContextValue {
   tabStop?: string;
   /** 「其他」告诉面板里面有没有字（面板靠它决定「确认提交」能不能点） */
   reportOther: (id: string, filled: boolean) => void;
+  /** 单选时「其他」里打了字：清掉已选的选项（单选的选项和「其他」互斥） */
+  clearSelection: () => void;
+  /** 「其他」登记自己的清空方法：单选时选了选项，面板用它清掉「其他」里的字 */
+  registerOther: (id: string, clear: () => void) => () => void;
 }
 
 export const QuestionContext = createContext<QuestionContextValue | null>(null);

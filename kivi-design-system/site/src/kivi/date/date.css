@@ -20,7 +20,6 @@
   color: var(--color-text-fill-primary);
   font-family: var(--font-family);
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-calendar__head {
@@ -34,7 +33,6 @@
   flex: 1;
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--font-line-height-24);
   text-align: center;
 }
 
@@ -132,7 +130,6 @@
   color: var(--color-text-fill-primary);
   font-family: inherit;
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
   text-align: left;
   cursor: pointer;
   transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);

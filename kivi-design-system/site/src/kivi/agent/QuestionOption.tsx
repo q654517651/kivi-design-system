@@ -1,4 +1,4 @@
-import { forwardRef, useContext, useEffect, useId, type HTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref } from 'react';
+import { forwardRef, useContext, useEffect, useId, useRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode, type Ref } from 'react';
 import { cx } from '../utils';
 import { composeHandlers } from '../hooks';
 import { QuestionContext } from './QuestionContext';
@@ -56,6 +56,19 @@ export const QuestionOption = forwardRef<HTMLElement, QuestionOptionProps>(funct
     return () => reportOther(id, false);
   }, [type, id, reportOther, controlled, initial]);
 
+  // 单选时选了选项，面板叫「其他」清空：直接改输入框的值再发 input 事件，受控、非受控都会收到 onChange
+  const inputRef = useRef<HTMLInputElement>(null);
+  const registerOther = ctx?.registerOther;
+  useEffect(() => {
+    if (type !== 'other' || !registerOther) return;
+    return registerOther(id, () => {
+      const input = inputRef.current;
+      if (!input || input.value === '') return;
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, '');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  }, [type, id, registerOther]);
+
   if (type === 'other') {
     return (
       <label
@@ -67,11 +80,17 @@ export const QuestionOption = forwardRef<HTMLElement, QuestionOptionProps>(funct
       >
         <span className="kv-question-option__index">{index}</span>
         <input
+          ref={inputRef}
           className="kv-question-option__input"
           placeholder={placeholder}
-          disabled={disabled}
           {...inputProps}
-          onChange={composeHandlers(inputProps?.onChange, (e) => reportOther?.(id, e.currentTarget.value.trim() !== ''))}
+          // 面板禁用时强制禁用，inputProps 里的 disabled 不能覆盖
+          disabled={disabled || inputProps?.disabled}
+          onChange={composeHandlers(inputProps?.onChange, (e) => {
+            const filled = e.currentTarget.value.trim() !== '';
+            reportOther?.(id, filled);
+            if (filled) ctx?.clearSelection();
+          })}
         />
       </label>
     );

@@ -41,7 +41,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-medium);
-  line-height: 1;
   cursor: pointer;
   user-select: none;
 }
@@ -132,7 +131,6 @@
 .kv-annotation-comment__preview {
   overflow: hidden;
   font-size: var(--font-size-12);
-  line-height: 17px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

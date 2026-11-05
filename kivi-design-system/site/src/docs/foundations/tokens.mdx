@@ -13,7 +13,7 @@ import { ColorCards, CopyAllTokens, TokenChip, TokenTable, TokenValue } from './
 
 ## 色彩
 
-只有深色一套主题。
+只有深色一套主题。变量两层：填充色阶在底下，其余是语义变量；没有原始色层。
 
 ### 主色
 
@@ -30,6 +30,12 @@ import { ColorCards, CopyAllTokens, TokenChip, TokenTable, TokenValue } from './
 每层只用对应的颜色。`popup-raised` 已并入 popup，不要再用。
 
 <ColorCards group="bg" />
+
+#### 填充色阶
+
+白色叠透明度的一条色阶，四档越往上越亮，下面的 Container 都引用它。组件里先用 Container；Container 语义不符、又找不到合适变量时才直接用，能用的地方见「设计规则 · 颜色和底色」。
+
+<ColorCards group="fillScale" />
 
 #### 填充与状态
 
@@ -49,7 +55,7 @@ Light 1 和 Light 2 按背景亮度选：背景相对亮度低于 0.015 是深�
 
 ### 功能色
 
-表示成功、警告、错误。文字和图标用实色，提示条和报错底色用对应的 subtle。取值都是占位。
+表示成功、警告、错误。文字和图标用实色，提示条和报错底色用对应的 subtle。
 
 <ColorCards group="status" />
 
@@ -97,6 +103,8 @@ Light 1 和 Light 2 按背景亮度选：背景相对亮度低于 0.015 是深�
 ### 文字样式
 
 Figma 文字样式按「文字/字号 字重」命名：`文字/13 常规`、`文字/13 粗`……字号 10–16 都有常规、粗、加粗三档。
+
+下表的行高只给多行文字。单行文字不设行高，用自动（代码里是 1.4）。
 
 | 样子 | 字号 / 行高 | 变量 | 用在哪 |
 |---|---|---|---|

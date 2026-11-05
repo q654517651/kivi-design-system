@@ -49,7 +49,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-13);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   cursor: text;
   transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
 }
@@ -91,9 +90,9 @@
   border-color: var(--color-status-danger);
 }
 
-/* 禁用：底色白 6%，文字 disabled */
+/* 禁用：底和平时一样（和按钮一致，11-05），只是文字 disabled、不响应悬停 */
 :is(.kv-input, .kv-number-input, .kv-textarea):has(:disabled) {
-  background: var(--color-bg-fill-container-light-2);
+  background: var(--color-bg-fill-container-light-1);
   color: var(--color-text-fill-disabled);
   cursor: not-allowed;
 }
@@ -221,14 +220,26 @@
   flex: 1 1 auto;
   width: 100%;
   min-height: 52px;
+  line-height: var(--font-line-height-22);
   resize: vertical;
 }
 
+/* 底部一行：字数 + 框内按钮，靠右，间距 8 */
+.kv-textarea__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-8);
+}
+
 .kv-textarea__counter {
-  align-self: flex-end;
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-20);
+}
+
+.kv-textarea__actions {
+  display: flex;
+  gap: var(--spacing-8);
 }
 
 /* 错误：字数也变 danger */

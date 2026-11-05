@@ -112,7 +112,6 @@
   background: var(--color-bg-fill-container-light-1);
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-20);
   white-space: nowrap;
 }
 
@@ -129,10 +128,11 @@
 }
 
 /* 悬停参考区，下面弹出浮层显示全部：玻璃浮层（底 glass、背景模糊 32、描边 border-subtle），圆角 8，内边距 6，间距 6，一行最多 5 个 ReferenceItem 72。
-   出现、消失照动效里菜单的档；鼠标离开后等 150ms 再收。离参考区的距离 Figma 没定，先用 4 */
+   出现、消失照动效里菜单的档；鼠标离开后等 150ms 再收。离参考区 8（悬停出来的浮层一档，11-05）。
+   不用 Popover panel：它的内边距 12、圆角 16，会改掉这块的样子 */
 .kv-gen-prompt-refs__popover {
   position: absolute;
-  top: calc(100% + var(--spacing-4));
+  top: calc(100% + var(--spacing-8));
   left: 0;
   z-index: 2;
   display: grid;
@@ -157,10 +157,10 @@
 .kv-gen-prompt-refs__popover::before {
   content: "";
   position: absolute;
-  top: calc(var(--spacing-4) * -1);
+  top: calc(var(--spacing-8) * -1);
   right: 0;
   left: 0;
-  height: var(--spacing-4);
+  height: var(--spacing-8);
 }
 
 .kv-gen-prompt-refs:where(:hover, :focus-within, .is-hover) > .kv-gen-prompt-refs__popover {
@@ -268,9 +268,8 @@
   inset: 0;
   border-radius: inherit;
   background: var(--color-bg-fill-container-dark);
-  /* Figma 背景模糊 24 = CSS blur 12（Figma 没变量） */
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(var(--effect-mask-blur));
+  backdrop-filter: blur(var(--effect-mask-blur));
 }
 
 .kv-result-tile__badge {

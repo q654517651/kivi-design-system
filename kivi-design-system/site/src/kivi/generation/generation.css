@@ -77,7 +77,6 @@
 .kv-param-field__label {
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-20);
 }
 
 /* 控件撑满；滑块 + 数字输入框（NumberInput）横排，间距 12。带刻度数字的滑块比轨道高，数字输入框对齐轨道（高 20）的中线，不对齐整个滑块 */
@@ -259,7 +258,7 @@
   opacity: 1;
 }
 
-/* 工具条：高 32。左边任务类型、参考方式、模型、参数，间距 6；右边张数和生成，间距 8；两边撑开。
+/* 工具条：高 32。左边任务类型、模型、参考方式、参数，间距 6；右边张数和生成，间距 8；两边撑开。
    不折行、控件不压缩：它排成一行的宽度就是整个输入框的最窄宽度（见上面 PromptBox） */
 
 .kv-prompt-box__toolbar {
@@ -309,9 +308,9 @@
   padding: 0;
   border: 0;
   border-radius: var(--border-radius-round);
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-on-media-text);
   cursor: pointer;
   opacity: 0;
@@ -418,7 +417,6 @@
 .kv-drop-overlay__text {
   color: var(--color-brand-solid); /* 图标和字用品牌绿（11-04 用户定） */
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
 }
 
 /* 不收：描边、图标和字换 danger */
@@ -489,11 +487,6 @@
   outline: none;
 }
 
-.kv-lora-field__item:focus-visible {
-  outline: 2px solid var(--color-text-fill-primary); /* Figma 没变量 */
-  outline-offset: 2px; /* Figma 没变量 */
-}
-
 /* 删除：悬停或聚焦到这一格，右上角出现，样子同参考区的删除（右上角标） */
 
 .kv-lora-field__item:where(:hover, :focus-within) > .kv-lora-field__remove {
@@ -520,7 +513,6 @@
   overflow: hidden;
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-22);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -534,7 +526,6 @@
 .kv-lora-settings__label {
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
 }
 
 /* 内容框：白 10% 底（玻璃是深底，用 Light 1），圆角 6，内边距 6，文字 12 secondary。复制按钮 28 贴在右边，用负外边距抵掉内边距，框高才是 28 */
@@ -560,7 +551,6 @@
   overflow: hidden;
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -595,7 +585,6 @@
   flex: none;
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
 }
 
 .kv-lora-settings__slider {
@@ -634,11 +623,6 @@
   font-family: var(--font-family);
   outline: none;
   -webkit-tap-highlight-color: transparent;
-}
-
-.kv-lora-card:focus-visible {
-  outline: 2px solid var(--color-text-fill-primary); /* Figma 没变量 */
-  outline-offset: 2px; /* Figma 没变量 */
 }
 
 .kv-lora-card__cover {
@@ -699,7 +683,6 @@
   background: linear-gradient(to top, color-mix(in srgb, black 60%, transparent), transparent);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--font-line-height-22);
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 1;
@@ -745,7 +728,6 @@
   overflow: hidden;
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--font-line-height-22);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -761,13 +743,13 @@
   line-clamp: 2;
 }
 
-/* 选中：2px 品牌色描边，画在里面，盖在封面和信息条上 */
+/* 选中：2px 白 40% 描边（同节点选中），画在里面，盖在封面和信息条上 */
 
 .kv-lora-card::after {
   content: "";
   position: absolute;
   inset: 0;
-  border: 2px solid var(--color-brand-solid); /* Figma 没变量 */
+  border: 2px solid rgba(255, 255, 255, 0.4); /* 和节点选中一样白 40%（11-05 用户定），Figma 没变量 */
   border-radius: inherit;
   opacity: 0;
   pointer-events: none;
@@ -828,8 +810,12 @@
 .kv-audio-char-count {
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
   font-variant-numeric: tabular-nums;
+}
+
+/* 超过上限：字变红（11-05 用户定），不挡生成 */
+.kv-audio-char-count[data-over] {
+  color: var(--color-status-danger);
 }
 
 /* ================= 选择模型 GenModelPicker ================= */
@@ -848,7 +834,6 @@
   color: var(--color-text-fill-primary);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-medium);
-  line-height: var(--font-line-height-22);
 }
 
 .kv-gen-model-picker > .kv-tab-group--segment {
@@ -911,7 +896,6 @@
 .kv-skill-panel__title {
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-medium);
-  line-height: var(--font-line-height-22);
 }
 
 .kv-skill-panel__actions {
@@ -963,7 +947,6 @@
   gap: var(--spacing-12);
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-14);
-  line-height: var(--font-line-height-22);
 }
 
 /* 一行：外壳撑满，「详情」叠在右边，悬停、键盘进到这一行才出现 */
@@ -1037,7 +1020,6 @@
   color: var(--color-text-fill-primary);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-medium);
-  line-height: var(--font-line-height-22);
 }
 
 .kv-skill-panel__preview-desc {

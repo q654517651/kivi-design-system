@@ -166,7 +166,7 @@ export const SkillPanel = forwardRef<HTMLDivElement, SkillPanelProps>(function S
             ))}
             <TabItem value="mine">我的</TabItem>
           </Tabs>
-          <IconButton icon="Search" label="搜索技能" variant="text" size={28} onClick={() => setSearching(true)} />
+          <IconButton tooltip={false} icon="Search" label="搜索技能" variant="text" size={28} onClick={() => setSearching(true)} />
         </div>
       )}
 

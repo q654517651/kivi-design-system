@@ -22,13 +22,6 @@ main.doc .home-title {
   letter-spacing: -0.02em;
 }
 
-.home-lead {
-  max-width: 600px;
-  color: var(--color-text-fill-secondary);
-  font-size: var(--font-size-16);
-  line-height: var(--font-line-height-24);
-}
-
 .home-stage {
   display: grid;
   grid-template-columns: 256px 360px 340px;
@@ -48,6 +41,11 @@ main.doc .home-title {
   align-items: stretch;
   gap: 40px;
   min-width: 0;
+}
+
+/* 中间一列比两边矮，在大框里上下居中，免得下面空一块 */
+.home-stage > .home-col:nth-child(2) {
+  align-self: center;
 }
 
 /* 左列 */
@@ -95,12 +93,6 @@ main.doc .home-title {
 }
 
 /* 中列 */
-.home-stack {
-  display: flex;
-  justify-content: flex-start;
-  min-height: 72px;
-}
-
 .home-buttons {
   display: flex;
   flex-wrap: wrap;

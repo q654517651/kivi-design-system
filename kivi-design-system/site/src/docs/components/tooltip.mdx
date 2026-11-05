@@ -58,7 +58,7 @@ import { PopoverPlayground, TooltipPlayground } from './tooltip.demos';
   const [open, setOpen] = useState(false);
   return (
     <Popover
-      trigger="click"
+      on="click"
       placement="bottom-start"
       open={open}
       onOpenChange={setOpen}
@@ -101,13 +101,13 @@ import { PopoverPlayground, TooltipPlayground } from './tooltip.demos';
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `variant` | `"tip"` `"long"` `"panel"` | `"tip"` | 说明 / 长文 / 面板。说明：标题加一段话，带箭头。长文：给被截断的长文字看全文（比如 GenPrompt 的提示词）：没有箭头、没有标题，底还是 `--color-bg-fill-popup`，能换行，宽度和触发元素一样、至少 240，14 / 22 `--color-text-fill-primary`，内边距 8 / 12，圆角 8，离触发元素 8；一般配 `disabled` 在没被截断时不出现；`content` 放全文，触发元素是那段文字本身。面板给能操作的悬停浮层（Lora 设置）：没有箭头，玻璃底（`--color-bg-fill-glass` + 模糊 `--effect-glass-blur`，描边 `--color-border-subtle` 画在里面），圆角 16，内边距 12，宽度由内容定；`content` 原样放进去，不套 13 / 20 的说明样式；按对话框读（`role="dialog"`） |
+| `variant` | `"tip"` `"long"` `"panel"` | `"tip"` | 说明 / 长文 / 面板。说明：标题加一段话，带箭头。长文：给被截断的长文字看全文（比如 GenPrompt 的提示词）：没有箭头、没有标题，底还是 `--color-bg-fill-popup`，能换行，宽度和触发元素一样、至少 240，14 / 22 `--color-text-fill-primary`，内边距 8 / 12，圆角 8，离触发元素 8；一般配 `disabled` 在没被截断时不出现；`content` 放全文，触发元素是那段文字本身。面板给能操作的悬停浮层（Lora 设置）：没有箭头，玻璃底（`--color-bg-fill-glass` + 模糊 `--effect-glass-blur`，描边 `--color-border-subtle` 画在里面），圆角 16，内边距 12，宽度由内容定；出现、消失和菜单同一套（淡入 + 从锚点那边 96% 放大、移 4，200ms ease-out / 150ms ease-in）；`content` 原样放进去，不套 13 / 20 的说明样式；按对话框读（`role="dialog"`） |
 | `content` | `ReactNode` | — | 内容，比一句话长的说明。13 / 20，`--color-text-fill-secondary`；长文是全文，14 / 22 |
 | `title` | `ReactNode` | — | 标题，不写就只有内容；长文没有标题。13 加粗，`--color-text-fill-primary`，和内容间距 4 |
-| `trigger` | `"hover"` `"click"` | `"hover"` | 悬停：停 `delay` 后出现，鼠标能挪进气泡里，键盘 Tab 聚焦（`:focus-visible`）也出，移开 150ms 后关。点击：点触发元素开关，点外面关；打开后焦点进气泡。两种都按 Esc 关闭、焦点回到触发元素 |
+| `on` | `"hover"` `"click"` | `"hover"` | 悬停：停 `delay` 后出现，鼠标能挪进气泡里，键盘 Tab 聚焦（`:focus-visible`）也出，移开 150ms 后关。点击：点触发元素开关，点外面关；打开后焦点进气泡。两种都按 Esc 关闭、焦点回到触发元素 |
 | `placement` | `"top"` `"bottom"` `"left"` `"right"`，各可加 `-start` `-end` | `"bottom"` | 出在触发元素哪边，默认居中；`-start` / `-end` 对齐上下方向的左右边、左右方向的上下边。放不下自动翻到对面，不出屏幕 |
 | `offset` | `number` | `10` | 离触发元素的距离：箭头 6 + 空 4；长文没有箭头，默认 8 |
-| `open` / `defaultOpen` / `onOpenChange` | `boolean` | 关 | 显示。受控时仍按 `trigger` 触发，通过 `onOpenChange` 通知 |
+| `open` / `defaultOpen` / `onOpenChange` | `boolean` | 关 | 显示。受控时仍按 `on` 触发，通过 `onOpenChange` 通知 |
 | `delay` | `number` | `200` | 悬停多久后出现，毫秒，只有悬停型用 |
 | `disabled` | `boolean` | `false` | 禁用：不出现，触发元素照常 |
 | `onInteractOutside` | `(event: PointerEvent) => void` | — | 点击型点了气泡外面时调用，`event.preventDefault()` 拦住这次关闭，比如点的是另一个浮层 |

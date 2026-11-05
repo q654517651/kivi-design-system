@@ -12,7 +12,7 @@ import {
   Slider,
   Switch,
   type CheckboxChecked,
-  type CheckboxShape,
+  type CheckboxVariant,
 } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 
@@ -198,7 +198,7 @@ export function SliderPlayground() {
 
 // ---------- Checkbox ----------
 
-type CheckboxState = { shape: string; checked: string; state: string; label: boolean; text: string };
+type CheckboxState = { variant: string; checked: string; state: string; label: boolean; text: string };
 
 const CHECKED: Record<string, CheckboxChecked> = { no: false, yes: true, part: 'mixed' };
 
@@ -206,17 +206,17 @@ export function CheckboxPlayground() {
   return (
     <Playground<CheckboxState>
       controls={[
-        { key: 'shape', label: '形状', type: 'segment', value: 'square', options: [['square', '方形'], ['round', '圆形']] },
+        { key: 'variant', label: '形状', type: 'segment', value: 'square', options: [['square', '方形'], ['round', '圆形']] },
         { key: 'checked', label: '选中', type: 'segment', value: 'yes', options: [['no', '否'], ['yes', '是'], ['part', '部分']] },
         { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['disabled', '禁用']] },
         { key: 'label', label: '显示文字', type: 'toggle', value: true },
         { key: 'text', label: '文字', type: 'text', value: '选项' },
       ]}
       rules={(s) => (s.label ? {} : { text: true })}
-      media={(s) => s.shape === 'round'}
+      media={(s) => s.variant === 'round'}
       render={(s, update) => (
         <Checkbox
-          shape={s.shape as CheckboxShape}
+          variant={s.variant as CheckboxVariant}
           checked={CHECKED[s.checked]}
           onChange={(on) => update({ checked: on ? 'yes' : 'no' })}
           className={HOVER[s.state]}

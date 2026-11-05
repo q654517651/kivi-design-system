@@ -17,10 +17,10 @@
   - 本地看：在 `site/` 下 `npm install`、`npm run dev`，打开 `http://localhost:4173/`（内网用本机内网地址 `:4173`）。
   - `src/kivi/`：组件库本体。`tokens.css` 是所有数值唯一的地方；`Icon.tsx` + `icons.ts` 是从 Figma 导出的图标；按组件类型分文件夹（11-04 重排：menu、navigation、inputs、selection、upload、tags-avatar、media、tooltip、generation、reference、agent-process 等，旧页到新页的对应见网站「旧名对照」的「页面改名」）：组件 `.tsx` + 这一类的 `.css` + `index.ts`。
   - `src/docs/`：规范页面（`.mdx`，规范文字）+ 旁边的 `.demos.tsx`（属性面板、状态矩阵），文件夹和目录分组跟 `src/kivi/` 一致。
-  - `src/docs/templates/`：页面模板（整页怎么拼，只能看），对应 Figma 的「模板 · …」页，目录里放最上面（11-02 用户定）。外框 `frame.tsx`、布局 `templates.css`。业务页上面不再放整体演示。
+  - `src/docs/templates/`：页面模板（整页怎么拼，只能看），对应 Figma 的「模板 · …」页，目录里放第二组、紧跟「开始」（11-04 用户定，原来放最上面）。外框 `frame.tsx`、布局 `templates.css`。业务页上面不再放整体演示。
   - `src/shell/`：网站自己的外壳（目录、演示、属性面板），不属于组件库。页面清单在 `src/shell/nav.ts`。全局搜索在 `src/shell/search/`，索引由 `scripts/search-index.mjs` 构建时从 nav.ts、MDX、`tokens.demos.tsx`、`icons.ts` 生成，新页进了 nav.ts 就自动能搜。
   - `assets/`（skill 根目录）是网站的静态目录，页面里用 `./placeholders/…`、`./empty-state/…`。
-- `kivi-design-system/references/`：旧的 md 规范，正在往网站迁，迁完删掉，别再往里加。
+- `kivi-design-system/references/`：只剩 `figma-kit.md`（改 Figma 组件库时读）。旧的 md 规范 11-05 已全部删掉，别再往里加。
 - `kivi-design-system-workspace/`：旧版备份（skill-snapshot-v0.1）、存档（纯 HTML 版网站在 `archive/site-html/`，别的对话做的演示在 `archive/demos/`）、测试结果，不进 skill。
 - `kivi-design-system.skill`：打包文件，现在是旧版，发布时重新打包，不进 git。
 
@@ -49,7 +49,7 @@
 - 演示要组件化：同一个东西在几页出现（比如生成用的下拉、参数面板），先抽成通用组件，再往里填内容，只写一份。生成控件在 `src/kivi/generation/`（11-04 从 docs 挪进组件库），画布和主站都用它（10-29 用户定）。
 - 改名必须有映射表，只放网站「旧名对照」一页（`src/docs/legacy-names.mdx`，变量和组件都在这，11-04 用户定），不放各组件页；Figma 各页的「迁移映射」11-04 已删，只留一句话 + 网站链接，别再加回去。
 - 写法：中文、短句；图片这类素材放 `assets/`；路径小写加连字符。
-- 改 Figma 组件库本身时，先读 `references/figma-kit.md`。
+- 改 Figma 组件库本身时，先读 `references/figma-kit.md`。在 Figma 里画任何东西，画完都要过那一篇的「画完自检」（11-04 用户定：图标缩到 16 线宽还是 1.6 是禁忌）。
 
 ## 图标方案（2026-10-29 定，还没做）
 
@@ -62,7 +62,7 @@
 ## 发布
 
 - skill 和新 kit 一起发布，现在都还没上线。
-- 发布前：图标仓库做好；删掉 `references/` 里已迁完的 md；重新打包 `.skill`。
+- 发布前：图标仓库做好；重新打包 `.skill`。
 
 ## 进度
 
@@ -102,7 +102,7 @@
 - 外部审查逐条过完并改了（10-30）：记录在 `kivi-design-system-workspace/review-2026-10-30.md`，对比图、改后对比、旧版里库没有的配图都在同名文件夹（发用户的是内嵌图片的单文件 html）。定的：参数面板、音频参数、工具条顺序（类型 → 模型 → 参考类型 → 参数）、画布参考类型在底部、MenuItem 禁用、音量浮层都以网站为准，Figma 已跟改；参考浮层一行 5 个、视频音频带时长；生成中分「没素材无遮罩」和「有原素材 + 遮罩 + 模糊 + 点阵」两种（ResultTile 用 `src`、NodeCard 用 `cover`）；FileCard 废弃；播放器悬停立刻播、属性面板去掉比例；首尾帧外部换图会更新。Figma 里仿的分段 / 下拉要换实例、换成 Noto 的文字要改回苹方，清单在记录里。网站截图脚本在 scratchpad（临时）。
 - 旧版（KIVI 3.5-3.14，fileKey `jF1VC4ldJtDK9ysA8h2K4c`）里库没有的：16 类通用零件（日历、级联子菜单、两行菜单项、搜索框、上传区、文件树、确认气泡、横幅、进度环、批量条、色块、尺寸输入、筛选胶囊、分步引导、画布缩放条 / 小地图 / 框选、正文排版）+ 约 12 个业务模板，配图在 `review-2026-10-30/旧版里库没有的.html`，还没排期。
 - 空状态 IP 插图从 Figma 导出到 `assets/empty-state/`（4 张，画布失败态也用 failed.png）。
-- `references/` 里已迁完可删的 md：components/ 全部、canvas/、agent/、pages/、foundations/（tokens、motion、icons）。还没删，等用户点头。
+- `references/` 里已迁完的 md 11-05 用户点头后删了（components、canvas、agent、pages、foundations、legacy-names、placeholder-images、prototype），只留 figma-kit.md。
 - 已加：占位图（`references/placeholder-images.md`，9 种风格 35 张，待迁到网站）。Figma「占位图」页已建统一入口 PlaceholderImage：先选 9 款图片之一，再选比例；组件描述标「待确认」。已改成实例拉满格子、画面跟着缩放；PlaceholderImage 是组件集，「填充」有铺满 / 模糊垫底两种；ResultTile 和「模板 · 主站」的生成记录已换上。其他业务组件里的旧占位图待替换。提示词存档在 `kivi-design-system-workspace/archive/placeholder-images/prompts.md`。
 - 已加：动效。2026-10-29 用户口头定的规则：屏幕内移动 ease-in-out，出现 ease-out，消失 ease-in；时长按距离分 5 档。Figma「变量」页已加「17 动效」分区，变量在 scale 集合的 `motion/`，时长按数字命名（不用 xs、sm），作用范围全关，只为导出。
 - 占位图页（10-30）：「基础 · 占位图」，组件 `PlaceholderImage`（`image` 9 款、`ratio`、`fill` 铺满 / 模糊垫底、`base` 图片目录）和 `placeholderImageSrc()`、`PLACEHOLDER_IMAGES`，在 `src/kivi/placeholder-image/`。旧 md 的用法、Figma 用法、补新图要求在 `page-notes/placeholder-images.md`。别的页面里手写的 `./placeholders/…` 还没换成它。`references/placeholder-images.md` 可删，等用户点头。
@@ -123,7 +123,11 @@
 - 归类和命名统一（11-04，照两份外部审查，用户定）：网站新加「基础 · 设计规则」页（`docs/foundations/rules.mdx`，所有设计硬规则只写这里，SKILL.md、验收清单指向它）和「展示 · 布局」页（Divider、Collapse）；生成控件（各种 Select、参数面板、GenModelPicker、SkillPanel / SkillPicker）挪进 `src/kivi/generation/`，选项在 `options.ts`，演示技能列表在 `docs/business/skill-data.ts`；属性统一 `variant` / `type` / `status`、尺寸写数字（Button 28/32/36、Tabs 32/36、Loading 16/24/40、EmptyState 160/96、VideoPlayer 改 `variant="card" | "preview"`），映射在旧名对照「属性统一（11-04）」；页头和正文的状态全删，顶栏只留 `v0.1.0`；画布、标注、Agent 过程页小标题改组件名，节点工具栏、画布工具栏挪到模板「画布工具」。四条全局规则已落地：技能没有不能点的状态、IconButton 选中一档白底不变绿、占位按钮用轻、按钮下拉箭头 tertiary。Figma 都没跟（记在 figma-sync-pending.md）。
 - Container 底色对比度（11-04，用户定）：相邻两层对比度不低于 1.12；深浅按背景相对亮度分，< 0.015 深底用 Light 1，≥ 0.015 浅底用 Light 2，写在「设计规则 · 颜色和底色」；全站按这个改完，重跑盘点 316 处全合规。容器给里面的组件传 `--kv-nested-fill`。盘点和改动在 `page-notes/container-contrast-2026-11-04.md`。 后来又定：只有 Light 1 / Light 2 两档，默认、hover、pressed 各管各的，不跨语义借用、不在背景上叠色；常驻底色（选中、展开、当前页）用默认，悬停一律 hover；玻璃改 #181818 50%，Container 每档加 2%（Light 1 10/14/18，Light 2 6/10/14），重跑 344 处全合规。
 - 参考和引用单开一页（11-04，用户定）：「业务组件 · 参考和引用」（`docs/business/reference.mdx`，代码 `kivi/reference/`），放主站 PromptBox 的参考区和参考格、画布生成面板的附件条和首尾帧、所有 @ 引用胶囊（MentionChip，标注页那份也挪来）、悬停预览。纯搬家，样式没改（搬前搬后 177 个元素逐个比过）。三家共用的删除角标规则还在 generation.css。 之后又定：MentionChip 加了 7 种类型的属性面板，图标类（音乐、技能、节点、模型）直接放 16 白色图标；ReferenceItem 加了属性面板，音频和文件一个样子（图标占位底），文件按扩展名换图标（新加 8 个 Hugeicons 文件图标）；附件条只留 56、间距 4；缩略图删除改回右上 18 的小圆。 11-04 又定：UploadTile 并进 AddTile（添加素材从素材库还是电脑都是它），AddTile 去掉 `size` 只留 56，格子自己的拖入不要；角标和删除、悬停浮层换一个时不交叉淡化（旧的立刻没、新的直接出）。 Dropzone 删了，拖文件只用 DropOverlay，照 Claude 桌面端改：框加 border-strong 描边、不铺底不模糊，正中 popup 小卡、三个图标（新加 Image、Files，Hugeicons）弹簧展开、中间上浮。 拖入提示加 mask 遮罩、图标和字用品牌绿；规则页品牌色改成「省着用，不大面积铺底」+ 举例。PromptBox 宽度照即梦：最宽 1040，最窄是工具条一行排开的宽度（不折行、控件不压缩）。 图标定用 V3（11-04 用户定）：网站默认 V3，去掉 V2 / V3 切换（V2 数据 icons.ts 留着），顶栏右上角加「Hugeicons 图标库」链接；「图标」页规格和「设计规则 · 图标」改成 Hugeicons 缩 21、线宽 1.6，补图标从 Hugeicons 找。 图标改用蒙版渲染（Icon.tsx 生成 `--kv-icon-mask`，底色 currentColor），颜色带透明度时线段交叠处不再叠色；V3 的 Tool 换成 Hugeicons wrench-01。
+- 多画布（11-04，飞书「P1 工作区内支持多个画布」，用户点头照方案做）：新组件 `CanvasHeader`（`kivi/canvas`，「画布」页 + 画布模板左上角）：玻璃按钮条 44 Logo｜工作区｜画布名 ⌄，下拉列表当前项选中底色不打勾、7.5 条滚动、「⋯」在新窗口打开 / 重命名 / 复制 / 删除，删除和 Agent 工作中切换都弹 Dialog 400，上限 30 出 Toast。顺手：Dropdown 支持套着的弹出层；弹出菜单里 MenuLabel 按钮一直显示；Icon 名字不存在时画空的不崩；新图标 NewWindow。记录在 `page-notes/multi-canvas.md`，Figma 没跟。
 - 网站全局搜索（11-04，用户要的，不改现有样式）：顶栏「搜索 ⌘K」（也认 Ctrl K、`/`），弹窗用 Dialog 560 + Input + Button 轻。能搜页面、标题、正文、表格行（参数表、旧名对照）、变量、图标；模糊（缩写 pb → PromptBox、隔字 生面 → 生成面板、拼错 Mdoel / buton、空格横线大小写不分）、多个词是「且」。排序：匹配分 + 类型加分（页面 > 二级标题 > 三级标题 > 图标 > 变量 > 表格行 = 正文），最近打开的加分，旧名对照的行扣分。建议三种：没输入时是「最近打开」+ 全部页面；输入时顶上一排补全（Tab 接受第一个）；一条都没有时「你是不是想搜」。点中后切页，滚到对应的标题 / 段落 / 表格行 / 变量 / 图标，闪一下品牌浅底（`[data-search-hit]`，1.6 秒，减少动态效果时不闪）。新样式只在 `src/shell/search/search.css`（新类名、只用 tokens），没改任何已有的类；`.shell-top` 原样没动，手机宽（≤560）不放入口，免得挤掉 Figma 按钮。开发时改了文档要刷新页面索引才更新。新依赖（devDependencies，原来就在 node_modules 里）：unified、remark-parse、remark-mdx、mdast-util-to-string、github-slugger。没做：拼音搜索。
+- 自洽审查（11-04）：8 个 Sonnet 分维度查 + 4 个复核，又吸纳了 GPT 那份（`outputs/consistency-audit-2026-11-04/`，新增 25 条复核过）。报告 `kivi-design-system-workspace/review-2026-11-04/report.html`（原始报告和复核在 `raw/`）。用户让先修「bug 和明显写错的」，已修 65 条（报告里标「已修」）：Logo 绿星（Icon 带固定颜色的照旧直接画 SVG）、网站外壳加错误边界、日历翻月、Tabs 方向键、Dropdown 面板类放行 Tab（`haspopup="dialog"`）、Tooltip / MessageFeedback / ReferenceStack 的 Esc 不连弹窗一起关、弹窗焦点陷阱放过挂在 body 上的浮层、禁用 Select、音高负号、首尾帧旧回调、GenPrompt 复制和空提示词、UserMessage 换行、ScrollArea 续载、主站模板改用 MessageFeedback，以及一批参数表、旧百分比、SKILL.md 路由表。追问单选和「其他」互斥是兜底做法（线上没有可照抄的）。没修：画布页里另一个对话在改的（History 空位、CanvasHeader 三条、C-2 / C-3 / C-4），和报告「要你定」的十几组，等用户看。
+- 变量收敛（11-05，用户定）：`--color-border-focus` 删了（组件不加聚焦描边，`base.css` 关掉浏览器默认聚焦框，和前端一致）；`--effect-shadow-stack` 删了（叠放用白底加旋转）；背景模糊只有两档、不许例外：32 `--effect-glass-blur` 给玻璃和 on-media，16 `--effect-mask-blur` 给生成中、占位图遮罩，底不透明的不加，`npm run check` 会拦写死的模糊。行高只给多行文字、单行不设（组件库默认 1.4 = Figma 苹方自动行高，单行的 75 处已删）。规则在「设计规则」页，Figma 待改已记。填充色阶（11-05 用户定）：`--color-fill-1~4`（白 6 / 10 / 14 / 18），Container 六个变量改成引用它、名字值不变；`fill-n` 只给 Container 语义不符的静态色块（名单在设计规则：叠层、小地图节点、骨架屏扫光），检查脚本拦名单以外的；开关轨道、文字头像、试听播放中改回 Container 默认。变量只留两层（填充色阶 → 语义变量），不要原始色层（只有深色一套用不上，以后做亮色再加），Figma 隐藏的原始色集合下次同步删。禁用的底和平时一样、只变字色；填充对比度 1.12 不管禁用和遮罩。IconButton 自带提示（label，`tooltip={false}` 关），通用符号不配，名单在设计规则「提示」。SendButton 纳入按钮体系（IconButton 主要 · 36 · `round`，圆形只给规则名单里的专用按钮）。生成失败态统一 EmptyState 生成失败 · 96，可配 `failedTitle` / `failedDescription`。待办（11-05 用户定，都是新增、先不做）：画布生成按钮「10 秒内可停止」、节点和结果格的停止、节点工具栏补框选 / 编辑文字和调顺序、停止图标，细节记在总表 `page-notes/component-inventory.md`「待做」。收藏了的星图标品牌绿（IconButton `data-collected`，设计规则里写成唯一例外）；连线删除改玻璃；音频字数超上限变红（11-05 用户定）；细滑杆暂定给剪辑时间线缩放，记待做。画布底部工具栏「添加」改 IconButton 主要（品牌绿，`__solid` 类删了）；Wan 用 Qwen Logo；Checkbox / Skeleton `shape` → `variant`、Popover `trigger` → `on`；生成结果组不补更多状态、模型面板不做加载 / 失败 / 空态（有缓存）。审查报告剩下的 181 条都分了 P0 / P1 / P2、写了问题和处理（`cur.json` 的 triage），15 条等用户定，其余按已定规矩由我定。
+- Textarea 框内按钮（11-05，用户定）：`actions` 放在框里右下角，按钮 28，字数在按钮左边；点踩原因（MessageFeedback）改成 Textarea + 框内「提交」，去掉关闭（Esc、再点踩收起）。起因是 3.14 记忆管理稿（补齐的状态在 Figma 498:6079，记录在 `page-notes/memory-manager.md`）。Figma Textarea 还没跟。
 - 发布时把网站编译打进 skill（双击能看需单文件打包，或 `npm run preview`），10-29 讨论，没定。
 
 ## 协作方式

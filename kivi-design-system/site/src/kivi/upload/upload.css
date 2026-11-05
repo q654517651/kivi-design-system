@@ -32,7 +32,6 @@
   color: var(--color-text-fill-primary);
   font: inherit;
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
@@ -94,6 +93,5 @@
   grid-area: 1 / 1;
   font-size: 9px;
   font-weight: var(--font-weight-medium);
-  line-height: 11px;
   font-variant-numeric: tabular-nums;
 }

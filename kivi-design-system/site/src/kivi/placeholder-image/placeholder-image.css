@@ -54,13 +54,13 @@
   transform: scale(1.3125); /* 336 / 256，Figma 没变量 */
 }
 
-/* 遮罩：glass 本身已带 50% 透明度，不再叠透明度；背景模糊 24 */
+/* 遮罩：glass 本身已带 50% 透明度，不再叠透明度；背景模糊用遮罩那一档 */
 .kv-placeholder-image__mask {
   position: absolute;
   inset: 0;
   background: var(--color-bg-fill-glass);
-  -webkit-backdrop-filter: blur(24px); /* Figma 没变量 */
-  backdrop-filter: blur(24px); /* Figma 没变量 */
+  -webkit-backdrop-filter: blur(var(--effect-mask-blur));
+  backdrop-filter: blur(var(--effect-mask-blur));
 }
 
 /* 模糊垫底：上面那张完整显示 */

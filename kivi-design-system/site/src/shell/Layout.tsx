@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Button, Icon, IconButton } from '@kivi';
 import { NAV } from './nav';
@@ -7,6 +7,18 @@ import { SearchButton, useSearchJump } from './search';
 const FIGMA = 'https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2';
 /** 图标用的是 Hugeicons 免费版（V3），补图标去这里找 */
 const HUGEICONS = 'https://hugeicons.com/icons';
+
+/** 一页出错只坏这一页：目录、顶栏还在，换页（key 换了）自动重来 */
+class PageBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) return <p className="shell-loading">这一页出错了：{this.state.error.message}</p>;
+    return this.props.children;
+  }
+}
 
 // 顶栏两个外链的品牌 Logo，只给网站外壳用，不进组件库；颜色是品牌原色（Figma 没变量）
 /** Figma 官方四色标，16 高 */
@@ -143,9 +155,11 @@ export function Layout() {
         </nav>
 
         <main className="doc" ref={mainRef}>
-          <Suspense fallback={<p className="shell-loading">加载中…</p>}>
-            <Outlet />
-          </Suspense>
+          <PageBoundary key={pathname}>
+            <Suspense fallback={<p className="shell-loading">加载中…</p>}>
+              <Outlet />
+            </Suspense>
+          </PageBoundary>
         </main>
 
         <aside className="shell-toc">

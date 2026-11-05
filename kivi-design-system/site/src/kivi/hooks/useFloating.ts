@@ -117,7 +117,13 @@ export function useFloating(
     };
     update();
     window.addEventListener('resize', update);
-    window.addEventListener('scroll', update, true);
+    // 浮层自己里面滚动（长菜单）不用重算：重算会先去掉限高再量，滚动位置会被夹回去
+    const onScroll = (e: Event) => {
+      const el = popup.current;
+      if (el && e.target instanceof Node && el.contains(e.target)) return;
+      update();
+    };
+    window.addEventListener('scroll', onScroll, true);
     // 锚点、弹出层尺寸变了（内容换了、字体加载完、折行）位置也要跟着变。开始观察时会回调一次，多算一次无妨
     let ro: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined') {
@@ -129,7 +135,7 @@ export function useFloating(
     return () => {
       ro?.disconnect();
       window.removeEventListener('resize', update);
-      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('scroll', onScroll, true);
     };
   }, [active, popup, placement, offset, matchWidth, anchorKey]);
 }

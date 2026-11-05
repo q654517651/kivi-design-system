@@ -55,7 +55,7 @@ export const MODELS: Record<ModelType, SelectOption[]> = {
     // 全能参考
     { value: 'gemini-omni-flash', label: 'Gemini Omni Flash', icon: 'Gemini' },
     { value: 'happyhorse', label: 'HappyHorse', icon: 'HappyHorse' },
-    { value: 'wan-3.0', label: 'Wan 3.0', icon: 'Bytedance' },
+    { value: 'wan-3.0', label: 'Wan 3.0', icon: 'Qwen' },
     // 只有首尾帧
     { value: 'veo-3.1-fast', label: 'Veo 3.1 Fast', icon: 'Gemini' },
     { value: 'sora-2', label: 'Sora 2', icon: 'Sora' },

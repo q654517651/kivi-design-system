@@ -19,7 +19,7 @@ export const Loading = forwardRef<HTMLDivElement, LoadingProps>(function Loading
 ) {
   const hasText = children !== undefined && children !== null && children !== false && children !== '';
   return (
-    <div ref={ref} className={cx('kv-loading', `kv-loading--${size}`, className)} role="status" {...rest}>
+    <div ref={ref} className={cx('kv-loading', `kv-loading--${size}`, className)} role="status" aria-label={hasText ? undefined : '加载中'} {...rest}>
       <Icon name="Loading" spin />
       {hasText && <span>{children}</span>}
     </div>

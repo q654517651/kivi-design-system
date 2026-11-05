@@ -43,7 +43,6 @@
   color: var(--kv-content);
   font-family: var(--font-family);
   font-weight: var(--font-weight-medium);
-  line-height: var(--font-line-height-20);
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
@@ -93,7 +92,7 @@
   --kv-fill-pressed: var(--color-bg-fill-container-light-1-pressed);
 }
 
-/* 平时没底色：悬停、按下用所在底那一档的 hover / pressed。深底 Light 1（12% / 16%）；
+/* 平时没底色：悬停、按下用所在底那一档的 hover / pressed。深底 Light 1（14% / 18%）；
    放在带底色的行里（菜单项的「⋯」），行把 --kv-nested-fill-hover / -pressed 设成 Light 2 */
 .kv-button--text,
 .kv-icon-button--text {
@@ -161,7 +160,7 @@
 }
 
 /* 状态：选中（只有 IconButton，主要没有；轻选中不换色，见下）。
-   IconButton 没有绿色状态（11-04 用户定）：选中是常驻底色，用所在底那一档的默认（深底 Light 1 8%），悬停、按下照常升档，图标白 */
+   IconButton 没有绿色状态（11-04 用户定）：选中是常驻底色，用所在底那一档的默认（深底 Light 1 10%），悬停、按下照常升档，图标白 */
 
 .kv-icon-button[aria-pressed="true"] {
   --kv-fill: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
@@ -178,6 +177,11 @@
   --kv-fill: var(--color-on-media-fill-hover);
   --kv-fill-hover: var(--color-on-media-fill-hover);
   --kv-fill-pressed: var(--color-on-media-fill-hover);
+}
+
+/* 收藏了：实心星，图标品牌绿（11-05 用户定，只给收藏用）。底照选中走 */
+.kv-icon-button[data-collected] {
+  --kv-content: var(--color-brand-solid);
 }
 
 /* 状态：禁用。底色白 10%，文字白 20%；文字、浮层、轻保持原来的底 */
@@ -293,6 +297,11 @@
   height: 36px;
 }
 
+/* 圆形：只给「设计规则 · 按钮」里列的专用按钮（SendButton 等），别的按钮一律方的，不许随手用（11-05） */
+.kv-icon-button--round {
+  border-radius: var(--border-radius-round);
+}
+
 /* ---------- ButtonGroup：按钮条 ---------- */
 
 /* 盖在图片、视频上的一排按钮合成一条：高 32（按钮 28 + 四周 2），按钮间距 4。
@@ -318,13 +327,13 @@
   background: var(--color-bg-fill-glass);
 }
 
-/* 实色：画布底部工具栏，照原来的 CanvasToolbar：surface 底、描边 border-subtle、模糊 12 */
+/* 实色：画布底部工具栏，照原来的 CanvasToolbar：surface 底、描边 border-subtle；底不透明，不加模糊 */
 .kv-button-group--surface {
   outline: var(--border-width-1) solid var(--color-border-subtle);
   outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-surface);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* 32 的条里的选中（收藏了）换实心图标，和别处一样加一档白底、不变绿（11-04 用户定 IconButton 没有绿色状态）。44、56 的工具栏里选中也是普通样子 */
@@ -350,14 +359,8 @@
 }
 
 /* 56 的条里图标是 24 */
-.kv-button-group--56 .kv-icon-button:not(.kv-button-group__solid) {
+.kv-button-group--56 .kv-icon-button:not(.kv-icon-button--primary) {
   --kv-icon-size: 24px;
 }
 
-/* 条里强调的那一个按钮（画布工具栏的「添加」）：白底黑图标。Figma 里手动改的，IconButton 没有这个类型 */
-.kv-button-group__solid {
-  --kv-fill: var(--color-text-fill-primary);
-  --kv-fill-hover: var(--color-text-fill-primary);
-  --kv-fill-pressed: var(--color-text-fill-primary);
-  --kv-content: var(--color-bg-fill-base);
-}
+/* 条里强调的那一个按钮（画布工具栏的「添加」）用 IconButton 主要，图标保持 20（11-05 从白底黑图标改成品牌绿） */

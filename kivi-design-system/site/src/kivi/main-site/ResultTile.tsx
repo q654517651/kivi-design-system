@@ -1,10 +1,9 @@
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { ButtonGroup, IconButton } from '../button';
-import { EmptyState } from '../feedback';
+import { EmptyState, GENERATION_FAILED_TITLE } from '../feedback';
 import { GeneratingDots } from '../generating';
 import { useControllable } from '../hooks';
 import type { IconName } from '../icons';
-import { Tooltip } from '../tooltip';
 import { Tag } from '../tags-avatar';
 import { cx } from '../utils';
 import { VideoPlayer } from '../media';
@@ -36,7 +35,7 @@ export interface ResultTileProps extends HTMLAttributes<HTMLDivElement> {
   badge?: ReactNode;
   /** 右上操作：删除、下载，合成一条按钮条（IconButton 28 · 文字），带 Tooltip。悬停才出；失败的格子也有（还能删除） */
   topActions?: ResultTileAction[];
-  /** 完成：右上按钮条最后放收藏（Collect，收藏了换 CollectSolid，绿色）。收藏了的，不悬停右上还留一个绿星 */
+  /** 完成：右上按钮条最后放收藏（Collect，收藏了换 CollectSolid，IconButton 选中：白底 + 白图标）。收藏了的，不悬停右上还留一个实心星 */
   collect?: boolean;
   /** 完成：收藏了没有 */
   collected?: boolean;
@@ -48,8 +47,10 @@ export interface ResultTileProps extends HTMLAttributes<HTMLDivElement> {
   quickActions?: ResultTileAction[];
   /** 视频右下「预览」：打开预览，参数是播到第几秒。不传就没有这个按钮 */
   onPreview?: (currentTime: number) => void;
-  /** 失败时的文字，默认「生成失败，消耗猕猴桃已退回」 */
-  failedText?: ReactNode;
+  /** 失败：标题，默认「生成失败，消耗猕猴桃已退回」。失败态就是 EmptyState 生成失败 · 96，和节点、生成结果组一样 */
+  failedTitle?: ReactNode;
+  /** 失败：副标题，默认没有 */
+  failedDescription?: ReactNode;
 }
 
 function Actions({ list, position, extra }: { list?: ResultTileAction[]; position: 'top' | 'quick'; extra?: ReactNode }) {
@@ -60,9 +61,7 @@ function Actions({ list, position, extra }: { list?: ResultTileAction[]; positio
       aria-label={position === 'top' ? '操作' : '快捷操作'}
     >
       {list?.map((a) => (
-        <Tooltip key={a.icon} content={a.label}>
-          <IconButton icon={a.icon} label={a.label} onClick={a.onClick} />
-        </Tooltip>
+        <IconButton key={a.icon} icon={a.icon} label={a.label} onClick={a.onClick} />
       ))}
       {extra}
     </ButtonGroup>
@@ -85,7 +84,8 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
     onCollectedChange,
     quickActions,
     onPreview,
-    failedText = '生成失败，消耗猕猴桃已退回',
+    failedTitle = GENERATION_FAILED_TITLE,
+    failedDescription,
     className,
     children,
     ...rest
@@ -122,7 +122,7 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
   if (status === 'failed') {
     return (
       <div ref={ref} className={cls} aria-invalid="true" tabIndex={topActions?.length ? 0 : undefined} {...rest}>
-        <EmptyState scene="failed" size={96} title={failedText} />
+        <EmptyState scene="failed" size={96} title={failedTitle} description={failedDescription} />
         <Actions list={topActions} position="top" />
         {children}
       </div>
@@ -138,21 +138,20 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
         position="top"
         extra={
           collect && (
-            <Tooltip content={collected ? '取消收藏' : '收藏'}>
-              <IconButton
+            <IconButton
                 icon={collected ? 'CollectSolid' : 'Collect'}
                 label={collected ? '取消收藏' : '收藏'}
                 selected={collected}
+                data-collected={collected || undefined}
                 onClick={() => setCollected(!collected)}
               />
-            </Tooltip>
           )
         }
       />
-      {/* 收藏了、不悬停：右上只留一个绿星，悬停时换成整条。只是标记，点不到（鼠标一移上去就是整条） */}
+      {/* 收藏了、不悬停：右上只留一个实心星，悬停时换成整条。只是标记，点不到（鼠标一移上去就是整条） */}
       {collect && collected && (
         <ButtonGroup className="kv-result-tile__pin" aria-hidden>
-          <IconButton icon="CollectSolid" label="已收藏" selected tabIndex={-1} />
+          <IconButton icon="CollectSolid" label="已收藏" selected data-collected tabIndex={-1} />
         </ButtonGroup>
       )}
       <Actions list={quickActions} position="quick" />

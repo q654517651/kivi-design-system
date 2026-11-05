@@ -38,7 +38,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-12);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   white-space: nowrap;
   -webkit-user-select: none;
   user-select: none;
@@ -194,6 +193,13 @@
   background: var(--color-bg-fill-glass);
   -webkit-backdrop-filter: blur(var(--effect-glass-blur));
   backdrop-filter: blur(var(--effect-glass-blur));
+  /* 出现、消失和菜单同一套（11-05）：淡入 + 96% 放大 + 移 4，200ms ease-out / 150ms ease-in */
+  transform-origin: var(--kv-popup-origin, 0 0);
+  animation: kv-popup-in var(--motion-duration-200) var(--motion-ease-out) both;
+}
+
+.kv-popover--panel[data-state="closed"] {
+  animation: kv-popup-out var(--motion-duration-150) var(--motion-ease-in) both;
 }
 
 /* 长文类（variant="long"）：给被截断的长文字（比如提示词）看全文。没有箭头，底还是实色 popup；

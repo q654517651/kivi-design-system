@@ -9,7 +9,7 @@ import { PageHeader } from '@shell';
 ## 变量
 
 - 透明度的单位不同：Figma 里 `opacity/50` 是 50，代码里 `--opacity-50` 是 0.5。
-- 玻璃的背景模糊和两个阴影是 Figma 的效果样式，不是变量；代码里照样有 `--effect-glass-blur`、`--effect-shadow-stack`、`--effect-shadow-spread`。
+- 玻璃的背景模糊和阴影是 Figma 的效果样式，不是变量；代码里照样有 `--effect-glass-blur`、`--effect-shadow-spread`。
 - 画布连线的代码名 `--g-workflow-line-color-*` 对应 Figma 的 `color/canvas/connector-*`，是照前端现有名字特意留的，不按 `/` 换 `-`。
 - 改名的变量先在 variable.less 里加别名（`--旧名: var(--新名)`），旧代码不用马上改；改值的直接改变量值；写死的颜色按表逐步替换；全部换完再删别名。
 - 「处理」一列：改名、改值、合并、删掉、留别名（迁移期保留）、研发自定义（不进 V2）；另有新增、改用途、代码不变（Figma 改了名，代码名不变）。
@@ -50,7 +50,7 @@ import { PageHeader } from '@shell';
 | `color/bg/fill/popup-raised`（原 `popup-light-1` 改名而来）· `--color-bg-fill-popup-light-1` | 删掉，并入 `color/bg/fill/popup` | 4 处：global.less 的 Tooltip、CustomMenu 子菜单、CanvasGuide 气泡、SkillPreviewCard；`--color-bg-fill-popup-light-1` 改为指向 popup | 删掉 |
 | `color/text/fill/secondary` · `--color-text-fill-secondary` = 白 50% | 同名，白 60% | 89 处引用，改完变量值自动生效 | 改值 |
 | — | `color/bg/fill/mask` · `--color-bg-fill-mask` = 黑 60% | 无。模态弹窗的遮罩；写死的遮罩（黑 60% 23 处、45% 等）统一换成它 | 新增 |
-| — | `border/radius/xl` · `--border-radius-24` = 24 | 写死的 24px 2 处可直接换成它。大容器用，弹窗和面板仍用 16 | 新增 |
+| — | `border/radius/24` · `--border-radius-24` = 24 | 写死的 24px 2 处可直接换成它。大容器用，弹窗和面板仍用 16 | 新增 |
 | — | `font/family` · `--font-family` = "PingFang SC" | 写死的 font-family 'PingFang SC' 约 120 处，逐步换成它 | 新增 |
 | `font/weight/semibold` · `--font-weight-semibold`（按钮、标题在用） | 按钮、标题改用 `font/weight/medium` · `--font-weight-medium` | 按钮、标题上的 semibold（600）改成 medium（500）；写死的 500（22 处）换成 `var(--font-weight-medium)` | 改用途 |
 | `gray/850` | 删掉 | 原始色，没有变量引用，只在 Figma 里，代码无影响 | 删掉 |
@@ -94,6 +94,11 @@ import { PageHeader } from '@shell';
 | 效果样式「玻璃/背景模糊」16 | 同名，32 | 画布里已经是 32，其他 `blur(16px)` 统一成 32 | 改值 |
 | on-media 按钮背景模糊 24（写死） | `--effect-glass-blur` 32 | 写死的 24 | 改值 |
 | 角上按钮的底：写死黑 40%（ToolbarItem 填充款手动改） | `color/on-media/fill` · `--color-on-media-fill` = 黑 40% | 倒计时、上传中、上传、设为封面、下载这几个按钮 | 合并 |
+| 缩略图上的标签和删除（序号角标、时长、Lora 权重、删除小圆）：写死 `container-dark` + 模糊 16 / 24 | `--color-on-media-fill` + `--effect-glass-blur` 32 | 写死的 16、24 | 合并（11-05） |
+| 生成中遮罩、占位图遮罩：写死模糊 12 / 24 | 效果样式「遮罩/背景模糊」· `--effect-mask-blur` = 16 | 写死的 12、24 | 新增（11-05） |
+| 画布底部工具栏模糊 12、连线删除按钮模糊 6 | 工具栏底不透明，去掉模糊；连线删除用 `--effect-glass-blur` 32 | 写死的 12、6 | 合并（11-05） |
+| 静态色块借 `container-light-1-pressed`（叠层、小地图节点）、借 `-hover`（骨架屏扫光） | 新增填充色阶 `--color-fill-1~4`（白 6 / 10 / 14 / 18），叠层 `fill-4`、小地图节点 `fill-2`、扫光 `fill-3`；Container 六个变量改成引用色阶，名字和值不变 | 写死的白 18% / 14% | 新增（11-05） |
+| 开关轨道、文字头像、试听播放中用 `container-light-1-pressed`（白 18%） | `container-light-1`（白 10%），放进浅底跟 `--kv-nested-fill` 换组 | | 改值（11-05，暗一档） |
 | 角上按钮悬停：写死 rgba(16, 19, 24, 0.9) | `color/on-media/fill-hover` · `--color-on-media-fill-hover` = 黑 60% | 代码里原来没有变量，要和前端对齐 | 合并 |
 | 贴图控件的文字：写死白色 | `color/on-media/text` · `--color-on-media-text` = #FFFFFF | — | 合并 |
 
@@ -126,7 +131,6 @@ V2 新加、线上 variable.less 没有的变量，前端整段加进去。值�
 | `color/text/fill/on-brand` · `--color-text-fill-on-brand` | #000000 | |
 | `color/border-subtle` · `--color-border-subtle` | 白 8% | |
 | `color/border-strong` · `--color-border-strong` | 白 50% | |
-| `color/border-focus` · `--color-border-focus` | #2BFF75 | |
 | `color/brand/hover` · `--color-brand-hover` | #5CFF95 | |
 | `color/brand/pressed` · `--color-brand-pressed` | #1FD962 | |
 | `color/brand/subtle` · `--color-brand-subtle` | #2BFF75 12% | |
@@ -164,7 +168,6 @@ V2 新加、线上 variable.less 没有的变量，前端整段加进去。值�
 | `motion/ease/expand` · `--motion-ease-expand` | cubic-bezier(0, 0.7, 0.22, 1) | |
 | `motion/ease/spring` · `--motion-ease-spring` | linear(…) 采样，冲过头约 4% | 值太长，见 tokens.css |
 | 效果样式「玻璃/背景模糊」· `--effect-glass-blur` | 32px | 不是 Figma 变量 |
-| 效果样式「阴影/叠放」· `--effect-shadow-stack` | 0 2px 10px rgb(0 0 0 / 0.2) | 不是 Figma 变量 |
 | 效果样式「阴影/展开」· `--effect-shadow-spread` | 0 10px 30px rgb(0 0 0 / 0.5) | 不是 Figma 变量 |
 | tailwind `fontWeight` 的 `medium` | `var(--font-weight-medium)` | 原来只有 `regular`、`semibold` |
 
@@ -186,7 +189,7 @@ V2 新加、线上 variable.less 没有的变量，前端整段加进去。值�
 
 #### 原始色
 
-V2 的原始色在 Figma 里是隐藏集合，不给代码直接用。按用途换成语义变量，迁移期留别名。
+V2 的原始色在 Figma 里是隐藏集合，不给代码直接用。11-05 定不要这一层：网站没有，Figma 下次同步时删掉（语义变量改成直接写值或引用填充色阶）。前端的 `--white-*`、`--black-*` 按下表用途换成语义变量，迁移期留别名。
 
 | 旧名 | 新名 | 前端用量 | 处理 |
 |---|---|---|---|
@@ -258,7 +261,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | 旧 | 新 | 类型 · 说明 |
 |---|---|---|
 | 单文件原型里的 `work-img`（`<img>` 铺满格子，`object-fit: cover`） | `PlaceholderImage`（`fill="cover"`） | 改成组件。单文件 HTML 原型不再维护 |
-| 单文件原型里的 `work-blur`（两张同图 + `work-blur__bg`、`work-blur__img`，`::after` 盖 glass） | `PlaceholderImage`（`fill="blur"`） | 改成组件。放大、遮罩、模糊的数值不变：336 / 256、glass、模糊 24 |
+| 单文件原型里的 `work-blur`（两张同图 + `work-blur__bg`、`work-blur__img`，`::after` 盖 glass） | `PlaceholderImage`（`fill="blur"`） | 改成组件。放大、遮罩的数值不变：336 / 256、glass；模糊 11-05 从 24 改成 16（`--effect-mask-blur`） |
 
 ## 图标
 
@@ -429,7 +432,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | 代码 CustomCheckbox（3 处，16，白边框，选中 #37ff74，12 号） | Checkbox · 方形 / 圆形 | 改样式 | 边框白 50%，选中用品牌绿变量，文字 12 → 13 |
 | 旧库 图标页 checkbox（未选择 / 选择 / 部分选择 × 圆形 / 圆角矩形） | Checkbox | 替换 | 从图标挪成组件，加悬停、禁用和文字 |
 | 分段选择器：示例 · 两项 / 三项 / 图标型（比例）；勾选框：示例/列表全选、图片多选；参数面板 · 模板（视频） | 「模板 · 通用」页「分段选择」「勾选」分区、「模板 · 画布」页「参数面板」分区；分段选择器分区已删（组件并进 TabItem） | 移动 | 改名在整理模板时做 |
-| Slider · 状态=悬停（绿色细轨：轨道 4、已选品牌绿、把手 14、悬停变 16） | Slider · 状态=聚焦（刻度滑块） | 改样式 | 悬停变体改名聚焦：网站悬停没有变化，键盘聚焦在轨道外 2 画 1.5 描边（`color/border-strong`）；把手填充绑 `color/text/fill/primary`；新增「刻度」「刻度数字」两个开关。旧实例 0 个 |
+| Slider · 状态=悬停（绿色细轨：轨道 4、已选品牌绿、把手 14、悬停变 16） | Slider · 状态=聚焦（刻度滑块） | 改样式 | 悬停变体改名聚焦：网站悬停没有变化，键盘聚焦不加描边（11-05 定，Figma 的聚焦描边要删）；把手填充绑 `color/text/fill/primary`；新增「刻度」「刻度数字」两个开关。旧实例 0 个 |
 | CustomSelect · CustomSelector · HeroUI Select | Select · 填充 | 合并 | 展开列表用菜单模板 + MenuItem，当前项用「选中」底色，不打勾 |
 | 输入框里的模型选择 | Select · 无底 | 替换 | 宽度跟着内容走，悬停白 8% |
 
@@ -559,7 +562,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | 旧写法 | 新写法 |
 |---|---|
 | 「模板 · 主站」里的输入框，复制模板改 | `PromptBox`；参考区 `ReferenceStack`；「生成 · 消耗 99」是 `GenerateButton` |
-| 工具条上的「参考素材 · 添加」「参考 · 图片1」 | `AddTile size={72}`、`ReferenceStack` 的卡片（`ReferenceItem` 72） |
+| 工具条上的「参考素材 · 添加」「参考 · 图片1」 | `AddTile`（56）、`ReferenceStack` 的卡片（`ReferenceItem` 72） |
 | Select 无底（已选） | `Select variant="plain"` |
 
 #### 提示词输入框
@@ -577,7 +580,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | `ButtonGroupDivider`、`NodeToolbarDivider`、`ToolbarDivider`、`MenuDivider` | `Divider`（`orientation="vertical"` / 默认横向） | 竖向高度跟着所在的条走（按钮条 16，工具栏 20）；菜单里自动左右缩进 8、颜色 border-subtle |
 | `NodeToolbar` | `ButtonGroup variant="glass" size={44}` | 内边距 6、间距 8、圆角 12 |
 | `CanvasToolbar` | `ButtonGroup variant="surface" size={56}` | 内边距 12 / 16、间距 16、胶囊；实色 surface 底不变 |
-| `kv-canvas-toolbar__add` | `kv-button-group__solid` | 「添加」白底黑图标 |
+| `kv-canvas-toolbar__add`、`kv-button-group__solid` | IconButton `variant="primary"` | 「添加」11-05 从白底黑图标改成主要（品牌绿），`__solid` 类删了 |
 | `ParamValue` | `NumberInput`，放在 Slider 旁边 | 能输入，和拖滑块双向同步 |
 | `ToolbarSwitch label="X"` | `<Switch>X</Switch>` | Switch 能带文字，13 号、间距 8，整行能点。原来唯一的用法「样片模式」已删 |
 | `ReferenceAddSlot` | `<AddTile />` | 只有 56 一档 |
@@ -585,7 +588,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | `UploadTile`（96 / 64） | `AddTile`（56）；传上去显示成 `ReferenceItem`，上传中用 `UploadRing` | 11-04 删：添加素材从哪来（素材库、电脑）不分组件。格子自己的拖入不要了，输入框整体拖入用 DropOverlay |
 | `AddTile size` 56 / 64 / 72 / 96 | 去掉 `size`，固定 56 | 只有 Lora 栏在用 56，别的档没人用 |
 | `NodePanelRefs` | `<AttachmentStrip />`（固定 56、间距 4）；首尾帧直接放 `ReferenceFramePair` | — |
-| 拖入高亮（DropOverlay、Dropzone、UploadTile 各一份，UploadTile 已删） | 共用 `--kv-drop-border-width`、`--kv-drop-border`、`--kv-drop-fill` | 都照 DropOverlay：1.5 品牌色描边 + 淡底，拒收 danger |
+| 拖入高亮（DropOverlay、Dropzone、UploadTile 各一份） | 只留 `DropOverlay`；`--kv-drop-border-width`、`--kv-drop-border`、`--kv-drop-fill` 已删除，没有共用变量 | DropOverlay 用 `--color-border-strong` 描边 + 遮罩 + 浮卡，类型不收时换 danger |
 | `Dropzone`（一直摆着的虚线上传区） | `DropOverlay`（拖进输入框才出现） | 11-04 删：没地方用。拖入高亮的三个变量 `--kv-drop-*` 也删了，DropOverlay 改成 border-strong 描边 + 浮卡，不再用品牌绿和淡底 |
 | NodeStack 叠层 | 和 MediaGroup 一样：右错 4 / 8、转 2° / 4°、底白 16% | 展开交互不变 |
 | 类名 `kv-node-toolbar*`、`kv-toolbar-divider`、`kv-toolbar-switch`、`kv-reference-add-slot`、`kv-param-value*`、`kv-node-panel__refs`、`kv-button-group__divider`、`kv-menu-divider` | 删掉 | — |
@@ -623,6 +626,9 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | ConnectorDot | `state`；类型 `ConnectorDotState` | `status`；`ConnectorDotStatus`（`NodeWrapper` 的 `leftDot`、`rightDot` 类型跟着改） |
 | SkillPanel | `state`；类型 `SkillPanelState` | `status`；`SkillPanelStatus` |
 | ResultTile | `status="loading"` | `status="generating"`（和 NodeCard 一致；类型 `ResultTileStatus` 跟着改） |
+| Checkbox | `shape`；类型 `CheckboxShape` | `variant`；`CheckboxVariant`（11-05，值不变：square / round；类名 `kv-checkbox--square` 等不变） |
+| Skeleton | `shape`；类型 `SkeletonShape` | `variant`；`SkeletonVariant`（11-05，值不变：rect / circle / text） |
+| Popover | `trigger`；类型 `PopoverTrigger` | `on`；`PopoverOn`（11-05，值不变：hover / click。Dropdown 的 `trigger` 是触发元素，不改） |
 | Button | `size="sm"` / `"md"` / `"lg"`；类型 `ButtonSize`；类名 `kv-button--sm` / `--md` / `--lg` | `size={28}` / `{32}` / `{36}`（高度）；`kv-button--28` / `--32` / `--36`。放进 ButtonGroup 默认 28 |
 | GenerateButton | `size="sm"` / `"md"` / `"lg"` | `size={28}` / `{32}` / `{36}` |
 | DateRangeFilter | `size="sm"` / `"md"` / `"lg"`（同 Button） | 删了。触发器固定 32 的文字 Button，尺寸不由时间筛选决定 |
@@ -645,3 +651,13 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | `docs/business/skill-picker.tsx`：`SkillPanel`、`SkillPicker`、`SkillItem` | `kivi/generation/SkillPanel.tsx`、`SkillPicker.tsx` | `SKILL_ITEMS`、`SKILL_CATEGORIES` 不再默认带（留在 `docs/business/skill-data.ts`，通过 `items`、`categories` 传进来）；推荐的技能改成 `SkillItem.recommended` |
 | `TASKS`、`REF_MODES`、`MODELS`、`DEFAULT_MODEL`、`SIZES`、`RATIOS`、`BACKGROUNDS`、`VOICES`、`COUNTS`、`AUDIO_CHAR_LIMIT`、`AGENT_MODES`、`GEN_MODEL_GROUPS`、`GEN_MODEL_MAX`、`ticks` | `kivi/generation/options.ts` | 产品选项只写这一份 |
 | 类名 `gen-model-picker*`、`skill-panel*`、`skill-preview*` | `kv-gen-model-picker*`、`kv-skill-panel*`、`kv-skill-panel__preview*` | 样式并进 `kivi/generation/generation.css` |
+
+## 失败态统一（11-05）
+
+结果格、节点、生成结果组的失败态都改成 EmptyState 生成失败 · 96，文案默认值是 `GENERATION_FAILED_TITLE`（`kivi/feedback`）。
+
+| 组件 | 旧 | 新 |
+|---|---|---|
+| ResultTile | `failedText` | `failedTitle`，新增 `failedDescription` |
+| NodeCard | `message`、`illustration`（插画 120） | `failedTitle`、`failedDescription`；插画跟 EmptyState 走，96 |
+| MediaGroup | 写死的文案、插画 64 | 新增 `failedTitle`、`failedDescription`；插画 96 |

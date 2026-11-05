@@ -54,7 +54,7 @@ import { ScrollAreaPlayground } from './scroll-area.demos';
 | `orientation` | `"vertical"` `"horizontal"` `"both"` | `"vertical"` | 纵向 / 横向 / 两个方向。两个方向都有得滚时，两条滚动条各让出角上 12，不叠在一起 |
 | `maxHeight` | `number` `string` | — | 最大高度，超过就在里面滚；数字按 px。外面已经定了高度的不用写 |
 | `fade` | `boolean` | `false` | 超出的那边渐隐，跟着滑的方向走：往下滑下面渐隐，往上滑上面渐隐，到头换到另一边。渐隐 24，用 mask，不盖底色。只有纵向有 |
-| `onReachEnd` | `() => void` | — | 滚到离末尾不到 `reachEndOffset` 时调用，每次「到了」只调一次：滚开到 offset 以外（或加载后内容变长）才会再调。内容不够长、没有滚动条时挂上就会调一次。两个方向时只看纵向 |
+| `onReachEnd` | `() => void` | — | 滚到离末尾不到 `reachEndOffset` 时调用，每次「到了」只调一次：滚开到 offset 以外才会再调；加载后内容变长、还停在末尾（比如内容一开始不满一屏）也会再调一次。内容不够长、没有滚动条时挂上就会调一次。两个方向时只看纵向 |
 | `reachEndOffset` | `number` | `200` | 离末尾多少 px 算到了 |
 | `viewportRef` | `Ref<HTMLDivElement>` | — | 真正在滚的那个 div，要读 `scrollTop`、调 `scrollTo` 时用 |
 | `viewportProps` | `HTMLAttributes<HTMLDivElement>` | — | 透传给滚动视口，比如 `onScroll`、`aria-label`、`id`；`className`、`style`、`onScroll` 和组件自己的合并 |

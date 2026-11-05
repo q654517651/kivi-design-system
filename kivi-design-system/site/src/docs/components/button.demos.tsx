@@ -110,7 +110,7 @@ function renderButtonGroup(s: ButtonGroupState, update: (patch: Partial<Playgrou
   if (s.size === '56') {
     return (
       <ButtonGroup variant="surface" size={56} aria-label="画布工具栏">
-        <IconButton icon="Add" label="添加" className={cx('kv-button-group__solid', hover(0))} />
+        <IconButton icon="Add" label="添加" variant="primary" className={hover(0)} />
         <IconButton icon="Upload" label="上传" />
         {s.content !== 'icons' && (
           <>

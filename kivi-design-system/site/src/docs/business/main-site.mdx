@@ -61,13 +61,13 @@ import { GenPromptPlayground, ResultTilePlayground } from './main-site.demos';
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `length` | `"short"` `"long"` | 自己量 | 短 / 超出两行。不传就自己量，超过两行就收成两行、末尾省略，复制按钮挪到第二行行尾，左边 40 的渐变从透明过渡到底色 base 盖住截断的文字（放在别的底色上改 `--kv-gen-prompt-bg`）；宽度变了重新量。收起时悬停用 Popover 长文看全文，没截断时禁用。传了就固定 |
-| `prompt` | `ReactNode` | — | 提示词，14 / 22 常规，primary。没有提示词就不显示这一行（照线上）；工具类任务（抠图、高清…）不传，只显示参数 |
-| `onCopy` | `() => void` | — | 点复制按钮（IconButton 28 · 轻）。有提示词就固定显示，跟在最后一个字后面，间距 6 `--spacing-6` |
+| `prompt` | `ReactNode` | — | 提示词，14 / 22 常规，primary。没有提示词（不传、null、空字符串、只有空白）就不显示这一行（照线上）；工具类任务（抠图、高清…）不传，只显示参数 |
+| `onCopy` | `() => void` | — | 复制成功后触发，只是通知；复制提示词、复制后换对勾图标 1.5 秒都是组件自己做的。复制按钮（IconButton 28 · 轻）有提示词就固定显示，跟在最后一个字后面，间距 6 `--spacing-6` |
 | `children` | `ReactNode` | — | 参数：一排 Tag（任务类型、模型、清晰度、比例、时长…），间距 6，放不下换行；参考区 `GenPromptRefs` 也放在这里。工具类任务的第一个 Tag 带工具图标（抠图 `Rmbg`、扩图 `Expand`、重绘 `SmartEditing`、高清 `HD`、元素去除 `RemoveEle`、视频拼接 `Connecting`…），参考区写「原图」或「原视频」 |
 
 ### GenPromptRefs
 
-GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆角 6 `--border-radius-6`，底 container-light-1，内边距 4 / 6 / 4 / 4（上右下左），元素间距 4，缩略图 AssetThumb 16。悬停时下面弹出玻璃浮层显示全部素材：圆角 8，内边距 6，间距 6，ReferenceItem 72，一行最多 5 个。其余原生 `<div>` 属性都能传。
+GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆角 6 `--border-radius-6`，底 container-light-1，内边距 4 / 6 / 4 / 4（上右下左），元素间距 4，缩略图 AssetThumb 16。悬停时下面弹出玻璃浮层显示全部素材，离参考区 8：圆角 8，内边距 6，间距 6，ReferenceItem 72，一行最多 5 个。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
@@ -89,16 +89,17 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `type` | `"image"` `"video"` | `"image"` | 图片 / 视频。视频就是播放器 VideoPlayer 卡片（见「图片和视频」页），时长、悬停播放、控制条都在里面 |
-| `status` | `"done"` `"generating"` `"failed"` | `"done"` | 完成 / 生成中 / 失败。生成中分两种：第一次生成（没有原素材）只有 `GeneratingDots` 铺满，没有遮罩；重新生成（传了 `src`）原素材 + 遮罩 `--color-bg-fill-container-dark`（黑 40%）+ 背景模糊 24（CSS `blur(12px)`），上面叠 `GeneratingDots` 和角标；失败：EmptyState 小 · 生成失败，居中，右上操作和 children 照常渲染（失败的格子还能删除）。悬停由鼠标触发 |
+| `status` | `"done"` `"generating"` `"failed"` | `"done"` | 完成 / 生成中 / 失败。生成中分两种：第一次生成（没有原素材）只有 `GeneratingDots` 铺满，没有遮罩；重新生成（传了 `src`）原素材 + 遮罩 `--color-bg-fill-container-dark`（黑 40%）+ 背景模糊 16（`--effect-mask-blur`），上面叠 `GeneratingDots` 和角标；失败：EmptyState 小 · 生成失败，居中，右上操作和 children 照常渲染（失败的格子还能删除）。悬停由鼠标触发 |
 | `src` | `string` | — | 图片是图片地址，视频是视频文件。生成中传了就是「有原素材」的样子（见 `status`） |
 | `poster` | `string` | — | 视频封面，没播时显示；不传是首帧 |
 | `fit` | `boolean` | `false` | 比例和格子不一致时画面完整显示，留底色；默认铺满，居中裁切 |
 | `badge` | `ReactNode` | — | 任务角标，左上，Tag · 浮层，离边 8。生成中用，比如「59s 生成中」 |
-| `topActions` | `ResultTileAction[]` | — | 右上操作：删除、下载，合成一条 ButtonGroup（IconButton 28 · 文字），每个都带 Tooltip（文字用 `label`），离边 8。失败时也显示 |
-| `collect` | `boolean` | `false` | 完成：右上按钮条最后放收藏（`Collect`，收藏了换 `CollectSolid`，图标 `--color-brand-solid` 绿色）。没收藏时悬停才出现；收藏了，鼠标移开后右上还留一个绿星（只是标记，点不到），悬停换回整条（150ms） |
+| `topActions` | `ResultTileAction[]` | — | 右上操作：删除、下载，合成一条 ButtonGroup（IconButton 28 · 文字），每个都有提示（IconButton 自带，文字用 `label`），离边 8。失败时也显示 |
+| `collect` | `boolean` | `false` | 完成：右上按钮条最后放收藏（`Collect`，收藏了换 `CollectSolid`，IconButton 选中 + `data-collected`，图标品牌绿）。没收藏时悬停才出现；收藏了，鼠标移开后右上还留一个实心星（只是标记，点不到），悬停换回整条（150ms） |
 | `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 完成：收藏了没有。传了 `collected` 就是受控；`onCollectedChange(collected)` 点收藏时触发 |
 | `quickActions` | `ResultTileAction[]` | — | 左下快捷操作，合成一条 ButtonGroup，离边 8，最后一个是「更多」。视频要抬到控制条上面，离底 46 |
 | `onPreview` | `(currentTime) => void` | — | 视频右下「预览」，打开预览接着放；不传就没有这个按钮 |
-| `failedText` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败时的文字 |
+| `failedTitle` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败：标题。失败态就是 EmptyState 生成失败 · 96，和节点、生成结果组一样 |
+| `failedDescription` | `ReactNode` | — | 失败：副标题 |
 
 `ResultTileAction` 每一项：`icon`（`IconName`）、`label`（`string`，读屏和 Tooltip 用）、`onClick`。

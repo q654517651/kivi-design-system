@@ -30,7 +30,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   white-space: nowrap;
   vertical-align: middle;
   user-select: none;
@@ -68,7 +67,11 @@
   pointer-events: none;
 }
 
-/* 缩略图用 kv-asset-thumb（56 或 72，和外框一致），铺满外框 */
+/* 缩略图用 kv-asset-thumb（56 或 72，和外框一致），铺满外框。
+   只留外框那圈 12%：缩略图自己的 8% 描边和它压在同一个像素上会叠成约 19%（11-05） */
+.kv-reference-item .kv-asset-thumb::after {
+  content: none;
+}
 /* 右上角标：序号或首帧 / 尾帧，最小 20 × 20，左右留 4（2026-10-29 用户在 Figma 里加的，不然「首帧」贴边）。
    左下圆角 4；右上也要跟外框一样做 8 的圆角：角标带背景模糊，Chrome 里外框的圆角裁不掉它，不写就会露出直角 */
 .kv-reference-item__badge {
@@ -83,12 +86,11 @@
   height: 20px;
   padding: 0 var(--spacing-4);
   border-radius: 0 var(--border-radius-8) 0 var(--border-radius-4);
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-on-media-text);
   font-size: var(--font-size-12);
-  line-height: 14px;
 }
 
 /* 左下视频时长 */
@@ -102,12 +104,11 @@
   height: 16px;
   padding: 0 var(--spacing-6);
   border-radius: var(--border-radius-6);
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-on-media-text);
   font-size: var(--font-size-12);
-  line-height: 14px;
 }
 
 /* 底部通栏：Lora 权重。底下两个角跟外框一样圆 8，理由同角标 */
@@ -121,12 +122,11 @@
   align-items: center;
   justify-content: center;
   height: 16px;
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-on-media-text);
   font-size: var(--font-size-12);
-  line-height: 14px;
 }
 
 /* ---------- ReferenceFramePair：首尾帧 ---------- */
@@ -214,12 +214,11 @@
   height: 16px;
   padding: 0 var(--spacing-6);
   border-radius: var(--border-radius-6);
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-on-media-text);
   font-size: var(--font-size-12);
-  line-height: 14px;
 }
 
 .kv-preview-card__text {
@@ -233,7 +232,6 @@
   overflow: hidden;
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -241,7 +239,6 @@
 .kv-preview-card__meta {
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
 }
 
 .kv-preview-card__description {
@@ -277,7 +274,6 @@
   color: var(--color-text-fill-on-brand);
   font-size: 9px; /* Figma 没变量 */
   font-weight: var(--font-weight-medium);
-  line-height: 1;
 }
 
 /* MentionChip 只有图标的类型（音乐、技能、节点、模型、没封面的视频）：图标 16，白色不透明，不加底框、不加背景（11-04 用户定统一） */
@@ -521,7 +517,6 @@
   padding: 0 calc(var(--spacing-4) / var(--kv-reference-stack-scale));
   border-radius: 0 calc(var(--border-radius-8) / var(--kv-reference-stack-scale)) 0 calc(var(--border-radius-4) / var(--kv-reference-stack-scale));
   font-size: calc(var(--font-size-12) / var(--kv-reference-stack-scale));
-  line-height: calc(14px / var(--kv-reference-stack-scale));
 }
 
 /* 上传中不写序号，Figma 的上传中状态只有暗色和进度环 */
@@ -533,7 +528,7 @@
 /* 展开后鼠标移到某一张上：序号隐藏，换成删除，两个不同时出现（线上逻辑）。
    序号直接消失、删除淡入；移开时删除直接消失、序号淡入。两个形状不同，交叉淡化会叠出重影（11-04） */
 
-.kv-reference-stack__tray[data-open] .kv-reference-stack__card:where(:hover, :focus-within) .kv-reference-item__badge {
+.kv-reference-stack__tray[data-open] .kv-reference-stack__card[data-removable]:where(:hover, :focus-within) .kv-reference-item__badge {
   opacity: 0;
   transition: none;
 }
@@ -550,12 +545,11 @@
   height: 16px;
   padding: 0 var(--spacing-6);
   border-radius: var(--border-radius-6);
-  background: var(--color-bg-fill-container-dark);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  background: var(--color-on-media-fill);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-on-media-text);
   font-size: var(--font-size-12);
-  line-height: 14px;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--motion-duration-100) var(--motion-ease-in);
@@ -628,7 +622,7 @@
   transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
-.kv-attachment-strip__item:where(:hover, :focus-within):not([data-uploading]) .kv-reference-item__badge {
+.kv-attachment-strip__item[data-removable]:where(:hover, :focus-within):not([data-uploading]) .kv-reference-item__badge {
   opacity: 0;
   transition: none;
 }

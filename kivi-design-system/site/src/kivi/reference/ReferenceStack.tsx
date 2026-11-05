@@ -121,7 +121,7 @@ export interface ReferenceStackProps extends Omit<HTMLAttributes<HTMLDivElement>
   items: ReferenceStackItem[];
   /** 点添加格、或右下角圆形上传按钮时触发：弹出选文件，选完把素材加进 items */
   onAdd?: () => void;
-  /** 点卡片右上角的删除时触发，参数是素材的 id：从 items 里去掉它 */
+  /** 点卡片右上角的删除时触发，参数是素材的 id：从 items 里去掉它。不传就没有删除按钮，悬停时序号也不隐藏 */
   onRemove?: (id: string) => void;
   /** 点卡片、卡片聚焦后按 Enter / Space 时触发，预览大图用。传了，展开后的卡片能键盘聚焦。Figma 没定，待确认 */
   onItemClick?: (item: ReferenceStackItem) => void;
@@ -321,7 +321,11 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave();
         }}
         onKeyDown={(e) => {
-          if (e.key === 'Escape') setExpanded(false);
+          if (e.key === 'Escape' && open) {
+            // 收起这一层自己吃掉 Esc，不连外层弹窗一起关
+            e.preventDefault();
+            setExpanded(false);
+          }
         }}
         onTouchStart={(e) => {
           if ((e.target as HTMLElement).closest('button')) return;
@@ -414,6 +418,7 @@ function ReferenceStackCard({ item, index, layout, ghost, enter, open, onRemove,
       data-uploading={uploading ? '' : undefined}
       data-leaving={ghost ? '' : undefined}
       data-clickable={onItemClick ? '' : undefined}
+      data-removable={onRemove ? '' : undefined}
       style={style}
       role="group"
       aria-label={item.name}
@@ -441,18 +446,20 @@ function ReferenceStackCard({ item, index, layout, ghost, enter, open, onRemove,
           <UploadRing progress={progress} aria-label={`${item.name}上传中`} />
         </div>
       )}
-      <button
-        type="button"
-        className="kv-reference-stack__remove"
-        aria-label={`删除${item.name}`}
-        tabIndex={open && !ghost ? 0 : -1}
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove?.(item.id);
-        }}
-      >
-        <Icon name="CloseSmall" />
-      </button>
+      {onRemove && (
+        <button
+          type="button"
+          className="kv-reference-stack__remove"
+          aria-label={`删除${item.name}`}
+          tabIndex={open && !ghost ? 0 : -1}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(item.id);
+          }}
+        >
+          <Icon name="CloseSmall" />
+        </button>
+      )}
     </div>
   );
 }

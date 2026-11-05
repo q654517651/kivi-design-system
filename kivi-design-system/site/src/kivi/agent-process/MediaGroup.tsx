@@ -8,6 +8,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from 'react';
+import { EmptyState, GENERATION_FAILED_TITLE } from '../feedback';
 import { Icon } from '../Icon';
 import type { IconName } from '../icons';
 import { Tag } from '../tags-avatar';
@@ -38,6 +39,10 @@ export interface MediaGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   type?: MediaGroupType;
   /** 标题行文字。不传按结果算，比如「图片已生成 ×2，图片生成失败 ×3」 */
   title?: ReactNode;
+  /** 失败的那几张：标题，默认「生成失败，消耗猕猴桃已退回」。失败态就是 EmptyState 生成失败 · 96，和结果格、节点一样 */
+  failedTitle?: ReactNode;
+  /** 失败的那几张：副标题，默认没有 */
+  failedDescription?: ReactNode;
   /** 展开：受控 */
   expanded?: boolean;
   /** 展开：非受控的初始值，默认收起 */
@@ -89,6 +94,8 @@ export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function M
     items,
     type = 'image',
     title,
+    failedTitle = GENERATION_FAILED_TITLE,
+    failedDescription,
     expanded: expandedProp,
     defaultExpanded = false,
     onExpandedChange,
@@ -218,8 +225,7 @@ export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function M
             >
               {tileFailed ? (
                 <span className="kv-media-group__failed">
-                  <img src="./empty-state/failed.png" alt="" />
-                  <span>生成失败，消耗猕猴桃已退回</span>
+                  <EmptyState scene="failed" size={96} title={failedTitle} description={failedDescription} />
                 </span>
               ) : (
                 it.src && <img className="kv-media-group__media" src={it.src} alt="" draggable={false} />

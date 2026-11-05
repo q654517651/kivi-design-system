@@ -27,7 +27,7 @@ export function TooltipPlayground() {
 
 type PopoverState = {
   type: string;
-  trigger: string;
+  on: string;
   side: string;
   align: string;
   showTitle: boolean;
@@ -53,7 +53,7 @@ function renderPopover(s: PopoverState, update: (patch: Partial<PlaygroundState>
   return (
     <Popover
       variant={long ? 'long' : 'tip'}
-      trigger={long ? 'hover' : (s.trigger as 'hover' | 'click')}
+      on={long ? 'hover' : (s.on as 'hover' | 'click')}
       placement={placement}
       title={!long && s.showTitle ? s.title : undefined}
       content={long ? s.longText : s.text}
@@ -74,7 +74,7 @@ export function PopoverPlayground() {
     <Playground<PopoverState>
       controls={[
         { key: 'type', label: '类型', type: 'segment', value: 'tip', options: [['tip', '说明'], ['long', '长文']] },
-        { key: 'trigger', label: '出现方式', type: 'segment', value: 'hover', options: [['hover', '悬停'], ['click', '点击']] },
+        { key: 'on', label: '出现方式', type: 'segment', value: 'hover', options: [['hover', '悬停'], ['click', '点击']] },
         { key: 'side', label: '方向', type: 'segment', value: 'bottom', options: [['top', '上'], ['bottom', '下'], ['left', '左'], ['right', '右']] },
         { key: 'align', label: '对齐', type: 'segment', value: 'center', options: [['start', '起点'], ['center', '居中'], ['end', '终点']] },
         { key: 'showTitle', label: '显示标题', type: 'toggle', value: true },
@@ -87,7 +87,7 @@ export function PopoverPlayground() {
       // 说明：标题可选；长文没有标题、箭头，只能悬停出现，对齐无意义
       rules={(s) =>
         s.type === 'long'
-          ? { trigger: true, align: true, showTitle: true, title: true, text: true }
+          ? { on: true, align: true, showTitle: true, title: true, text: true }
           : { longText: true, ...(s.showTitle ? {} : { title: true }) }
       }
       render={renderPopover}

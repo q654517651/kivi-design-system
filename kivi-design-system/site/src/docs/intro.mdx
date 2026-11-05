@@ -17,7 +17,7 @@ import { PageHeader } from '@shell';
 | 位置 | 是什么 | 前端要不要用 |
 |---|---|---|
 | `src/kivi/tokens.css` | 所有变量。数值只写在这里 | 要 |
-| `src/kivi/base.css`、`Icon.tsx`、`icons.ts` | 图标和加载转圈。图标从 Figma 导出 | 要 |
+| `src/kivi/base.css`、`Icon.tsx`、`icons-v3.ts`、`icons.ts` | 图标和加载转圈。默认用的 V3 图标数据在 `icons-v3.ts`，`icons.ts` 是 V2 数据和新补的图标。图标从 Figma 导出 | 要 |
 | `src/kivi/按组件类型/` | 按组件类型分文件夹（菜单、导航、输入框、选择……）：组件 `.tsx` + 这一类的 `.css` | 要 |
 | `src/docs/` | 规范页面：用途、结构、属性、样子、用法 + 演示 | 不用，看就行 |
 | `src/shell/` | 这个网站自己的外壳：目录、演示、属性面板 | 不用 |

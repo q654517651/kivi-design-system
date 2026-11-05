@@ -4,7 +4,6 @@ import {
   GenerateButton,
   PromptBox,
   ReferenceStack,
-  Toaster,
   Switch,
   referenceName,
   type ButtonSize,
@@ -380,8 +379,6 @@ export function PromptBoxLab() {
 
   return (
     <figure className="shell-demo" style={slow ? SLOW : undefined}>
-      {/* 拖来的文件类型不收时弹 toast，这一页放一个 Toaster */}
-      <Toaster />
       <div className="shell-demo-preview" data-stage="base">
         <PromptBox
           defaultValue={LONG}

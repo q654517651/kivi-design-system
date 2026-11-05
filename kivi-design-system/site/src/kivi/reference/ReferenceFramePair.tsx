@@ -1,4 +1,4 @@
-import { forwardRef, useState, type CSSProperties, type HTMLAttributes, type MouseEvent } from 'react';
+import { forwardRef, useEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type MouseEvent } from 'react';
 import { IconButton } from '../button';
 import { cx } from '../utils';
 import { ReferenceItem } from './ReferenceItem';
@@ -45,12 +45,25 @@ export const ReferenceFramePair = forwardRef<HTMLDivElement, ReferenceFramePairP
   const pair: [ReferenceFrame, ReferenceFrame] = swapped ? [last, first] : [first, last];
   const distance = size + GAP * 2 + BUTTON;
 
+  // 动画的定时器和当前输入：外面换图、卸载时清掉定时器；滑完时输入已经变了就不回传
+  const timer = useRef<number>();
+  const sourceRef = useRef(source);
+  sourceRef.current = source;
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(() => {
+    window.clearTimeout(timer.current);
+    setMoving(false);
+  }, [source]);
+
   // 两张图滑到对方位置（时长取 --motion-duration-200，「减少动态效果」时是 0），滑完再对调数据、去掉位移
   const swap = (e: MouseEvent<HTMLButtonElement>) => {
     if (moving) return;
     const raw = getComputedStyle(e.currentTarget).getPropertyValue('--motion-duration-200');
     const ms = parseFloat(raw) || 0;
+    const startedWith = source;
     const finish = () => {
+      // 动画途中外面换了图：之前的互换作废，不把旧图写回去
+      if (sourceRef.current !== startedWith) return;
       const next: [ReferenceFrame, ReferenceFrame] = [pair[1], pair[0]];
       setSwapped(!swapped);
       setMoving(false);
@@ -58,7 +71,8 @@ export const ReferenceFramePair = forwardRef<HTMLDivElement, ReferenceFramePairP
     };
     if (ms === 0) return finish();
     setMoving(true);
-    window.setTimeout(finish, ms);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(finish, ms);
   };
 
   return (

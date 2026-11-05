@@ -1,7 +1,6 @@
 import { forwardRef, useEffect, useState, type HTMLAttributes, type KeyboardEvent } from 'react';
 import { Button, IconButton } from '../button';
-import { Input } from '../inputs';
-import { Tooltip } from '../tooltip';
+import { Textarea } from '../inputs';
 import { cx } from '../utils';
 import { useControllable, useCopy } from '../hooks';
 import { Collapse } from '../collapse';
@@ -22,7 +21,7 @@ export interface MessageFeedbackProps extends Omit<HTMLAttributes<HTMLDivElement
   onValueChange?: (value: MessageFeedbackValue) => void;
   /** 点了踩之后下面出原因输入框，默认出。不要原因就传 false */
   reason?: boolean;
-  /** 提交了踩的原因（回车或点提交；没写字时提交按钮不可点） */
+  /** 提交了踩的原因（回车或点框里的提交；没写字时提交按钮不可点。Shift + 回车换行） */
   onSubmitReason?: (reason: string) => void;
   /** 复制成功后触发，参数是复制的文字 */
   onCopied?: (text: string) => void;
@@ -30,8 +29,8 @@ export interface MessageFeedbackProps extends Omit<HTMLAttributes<HTMLDivElement
 
 /**
  * 助手消息底部的反馈条：复制、复制 TraceID、赞、踩，四个都是 IconButton「轻」。
- * 复制成功图标换对勾 1.5 秒；赞、踩选中换实心图标，互斥。点踩后下面往下推出一行原因输入：输入框 + 提交 + 关闭，回车提交、Esc 关闭；
- * 点赞、再点踩、提交、关闭都会收起。生成中不显示这一条（调用方控制）。交互照线上，Figma 还没有。
+ * 复制成功图标换对勾 1.5 秒；赞、踩选中换实心图标，互斥。点踩后下面往下推出原因输入：Textarea，提交按钮在框里右下角，回车提交、Esc 收起；
+ * 点赞、再点踩、提交、Esc 都会收起。生成中不显示这一条（调用方控制）。交互照线上，Figma 还没有。
  */
 export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(function MessageFeedback(
   { text, traceId, value: valueProp, defaultValue = null, onValueChange, reason = true, onSubmitReason, onCopied, className, ...rest },
@@ -66,8 +65,7 @@ export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(
     <div ref={ref} className={cx('kv-message-feedback', className)} {...rest}>
       <div className="kv-message-feedback__bar">
         {text != null && (
-          <Tooltip content={textCopy.copied ? '已复制' : '复制'}>
-            <IconButton
+          <IconButton
               icon={textCopy.copied ? 'CheckSmall' : 'Copy'}
               label={textCopy.copied ? '已复制' : '复制'}
               variant="light"
@@ -75,11 +73,9 @@ export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(
                 if (await textCopy.copy(text)) onCopied?.(text);
               }}
             />
-          </Tooltip>
         )}
         {traceId != null && (
-          <Tooltip content={idCopy.copied ? '已复制' : '复制 TraceID'}>
-            <IconButton
+          <IconButton
               icon={idCopy.copied ? 'CheckSmall' : 'CopyTraceID'}
               label={idCopy.copied ? '已复制' : '复制 TraceID'}
               variant="light"
@@ -87,35 +83,35 @@ export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(
                 if (await idCopy.copy(traceId)) onCopied?.(traceId);
               }}
             />
-          </Tooltip>
         )}
-        <Tooltip content="赞">
-          <IconButton icon={value === 'like' ? 'ThumbsUpFill' : 'ThumbsUp'} label="赞" variant="light" selected={value === 'like'} onClick={() => choose('like')} />
-        </Tooltip>
-        <Tooltip content="踩">
-          <IconButton icon={value === 'dislike' ? 'ThumbsDownFill' : 'ThumbsDown'} label="踩" variant="light" selected={value === 'dislike'} onClick={() => choose('dislike')} />
-        </Tooltip>
+        <IconButton icon={value === 'like' ? 'ThumbsUpFill' : 'ThumbsUp'} label="赞" variant="light" selected={value === 'like'} onClick={() => choose('like')} />
+        <IconButton icon={value === 'dislike' ? 'ThumbsDownFill' : 'ThumbsDown'} label="踩" variant="light" selected={value === 'dislike'} onClick={() => choose('dislike')} />
       </div>
       {reason && (
-        <Collapse open={asking} distance={60} gap={6}>
-          <div className="kv-message-feedback__reason">
-            <Input
-              className="kv-message-feedback__input"
-              aria-label="踩的原因"
-              placeholder="哪里不好？告诉我们"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === 'Enter' && !e.nativeEvent.isComposing) submit();
-                if (e.key === 'Escape') close();
-              }}
-              tabIndex={asking ? 0 : -1}
-            />
-            <Button size={28} variant="primary" disabled={!draft.trim()} onClick={submit} tabIndex={asking ? 0 : -1}>
-              提交
-            </Button>
-            <IconButton icon="CloseSmall" label="关闭" size={28} onClick={close} tabIndex={asking ? 0 : -1} />
-          </div>
+        <Collapse className="kv-message-feedback__reason" open={asking} distance={104} gap={6}>
+          <Textarea
+            aria-label="踩的原因"
+            placeholder="哪里不好？告诉我们"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                submit();
+              }
+              if (e.key === 'Escape') {
+                // 只关原因输入，不让外层弹窗一起关
+                e.preventDefault();
+                close();
+              }
+            }}
+            tabIndex={asking ? 0 : -1}
+            actions={
+              <Button size={28} variant="primary" disabled={!draft.trim()} onClick={submit} tabIndex={asking ? 0 : -1}>
+                提交
+              </Button>
+            }
+          />
         </Collapse>
       )}
     </div>

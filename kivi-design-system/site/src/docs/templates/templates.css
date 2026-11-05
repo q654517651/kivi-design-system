@@ -123,6 +123,7 @@
 
 .tpl-ms__toggle {
   position: absolute;
+  display: flex;
   top: 0;
   right: 0;
   transition:
@@ -292,8 +293,23 @@
   height: 100%;
 }
 
+.tpl-cv__main {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden; /* 画布窄的时候左上角的条不盖到 Agent 侧栏上 */
+}
+
 .tpl-cv__canvas {
   height: 100%;
+}
+
+/* 画布左上角的 CanvasHeader：离左上各 16，盖在画布上 */
+.tpl-cv__header {
+  position: absolute;
+  top: var(--spacing-16);
+  left: var(--spacing-16);
+  z-index: 1;
 }
 
 .tpl-cv__agent {

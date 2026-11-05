@@ -41,11 +41,21 @@ function maskOf(set: IconSet, name: IconName, body: string) {
 export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon({ name, size, spin, className, style, ...rest }, ref) {
   const set = useContext(IconSetContext);
   const v3 = set === 'v3' && ICONS_V3[name];
-  const body = v3 || ICONS[name];
+  // 没有这个图标（演示里先留的空位）就给一张空的蒙版：什么都不画，不报错，也不会涂成一个色块
+  const body = v3 || ICONS[name] || '';
+  const cls = cx('kv-icon', size && size !== 16 && `kv-icon--${size}`, spin && 'kv-icon--spin', className);
+  // 自带颜色的图标（Logo 的绿星）不能走蒙版，蒙版只认形状、颜色会被涂成文字色；照旧直接画，其余部分跟文字色
+  if (/fill="#/.test(body)) {
+    return (
+      <span ref={ref} className={cls} data-icon={name} data-multicolor="" aria-hidden="true" style={style} {...rest}>
+        <svg viewBox={ICON_VIEWBOX[name] ?? '0 0 24 24'} fill="currentColor" dangerouslySetInnerHTML={{ __html: body }} />
+      </span>
+    );
+  }
   return (
     <span
       ref={ref}
-      className={cx('kv-icon', size && size !== 16 && `kv-icon--${size}`, spin && 'kv-icon--spin', className)}
+      className={cls}
       data-icon={name}
       aria-hidden="true"
       style={{ '--kv-icon-mask': maskOf(v3 ? 'v3' : 'v2', name, body), ...style } as CSSProperties}

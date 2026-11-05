@@ -140,7 +140,7 @@ Lora 卡：选 Lora 时的一张卡。
 | `onChange` | `(value: string) => void` | — | 提示词变了触发，参数是新的文字 |
 | `placeholder` | `string` | — | 没输入时的占位文字，随模式变，比如「描述你想生成的视频，@ 引用参考素材」 |
 | `references` | `ReactNode` | — | 参考区，在提示词左边，间距 24 `--spacing-24`，从顶端对齐：`ReferenceStack`，或首尾帧 `ReferenceFramePair`。不传没有参考区，提示词从最左边开始。展开时浮在提示词上面，被盖住的字由输入框藏起来 |
-| `toolbar` | `ReactNode` | — | 工具条左边，间距 6 `--spacing-6`：任务类型、模型、参考方式、参数、其他开关。一般是 `Select variant="plain"`，放不下换行 |
+| `toolbar` | `ReactNode` | — | 工具条左边，间距 6 `--spacing-6`：任务类型、模型、参考方式、参数、其他开关。一般是 `Select variant="plain"`，不折行、控件不压缩 |
 | `actions` | `ReactNode` | — | 工具条右边，间距 8 `--spacing-8`：张数 + `GenerateButton` |
 | `maxHeight` | `number` | `240` | 提示词最高多高，单位 px，超过就在里面滚动 |
 | `onDropFiles` | `(files: File[]) => void` | — | 把文件拖进输入框、放下后触发，参数是通过 `accept` 检查的文件：一般是加进 `references` 的素材（缩略图、上传进度自己管，输入框不存素材）。不传就不接收拖拽。拖进来时整个输入框盖一层 `DropOverlay`；类型不收的显示「不支持这种文件」，不接收，放下后弹 toast（页面上要放一个 `<Toaster />`） |
@@ -168,7 +168,7 @@ Lora 卡：选 Lora 时的一张卡。
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `cost` | `number` `string` | — | 这次生成消耗的猕猴桃数，必填，写在图标右边 |
-| `size` | `28` `32` `36` | `32` | 同按钮：高 28 / 32 / 36。Figma 里是 32，圆角 8，左右 12，文字 13 |
+| `size` | `28` `32` `36` | `32` | 同按钮：高 28 / 32 / 36 |
 | `loading` | `boolean` | `false` | 点了等结果时用：猕猴桃换成转圈，数字和宽度不变，不能点 |
 | `disabled` | `boolean` | `false` | 参数不全或正在生成时用 |
 | `aria-label` | `string` | `"生成，消耗 N 个猕猴桃"` | 读屏用，N 是 `cost` |
@@ -194,6 +194,7 @@ Lora 卡：选 Lora 时的一张卡。
 | `open` | `boolean` | — | 面板展开。传了就是受控 |
 | `defaultOpen` | `boolean` | `false` | 非受控时一开始是否展开 |
 | `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发，参数是新的状态 |
+| `aria-label` | `string` | `"参数"` | 触发器的说明，读屏用 |
 
 面板 `ParamPanel`：玻璃浮层，宽 368（视频、音频、高级设置都一样），圆角 16、内边距 12、块间距 12。`ParamField`（`label` + 控件）：标题 14 号 secondary，和控件间距 4。滑块右边是 `NumberInput`（带单位，和滑块双向同步，和 LoraSettings 的「Slider + NumberInput」一样；音高这种有负数的 `min` 写负数就能打负号），和滑块间距 12，对齐轨道（高 20）的中线。
 
@@ -206,18 +207,18 @@ Lora 卡：选 Lora 时的一张卡。
 | `max` | `number` | `4` | 最多几个。已选满了，添加格隐藏 |
 | `onAdd` | `() => void` | — | 点添加格。外面打开 `LoraPicker`，选好后把结果放回 `value` |
 
-一排间距 4（`--spacing-4`）。已选的是 56 见方的 `ReferenceItem`，底部通栏写权重（一位小数）。悬停已选格，延迟 200ms 在上方（`top-start`）弹出 `LoraSettings`（`Popover variant="panel"`），鼠标能挪进去，键盘聚焦也出；悬停或聚焦格子，右上角出删除（右上角离边 4 的 18 小圆，黑 40% + 模糊，同参考区的删除）。添加格是 `AddTile size={56} icon="LoraModel" label="Lora"`（见「上传」页）。其余原生 `<div>` 属性都能传。
+一排间距 4（`--spacing-4`）。已选的是 56 见方的 `ReferenceItem`，底部通栏写权重（一位小数）。悬停已选格，延迟 200ms 在上方（`top-start`）弹出 `LoraSettings`（`Popover variant="panel"`），鼠标能挪进去，键盘聚焦也出；悬停或聚焦格子，右上角出删除（右上角离边 4 的 18 小圆，黑 40% + 模糊，同参考区的删除）。添加格是 `AddTile icon="LoraModel" label="Lora"`（见「上传」页）。其余原生 `<div>` 属性都能传。
 
 ### LoraSettings
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `name` | `string` | — | Lora 名字，14 / 22，`--color-text-fill-primary`，一行省略 |
-| `triggerWords` | `string` | — | 触发词。不传就不显示这一块。框里一行省略，右边复制按钮，点了复制并弹 Toast「复制成功」（页面上要放一个 `<Toaster />`） |
+| `triggerWords` | `string` | — | 触发词。不传就不显示这一块。框里一行省略，右边复制按钮，点了复制并弹 Toast「复制成功」，失败弹「复制失败」（页面上要放一个 `<Toaster />`） |
 | `template` | `string` | — | 提示词模版。不传就不显示这一块。框最高 60，多了在里面滚动，复制按钮同上 |
 | `weight` / `defaultWeight` / `onWeightChange` | `number` | `1` | 权重 0–2，步长 0.1。滑块和数字框同步；数字框输入时最多一位小数，失焦时夹进 0–2 并补成「1.0」 |
 
-宽 234，块间距 12，要放进 `Popover variant="panel"`（内边距 12 由它给）。「触发词」「提示词模版」小标题 12、`--color-text-fill-tertiary`，和下面的框间距 4；框底 `--color-bg-fill-container-light-2`，圆角 6，内边距 6，文字 12 / 16、`--color-text-fill-secondary`，复制按钮是 28 的 `IconButton`。权重一行：标签「权重」13 / 20 secondary，`Slider`（不带刻度）撑满，`NumberInput`（`precision={1}`）宽 56，间距 8。其余原生 `<div>` 属性都能传。
+宽 234，块间距 12，要放进 `Popover variant="panel"`（内边距 12 由它给）。「触发词」「提示词模版」小标题 12、`--color-text-fill-tertiary`，和下面的框间距 4；框底 `--color-bg-fill-container-light-1`（玻璃是深底），圆角 6，内边距 6，文字 12 / 16、`--color-text-fill-secondary`，复制按钮是 28 的 `IconButton`。权重一行：标签「权重」13 / 20 secondary，`Slider`（不带刻度）撑满，`NumberInput`（`precision={1}`）宽 56，间距 8。其余原生 `<div>` 属性都能传。
 
 ### LoraCard
 
@@ -228,8 +229,8 @@ Lora 卡：选 Lora 时的一张卡。
 | `cover` | `string` | — | 封面地址，铺满（cover） |
 | `base` | `string` | — | 底模名，左上角 `Tag variant="on-media"`，比如 `SDXL`、`FLUX` |
 | `isNew` | `boolean` | `false` | 底模标签旁多一个 `Tag variant="brand"`「New」 |
-| `selected` | `boolean` | `false` | 选中：2px `--color-brand-solid` 描边，画在里面。由外面管，点卡片时 `onClick` 通知 |
-| `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 收藏。右上角 `ButtonGroup` 里一个收藏 `IconButton`（`Collect` / `CollectSolid`，收藏了绿色）；平时隐藏，悬停、聚焦或已收藏时显示 |
+| `selected` | `boolean` | `false` | 选中：2px 白 40% 描边（同节点选中），画在里面。由外面管，点卡片时 `onClick` 通知 |
+| `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 收藏。右上角 `ButtonGroup` 里一个收藏 `IconButton`（`Collect` / `CollectSolid`，收藏了是 IconButton 选中 + `data-collected`，图标品牌绿）；平时隐藏，悬停、聚焦或已收藏时显示 |
 | `onClick` | `MouseEventHandler` | — | 点卡片（切换选中）。点收藏按钮不会触发 |
 
 宽跟着网格，比例 3:4，圆角 12，封面裁切铺满。整张卡是 `role="checkbox"` + `aria-checked`，`tabIndex=0`，Space、Enter 切换。悬停：封面 1.05 放大，名字淡出，底部浮出信息条（名字 + 描述，`--color-bg-fill-glass` 底，模糊 `--effect-glass-blur`，内边距 12，从下 8px 往上淡入）；出现 200ms ease-out，收回 150ms ease-in。底部名字渐变：从下往上，黑 60% 到透明。其余原生 `<div>` 属性都能传。
@@ -248,7 +249,7 @@ Lora 卡：选 Lora 时的一张卡。
 
 ### 生成下拉
 
-下面这些是填好选项的生成控件，画布生成面板、主站输入框、Agent 输入框共用，放进 `PromptBox` 的 `toolbar` 和 `actions`。选项（任务、模型、比例、尺寸、背景、音色、张数、Agent 模式、模型分组、字数上限）都在 `kivi/generation/options.ts`，只写这一份；线上的清单是后端下发的，接入时整体换掉。组件都是 Figma 还没有的，待确认。
+下面这些是填好选项的生成控件，画布生成面板、主站输入框、Agent 输入框共用，放进 `PromptBox` 的 `toolbar` 和 `actions`。选项（任务、模型、比例、尺寸、背景、音色、张数、Agent 模式、模型分组、字数上限）都在 `kivi/generation/options.ts`，只写这一份；线上的清单是后端下发的，接入时整体换掉。
 
 `TaskSelect`、`RefModeSelect`、`ModelSelect`、`SizeSelect`、`RatioSelect`、`BackgroundSelect`、`VoiceSelect`、`CountSelect`、`AgentModeSelect` 都是填好选项的无底 `Select`（`variant="plain"`）。展开位置不写，默认往下、放不下自己翻上去。`Select` 的属性（`value`、`defaultValue`、`onChange`、`placement`、`disabled`、`aria-label` 等）都能传，传了盖过默认；选项和样式固定，不能传 `options`、`variant`。
 
@@ -326,7 +327,7 @@ Lora 卡：选 Lora 时的一张卡。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `count` | `number` | `0` | 现在的字数 |
+| `count` | `number` | `0` | 现在的字数。超过上限字变红（`--color-status-danger`），不挡生成 |
 | `model` | `string` | `"seed-audio-1.0"` | 音频模型的值，上限跟着它变（`AUDIO_CHAR_LIMIT`：Seed 3000、MiniMax 10000、Eleven 5000） |
 
 ### GenModelPicker
@@ -350,6 +351,7 @@ Lora 卡：选 Lora 时的一张卡。
 | `items` | `SkillItem[]` | — | 技能，传给面板 |
 | `categories` | `string[]` | — | 分类，传给面板 |
 | `onPick` | `(skill: SkillItem) => void` | — | 点了一个技能：插进输入框，面板关上 |
+| `defaultOpen` | `boolean` | `false` | 一开始是否展开 |
 | `trigger` | `ReactElement` | 图标按钮 `Skill` | 触发器。主站 Agent 工具条传一个无底按钮 |
 | `placement` | `DropdownPlacement` | `"top-start"` | 面板位置 |
 | 其余 | `DropdownProps` | — | 同 `GenModelPicker` |

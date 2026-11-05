@@ -21,7 +21,7 @@ export interface AttachmentItem {
   duration?: string;
   /** 文件扩展名，文件用，比如「PDF」 */
   ext?: string;
-  /** 右上角序号，比如「1」：画布生成面板里的参考图按连进来的顺序写。不传就没有；悬停出删除时序号被盖住 */
+  /** 右上角序号，比如「1」：画布生成面板里的参考图按连进来的顺序写。不传就没有；悬停出删除时序号被盖住（没传 `onRemove` 没有删除，序号不隐藏） */
   badge?: ReactNode;
   /** 上传进度 0–100。不传是已经上传完；传了盖一层暗色加进度环，没有悬停预览 */
   progress?: number;
@@ -67,6 +67,7 @@ export const AttachmentStrip = forwardRef<HTMLDivElement, AttachmentStripProps>(
               className="kv-attachment-strip__item"
               data-uploading={uploading ? '' : undefined}
               data-clickable={onItemClick ? '' : undefined}
+              data-removable={onRemove ? '' : undefined}
               role="group"
               aria-label={item.name}
               tabIndex={onItemClick ? 0 : undefined}

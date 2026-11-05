@@ -1,5 +1,5 @@
 // 查组件库 src/kivi/ 是否按「组件写法」页写的。npm run check 会跑。
-// 只查能机械判断的：forwardRef、displayName、...rest、is-* 类名、部件类名、CSS 里写死的颜色。
+// 只查能机械判断的：forwardRef、displayName、...rest、is-* 类名、部件类名、CSS 里写死的颜色和背景模糊。
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -62,15 +62,19 @@ const checkClass = (file, src, re) => {
 };
 for (const [file, src] of sources) checkClass(file, src, /['"`\s](kv-[a-z0-9-]+)(?=[\s'"`$])/g);
 
-// CSS：部件类名、写死的颜色
+// 能直接用填充色阶 --color-fill-n 的选择器（设计规则 · 颜色和底色 的名单）
+const FILL_OK = ['.kv-media-group__layer', '.kv-node-stack__card', '.kv-minimap__node', '.kv-skeleton'];
+
+// CSS：部件类名、写死的颜色、写死的背景模糊
 for (const file of css) {
   const src = readFileSync(file, 'utf8');
   checkClass(file, src, /\.(kv-[a-z0-9-]+)/g);
   // 文档摆静态状态的 is-hover、is-active、is-focus 例外
   for (const m of src.matchAll(/\.is-(?!(hover|active|focus)\b)[a-z-]+/g)) report(file, lineOf(src, m.index), `用了 ${m[0]} 类名，改成原生属性、aria-* 或 data-*`);
   let inComment = false;
+  let sel = '';
   src.split('\n').forEach((raw, i) => {
-    if (raw.includes(NO_TOKEN_MARK)) return;
+    if (raw.includes('{')) sel = raw;
     let code = '';
     let rest = raw;
     while (rest) {
@@ -90,6 +94,11 @@ for (const file of css) {
         inComment = true;
       }
     }
+    // 背景模糊只有两档，没有例外（11-05 用户定），「Figma 没变量」也不放过
+    if (/backdrop-filter:\s*blur\(\s*[\d.]/.test(code)) report(file, i + 1, `写死了背景模糊：${code.trim()}（只用 --effect-glass-blur 32 或 --effect-mask-blur 16）`);
+    // 填充色阶只给名单里的静态色块（设计规则 · 颜色和底色），别处用 Container（11-05 用户定）
+    if (/var\(--color-fill-[1-4]\)/.test(code) && !FILL_OK.some((c) => sel.includes(c))) report(file, i + 1, `直接用了填充色阶：${code.trim()}（先用 Container；确实不符的静态色块先加进设计规则的名单和 FILL_OK）`);
+    if (raw.includes(NO_TOKEN_MARK)) return;
     if (/#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?)\(/.test(code)) report(file, i + 1, `写死了颜色：${code.trim()}（用变量；Figma 没变量就在这一行注释「${NO_TOKEN_MARK}」）`);
   });
 }

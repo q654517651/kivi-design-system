@@ -79,6 +79,7 @@ export const LoraCard = forwardRef<HTMLDivElement, LoraCardProps>(function LoraC
           icon={collected ? 'CollectSolid' : 'Collect'}
           label={collected ? '取消收藏' : '收藏'}
           selected={collected}
+          data-collected={collected || undefined}
           onClick={(e) => {
             e.stopPropagation();
             setCollected(!collected);

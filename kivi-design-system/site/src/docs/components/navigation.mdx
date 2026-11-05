@@ -59,12 +59,12 @@ import { TabItemPlayground } from './navigation.demos';
 
 ### Tabs
 
-把一组 `TabItem` 管起来：同一时间只有一个选中，方向键移动选中（横排 ← →，竖排 ↑ ↓；跳过禁用项，到头绕回），Home、End 到头尾。根元素带 `aria-orientation`。
+把一组 `TabItem` 管起来：同一时间只有一个选中，方向键移动选中（← →，分段 ↑ ↓ 也行；跳过禁用项，到头绕回），Home、End 到头尾。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `variant` | `"tab"` `"segment"` | `"tab"` | 里面的 `TabItem` 都跟着它。选项卡是 `role="tablist"`，没有底槽，选项间距 4。分段是 `radiogroup`，带底槽：内边距 4（`--spacing-4`），圆角 12（`--border-radius-12`），底白 10%，选项等宽平分 |
-| `layout` | `"horizontal"` `"vertical"` | `"horizontal"` | 同 `TabItem`。决定方向键：横排左右，竖排上下 |
+| `layout` | `"horizontal"` `"vertical"` | `"horizontal"` | 同 `TabItem`。不影响方向键：竖排只是每项上图标下文字，整组仍横排 |
 | `size` | `32` `36` | `32` | 同 `TabItem`。分段底槽比选项高 8：32 的 40，36 的 44，竖排 64 |
 | `value` | `string` | — | 选中的值（受控），和 `onChange` 一起用 |
 | `defaultValue` | `string` | — | 默认选中的值（非受控）。没有选中项、或选中的那项禁用了 / 不在了，第一个可用项能 Tab 进来 |

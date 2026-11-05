@@ -51,7 +51,7 @@ import {
 |---|---|---|---|
 | `items` | `ReferenceStackItem[]` | — | 参考素材，必填，按添加顺序排，最后一个是叠放时最上面那张。每项见下表 |
 | `onAdd` | `() => void` | — | 点添加格、右下角圆形上传按钮时触发：弹出选文件，选完把素材加进 `items` |
-| `onRemove` | `(id: string) => void` | — | 点卡片右上角的删除时触发（鼠标移到卡片上才出现，同时序号隐藏），参数是素材的 `id`：从 `items` 里去掉它 |
+| `onRemove` | `(id: string) => void` | — | 点卡片右上角的删除时触发（鼠标移到卡片上才出现，同时序号隐藏），参数是素材的 `id`：从 `items` 里去掉它。不传就没有删除按钮，序号悬停时也不隐藏 |
 | `onItemClick` | `(item: ReferenceStackItem) => void` | — | 点卡片时触发，预览大图用 |
 | `expanded` | `boolean` | — | 展开（受控）：传 `true` 一直展开。不传是鼠标移上去展开、移开收起，键盘聚焦也展开 |
 | `defaultExpanded` | `boolean` | `false` | 非受控时的初始状态 |
@@ -78,7 +78,7 @@ import {
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `items` | `AttachmentItem[]` | — | 附件，必填，按添加顺序排。每项见下表 |
-| `onRemove` | `(id: string) => void` | — | 点右上角删除时触发，参数是附件的 `id`：从 `items` 里去掉它。不传就没有删除按钮（画布生成面板的参考图是连线连进来的，不能在这里删） |
+| `onRemove` | `(id: string) => void` | — | 点右上角删除时触发，参数是附件的 `id`：从 `items` 里去掉它。不传就没有删除按钮，序号悬停时也不隐藏（画布生成面板的参考图是连线连进来的，不能在这里删） |
 | `onItemClick` | `(item: AttachmentItem) => void` | — | 点缩略图时触发，预览大图用。传了缩略图能键盘聚焦，Enter、Space 触发 |
 
 `items` 每一项：
@@ -104,7 +104,7 @@ import {
 | `type` | `"image"` `"video"` `"audio"` `"file"` | `"image"` | 类型。视频用封面当缩略图；音频和文件一个样子：图标占位底（AssetThumb 图标类型）加图标，左下写时长或扩展名。文件按 `ext` 换图标（`fileIcon(ext)`）：PDF `FilePdf`、DOC/DOCX `FileDoc`、PPT/PPTX/KEY `FilePpt`、TXT/MD/RTF `FileTxt`、XLS/XLSX/NUMBERS `FileXls`、CSV/TSV `FileCsv`、ZIP/RAR/7Z/TAR/GZ `FileZip`、JSON `FileJson`，认不出的是通用 `File` |
 | `src` | `string` | — | 缩略图地址，图片、视频封面用 |
 | `ext` | `string` | — | 文件扩展名，比如 `"PDF"`，文件类型写在左下角（和时长同一个位置） |
-| `badge` | `ReactNode` | — | 右上角标 20 × 20，只有左下圆角 4，黑 40% + 模糊 16：序号，或「首帧」「尾帧」 |
+| `badge` | `ReactNode` | — | 右上角标 20 × 20，只有左下圆角 4，on-media 底（`--color-on-media-fill` + 模糊 32）：序号，或「首帧」「尾帧」 |
 | `duration` | `ReactNode` | — | 左下的时长，视频、音频用，高 16，比如 `"12s"` |
 | `weight` | `ReactNode` | — | 底部通栏：Lora 权重。名字不写在卡片上（序号在右上角，名字只给 @ 引用和读屏用） |
 

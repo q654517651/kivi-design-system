@@ -62,7 +62,7 @@ export const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function
         <Dropdown
           className="kv-project-card__more"
           placement="bottom-end"
-          trigger={<IconButton icon="More" label="更多" variant="text" size={32} />}
+          trigger={<IconButton tooltip={false} icon="More" label="更多" variant="text" size={32} />}
         >
           <Menu>
             <MenuItem icon="Share" onClick={onShare}>

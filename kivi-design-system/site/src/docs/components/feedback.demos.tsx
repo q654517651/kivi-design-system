@@ -16,7 +16,7 @@ import {
   type EmptyStateSize,
   type LoadingSize,
   type NotificationType,
-  type SkeletonShape,
+  type SkeletonVariant,
   type ToastType,
 } from '@kivi';
 import { Playground } from '@shell';
@@ -210,10 +210,10 @@ export function LoadingPlayground() {
 
 // ---------- Skeleton ----------
 
-type SkeletonState = { shape: SkeletonShape };
+type SkeletonState = { variant: SkeletonVariant };
 
 // 宽高是 Figma 里摆的示意尺寸，不是默认尺寸
-const SKELETON_SIZE: Record<SkeletonShape, { width: number; height?: number }> = {
+const SKELETON_SIZE: Record<SkeletonVariant, { width: number; height?: number }> = {
   rect: { width: 160, height: 90 },
   circle: { width: 32, height: 32 },
   text: { width: 200 },
@@ -223,9 +223,9 @@ export function SkeletonPlayground() {
   return (
     <Playground<SkeletonState>
       controls={[
-        { key: 'shape', label: '形状', type: 'segment', value: 'rect', options: [['rect', '矩形'], ['circle', '圆形'], ['text', '文字行']] },
+        { key: 'variant', label: '形状', type: 'segment', value: 'rect', options: [['rect', '矩形'], ['circle', '圆形'], ['text', '文字行']] },
       ]}
-      render={(s) => <Skeleton shape={s.shape} {...SKELETON_SIZE[s.shape]} />}
+      render={(s) => <Skeleton variant={s.variant} {...SKELETON_SIZE[s.variant]} />}
     />
   );
 }

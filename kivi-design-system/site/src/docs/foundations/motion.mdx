@@ -59,7 +59,7 @@ import { DialogDemo, DurationDemo, EaseDemo, LoadingDemo, MenuDemo, SkeletonDemo
   opacity: 0;
   transition: opacity var(--motion-duration-150) var(--motion-ease-in);
 }
-.menu.is-open {
+.menu[data-state="open"] {
   opacity: 1;
   transition: opacity var(--motion-duration-200) var(--motion-ease-out);
 }

@@ -153,15 +153,7 @@
   max-width: none;
 }
 
-@keyframes kv-popup-in {
-  from { opacity: 0; transform: translateY(var(--kv-popup-shift, -4px)) scale(0.96); }
-  to { opacity: 1; transform: none; }
-}
-
-@keyframes kv-popup-out {
-  from { opacity: 1; transform: none; }
-  to { opacity: 0; transform: translateY(var(--kv-popup-shift, -4px)) scale(0.96); }
-}
+/* 动画 kv-popup-in / kv-popup-out 在 base.css，玻璃面板共用 */
 
 /* 触发器的壳：Dropdown 用它量触发器的位置 */
 .kv-dropdown {
@@ -190,7 +182,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-13);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   text-align: left;
   text-decoration: none;
   cursor: pointer;
@@ -291,7 +282,6 @@
 .kv-menu-item__description {
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
 }
 
 .kv-menu-item[data-two-line][aria-selected="true"]:not(:hover, :focus-visible, .is-hover) {
@@ -322,6 +312,13 @@
 .kv-menu-item:where(:hover, :focus-within, .is-hover, [aria-current="page"]) > .kv-menu-item__more,
 .kv-menu-item:has([aria-expanded="true"]) > .kv-menu-item__more {
   display: inline-flex;
+}
+
+/* 弹出菜单里（比如画布切换）：带「⋯」的条目右边内边距 4，「⋯」28 在 36 的行里上、下、右都离 4；
+   MenuLabel 右边的按钮也离右 4，和「⋯」上下对齐。平铺（侧栏）的另有规矩（右 6），不受影响 */
+.kv-menu:not(.kv-menu--plain) .kv-menu-item:has(> .kv-menu-item__more),
+.kv-menu:not(.kv-menu--plain) .kv-menu-label:has(> .kv-menu-label__action) {
+  padding-right: var(--spacing-4);
 }
 
 /* 收起：文字淡出，「⋯」不显示 */
@@ -403,7 +400,6 @@
 .kv-menu--plain .kv-menu-item:not([data-lead]) {
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-12);
-  line-height: var(--font-line-height-16);
 }
 
 .kv-menu--plain .kv-menu-item:not([data-lead]):where(:hover, .is-hover):not(:focus-visible) {
@@ -442,7 +438,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-12);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-20);
   white-space: nowrap;
   -webkit-user-select: none;
   user-select: none;
@@ -478,7 +473,6 @@
   font-family: var(--font-family);
   font-size: var(--font-size-12);
   font-weight: var(--font-weight-regular);
-  line-height: var(--font-line-height-16);
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
@@ -506,9 +500,10 @@
 }
 
 /* 箭头和按钮平时藏着，悬停这一行（或键盘 Tab 进来）才出现（11-02 用户定）。
-   出现 150ms ease-out，消失 100ms ease-in。收起成图标栏时按钮一直在 */
+   出现 150ms ease-out，消失 100ms ease-in。收起成图标栏时按钮一直在。
+   只管平铺（侧栏）：弹出的菜单里（比如画布切换的「画布 +」）按钮一直显示 */
 .kv-menu-label__title > .kv-icon,
-.kv-menu-label:not([data-collapsed]) > .kv-menu-label__action {
+.kv-menu--plain .kv-menu-label:not([data-collapsed]) > .kv-menu-label__action {
   opacity: 0;
   transition: opacity var(--motion-duration-100) var(--motion-ease-in);
 }

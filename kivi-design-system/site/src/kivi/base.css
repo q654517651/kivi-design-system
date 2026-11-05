@@ -4,6 +4,17 @@
   图标用 <Icon name="Add" />（Icon.tsx），SVG 数据在 icons.ts，从 Figma「图标」页导出，名字和 Figma 一样。
 */
 
+/* 行高只给多行文字（11-05 用户定）：单行文字不写行高，跟这里的默认 1.4，等于 Figma 里苹方的「自动」行高。
+   多行文字（段落、对话、提示词、说明、按行数截断的）在自己的类上写变量页「文字样式」表里的行高 */
+:where([class^="kv-"], [class*=" kv-"]) {
+  line-height: 1.4;
+}
+
+/* 聚焦不画描边（浏览器默认的聚焦框也去掉），和前端一致。:where 不占权重，组件自己写的 outline 照旧生效 */
+:where(:focus, :focus-visible) {
+  outline: none;
+}
+
 /* 图标：<Icon /> 渲染成 <span class="kv-icon">，颜色跟文字走。
    尺寸照 Figma Icon 组件：16 是默认，另有 20 / 24 / 40 / 64。放进组件里时由组件定尺寸。
    图形是蒙版（--kv-icon-mask，Icon.tsx 给），底色涂 currentColor：颜色带透明度时线段交叠处不会叠色 */
@@ -23,6 +34,18 @@
 .kv-icon--40 { width: 40px; height: 40px; }
 .kv-icon--64 { width: 64px; height: 64px; }
 
+/* 自带颜色的图标（Logo）直接画 SVG，不用蒙版 */
+.kv-icon[data-multicolor] {
+  background-color: transparent;
+  -webkit-mask: none;
+  mask: none;
+}
+.kv-icon[data-multicolor] > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* 品牌 Logo 是 54×24，按高度缩放 */
 .kv-icon[data-icon="Logo"] { width: auto; aspect-ratio: 54 / 24; }
 
@@ -35,4 +58,16 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* 玻璃面板（菜单、下拉、参数面板、Popover panel）的出现、消失：淡入 + 从锚点那边 96% 放大、往外移 4。
+   原点、方向由 useFloating 写的 --kv-popup-origin / --kv-popup-shift 给 */
+@keyframes kv-popup-in {
+  from { opacity: 0; transform: translateY(var(--kv-popup-shift, -4px)) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes kv-popup-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(var(--kv-popup-shift, -4px)) scale(0.96); }
 }

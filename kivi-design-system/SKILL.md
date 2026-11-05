@@ -52,7 +52,6 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 | 没覆盖 | 网站上没有依据（比如整页布局、新的业务模块） | 按最像的现有页面给方案，标「规范未覆盖，待设计确认」 | 写成**建议**，标「规范未覆盖」，不判对错 |
 
 - 不要把自己的审美偏好当规范。说不出依据在网站哪一页，就不是「已定」。
-- 变量页标了「占位」的值（功能色等）照用，交付时注明。
 
 ## 搭页面、验收
 
@@ -70,15 +69,18 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 | 设计规则 | `docs/foundations/rules.mdx` | — | 每个任务都先读：所有硬规则（变量、底色、浮层、按钮、提示、状态、动效、图标、组件命名） |
 | 变量 | `docs/foundations/tokens.mdx` | `kivi/tokens.css` | 要变量名、取值，或核对某个值该用哪个变量 |
 | 动效 | `docs/foundations/motion.mdx`、`motion-generating.mdx` | `kivi/generating/` | 做任何过渡和动画；生成中的点阵动效 |
-| 图标 | `docs/foundations/icons.mdx` | `kivi/Icon.tsx`、`kivi/icons.ts` | 选图标、确认图标名、补模型厂 Logo |
+| 图标 | `docs/foundations/icons.mdx` | `kivi/Icon.tsx`、`kivi/icons-v3.ts`（默认用的 V3 数据）、`kivi/icons.ts`（V2 数据和新补的图标） | 选图标、确认图标名、补模型厂 Logo |
 | 占位图 | `docs/foundations/placeholder-images.mdx` | `kivi/placeholder-image/` | 用户作品的位置要放图 |
 | 按钮 | `docs/components/button.mdx` | `kivi/button/` | Button、IconButton、ButtonGroup |
 | 菜单 | `docs/components/menu.mdx` | `kivi/menu/` | 菜单、下拉、右键菜单 |
 | 导航 | `docs/components/navigation.mdx` | `kivi/navigation/` | 选项卡、分段 |
 | 输入框 | `docs/components/inputs.mdx` | `kivi/inputs/` | 输入框、数字输入、多行输入 |
 | 选择 | `docs/components/selection.mdx` | `kivi/selection/` | 下拉选择、开关、滑块、勾选框 |
-| 上传 | `docs/components/upload.mdx` | `kivi/upload/` | 上传格、拖拽上传区、上传进度环 |
+| 日期 | `docs/components/date.mdx` | `kivi/date/` | 日期范围筛选、日历 |
+| 上传 | `docs/components/upload.mdx` | `kivi/upload/` | 添加素材格（AddTile）、上传进度环（UploadRing）；拖文件进输入框用 DropOverlay（`kivi/generation/`），见「生成」页 |
 | 标签和头像 | `docs/components/tags-avatar.mdx` | `kivi/tags-avatar/` | 标签、头像、素材缩略图 |
+| 正文排版 | `docs/components/prose.mdx` | `kivi/prose/` | 正文、代码块 |
+| 滚动条 | `docs/components/scroll-area.mdx` | `kivi/scroll-area/` | 自画滚动条、滚动渐隐、触底回调 |
 | 布局 | `docs/components/layout.mdx` | `kivi/divider/`、`kivi/collapse/` | 分割线、展开收起 |
 | 图片和视频 | `docs/components/media.mdx` | `kivi/media/` | 图片（加载、失败、重试）、卡片里和预览里的视频 |
 | 提示 | `docs/components/tooltip.mdx` | `kivi/tooltip/` | Tooltip、Popover |
@@ -87,9 +89,11 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 | 生成 | `docs/business/generation.mdx` | `kivi/generation/` | 创作输入框、提示词输入、生成按钮、参数面板、Lora |
 | 参考和引用 | `docs/business/reference.mdx` | `kivi/reference/` | 主站参考区、参考格、首尾帧、附件条（画布生成面板、发给 Agent 的附件）、所有 @ 引用胶囊、悬停预览 |
 | 画布 | `docs/business/canvas.mdx` | `kivi/canvas/` | 节点、多图节点、连线、生成面板、小地图（节点工具栏、画布工具栏在模板「画布工具」） |
+| 标注 | `docs/business/annotation.mdx` | `kivi/annotation/` | 标注框、标注点、标注评论 |
 | Agent 对话 | `docs/business/agent.mdx` | `kivi/agent/` | 对话里的询问记录、用户消息、追问、确认卡片、技能卡、发送按钮 |
 | Agent 过程 | `docs/business/agent-process.mdx` | `kivi/agent-process/`、`docs/business/agent-tools.ts` | 过程行、工具调用组、思考块、结果叠放；Agent 调的每个工具出不出一行、用什么图标 |
 | 主站 | `docs/business/main-site.mdx` | `kivi/main-site/` | 生成记录、结果格 |
+| 资产 | `docs/business/asset.mdx` | `kivi/asset/` | 封面格、文件夹卡、项目卡、新建卡 |
 | 生成控件 | `docs/business/generation.mdx` | `kivi/generation/` | 画布和主站共用的类型、模型、参考类型、参数下拉，模型偏好、技能面板 |
 | 旧名对照 | `docs/legacy-names.mdx` | — | 遇到旧变量名、旧组件名、旧图标名 |
 | 组件写法 | `docs/component-api.mdx` | `kivi/hooks/` | 写或改 React 组件：forwardRef、受控、事件合并 |
