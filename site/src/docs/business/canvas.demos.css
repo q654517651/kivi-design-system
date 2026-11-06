@@ -37,6 +37,19 @@
   cursor: grabbing;
 }
 
+/* 左下角视图工具栏（MiniCanvas viewBar）：离边 16，小地图开着叠在工具栏上面、间距 8（同「业务组件 · 画布」Minimap 演示） */
+.cv-view {
+  position: absolute;
+  left: var(--spacing-16);
+  bottom: var(--spacing-16);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-8);
+  cursor: default;
+}
+
 .cv-world {
   position: absolute;
   top: 0;
@@ -58,6 +71,10 @@
   z-index: 2;
   width: max-content;
   cursor: default;
+}
+
+/* 淡入做在里面的工具栏、面板上，不做在外层：外层带着透明度动画时，里面的毛玻璃看不到后面的画面（同菜单） */
+.cv-float > * {
   animation: cv-float-in var(--motion-duration-150) var(--motion-ease-out) both;
 }
 

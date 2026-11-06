@@ -389,6 +389,8 @@ export interface MiniCanvasProps {
   chrome?: boolean;
   /** 假生成、假上传，默认有；页面模板里只能看，点了不动 */
   fake?: boolean;
+  /** 左下角的视图工具栏（整理画布、小地图、适配画布、吸附、连线、缩放），照线上；默认没有，页面模板里开 */
+  viewBar?: boolean;
   /** 一开始各节点的状态，不写的照默认（视频节点待生成，其余完成） */
   phases?: Partial<Record<Key, Phase>>;
   className?: string;
@@ -400,7 +402,7 @@ export function CanvasPlayground() {
   return <MiniCanvas />;
 }
 
-export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function MiniCanvas({ chrome = true, fake = true, phases, className, style }, ref) {
+export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function MiniCanvas({ chrome = true, fake = true, viewBar = false, phases, className, style }, ref) {
   const [runs, setRuns] = useState<Record<Key, Run>>(() => {
     const r = { ...START };
     for (const [k, phase] of Object.entries(phases ?? {}) as [Key, Phase][]) r[k] = { ...r[k], phase };
@@ -415,21 +417,24 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
     setSelectedRaw(key);
   };
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
+  const [gliding, setGliding] = useState(false);
   const [panning, setPanning] = useState(false);
   const viewport = useRef<HTMLDivElement>(null);
   const timers = useRef<Partial<Record<Key, number>>>({});
   const drag = useRef<{ id: number; x: number; y: number; vx: number; vy: number; moved: boolean } | null>(null);
 
-  // 开场：缩放到整张图放得下，最大 1；画布尺寸变了（比如模板切全屏）重新放一次
+  // 开场：缩放到整张图放得下，最大 1；画布尺寸变了（比如模板切全屏）重新放一次。工具栏「适配画布」也是它
+  const fit = () => {
+    const el = viewport.current;
+    if (!el) return;
+    const w = BOUNDS.right - BOUNDS.left;
+    const h = BOUNDS.bottom - BOUNDS.top;
+    const k = Math.min(1, (el.clientWidth - 96) / w, (el.clientHeight - 160) / h);
+    setView({ k, x: (el.clientWidth - w * k) / 2 - BOUNDS.left * k, y: 72 - BOUNDS.top * k });
+  };
   useLayoutEffect(() => {
     const el = viewport.current;
     if (!el) return;
-    const fit = () => {
-      const w = BOUNDS.right - BOUNDS.left;
-      const h = BOUNDS.bottom - BOUNDS.top;
-      const k = Math.min(1, (el.clientWidth - 96) / w, (el.clientHeight - 160) / h);
-      setView({ k, x: (el.clientWidth - w * k) / 2 - BOUNDS.left * k, y: 72 - BOUNDS.top * k });
-    };
     fit();
     let size = `${el.clientWidth}x${el.clientHeight}`;
     const ro = new ResizeObserver(() => {
@@ -440,7 +445,25 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
     });
     ro.observe(el);
     return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 视图工具栏：小地图开关、吸附开关、连线显示隐藏、以画布中心缩放（30%–200%，每次 ×1.25）
+  const [minimap, setMinimap] = useState(false);
+  const [snap, setSnap] = useState(true);
+  const [hideLines, setHideLines] = useState(false);
+  const zoomTo = (next: (k: number) => number) => {
+    const el = viewport.current;
+    if (!el) return;
+    const px = el.clientWidth / 2;
+    const py = el.clientHeight / 2;
+    setGliding(true);
+    setView((v) => {
+      const k = Math.min(2, Math.max(0.3, next(v.k)));
+      return { k, x: px - ((px - v.x) * k) / v.k, y: py - ((py - v.y) * k) / v.k };
+    });
+    window.setTimeout(() => setGliding(false), 220);
+  };
 
   // 按住 ⌘ / Ctrl 滚轮（触控板捏合）缩放，以鼠标为中心；不按就让页面正常滚动
   useEffect(() => {
@@ -464,7 +487,6 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
   useEffect(() => () => Object.values(timers.current).forEach((t) => window.clearInterval(t)), []);
 
   // 定位到节点：选中它，画布平移到让它在中间，300ms ease-in-out（距离长）
-  const [gliding, setGliding] = useState(false);
   useImperativeHandle(ref, () => ({
     focus: (key: Key) => {
       const el = viewport.current;
@@ -513,7 +535,7 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
   // 拖空白处移动画布；没拖动就是点空白，取消选中
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    if ((e.target as HTMLElement).closest('.cv-node, .cv-float, button')) return;
+    if ((e.target as HTMLElement).closest('.cv-node, .cv-float, .cv-view, button')) return;
     drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false };
     if (e.currentTarget.hasPointerCapture?.(e.pointerId) === false) {
       try {
@@ -593,6 +615,38 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
     }
   }
 
+  // 左下角视图工具栏（照线上 bottom-toolbar）：整理画布、小地图、适配画布、吸附、连线，缩小 / 比例 / 放大；小地图开着就叠在上面。
+  // 只有小地图有选中样子；吸附、连线照线上只换图标和提示
+  const viewBarOf = () => {
+    const el = viewport.current;
+    const area: MinimapRect = el
+      ? { x: -view.x / view.k, y: -view.y / view.k, width: el.clientWidth / view.k, height: el.clientHeight / view.k }
+      : { x: 0, y: 0, width: 1, height: 1 };
+    return (
+      <div className="cv-view">
+        {minimap && (
+          <Minimap
+            nodes={NODES.map((n) => ({ x: n.x, y: n.y, width: SIZE[n.ratio][0], height: SIZE[n.ratio][1] }))}
+            viewport={area}
+            onViewportChange={(c) => setView((v) => ({ ...v, x: area.width / 2 * v.k - c.x * v.k, y: area.height / 2 * v.k - c.y * v.k }))}
+          />
+        )}
+        <ButtonGroup variant="glass" aria-label="视图">
+          <IconButton icon="AutoLayout" label="整理画布" />
+          <IconButton icon="Map" label="小地图" selected={minimap} onClick={() => setMinimap(!minimap)} />
+          <IconButton icon="FitContent" label="适配画布" onClick={fit} />
+          <IconButton icon={snap ? 'Snap' : 'DisableSnap'} label={snap ? '关闭网格吸附' : '开启网格吸附'} onClick={() => setSnap(!snap)} />
+          <IconButton icon={hideLines ? 'HideConnections' : 'ShowConnections'} label={hideLines ? '显示节点连线' : '隐藏节点连线'} onClick={() => setHideLines(!hideLines)} />
+          <IconButton icon="SubtractSmall" label="缩小" disabled={view.k <= 0.3} onClick={() => zoomTo((k) => k / 1.25)} />
+          <Button style={{ minWidth: 48 }} onClick={() => zoomTo(() => 1)}>
+            {Math.floor(view.k * 100)}%
+          </Button>
+          <IconButton icon="AddSmall" label="放大" disabled={view.k >= 2} onClick={() => zoomTo((k) => k * 1.25)} />
+        </ButtonGroup>
+      </div>
+    );
+  };
+
   const canvas = (
       <div
         ref={viewport}
@@ -611,6 +665,8 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
           }}
         >
           {edges.map((edge) => {
+            // 隐藏连线时，选中节点上下游的连线还显示（照线上）
+            if (hideLines && selected !== edge[0] && selected !== edge[1]) return null;
             const box = edgeBox(nodeOf(edge[0]), nodeOf(edge[1]));
             return (
               <Connector
@@ -639,6 +695,7 @@ export const MiniCanvas = forwardRef<MiniCanvasHandle, MiniCanvasProps>(function
           {toolbar}
           {panel}
         </div>
+        {viewBar && viewBarOf()}
       </div>
   );
 

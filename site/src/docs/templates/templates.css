@@ -110,58 +110,74 @@
   padding: 0 0 var(--spacing-12) var(--spacing-8);
 }
 
+/* 收起、展开时 Logo 行什么都不挪、不变大小，只换透明度（11-05 用户定）：
+   大 Logo 淡出、小 Logo 在 36 的格子正中淡入，行高不变，下面的导航也不上下动；
+   收起按钮钉在展开时的位置（不跟着侧栏右边往左滑），淡出后才挪到小 Logo 上，收起后悬停小 Logo 才出现；
+   点收起后鼠标离开过这行才认悬停（data-settling），鼠标还停在这行也不冒出来；键盘 Tab 到按钮照常显示 */
 .tpl-ms__brand > .kv-icon {
   width: 54px;
   height: 24px;
-  margin-left: 0;
-  transition:
-    width var(--motion-duration-300) var(--motion-ease-in-out),
-    height var(--motion-duration-300) var(--motion-ease-in-out),
-    margin-left var(--motion-duration-300) var(--motion-ease-in-out),
-    opacity var(--motion-duration-150) var(--motion-ease-out);
+  transition: opacity var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+/* 收起时的小 Logo：24 的方块，圆角 6，绿色渐变底 + 描边，Logo 缩到 20 放正中（照原型） */
+.tpl-ms__mini-logo {
+  position: absolute;
+  top: 0;
+  left: calc((36px - 24px) / 2);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-6);
+  background: linear-gradient(#9DFFC10A, #00993842); /* Figma 没变量，照原型 */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+.tpl-ms__mini-logo > .kv-icon {
+  width: 20px;
+  height: calc(20px * 24 / 54);
 }
 
 .tpl-ms__toggle {
   position: absolute;
   display: flex;
   top: 0;
-  right: 0;
-  transition:
-    right var(--motion-duration-300) var(--motion-ease-in-out),
-    opacity var(--motion-duration-150) var(--motion-ease-out);
+  left: calc(240px - 2 * var(--spacing-12) - 28px); /* 展开时贴右边，收起时也钉在这，不往左滑 */
+  transition: opacity var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
-/* 收起：Logo 缩到宽 24（高 24 × 24 / 54 ≈ 10.7，照 3.14 收起侧栏 1:2231），在 36 的格子里居中；按钮跟着侧栏右边滑过来，停在 Logo 正中，平时藏着。
-   位移写死，不用百分比：侧栏宽度也在变，按百分比算 Logo 会先往外冲再回来。
-   悬停 Logo（或键盘 Tab 到按钮）时 Logo 淡出、换成「展开侧栏」 */
 .tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand > .kv-icon {
-  width: 24px;
-  height: calc(24px * 24 / 54);
-  margin-left: calc((36px - 24px) / 2 - var(--spacing-8));
-}
-
-.tpl-ms__side-wrap[data-collapsed] .tpl-ms__toggle {
-  right: var(--spacing-4); /* 36 宽的格子里放 28 的按钮，两边各 4 */
   opacity: 0;
-  transition:
-    right var(--motion-duration-300) var(--motion-ease-in-out),
-    opacity var(--motion-duration-100) var(--motion-ease-in);
 }
 
-.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand:where(:hover, :has(:focus-visible)) > .kv-icon {
-  opacity: 0;
-  transition:
-    width var(--motion-duration-300) var(--motion-ease-in-out),
-    height var(--motion-duration-300) var(--motion-ease-in-out),
-    margin-left var(--motion-duration-300) var(--motion-ease-in-out),
-    opacity var(--motion-duration-100) var(--motion-ease-in);
-}
-
-.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand:where(:hover, :has(:focus-visible)) .tpl-ms__toggle {
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__mini-logo {
   opacity: 1;
+}
+
+/* 淡出完了再挪到小 Logo 上：36 宽的格子里放 28 的按钮，两边各 4 */
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__toggle {
+  left: var(--spacing-4);
+  opacity: 0;
   transition:
-    right var(--motion-duration-300) var(--motion-ease-in-out),
-    opacity var(--motion-duration-150) var(--motion-ease-out);
+    opacity var(--motion-duration-300) var(--motion-ease-in-out),
+    left 0s var(--motion-duration-300);
+}
+
+.tpl-ms__side-wrap[data-collapsed]:not([data-settling]) .tpl-ms__brand:hover > .tpl-ms__mini-logo,
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand:has(:focus-visible) > .tpl-ms__mini-logo {
+  opacity: 0;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.tpl-ms__side-wrap[data-collapsed]:not([data-settling]) .tpl-ms__brand:hover .tpl-ms__toggle,
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand:has(:focus-visible) .tpl-ms__toggle {
+  opacity: 1;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
 /* 导航和「对话」「画布」两段之间空一点 */
@@ -227,15 +243,31 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-8);
-  padding: var(--spacing-4) var(--spacing-4) var(--spacing-4) var(--spacing-12);
-  border: var(--border-width-1) solid var(--color-border-subtle);
-  border-radius: var(--border-radius-12);
+}
+
+/* 余额胶囊 + 旁边单独一个头像 32（11-05 用户定，内部平台只有余额和头像，没有升级）。
+   胶囊是展示用的容器，不是按钮，所以是全圆的；浮在滚动的记录上用玻璃。高 32，左右 12，猕猴桃 16 品牌绿，数字白 */
+.tpl-ms__balance {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 var(--spacing-12);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
+  border-radius: var(--border-radius-round);
   background: var(--color-bg-fill-glass);
   -webkit-backdrop-filter: blur(var(--effect-glass-blur));
   backdrop-filter: blur(var(--effect-glass-blur));
-  color: var(--color-brand-solid);
+  color: var(--color-text-fill-primary);
   font-size: var(--font-size-13);
-  line-height: var(--font-line-height-20);
+}
+
+.tpl-ms__balance > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-brand-solid);
 }
 
 /* 一条记录：记录头 + 结果网格 + 底部按钮，间距 12 */
@@ -506,49 +538,49 @@
   font-size: var(--font-size-14);
 }
 
-/* 裁剪：图上盖暗色，裁剪框里是亮的 */
+/* 裁剪：图上盖暗色，裁剪框里是亮的。框和手柄在裁切层外面，贴边时角上的圆点不被切掉 */
 .tpl-tool__crop {
   position: relative;
   width: 256px;
   height: 256px;
+}
+
+.tpl-tool__crop-clip {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   border-radius: var(--border-radius-12);
 }
 
-.tpl-tool__crop > img,
-.tpl-tool__expand-box > img {
+.tpl-tool__crop-clip > img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.tpl-tool__crop-box {
+.tpl-tool__crop-shade {
   position: absolute;
-  inset: 32px 24px 48px 40px;
   box-shadow: 0 0 0 999px var(--color-bg-fill-mask);
+  pointer-events: none;
 }
 
-.tpl-tool__crop-box > .kv-crop-handles,
-.tpl-tool__expand-box > .kv-crop-handles {
-  position: absolute;
-  inset: 0;
-}
-
-/* 扩图：外框比原图大，原图在中间，扩出去的地方是浅底 */
+/* 扩图：画布区里原图在中间，扩图框跟着拖，扩出去的地方是浅底（线上是棋盘格，V2 没有） */
 .tpl-tool__expand {
-  display: grid;
-  place-items: center;
+  position: relative;
   width: 320px;
   height: 256px;
-  border-radius: var(--border-radius-12);
+}
+
+.tpl-tool__expand-fill {
+  position: absolute;
   background: var(--color-bg-fill-container-light-1);
 }
 
-.tpl-tool__expand-box {
-  position: relative;
-  width: 176px;
-  height: 176px;
+.tpl-tool__expand > img {
+  position: absolute;
+  display: block;
+  object-fit: cover;
 }
 
 /* 视频封装：左类型 160、中素材 248、右规格，间距 16 */
@@ -724,11 +756,11 @@
   gap: var(--spacing-8);
 }
 
-/* 我的素材、我的画布：只放一排。每张最小 200，一排能放几个放几个（内容区 1452 时 6 个，屏越宽越多），
+/* 我的素材、我的画布：只放一排。每张最小 240（11-05 从 200 调大，宽屏太小），一排能放几个放几个（内容区 1452 时 5 个，屏越宽越多），
    放不下的排到第二行、第二行高 0 藏起来，看更多点「查看全部」。工作站网站是全屏用的（11-04 用户定） */
 .tpl-as__row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   grid-template-rows: auto;
   grid-auto-rows: 0;
   column-gap: var(--spacing-16);
@@ -769,7 +801,7 @@
   margin-left: auto;
 }
 
-/* 按天分组：「今天」，下面正方形格子，最小 136、间距 4，一排能放几个放几个（内容区 1452 时 10 个），照即梦 */
+/* 按天分组：「今天」，下面正方形格子，最小 200（11-05 从 136 调大，1920 屏约 8 列和线上一样）、间距 4，一排能放几个放几个，窄了先缩、放不下少一列 */
 .tpl-as__day {
   margin-bottom: var(--spacing-32);
 }
@@ -791,7 +823,7 @@
 
 .tpl-as__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--spacing-4);
 }
 

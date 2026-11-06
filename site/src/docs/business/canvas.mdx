@@ -61,7 +61,7 @@ import { AudioWavePlayground, CanvasHeaderPlayground, ConnectorPlayground, NodeP
 
 ## CropHandles
 
-裁剪框：盖在图片上的拉伸手柄，拖动逻辑自己写。
+裁剪框：裁剪、扩图时拖着选范围。
 
 <PartsDemo />
 
@@ -227,7 +227,17 @@ import { AudioWavePlayground, CanvasHeaderPlayground, ConnectorPlayground, NodeP
 
 ### CropHandles
 
-裁剪框，选中图片点「裁剪」后盖在图片上。描边 2px #4AFF70；四角 12 的白圆点，四边中间 120 × 6 的白圆头条。没有自己的属性，大小用 `style` 或外层定位给。
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `value` / `defaultValue` | `CropRect` | — | 框的位置和大小 `{ x, y, w, h }`（px，相对外层定位元素）。传了才能拖；都不传只摆样子，大小用 `style` 或外层定位给 |
+| `onValueChange` | `(rect: CropRect) => void` | — | 拖动、键盘挪动时触发 |
+| `ratio` | `number \| null` | `null` | 锁定的比例（宽 / 高）。`null` 自由，拖的时候按住 Shift 临时锁住当前比例 |
+| `bounds` | `CropRect` | — | 框能去的范围：裁剪是图片，扩图是画布可见区 |
+| `contain` | `CropRect` | — | 框必须包住的区域，扩图传原图。传了框里不能按住挪 |
+| `min` | `number` | `16` | 最小边（px） |
+| `onConfirm` / `onCancel` | `() => void` | — | Enter、双击框里是确定；Esc 是取消 |
+
+描边 2px #4AFF70；四角 12 的白圆点，四边中间 24 × 4 的白圆头条，边短于 64 就不画这一边的条。拖：四角、四边拉伸，热区是描边里外各 8；按住 Option 从中心拉（两边一起）；裁剪时框里按住挪，方向键挪 1、Shift 10。拖的时候出九宫格（1px `--color-border-strong`），出现 150ms ease-out，松手 150ms ease-in 淡掉。
 
 ### Minimap
 
@@ -245,7 +255,7 @@ import { AudioWavePlayground, CanvasHeaderPlayground, ConnectorPlayground, NodeP
 
 画布左上角，离左上各 16。玻璃按钮条 44（`ButtonGroup variant="glass" size={44}`）：Logo（Button 文字，Logo 20 高）｜工作区名称（13 号白字，不能点，最宽 160 省略）｜画布名称（Button 文字 + 下拉箭头，开着时箭头朝上）。
 
-点画布名称出下拉（Menu 240）：顶上 MenuLabel「画布」，右边「+」（IconButton 28 轻，一直显示）新建；下面是这个工作区的所有画布，当前的用选中底色（单选不打勾）。列表最高 7.5 条，多了自己滚，「画布 +」不跟着滚。点一条切过去，下拉不关；双击一条原地改名（回车生效，Esc、点外面取消，最多 20 字）。悬停一条出「⋯」：在新窗口打开、重命名画布、复制画布、分割线、删除画布（危险；只剩 1 个时置灰）。
+点画布名称出下拉（Menu 240）：顶上 MenuLabel「画布」，右边「+」（IconButton 28 轻，一直显示）新建；下面是这个工作区的所有画布，当前的用选中底色（单选不打勾）。列表最高 7.5 条，多了自己滚，「画布 +」不跟着滚。点一条切过去，下拉不关；双击一条原地改名（回车生效，Esc、点外面取消，最多 20 字）。悬停一条出「⋯」：重命名画布、复制画布、分割线、删除画布（危险；只剩 1 个时置灰）。
 
 - 新建：名字「画布 N」，N 是新建前的个数 + 1，允许重名；追加到最后、切过去、滚到它。
 - 复制：名字「原名 副本」，追加到最后、滚到它，不切过去。
@@ -266,5 +276,4 @@ import { AudioWavePlayground, CanvasHeaderPlayground, ConnectorPlayground, NodeP
 | `onChange` | `(id: string) => void` | — | 切到别的画布 |
 | `max` | `number` | `30` | 一个工作区最多几个画布 |
 | `agentWorking` | `boolean` | `false` | Agent 正在工作，切画布先确认 |
-| `onOpenInNewWindow` | `(id: string) => void` | — | 「⋯」里的「在新窗口打开」 |
 | `onLogoClick` | `() => void` | — | 点 Logo |

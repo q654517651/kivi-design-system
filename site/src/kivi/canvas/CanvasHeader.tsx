@@ -35,8 +35,6 @@ export interface CanvasHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 
   max?: number;
   /** Agent 正在工作：这时切画布先弹窗确认 */
   agentWorking?: boolean;
-  /** 「⋯」里的「在新窗口打开」 */
-  onOpenInNewWindow?: (id: string) => void;
   /** 点 Logo，比如回首页 */
   onLogoClick?: () => void;
 }
@@ -48,7 +46,7 @@ const uid = () => `canvas-${Date.now().toString(36)}-${Math.random().toString(36
 /**
  * 画布左上角：Logo｜工作区名称｜画布名称 ⌄。玻璃按钮条 44（和节点工具栏同一档）。
  * 点画布名称展开下拉：顶上「画布 +」，下面这个工作区的所有画布，当前的用选中底色（单选不打勾）；超过 7.5 条滚动，新建、复制后滚到新的那条。
- * 点一条切过去，下拉不关（还能双击改名）；悬停出「⋯」：在新窗口打开、重命名画布、复制画布、删除画布（只剩 1 个时置灰）。
+ * 点一条切过去，下拉不关（还能双击改名）；悬停出「⋯」：重命名画布、复制画布、删除画布（只剩 1 个时置灰）。
  * 双击一条或点「重命名画布」原地改名，回车生效；删除先弹窗确认，删的是当前画布就切到上面最近的一个，上面没有切到下面。
  * Agent 正在工作时切画布先弹窗确认。新建、复制到上限出 Toast，页面里要放一个 Toaster
  */
@@ -63,7 +61,6 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
     onChange,
     max = 30,
     agentWorking,
-    onOpenInNewWindow,
     onLogoClick,
     className,
     ...rest
@@ -171,9 +168,6 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
                   onRename={(name) => rename(c.id, name)}
                   more={
                     <Menu>
-                      <MenuItem icon="NewWindow" onClick={() => onOpenInNewWindow?.(c.id)}>
-                        在新窗口打开
-                      </MenuItem>
                       <MenuItem icon="Rename" onClick={() => setEditing(c.id)}>
                         重命名画布
                       </MenuItem>

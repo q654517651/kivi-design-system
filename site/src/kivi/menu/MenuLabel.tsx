@@ -2,7 +2,7 @@ import { cloneElement, forwardRef, isValidElement, useId, type HTMLAttributes, t
 import { Collapse } from '../collapse';
 import { Icon } from '../Icon';
 import { cx } from '../utils';
-import { useControllable } from '../hooks';
+import { useControllable, useJustExpanded } from '../hooks';
 import './menu.css';
 
 export interface MenuLabelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
@@ -46,6 +46,8 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
   const [expanded, setExpanded] = useControllable(expandedProp, defaultExpanded, onExpandedChange);
   const bodyId = useId();
   const grouped = items !== undefined;
+  // 侧栏刚展开那 300ms 新建按钮先藏着，不跟着右边滑
+  const justExpanded = useJustExpanded(collapsed);
 
   // 收起后只剩 action；action 的 label 就是提示文字
   const actionLabel = isValidElement(action) ? (action.props as { label?: string }).label : undefined;
@@ -62,6 +64,7 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
       className={cx('kv-menu-label', className)}
       data-collapsible={collapsible ? '' : undefined}
       data-collapsed={collapsed ? '' : undefined}
+      data-expanding={justExpanded ? '' : undefined}
       {...rest}
     >
       {collapsible ? (

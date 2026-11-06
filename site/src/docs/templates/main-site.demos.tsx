@@ -331,6 +331,8 @@ export function Sidebar({
   defaultSelected?: string;
 }) {
   const [collapsed, setCollapsed] = useControllable(collapsedProp, defaultCollapsed, onCollapsedChange);
+  // 点收起后，鼠标离开过 Logo 这行才认悬停：点的时候鼠标还在这行，鼠标不动浏览器不重新算悬停，不然「展开侧栏」会冒出来
+  const [settling, setSettling] = useState(false);
   const [chats, setChats] = useState(CHATS);
   const [canvases, setCanvases] = useState(CANVASES);
   const [selected, setSelected] = useState(defaultSelected);
@@ -355,13 +357,17 @@ export function Sidebar({
     });
   const toggle = collapsed ? '展开侧栏' : '收起侧栏';
   return (
-    <div className="tpl-ms__side-wrap" data-collapsed={collapsed ? '' : undefined}>
+    <div className="tpl-ms__side-wrap" data-collapsed={collapsed ? '' : undefined} data-settling={settling ? '' : undefined}>
       <aside className="tpl-ms__side">
-        <div className="tpl-ms__brand">
+        <div className="tpl-ms__brand" onPointerLeave={() => setSettling(false)}>
           <Icon name="Logo" />
-          {/* 展开时在右边；收起时叠在 Logo 上，悬停 Logo 才换成它。轻：平时 50%，悬停变亮 */}
+          {/* 收起时的小 Logo：绿色渐变底 + 描边，Logo 缩小放正中（照原型） */}
+          <span className="tpl-ms__mini-logo" aria-hidden>
+            <Icon name="Logo" />
+          </span>
+          {/* 展开时在右边；收起时淡出，原地不动。收起后悬停小 Logo 才在它的位置出现。轻：平时 50%，悬停变亮 */}
           <span className="tpl-ms__toggle">
-            <IconButton icon="Sidebar" label={toggle} variant="light" size={28} tooltip={{ placement: collapsed ? 'right' : 'bottom' }} onClick={() => setCollapsed(!collapsed)} />
+            <IconButton icon="Sidebar" label={toggle} variant="light" size={28} tooltip={{ placement: collapsed ? 'right' : 'bottom' }} onClick={() => { setSettling(!collapsed); setCollapsed(!collapsed); }} />
           </span>
         </div>
         <Menu variant="plain" aria-label="主站导航">
@@ -527,9 +533,11 @@ export function MainSiteTemplate() {
         <Sidebar />
         <main className="tpl-ms__main" style={{ '--tpl-composer-h': `${composerH}px` } as CSSProperties}>
           <div className="tpl-ms__wallet">
-            <Icon name="Kiwi" />
-            200
-            <Avatar name="KIVI" size={24} src={img('ip-peek', '1:1')} />
+            <span className="tpl-ms__balance" aria-label="余额 200">
+              <Icon name="Kiwi" />
+              200
+            </span>
+            <Avatar name="KIVI" size={32} src={img('ip-peek', '1:1')} />
           </div>
           <div ref={feed} className="tpl-ms__feed">
             <div className="tpl-ms__column">

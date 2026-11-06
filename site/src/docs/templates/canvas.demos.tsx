@@ -90,7 +90,7 @@ export function CanvasTemplate() {
       <Toaster />
       <div className="tpl-cv">
         <div className="tpl-cv__main">
-          <MiniCanvas ref={canvas} chrome={false} fake={false} phases={{ video: 'done' }} className="tpl-cv__canvas" />
+          <MiniCanvas ref={canvas} chrome={false} fake={false} viewBar phases={{ video: 'done' }} className="tpl-cv__canvas" />
           {/* 左上角：Logo｜工作区｜画布切换 */}
           <CanvasHeader
             className="tpl-cv__header"

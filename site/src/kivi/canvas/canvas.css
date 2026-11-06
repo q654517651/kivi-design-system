@@ -614,9 +614,25 @@
   border: 2px solid var(--kv-crop-color);
 }
 
+/* 能拖的：位置大小由 value 给，相对外层定位；不画浏览器的聚焦框 */
+.kv-crop-handles[data-interactive] {
+  position: absolute;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+}
+
+/* 热区：描边外面再伸出 8，和里面的 8 一起 16 宽 */
+.kv-crop-handles[data-interactive]::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
 .kv-crop-handles__handle {
   position: absolute;
   background: var(--color-text-fill-primary);
+  pointer-events: none;
 }
 
 /* 四个角：12 的圆，圆心在描边的角上。nw 左上、ne 右上、sw 左下、se 右下 */
@@ -637,32 +653,57 @@
 
 .kv-crop-handles__handle--se { right: -7px; bottom: -7px; }
 
-/* 四条边：120 × 6 的圆头条，在每条边的中间。n 上、s 下、w 左、e 右 */
+/* 四条边：24 × 4 的圆头条，在每条边的中间。n 上、s 下、w 左、e 右 */
 .kv-crop-handles__handle--n,
 .kv-crop-handles__handle--s {
   left: 50%;
-  width: 120px;
-  height: 6px;
-  margin-left: -60px;
+  width: 24px;
+  height: 4px;
+  margin-left: -12px;
   border-radius: var(--border-radius-round);
 }
 
 .kv-crop-handles__handle--w,
 .kv-crop-handles__handle--e {
   top: 50%;
-  width: 6px;
-  height: 120px;
-  margin-top: -60px;
+  width: 4px;
+  height: 24px;
+  margin-top: -12px;
   border-radius: var(--border-radius-round);
 }
 
-.kv-crop-handles__handle--n { top: -4px; }
+.kv-crop-handles__handle--n { top: -3px; }
 
-.kv-crop-handles__handle--s { bottom: -4px; }
+.kv-crop-handles__handle--s { bottom: -3px; }
 
-.kv-crop-handles__handle--w { left: -4px; }
+.kv-crop-handles__handle--w { left: -3px; }
 
-.kv-crop-handles__handle--e { right: -4px; }
+.kv-crop-handles__handle--e { right: -3px; }
+
+/* 框的边短于 64：不画边中间的条，只留四角 */
+.kv-crop-handles[data-narrow] > .kv-crop-handles__handle--n,
+.kv-crop-handles[data-narrow] > .kv-crop-handles__handle--s,
+.kv-crop-handles[data-short] > .kv-crop-handles__handle--w,
+.kv-crop-handles[data-short] > .kv-crop-handles__handle--e {
+  display: none;
+}
+
+/* 九宫格：拖的时候出，三等分线 1px */
+.kv-crop-handles__grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, transparent calc(100% / 3 - 0.5px), var(--color-border-strong) 0, var(--color-border-strong) calc(100% / 3 + 0.5px), transparent 0, transparent calc(200% / 3 - 0.5px), var(--color-border-strong) 0, var(--color-border-strong) calc(200% / 3 + 0.5px), transparent 0),
+    linear-gradient(to bottom, transparent calc(100% / 3 - 0.5px), var(--color-border-strong) 0, var(--color-border-strong) calc(100% / 3 + 0.5px), transparent 0, transparent calc(200% / 3 - 0.5px), var(--color-border-strong) 0, var(--color-border-strong) calc(200% / 3 + 0.5px), transparent 0);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+
+.kv-crop-handles[data-dragging] > .kv-crop-handles__grid {
+  opacity: 1;
+  transition-timing-function: var(--motion-ease-out);
+}
 
 /* ---------- 模板外框：生成面板 ----------
    这个是模板，由 AttachmentStrip、PromptInput 等拼成，不发布成组件。这里只给外框的样子。

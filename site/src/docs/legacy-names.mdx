@@ -99,6 +99,7 @@ import { PageHeader } from '@shell';
 | 画布底部工具栏模糊 12、连线删除按钮模糊 6 | 工具栏底不透明，去掉模糊；连线删除用 `--effect-glass-blur` 32 | 写死的 12、6 | 合并（11-05） |
 | 静态色块借 `container-light-1-pressed`（叠层、小地图节点）、借 `-hover`（骨架屏扫光） | 新增填充色阶 `--color-fill-1~4`（白 6 / 10 / 14 / 18），叠层 `fill-4`、小地图节点 `fill-2`、扫光 `fill-3`；Container 六个变量改成引用色阶，名字和值不变 | 写死的白 18% / 14% | 新增（11-05） |
 | 开关轨道、文字头像、试听播放中用 `container-light-1-pressed`（白 18%） | `container-light-1`（白 10%），放进浅底跟 `--kv-nested-fill` 换组 | | 改值（11-05，暗一档） |
+| `color/bg/fill/glass` · `--color-bg-fill-glass` = #181818 50% | 同名，#181818 65% | 颜色不变，只加不透明度 | 改值（11-05，深一档） |
 | 角上按钮悬停：写死 rgba(16, 19, 24, 0.9) | `color/on-media/fill-hover` · `--color-on-media-fill-hover` = 黑 60% | 代码里原来没有变量，要和前端对齐 | 合并 |
 | 贴图控件的文字：写死白色 | `color/on-media/text` · `--color-on-media-text` = #FFFFFF | — | 合并 |
 
@@ -124,7 +125,7 @@ V2 新加、线上 variable.less 没有的变量，前端整段加进去。值�
 |---|---|---|
 | `color/bg/fill/surface` · `--color-bg-fill-surface` | #191A1B | |
 | `color/bg/fill/mask` · `--color-bg-fill-mask` | 黑 60% | |
-| `color/bg/fill/glass` · `--color-bg-fill-glass` | #181818 50%（11-04 从黑 50% 改） | |
+| `color/bg/fill/glass` · `--color-bg-fill-glass` | #181818 65%（11-04 从黑 50% 改成 #181818 50%，11-05 改成 65%） | |
 | `color/bg/fill/container-light-1-pressed` · `--color-bg-fill-container-light-1-pressed` | 白 18%（11-04 从 16% 改） | |
 | `color/bg/fill/container-light-2-pressed` · `--color-bg-fill-container-light-2-pressed` | 白 14%（11-04 从 12% 改） | |
 | `color/text/fill/tertiary` · `--color-text-fill-tertiary` | 白 40% | |
@@ -280,7 +281,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | `calendar` | `Calendar` | 改名 | 统一首字母大写。代码 1 处：TimeRangeFilter / DateField |
 | `Cutting1` | `Cutting` | 合并 | 和 Cutting 重复。代码 1 处：添加节点面板 node-list |
 | `Snap1` | `Snap` | 合并 | 和 Snap 重复。代码 1 处：画布底部工具栏 bottom-toolbar（吸附开关） |
-| `ShowConnections-1` | `ShowConnections` | 合并 | 和 ShowConnections 重复。代码 1 处：画布底部工具栏 bottom-toolbar |
+| `ShowConnections-1` | `AutoLayout` | 改名 | 线上画布左下角「整理画布」用的是它（四个方块），不是连线。代码 1 处：画布底部工具栏 bottom-toolbar（11-05 改，原来误合并进 ShowConnections） |
 | `VolumeFull` `VolumeHalf` `VolumeOff` | 不变 | 改图形 | 名字不变，实心改成描边（volume-2、volume-1、volume-x）。代码不用改，Iconfont 换上新图形就行。播放、暂停还是实心 |
 
 ## 按钮
@@ -536,6 +537,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | Inter 字体（模型选择栏的英文） | `--font-family`（苹方） | 改样式。和代码一致 |
 | 资产图 | 「业务组件 · 资产」页的 CoverGrid、FolderCard、ProjectCard、CreateCard；作品格用 ResultTile | 替换。是「我的资产」的卡片，不是画布节点 |
 | 图标 AudioGeneration · History · Guide | Audio · History · 不收 | AudioGeneration 用节点类型的 Audio；History 11-05 从 Hugeicons 补（history）；Guide 线上没用到，不收 |
+| CanvasHeader「⋯」的「在新窗口打开」· `onOpenInNewWindow` | 删掉 | 删除（11-05）。菜单只剩重命名、复制、删除 |
 
 ## Agent
 

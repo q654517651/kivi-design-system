@@ -32,7 +32,7 @@ import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground } from '.
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `size` | `28` `32` `36` | `32` | 高 28 / 32 / 36，圆角 6 / 8 / 8，文字 12 / 13 / 13。放进 ButtonGroup 默认 28 |
+| `size` | `28` `32` `36` | `32` | 高 28 / 32 / 36，圆角 6 / 8 / 8，文字 12 / 13 / 13。28：贴在图片、视频上的按钮条（ButtonGroup 32 里默认 28），浮层、卡片这类小容器里（技能面板、标注评论、点踩原因、Textarea 框内按钮）。32：默认，页面里的工具条、标题行（比如「查看全部」），ButtonGroup 44 / 56 里。36：弹窗底部的取消、确定 |
 | `variant` | `"primary"` `"secondary"` `"text"` `"danger"` `"on-media"` `"light"` | `"secondary"` | 主要 / 次要 / 文字 / 危险 / 浮层 / 轻。轻：底白 10%（同次要），文字和图标 50%，悬停、按下回到 100%，禁用 20%；没有大号和加载中 |
 | `leftIcon` | `IconName` | — | 左图标，28 的 16，32、36 的 20 |
 | `rightIcon` | `IconName` | — | 右图标，只放下拉箭头 `DownArrowSmall`，减弱一档（`--color-text-fill-tertiary`），和 Select 的箭头一样 |
@@ -48,7 +48,7 @@ import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground } from '.
 | `label` | `string` | — | 说明，必填，读屏和自带提示用 |
 | `round` | `boolean` | `false` | 圆形。只在特殊情况下用：只给「设计规则 · 按钮」名单里的专用按钮（SendButton 等），别的按钮一律方的 |
 | `tooltip` | `boolean` `{ content?, shortcut?, placement? }` | `true` | 自带的提示，内容是 `label`，悬停 500ms 出现、离 8。通用符号（关闭、更多、播放器、翻页箭头、搜索、清除）写 `false`；要换内容、带快捷键、换方向（收起的侧栏用 `right`）传对象。名单见「设计规则 · 提示」 |
-| `size` | `28` `32` `36` | `32` | 图标 16 / 20 / 20。轻没有 36。放进 ButtonGroup 默认 28 |
+| `size` | `28` `32` `36` | `32` | 图标 16 / 20 / 20。轻没有 36。28：贴在图片、视频上的按钮条（ButtonGroup 32 里默认 28），列表行里的「⋯」、新建，小浮层、卡片里的关闭、复制、翻页。32：默认，工具条、标题行，ButtonGroup 44 / 56 里。36：发送按钮 SendButton |
 | `variant` | `"primary"` `"secondary"` `"text"` `"on-media"` `"on-media-ghost"` `"light"` | `"text"` | 主要 / 次要 / 文字 / 浮层 / 浮层无底 / 轻。浮层无底：平时没有底、不模糊，悬停黑 40%、按下黑 60%，盖在图上的控制条（播放器）用。轻：没有底，图标 50%，悬停出白 14% 底（深底 Light 1 hover；放在带底的行里是 Light 2 hover 10%）、图标回到 100% |
 | `selected` | `boolean` | `false` | 选中：有开关的工具用，比如加粗。选中是常驻底色：深底上白 10%（`--color-bg-fill-container-light-1`），悬停 14%、按下 18% 照常，图标白，不变绿。主要没有。轻选中不换色，靠换实心图标表示（点赞、点踩），`aria-pressed` 照写。收藏按钮另加 `data-collected`，收藏了图标品牌绿 |
 | `loading` | `boolean` | `false` | 加载中：图标换成转圈（`Loading`），不响应悬停；鼠标和键盘（Enter、Space）都不再触发 `onClick`，也不提交表单。外观不变灰。比如下载、收藏点了之后等结果。轻没有 |
