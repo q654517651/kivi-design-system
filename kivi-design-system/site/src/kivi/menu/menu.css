@@ -58,7 +58,7 @@
       重命名中 data-editing，输入框 kv-menu-item__input（就是 Input）
   MenuLabel
     分组标题 kv-menu-label。能展开收起（data-collapsible）：标题按钮 kv-menu-label__title（aria-expanded），悬停这一行才出箭头；
-    右边按钮 kv-menu-label__action，悬停这一行才出现（收起时一直在）；
+    右边按钮 kv-menu-label__action，悬停这一行才出现（收起时一直在）；侧栏刚展开 300ms 带 data-expanding，贴右边的按钮先藏着；
     带 items 时标题和条目包成 kv-menu__group，条目放在 Collapse 里（kv-menu__group-items）。
     平铺里高 28，左 8（和导航图标对齐）右 6（按钮和「⋯」对齐）；收起（data-collapsed）左右 4，标题淡出，只留按钮
 
@@ -71,7 +71,7 @@
 */
 
 /* ---------- 菜单模板（容器） ---------- */
-/* 玻璃浮层：底 glass（#181818 50%），背景模糊 32，描边 border-subtle（8%），圆角 12，内边距 4，条目间距 4。
+/* 玻璃浮层：底 glass（#181818 65%），背景模糊 32，描边 border-subtle（8%），圆角 12，内边距 4，条目间距 4。
    圆角 12 = 条目圆角 8 + 内边距 4，里外的圆角才同心（2026-10-29 从 16 改，用户定）。
    下拉、右键、双击画布的快捷添加、子菜单、Select 的列表都是它。
    宽 120–240（Figma 里最窄 120、最宽 220），文字太长单行省略；最高 302 = 7.5 项（内边距 4 + 7 × (36 + 4) + 半项 18），
@@ -340,6 +340,11 @@
   display: none;
 }
 
+/* 侧栏刚展开（data-expanding，300ms）：「⋯」先不显示，等宽度定了再在原位出现，不跟着右边滑 */
+.kv-menu-item[data-expanding] > .kv-menu-item__more {
+  display: none;
+}
+
 /* 重命名中：文字换成 Input（高 32，右边「字数/上限」），占满左边图标、缩略图右边剩下的宽；
    条目不出悬停、选中底色，只看输入框 */
 .kv-menu-item[data-editing] {
@@ -425,11 +430,14 @@
   color: var(--color-text-fill-primary);
 }
 
-/* 收起：文字淡出，换成向下的箭头 DownArrow（和导航图标一样大），在 36 的格子正中（照即梦），和文字一样 100ms 淡出、展开时晚 150ms 淡入 */
+/* 收起：文字换成向下的箭头 DownArrow（和导航图标一样大），在 36 的格子正中（照即梦）。
+   钉在左 8（和导航图标一样），不跟着条目变窄往左滑，只换透明度；文字和箭头同时交叉淡化，淡出 100ms ease-in、淡入 100ms ease-out，不留空档（11-05 用户定） */
 .kv-menu-item > .kv-menu-item__fold {
   position: absolute;
-  inset: 0;
-  margin: auto;
+  top: 0;
+  bottom: 0;
+  left: var(--spacing-8);
+  margin: auto 0;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--motion-duration-100) var(--motion-ease-in);
@@ -441,7 +449,16 @@
 
 .kv-menu--plain .kv-menu-item[data-collapsed]:not([data-lead]) > .kv-menu-item__fold {
   opacity: 1;
-  transition: opacity var(--motion-duration-150) var(--motion-ease-out) var(--motion-duration-150);
+  transition: opacity var(--motion-duration-100) var(--motion-ease-out);
+}
+
+/* 「更多」的文字不等侧栏变宽（两个字放得下），和箭头同时换 */
+.kv-menu--plain .kv-menu-item:not([data-lead]) > span:not([class]) {
+  transition: opacity var(--motion-duration-100) var(--motion-ease-out);
+}
+
+.kv-menu--plain .kv-menu-item[data-collapsed]:not([data-lead]) > span:not([class]) {
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
 }
 
 /* ---------- MenuLabel ---------- */
@@ -527,27 +544,48 @@
 }
 
 .kv-menu-label:where(:hover, :has(:focus-visible), .is-hover) > .kv-menu-label__title > .kv-icon,
-.kv-menu-label:not([data-collapsed]):where(:hover, :has(:focus-visible), .is-hover) > .kv-menu-label__action {
+.kv-menu--plain .kv-menu-label:not([data-collapsed]):where(:hover, :has(:focus-visible), .is-hover) > .kv-menu-label__action {
   opacity: 1;
   transition: opacity var(--motion-duration-150) var(--motion-ease-out);
 }
 
-/* 收起：标题淡出，只留按钮 */
+/* 收起：标题换成按钮，同时交叉淡化：淡出 100ms ease-in、淡入 100ms ease-out，不留空档（11-05 用户定：一个淡出、一个晚点淡入，中间会黑一下） */
 .kv-menu-label[data-collapsed] > .kv-menu-label__title {
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
+  transition:
+    color var(--motion-duration-100) var(--motion-ease-in-out),
+    opacity var(--motion-duration-100) var(--motion-ease-in);
+}
+
+.kv-menu--plain .kv-menu-label__title {
+  transition:
+    color var(--motion-duration-100) var(--motion-ease-in-out),
+    opacity var(--motion-duration-100) var(--motion-ease-out);
 }
 
 /* 平铺（侧栏）里：高 28，左 8（和导航图标对齐）右 6（按钮和「⋯」对齐）。
-   收起：左右 4，图标栏里（宽 36）按钮 28 正好居中，侧栏收的时候它贴着右边滑过来 */
+   收起：按钮不跟着侧栏右边往左滑（11-05 用户定）：标题不占位，按钮直接在图标栏的位置（宽 36 的格子里离左 4，28 正好居中），和标题交叉淡化。
+   刚展开的 300ms（data-expanding）按钮还留在图标栏的位置淡出，等侧栏宽度定了再回右边（那时已经看不见） */
 .kv-menu--plain .kv-menu-label {
   padding: 0 var(--spacing-6) 0 var(--spacing-8);
-  transition: padding var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
-.kv-menu--plain .kv-menu-label[data-collapsed] {
-  padding: 0 var(--spacing-4);
+.kv-menu--plain .kv-menu-label:where([data-collapsed], [data-expanding]) > .kv-menu-label__title {
+  position: absolute;
+}
+
+.kv-menu--plain .kv-menu-label:where([data-collapsed], [data-expanding]) > .kv-menu-label__action {
+  margin-left: calc(var(--spacing-4) - var(--spacing-8));
+}
+
+.kv-menu--plain .kv-menu-label[data-collapsed] > .kv-menu-label__action {
+  transition: opacity var(--motion-duration-100) var(--motion-ease-out);
+}
+
+.kv-menu--plain .kv-menu-label[data-expanding] > .kv-menu-label__action {
+  opacity: 0;
+  transition: opacity var(--motion-duration-100) var(--motion-ease-in);
 }
 
 /* ---------- MenuDivider ---------- */

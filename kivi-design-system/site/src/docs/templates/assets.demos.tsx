@@ -88,7 +88,7 @@ function SectionHead({ title, children }: { title: string; children?: React.Reac
       <h2>{title}</h2>
       <div className="tpl-as__head-actions">
         {children}
-        <Button size={28} variant="text" rightIcon="RightArrowSmall">
+        <Button size={32} variant="text" rightIcon="RightArrowSmall">
           查看全部
         </Button>
       </div>
@@ -161,7 +161,7 @@ function AssetsPage() {
 
       <section className="tpl-as__section">
         <SectionHead title="我的画布">
-          <Button size={28} variant="text" leftIcon="AddSmall">
+          <Button size={32} variant="text" leftIcon="AddSmall">
             新建画布
           </Button>
         </SectionHead>

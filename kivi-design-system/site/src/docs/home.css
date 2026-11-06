@@ -5,17 +5,21 @@
   margin: 0 auto;
 }
 
-/* 背景（AsciiGlow）：铺满正文区上半截，往下淡掉；下面的组件不加底，直接叠在上面 */
+/* 背景（AsciiGlow）：铺满整个窗口上半截（从悬浮导航和顶部胶囊下面透过去，11-05），往下淡掉；下面的组件不加底，直接叠在上面。
+   往左伸出正文区、伸到窗口左边；横向超出的由外框裁掉（clip 不影响里面的 sticky） */
 main.doc:has(> .home),
 main.doc:has(.home) {
   position: relative;
-  overflow: hidden;
+}
+
+.shell-frame.is-home {
+  overflow-x: clip;
 }
 
 .home-bg {
   position: absolute;
   top: 0;
-  left: 0;
+  left: calc(var(--shell-nav-space) * -1);
   right: 0;
   height: 640px;
   pointer-events: none;
@@ -181,3 +185,9 @@ main.doc .home-title {
   }
 }
 
+/* 窄屏导航收成抽屉，正文从窗口左边开始，背景不用往左伸 */
+@media (max-width: 860px) {
+  .home-bg {
+    left: 0;
+  }
+}

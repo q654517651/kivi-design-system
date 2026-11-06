@@ -50,13 +50,35 @@ function HugeiconsLogo() {
 
 type Head = { id: string; text: string };
 
-/** 网站外壳：顶栏、左侧目录、正文、本页目录 */
+/** Logo、「设计规范」、版本号。宽屏放在悬浮导航顶上，窄屏导航收成抽屉时放顶栏 */
+function Brand({ className }: { className?: string }) {
+  return (
+    <div className={className ? `shell-brand ${className}` : 'shell-brand'}>
+      <NavLink className="shell-logo" to="/">
+        <Icon name="Logo" size={24} />
+        设计规范
+      </NavLink>
+      <span className="shell-badge">v{version}</span>
+    </div>
+  );
+}
+
+/** 网站外壳：悬浮导航（玻璃）、右上角三个胶囊、正文、本页目录。内容滑到顶部区域时出模糊带 */
 export function Layout() {
   const { pathname } = useLocation();
   const mainRef = useRef<HTMLElement>(null);
   const [heads, setHeads] = useState<Head[]>([]);
   const [current, setCurrent] = useState('');
   const [navOpen, setNavOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // 内容滑过顶部区域：出模糊带
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 0);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -100,23 +122,22 @@ export function Layout() {
   }, [heads]);
 
   return (
-    <div className={navOpen ? 'shell-root nav-open' : 'shell-root'}>
+    <div className={navOpen ? 'shell-root nav-open' : 'shell-root'} data-scrolled={scrolled ? '' : undefined}>
       <header className="shell-top">
         <IconButton icon="Sidebar" label="目录" className="shell-menu" onClick={() => setNavOpen(!navOpen)} />
-        <NavLink className="shell-logo" to="/">
-          <Icon name="Logo" size={24} />
-          设计规范
-        </NavLink>
-        <span className="shell-badge">v{version}</span>
+        <Brand className="shell-brand--top" />
         <span className="shell-spacer" />
-        <SearchButton />
-        <a href={HUGEICONS} target="_blank" rel="noopener">
+        {/* 右上角三个独立的玻璃胶囊 */}
+        <span className="shell-pill">
+          <SearchButton />
+        </span>
+        <a className="shell-pill" href={HUGEICONS} target="_blank" rel="noopener">
           <Button size={28} variant="text" tabIndex={-1}>
             <HugeiconsLogo />
             Hugeicons 图标库
           </Button>
         </a>
-        <a href={FIGMA} target="_blank" rel="noopener">
+        <a className="shell-pill" href={FIGMA} target="_blank" rel="noopener">
           <Button size={28} variant="text" tabIndex={-1}>
             <FigmaLogo />
             Figma 组件库
@@ -126,34 +147,37 @@ export function Layout() {
 
       <div className={pathname === '/' ? 'shell-frame is-home' : 'shell-frame'}>
         <nav className="shell-nav">
-          {NAV.map((g) => (
-            <div key={g.group}>
-              <div className="shell-nav-group">{g.group}</div>
-              {g.items.map((it) =>
-                it.path && it.load ? (
-                  <NavLink
-                    key={it.id}
-                    to={it.path}
-                    end
-                    className={({ isActive }) => (isActive ? 'shell-nav-item is-current' : 'shell-nav-item')}
-                  >
-                    <span className="shell-nav-label">
-                      <it.icon size={16} strokeWidth={1.75} aria-hidden="true" />
-                      {it.title}
+          <Brand className="shell-brand--nav" />
+          <div className="shell-nav-list">
+            {NAV.map((g) => (
+              <div key={g.group}>
+                <div className="shell-nav-group">{g.group}</div>
+                {g.items.map((it) =>
+                  it.path && it.load ? (
+                    <NavLink
+                      key={it.id}
+                      to={it.path}
+                      end
+                      className={({ isActive }) => (isActive ? 'shell-nav-item is-current' : 'shell-nav-item')}
+                    >
+                      <span className="shell-nav-label">
+                        <it.icon size={16} strokeWidth={1.75} aria-hidden="true" />
+                        {it.title}
+                      </span>
+                    </NavLink>
+                  ) : (
+                    <span key={it.id} className="shell-nav-item is-todo">
+                      <span className="shell-nav-label">
+                        <it.icon size={16} strokeWidth={1.75} aria-hidden="true" />
+                        {it.title}
+                      </span>
+                      <em>待迁移</em>
                     </span>
-                  </NavLink>
-                ) : (
-                  <span key={it.id} className="shell-nav-item is-todo">
-                    <span className="shell-nav-label">
-                      <it.icon size={16} strokeWidth={1.75} aria-hidden="true" />
-                      {it.title}
-                    </span>
-                    <em>待迁移</em>
-                  </span>
-                ),
-              )}
-            </div>
-          ))}
+                  ),
+                )}
+              </div>
+            ))}
+          </div>
         </nav>
 
         <main className="doc" ref={mainRef}>

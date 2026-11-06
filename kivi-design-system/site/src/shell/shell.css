@@ -10,6 +10,10 @@
 :root {
   --shell-mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   --shell-top: 56px;
+  /* 悬浮导航：离屏幕边 12，宽 232；正文左边让出 12 + 232 + 12 */
+  --shell-gap: var(--spacing-12);
+  --shell-nav-w: 232px;
+  --shell-nav-space: calc(var(--shell-nav-w) + var(--shell-gap) * 2);
 }
 
 *,
@@ -39,17 +43,77 @@ a {
 
 /* ---------- 顶栏 ---------- */
 
+/* 顶栏没有底，只摆右上角三个胶囊，正文从它下面透过去（11-05 用户定，照苹果官网）。
+   内容滑过顶部区域时（data-scrolled）后面出一条模糊带：玻璃底 + 模糊 32，下边渐隐，没有硬边 */
 .shell-top {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: var(--spacing-12);
+  gap: var(--spacing-8);
   height: var(--shell-top);
-  padding: 0 var(--spacing-24);
-  background: var(--color-bg-fill-base);
-  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
+  padding: 0 var(--spacing-16) 0 calc(var(--shell-nav-space) + var(--spacing-12));
+  pointer-events: none;
+}
+
+.shell-top > * {
+  pointer-events: auto;
+}
+
+.shell-top::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 calc(var(--spacing-24) * -1);
+  z-index: -1;
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  -webkit-mask-image: linear-gradient(#000 50%, transparent);
+  mask-image: linear-gradient(#000 50%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-200) var(--motion-ease-in-out);
+}
+
+.shell-root[data-scrolled] .shell-top::before {
+  opacity: 1;
+}
+
+/* 胶囊：玻璃底 + 描边，圆角拉满，里面放 28 的按钮，四周 4 */
+.shell-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-4);
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-round);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+}
+
+.shell-pill .kv-button,
+.shell-pill .kv-icon-button {
+  border-radius: var(--border-radius-round);
+}
+
+/* Logo、「设计规范」、版本号：宽屏在导航顶上，窄屏（导航收成抽屉）在顶栏 */
+.shell-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+}
+
+.shell-brand--top {
+  display: none;
+}
+
+.shell-brand--nav {
+  flex: none;
+  height: 44px;
+  padding: 0 var(--spacing-12);
 }
 
 .shell-logo {
@@ -96,19 +160,37 @@ a {
 
 /* ---------- 三栏 ---------- */
 
-/* 铺满屏幕宽：很多组件本身就宽，正文段落另外限宽方便阅读 */
+/* 铺满屏幕宽：很多组件本身就宽，正文段落另外限宽方便阅读。左边让出悬浮导航的位置 */
 .shell-frame {
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr) 200px;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  padding-left: var(--shell-nav-space);
 }
 
+/* 悬浮导航：离屏幕上、左、下各 12，圆角 16，玻璃底 + 描边（11-05 用户定，全站一样）。
+   Logo 行固定在顶上，下面的目录自己滚 */
 .shell-nav {
-  position: sticky;
-  top: var(--shell-top);
-  height: calc(100vh - var(--shell-top));
+  position: fixed;
+  top: var(--shell-gap);
+  left: var(--shell-gap);
+  bottom: var(--shell-gap);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  width: var(--shell-nav-w);
+  padding: var(--spacing-8) var(--spacing-8) 0;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+}
+
+.shell-nav-list {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: var(--spacing-8) var(--spacing-12) var(--spacing-32);
-  border-right: var(--border-width-1) solid var(--color-border-subtle);
+  padding-bottom: var(--spacing-24);
 }
 
 .shell-nav-group {
@@ -204,7 +286,7 @@ a.shell-nav-item:hover {
 
 main.doc {
   min-width: 0;
-  padding: 40px 48px 120px;
+  padding: calc(var(--shell-top) + 40px) 48px 120px;
 }
 
 .doc-eyebrow {
@@ -955,7 +1037,7 @@ a.shell-card:hover {
 /* 首页：不要右侧「本页」目录，正文铺开居中 */
 @media (min-width: 861px) {
   .shell-frame.is-home {
-    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .shell-frame.is-home .shell-toc {
@@ -964,14 +1046,14 @@ a.shell-card:hover {
 }
 
 .shell-frame.is-home main.doc {
-  padding-top: 56px;
+  padding-top: calc(var(--shell-top) + 56px);
 }
 
 /* ---------- 窄屏 ---------- */
 
 @media (max-width: 1200px) {
   .shell-frame {
-    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .shell-toc {
@@ -988,20 +1070,24 @@ a.shell-card:hover {
     display: inline-flex;
   }
 
-  .shell-frame {
-    grid-template-columns: minmax(0, 1fr);
+  .shell-brand--top {
+    display: flex;
   }
 
+  .shell-brand--nav {
+    display: none;
+  }
+
+  .shell-frame {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 0;
+  }
+
+  /* 窄屏：导航收成抽屉，从顶栏下面滑出来，还是悬浮的玻璃块 */
   .shell-nav {
-    position: fixed;
     top: var(--shell-top);
-    left: 0;
-    bottom: 0;
-    z-index: 15;
     width: 260px;
-    height: auto;
-    background: var(--color-bg-fill-surface);
-    transform: translateX(-100%);
+    transform: translateX(calc(-100% - var(--shell-gap) * 2));
     transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
   }
 
@@ -1010,7 +1096,7 @@ a.shell-card:hover {
   }
 
   main.doc {
-    padding: var(--spacing-24) var(--spacing-16) 80px;
+    padding: calc(var(--shell-top) + var(--spacing-24)) var(--spacing-16) 80px;
   }
 
   .shell-pg {
@@ -1031,6 +1117,17 @@ a.shell-card:hover {
 
 /* 手机宽：顶栏放不下，藏掉版本标签和「图标」两个字 */
 @media (max-width: 560px) {
+  /* 搜索入口这时不显示，空胶囊也藏掉 */
+  .shell-pill:has(.shell-search-ibtn) {
+    display: none;
+  }
+
+  /* 外链胶囊只留 Logo，不然挤出屏幕 */
+  .shell-pill .kv-button > span:has(> .shell-brand-logo) {
+    font-size: 0;
+    gap: 0;
+  }
+
   .shell-top {
     gap: var(--spacing-8);
   }

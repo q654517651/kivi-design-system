@@ -34,6 +34,20 @@
 .kv-icon--40 { width: 40px; height: 40px; }
 .kv-icon--64 { width: 64px; height: 64px; }
 
+/* Iconfont 字体图标（11-05，Icon.tsx 给 data-font）：字形跟着框的大小走。
+   组件常直接改 .kv-icon 的宽高（按钮的 --kv-icon-size 这类），所以字号不跟 size 写死，用容器高度（100cqh）撑满 */
+.kv-icon[data-font] {
+  container-type: size;
+  background-color: transparent;
+  -webkit-mask: none;
+  mask: none;
+}
+.kv-icon[data-font]::before {
+  display: block;
+  font-size: 100cqh;
+  line-height: 1;
+}
+
 /* 自带颜色的图标（Logo）直接画 SVG，不用蒙版 */
 .kv-icon[data-multicolor] {
   background-color: transparent;
