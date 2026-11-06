@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 const FIGMA = 'https://www.figma.com/design/bfXarGblevAYPh7a6nmXlt/KIVI-UI-KIT-V2';
 
 export interface PageHeaderProps {
-  /** 分组：基础 / 操作 / 导航 / 录入 / 展示 / 浮层 / 反馈 / 业务组件 */
+  /** 分组：基础 / 操作和导航 / 录入 / 展示 / 浮层和反馈 / 业务组件 */
   eyebrow: string;
   title: string;
   lead?: ReactNode;

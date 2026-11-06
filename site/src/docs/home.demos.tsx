@@ -128,7 +128,7 @@ const ATTACHMENTS: AttachmentItem[] = [
   { id: 'a1', type: 'image', name: '图片1', src: `${IMG}kivi-future-1x1.webp` },
   { id: 'a2', type: 'video', name: '视频1', src: `${IMG}kiwi-light-1x1.webp`, duration: '0:05' },
   { id: 'a3', type: 'image', name: '图片2', src: `${IMG}monstera-dots-1x1.webp` },
-  { id: 'a4', type: 'audio', name: '旁白.mp3', duration: '0:12' },
+  { id: 'a4', type: 'audio', name: '旁白.mp3', duration: '0:12', src: './placeholders/video/kivi-demo-9x16.mp4' },
   { id: 'a5', type: 'image', name: '图片3', src: `${IMG}ip-gouache-1x1.webp` },
   { id: 'a6', type: 'file', name: '分镜脚本.pdf', ext: 'PDF' },
 ];

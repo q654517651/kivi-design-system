@@ -370,7 +370,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | `SidebarMore` | 不带图标的 `MenuItem` | 平铺里自动是 12 号 tertiary |
 | 类名 `kv-sidebar-item`、`kv-sidebar-label`、`kv-sidebar-more` | `kv-menu-item`、`kv-menu-label`；平铺 `kv-menu--plain`，分组 `kv-menu__group` | — |
 
-## 导航
+## 选项卡
 
 选项卡、分段选择，旧组件库和代码里的对应到 TabItem。代码没改，前端按这张表改。
 
@@ -482,7 +482,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 - 代码里还没有尺寸档位：弹窗有 BaseModal、antd Modal、HeroUI Modal 三种写法，宽度都是各写各的。
 - 要按上面几档走，需要前端给弹窗加一个 size 参数，再把上面这些宽度改过去。
 
-## 反馈
+## 消息、加载和空态
 
 旧组件库和代码里的反馈类组件，对应到新组件的哪里。代码没改，前端按这张表改。
 
@@ -491,7 +491,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | 旧库 Toast · 成功 / 失败 / 提醒 | Toast · 成功 / 错误 / 警告 | 改样式 | 圆角 8 → 12，图标改成镂空圆 |
 | 旧库 Toast · 处理中（带「取消」） | Toast · 加载中 + 显示操作 | 合并 | 「取消」变成 Toast 的操作文字 |
 | 旧库 Toast · 鼠标悬浮提示 | Tooltip · 说明 | 替换 | 悬停时解释东西的是 Tooltip，不是 Toast |
-| 旧库 封装背景提醒 / 封装素材提醒（黄底条） | Banner · 警告 | 替换 | 页面里常驻的提醒条统一用 Banner（反馈页） |
+| 旧库 封装背景提醒 / 封装素材提醒（黄底条） | Banner · 警告 | 替换 | 页面里常驻的提醒条统一用 Banner（消息页） |
 | 代码 message（antd，#2b2d31，14 号，约 130 处） | Toast | 改样式 | 底色换弹层色，圆角 12，图标按新库 |
 | 代码 Spinner（HeroUI，约 20 处） | Loading | 改样式 | 统一用图标库的 Loading，尺寸 16 / 24 / 40 |
 | 代码 CustomSkeleton · LoadingSkeleton · HeroUI Skeleton · 技能市场手写 | Skeleton | 合并 | 底色 `container-light-1`，扫光 `fill-3`，1.4 秒一轮 |
@@ -557,7 +557,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | MediaStack（结果叠放，11-03 前） | MediaGroup | 合并 | 叠放 ↔ 两列展开，点了定位节点；MediaStack 删了 |
 | ProcessDrawer（`open`、`distance`） | Collapse（`open`、`distance`、`gap`） | 合并 | 通用的展开收起，挪到 `kivi/collapse/`；类名 `kv-process-drawer` → `kv-collapse` |
 
-## 生成
+## 创作输入框
 
 #### 主站输入框
 
@@ -594,6 +594,33 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | `Dropzone`（一直摆着的虚线上传区） | `DropOverlay`（拖进输入框才出现） | 11-04 删：没地方用。拖入高亮的三个变量 `--kv-drop-*` 也删了，DropOverlay 改成 border-strong 描边 + 浮卡，不再用品牌绿和淡底 |
 | NodeStack 叠层 | 和 MediaGroup 一样：右错 4 / 8、转 2° / 4°、底 `container-light-1-pressed`（`fill-4`） | 展开交互不变 |
 | 类名 `kv-node-toolbar*`、`kv-toolbar-divider`、`kv-toolbar-switch`、`kv-reference-add-slot`、`kv-param-value*`、`kv-node-panel__refs`、`kv-button-group__divider`、`kv-menu-divider` | 删掉 | — |
+
+## 删除（11-06）
+
+| 组件 | 删了什么 | 怎么改 |
+|---|---|---|
+| QuestionPanel | 「全部由 AI 决策」按钮：`aiDecide`、`aiDecideText`、`onAiDecide` | 删掉这三个属性，以后也不会有；底部只剩「忽略」和「确认提交」 |
+| AskRecord | `skippedText="交给 AI 决策"` 这种用法 | 不再传，跳过时用默认「已跳过」 |
+
+## 页面改名（11-06）
+
+目录再理一轮：通用组件从六组收成四组，名字和页名不再重复，太大的页拆开，放错页的组件挪回去。只挪位置、改页名，组件名、属性、样子和 `src/kivi/` 的文件夹都没变，`import { X } from '@kivi'` 照旧能用。旧地址打开会自动跳到新页。
+
+| 旧 | 新 |
+|---|---|
+| 分组「操作」「导航」 | 合成「操作和导航」：按钮、菜单、选项卡 |
+| 分组「浮层」「反馈」 | 合成「浮层和反馈」：提示、弹窗、消息、加载和空态 |
+| 导航页（TabItem、Tabs，`/components/navigation`） | 选项卡（`/components/tabs`） |
+| 滚动条页（ScrollArea，`/components/scroll-area`） | 并进「布局」（`/components/layout`） |
+| 反馈页（`/components/feedback`）：Toast、Notification、Banner | 消息（`/components/messages`） |
+| 反馈页：Loading、Skeleton、EmptyState | 加载和空态（`/components/loading-empty`） |
+| 标签和头像页的 AssetThumb | 图片和视频 |
+| 生成页：PromptBox、GenerateButton、PromptInput | 创作输入框（`/business/prompt-box`） |
+| 生成页：Lora、参数、模型、技能这些控件 | 参数和模型（地址还是 `/business/generation`） |
+| 生成页的 DropOverlay | 上传 |
+| Agent 对话页的 SendButton | 按钮 |
+| 主站页（GenPrompt、GenPromptRefs、ResultTile，`/business/main-site`） | 生成记录（`/business/records`） |
+| Agent 过程页的 MediaGroup | 生成记录 |
 
 ## 页面改名（11-04）
 

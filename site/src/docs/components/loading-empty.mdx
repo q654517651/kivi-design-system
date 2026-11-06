@@ -1,0 +1,74 @@
+import { Demo, PageHeader } from '@shell';
+import { EmptyStatePlayground, LoadingPlayground, SkeletonPlayground } from './loading-empty.demos';
+
+<PageHeader
+  eyebrow="浮层和反馈"
+  title="加载和空态"
+  figma={['反馈', '177:714']}
+  code="kivi/feedback"
+/>
+
+## Loading
+
+加载：不知道内容长什么样时等待用，比如技能面板加载中。
+
+<LoadingPlayground />
+
+## Skeleton
+
+骨架屏：知道内容长什么样时等待用，比如图片加载中。
+
+<SkeletonPlayground />
+
+### 一条带头像的卡片
+
+<Demo code={`
+<div style={{ display: 'grid', gridTemplateColumns: '40px 1fr', gap: 'var(--spacing-12)', width: 320, maxWidth: '100%' }}>
+  <Skeleton variant="circle" width={40} height={40} />
+  <div style={{ display: 'grid', gap: 'var(--spacing-8)', alignContent: 'center' }}>
+    <Skeleton variant="text" width="60%" />
+    <Skeleton variant="text" />
+  </div>
+  <Skeleton variant="rect" height={160} style={{ gridColumn: '1 / -1' }} />
+</div>
+`} />
+
+## EmptyState
+
+空状态：没内容、没收藏、没网络、加载失败时占位，比如技能「我的」为空。
+
+<EmptyStatePlayground />
+
+## 参数
+
+### Loading
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `size` | `16` `24` `40` | `16` | 图标大小。16：横排，字 12 / 20，间距 8。24：竖排，字 13 / 20，间距 8。40：竖排，字 14 / 22，间距 12 |
+| `children` | `ReactNode` | — | 文字，比如「加载中…」，不传就只有转圈。颜色 `--color-text-fill-secondary`，图标 `--color-text-fill-primary`。没有文字时读屏默认读「加载中」，自己传 `aria-label` 就用自己的 |
+
+图标是图标库的 `Loading`，1 秒一圈，匀速。按钮里的加载用 Button 的 `loading`，不用它。其余原生 `<div>` 属性都能传。
+
+### Skeleton
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `variant` | `"rect"` `"circle"` `"text"` | `"rect"` | 矩形（图片、卡片，圆角 8 `--border-radius-8`）/ 圆形（头像，`--border-radius-round`）/ 文字行（高 12，圆角 4 `--border-radius-4`） |
+| `width` | `number` `string` | — | 照真实内容，数字按 px，也可以写 `'60%'`。文字行不写就撑满一行 |
+| `height` | `number` `string` | — | 照真实内容。文字行默认 12，不用写 |
+
+底色 `--color-bg-fill-container-light-1`（白 10%）；扫光从左往右，白 14%（`--color-bg-fill-container-light-1-hover`），1.4 秒一轮，匀速；系统开了「减少动态效果」时只留底色。其余原生 `<div>` 属性都能传。
+
+### EmptyState
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"empty"` `"favorite"` `"offline"` `"failed"` | `"empty"` | 暂无内容 / 暂无收藏 / 无网络 / 生成失败。换的是 IP 图，样式一样 |
+| `size` | `160` `96` | `160` | 插图边长。160（页面、大面板）：间距 16，标题 16 / 24 粗 primary，描述 14 / 22 tertiary。96（下拉、侧栏）：间距 8，标题 14 / 22 粗 secondary，描述 12 / 20 tertiary。标题和描述间距都是 4 |
+| `title` | `ReactNode` | — | 标题，必填，一句话说清楚现在是什么情况 |
+| `description` | `ReactNode` | — | 说明，写清楚下一步做什么。下拉里不要 |
+| `action` | `ReactNode` | — | 引导操作，放一个 32 的轻 `Button`（占位处的按钮都减弱一档，文字灰），离文字 24 |
+| `image` | `string` | — | 换一张插图的地址；不传就按 `type` 取 `EMPTY_STATE_IMAGES` |
+
+四张 IP 图在 `assets/empty-state/`（`empty.png` · `no-favorites.png` · `offline.png` · `failed.png`，320×320），项目里放到自己的静态目录后改 `EMPTY_STATE_IMAGES`。插图背后有绿色光晕，脚下有地面阴影。其余原生 `<div>` 属性（除 `title`）都能传。

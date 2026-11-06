@@ -10,7 +10,6 @@ import {
   QuestionOption,
   QuestionPanel,
   ReferenceItem,
-  SendButton,
   UserMessage,
   type FileCardType,
   type AskRecordStatus,
@@ -25,7 +24,7 @@ type Update = (patch: Partial<PlaygroundState>) => void;
 
 // ---------- AskRecord ----------
 
-type AskRecordState = { status: AskRecordStatus; kind: string; skipped: string; expand: string };
+type AskRecordState = { status: AskRecordStatus; kind: string; expand: string };
 
 function renderAskRecord(s: AskRecordState, update: Update) {
   const items =
@@ -39,7 +38,6 @@ function renderAskRecord(s: AskRecordState, update: Update) {
     <AskRecord
       status={s.status === 'answered' ? undefined : s.status}
       items={s.status === 'answered' ? items : items.map(({ question }) => ({ question }))}
-      skippedText={s.status === 'skipped' && s.skipped === 'ai' ? '交给 AI 决策' : undefined}
       expanded={s.expand === 'yes'}
       onExpandedChange={(v) => update({ expand: v ? 'yes' : 'no' })}
     />
@@ -52,10 +50,8 @@ export function AskRecordPlayground() {
       controls={[
         { key: 'status', label: '状态', type: 'segment', value: 'answered', options: [['asking', '询问中'], ['answered', '已询问'], ['skipped', '询问（跳过）']] },
         { key: 'kind', label: '内容', type: 'segment', value: 'question', options: [['question', '问题卡'], ['confirm', '生成确认']] },
-        { key: 'skipped', label: '怎么跳过的', type: 'segment', value: 'skip', options: [['skip', '直接发了新消息'], ['ai', '交给 AI 决策']] },
         { key: 'expand', label: '展开', type: 'segment', value: 'yes', options: [['no', '否'], ['yes', '是']] },
       ]}
-      rules={(s) => (s.status === 'skipped' ? {} : { skipped: true })}
       render={renderAskRecord}
     />
   );
@@ -170,12 +166,10 @@ type QuestionPanelState = {
   pager: boolean;
   other: boolean;
   skip: boolean;
-  aiDecide: boolean;
   disabled: boolean;
   title: string;
   pagerText: string;
   skipText: string;
-  aiDecideText: string;
   submitText: string;
 };
 
@@ -187,15 +181,13 @@ export function QuestionPanelPlayground() {
         { key: 'pager', label: '显示分页', type: 'toggle', value: true },
         { key: 'other', label: '显示其他输入', type: 'toggle', value: true },
         { key: 'skip', label: '显示忽略', type: 'toggle', value: true },
-        { key: 'aiDecide', label: '显示全部由 AI 决策', type: 'toggle', value: true },
         { key: 'disabled', label: '提交中（禁用）', type: 'toggle', value: false },
         { key: 'title', label: '题目', type: 'text', value: '1. 你喜欢小猫吗？（2 个选项）' },
         { key: 'pagerText', label: '分页', type: 'text', value: '1/5' },
         { key: 'skipText', label: '忽略文字', type: 'text', value: '忽略' },
-        { key: 'aiDecideText', label: '全部由 AI 决策文字', type: 'text', value: '全部由 AI 决策' },
         { key: 'submitText', label: '提交文字', type: 'text', value: '确认提交' },
       ]}
-      rules={(s) => ({ ...(s.pager ? {} : { pagerText: true }), ...(s.skip ? {} : { skipText: true }), ...(s.aiDecide ? {} : { aiDecideText: true }) })}
+      rules={(s) => ({ ...(s.pager ? {} : { pagerText: true }), ...(s.skip ? {} : { skipText: true }) })}
       render={(s) => (
         <QuestionPanel
           key={s.mode}
@@ -204,8 +196,6 @@ export function QuestionPanelPlayground() {
           multiple={s.mode === 'multi' || undefined}
           skip={s.skip ? undefined : false}
           skipText={s.skipText === '忽略' ? undefined : s.skipText}
-          aiDecide={s.aiDecide ? undefined : false}
-          aiDecideText={s.aiDecideText === '全部由 AI 决策' ? undefined : s.aiDecideText}
           submitText={s.submitText === '确认提交' ? undefined : s.submitText}
           disabled={s.disabled || undefined}
           defaultValue={s.mode === 'multi' ? ['1', '2'] : ['1']}
@@ -222,13 +212,11 @@ export function QuestionPanelPlayground() {
 /** 追问的来回：问的时候面板停在输入框的位置，消息里是「询问中」；提交后面板消失，留「已询问」，忽略了留「询问」 */
 export function QuestionFlowDemo() {
   const [phase, setPhase] = useState<'asking' | 'sending' | 'answered' | 'skipped'>('asking');
-  const [byAi, setByAi] = useState(false);
   const text = { color: 'var(--color-text-fill-primary)', fontSize: 'var(--font-size-14)', lineHeight: 'var(--font-line-height-22)' };
   const question = '1. 你喜欢小猫吗？（2 个选项）';
 
   // 假提交：禁用 600ms 再收起
-  const finish = (result: 'answered' | 'skipped', ai = false) => {
-    setByAi(ai);
+  const finish = (result: 'answered' | 'skipped') => {
     setPhase('sending');
     window.setTimeout(() => setPhase(result), 600);
   };
@@ -241,7 +229,7 @@ export function QuestionFlowDemo() {
           <div style={text}>好的，马上为你同时生成 10 张小狗图片！</div>
           {phase === 'answered' || phase === 'skipped' ? (
             <>
-              <AskRecord status={phase} items={[{ question, answer: '喜欢' }]} skippedText={byAi ? '交给 AI 决策' : undefined} />
+              <AskRecord status={phase} items={[{ question, answer: '喜欢' }]} />
               <Button onClick={() => setPhase('asking')}>重新演示</Button>
             </>
           ) : (
@@ -255,7 +243,6 @@ export function QuestionFlowDemo() {
                 disabled={phase === 'sending'}
                 onSubmit={() => finish('answered')}
                 onSkip={() => finish('skipped')}
-                onAiDecide={() => finish('skipped', true)}
               >
                 <QuestionOption value="1">喜欢</QuestionOption>
                 <QuestionOption value="2">不喜欢</QuestionOption>
@@ -347,25 +334,6 @@ export function ActionCardPlayground() {
       ]}
       rules={(s) => (s.type === 'confirm' ? {} : { secondary: true })}
       render={renderActionCard}
-    />
-  );
-}
-
-// ---------- SendButton ----------
-
-type SendButtonState = { state: string };
-
-function sendButton(state: string) {
-  // 悬停、按下是摆静态样子用的（is-hover / is-active），项目里不用写
-  const cls = state === 'hover' ? 'is-hover' : state === 'active' ? 'is-active' : undefined;
-  return <SendButton className={cls} disabled={state === 'disabled' || undefined} generating={state === 'busy' || undefined} />;
-}
-
-export function SendButtonPlayground() {
-  return (
-    <Playground<SendButtonState>
-      controls={[{ key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['active', '按下'], ['disabled', '禁用'], ['busy', '生成中']] }]}
-      render={(s) => sendButton(s.state)}
     />
   );
 }

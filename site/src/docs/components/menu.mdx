@@ -2,7 +2,7 @@ import { Demo, PageHeader } from '@shell';
 import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlayground } from './menu.demos';
 
 <PageHeader
-  eyebrow="导航"
+  eyebrow="操作和导航"
   title="菜单"
   figma={['菜单', '1083:7636']}
   code="kivi/menu"
@@ -26,7 +26,7 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 () => {
   const [count, setCount] = useState('x4');
   return (
-    <Menu role="listbox" width={120}>
+    <Menu role="listbox" width={160}>
       {['x4', 'x2', 'x1'].map((v) => (
         <MenuItem key={v} selected={count === v} onClick={() => setCount(v)}>{v}</MenuItem>
       ))}
@@ -96,7 +96,7 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `variant` | `"default"` `"plain"` | `"default"` | 默认（玻璃浮层）/ 平铺。平铺不带玻璃底、描边、内边距、圆角，条目间距 2，撑满外面，不限宽高、不滚动，给侧栏这种直接铺在页面上的地方用；条目、分组标题的尺寸和选中写法跟着变，见 MenuItem、MenuLabel |
-| `width` | `number` `string` | — | 宽 120–240（有两行菜单项的最宽 320），最高 7.5 项（302），多了滚动，最后露半条提示能滚。数字按 px，不写就跟着内容（平铺的撑满外面） |
+| `width` | `number` `string` | — | 宽 160–240（有两行菜单项的最宽 320），最高 7.5 项（302），多了滚动，最后露半条提示能滚。数字按 px，不写就跟着内容（平铺的撑满外面） |
 | `role` | `"menu"` `"listbox"` | `"menu"` | 菜单 / 单选列表。单选列表的每项传 `selected`。平铺的不写 `role` |
 
 默认款是玻璃浮层：`--color-bg-fill-glass`，模糊 `--effect-glass-blur`（32），描边 `--color-border-subtle`，圆角 12，内边距 4，条目间距 4，不加阴影。其余原生 `<div>` 属性都能传。

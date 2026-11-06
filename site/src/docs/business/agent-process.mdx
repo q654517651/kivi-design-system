@@ -1,6 +1,5 @@
 import { Demo, PageHeader } from '@shell';
 import {
-  MediaGroupPlayground,
   ProcessGroupPlayground,
   ProcessGroupSim,
   ProcessRowPlayground,
@@ -51,12 +50,6 @@ import {
 ### 思考中，流式输出
 
 <Demo noCode scope={{ ThinkingSim }} code={`<ThinkingSim />`} />
-
-## MediaGroup
-
-生成结果组：Agent 一次生成的多张图或视频，叠成一摞，点开看全部。
-
-<MediaGroupPlayground />
 
 ## 分组
 
@@ -116,22 +109,6 @@ Agent 两段话之间连续调的工具算一组。进行中只占一行，显�
 | `expanded` | `boolean` | — | 展开：受控。思考中一直展开，这个只管思考完成之后 |
 | `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
-
-### MediaGroup
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `items` | `MediaGroupItem[]` | — | 这一组结果，按生成顺序。每项 `id`、`src`（视频传封面）、`ratio`（数字或「16:9」，限制 9:16–16:9，默认 1:1）、`status`（`done` / `failed`）、`name`（悬停显示在左下） |
-| `type` | `"image"` `"video"` | `"image"` | 产出类型，决定标题行的图标和文字 |
-| `title` | `ReactNode` | 按结果算 | 标题行，比如「图片已生成 ×2，图片生成失败 ×3」 |
-| `failedTitle` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败的那几张：标题。失败态就是 EmptyState 生成失败 · 96，和结果格、节点一样；格子矮于 170（16:9 这类）放不下插图，只留文字 |
-| `failedDescription` | `ReactNode` | — | 失败的那几张：副标题 |
-| `expanded` | `boolean` | — | 展开：受控。只有一张时不叠放，直接平铺 |
-| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
-| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
-| `onItemClick` | `(item: MediaGroupItem) => void` | — | 展开后点某一张。画布里用来定位到节点 |
-
-叠放：封面取第一张成功的，比例跟封面；后两层往右错开 4、8，旋转 2°、4°，底白 18% `container-light-1-pressed`。展开是瀑布流，至少两列，宽了列数增加（列最小宽 182、间距 12），展开收起卡片只动 transform，容器高度用同一条缓动 `--motion-ease-expand`、同一个时长；展开 400 起每张 +10、最多 700，收起固定 300。
 
 ## 对照表
 

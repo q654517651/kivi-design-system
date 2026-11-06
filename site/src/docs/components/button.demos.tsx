@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Divider, cx, IconButton, type ButtonSize, type ButtonVariant, type IconButtonSize, type IconButtonVariant, type IconName } from '@kivi';
+import { Button, ButtonGroup, Divider, cx, IconButton, SendButton, type ButtonSize, type ButtonVariant, type IconButtonSize, type IconButtonVariant, type IconName } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 
 // 按钮页的三个属性面板：所有尺寸、类型、状态都在面板里切。参数表在 button.mdx
@@ -169,3 +169,21 @@ export function ButtonGroupPlayground() {
   );
 }
 
+// ---------- SendButton ----------
+
+type SendButtonState = { state: string };
+
+function sendButton(state: string) {
+  // 悬停、按下是摆静态样子用的（is-hover / is-active），项目里不用写
+  const cls = state === 'hover' ? 'is-hover' : state === 'active' ? 'is-active' : undefined;
+  return <SendButton className={cls} disabled={state === 'disabled' || undefined} generating={state === 'busy' || undefined} />;
+}
+
+export function SendButtonPlayground() {
+  return (
+    <Playground<SendButtonState>
+      controls={[{ key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['active', '按下'], ['disabled', '禁用'], ['busy', '生成中']] }]}
+      render={(s) => sendButton(s.state)}
+    />
+  );
+}

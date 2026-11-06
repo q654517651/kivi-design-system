@@ -1,5 +1,5 @@
 import { PageHeader } from '@shell';
-import { AssetThumbPlayground, AvatarPlayground, TagPlayground } from './tags-avatar.demos';
+import { AvatarPlayground, TagPlayground } from './tags-avatar.demos';
 
 <PageHeader
   eyebrow="展示"
@@ -19,12 +19,6 @@ import { AssetThumbPlayground, AvatarPlayground, TagPlayground } from './tags-av
 头像：显示用户，比如主站右上角。
 
 <AvatarPlayground />
-
-## AssetThumb
-
-素材缩略图：在小地方显示一个素材，比如 @ 引用、菜单项、参考格。
-
-<AssetThumbPlayground />
 
 ## 参数
 
@@ -54,16 +48,3 @@ import { AssetThumbPlayground, AvatarPlayground, TagPlayground } from './tags-av
 | `initial` | `string` | `name` 第一个字 | 首字，文字类型用 |
 
 圆角 `--border-radius-round`。其余原生 `<span>` 属性都能传。
-
-### AssetThumb
-
-序号、时长这类角标由外层叠加，不放进来。没有悬停、按下、禁用。
-
-| 属性 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `size` | `16` `24` `56` `72` | `16` | 圆角 4 / 4 / 8 / 8（`--border-radius-4` · `--border-radius-8`），占位图标 12 / 12 / 24 / 24 |
-| `type` | `"image"` `"icon"` | `"image"` | 图片（图片、视频首帧，铺满）/ 图标（白 10% 底 + 图标，不透明度 30%；音频用它，图标 `Music`）。两种都有 1 的内描边 `--color-border-subtle` |
-| `src` | `string` | — | 图片类型的图片地址 |
-| `icon` | `IconName` | `"Message"` | 图标类型的图标：对话用 `Message`，画布用 `Canvas`，音频用 `Music` |
-
-其余原生 `<span>` 属性都能传。
