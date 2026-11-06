@@ -77,7 +77,7 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   Template: { means: '模板' },
   Pack: { means: '打包、素材包、封装', note: 'lucide/package（10-29 从 box 换）' },
   Subtitle: { means: '字幕、srt、文本轨', note: 'FileCard 字幕文件（srt）用' },
-  // 生成与 AI（17）
+  // 生成与 AI（19，Mdoel、Auto 写在下面「模型 Logo」前面，11-05 从模型 Logo 挪过来）
   Text: { means: '文本节点', note: '自绘；不要用于字号设置（用 FontSize）；旧名 text' },
   ImageGeneration: { means: '图片生成', note: '自绘' },
   VideoGeneration: { means: '视频生成', note: '自绘' },
@@ -135,8 +135,9 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   ZoomOut: { means: '缩小' },
   Snap: { means: '吸附', note: '旧名 Snap1 已合并到这里' },
   DisableSnap: { means: '关闭吸附', note: '自绘：Snap 加斜线，斜线两侧留缝' },
-  ShowConnections: { means: '显示连线', note: '旧名 ShowConnections-1 已合并到这里' },
+  ShowConnections: { means: '显示连线' },
   HideConnections: { means: '隐藏连线' },
+  AutoLayout: { means: '整理画布', note: 'Hugeicons dashboard-square-02（11-05 补，线上用的 ShowConnections-1）' },
   Group: { means: '编组' },
   UnGroup: { means: '取消编组' },
   AddToCanvas: { means: '添加到画布', note: '自绘' },
@@ -195,9 +196,9 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   AITools: { means: 'AI 工具、应用', note: '主站侧栏「AI工具」用' },
   Sidebar: { means: '侧栏、收起、展开', note: '主站侧栏收起 / 展开用' },
   Kiwi: { means: '猕猴桃、积分、余额、消耗', note: '主站积分余额、生成按钮消耗用；颜色跟随所在位置，余额处用品牌绿' },
-  // 模型 Logo（13）
-  Mdoel: { means: '模型 Logo', note: '名字拼错了，应为 Model；代码里在用，改名前要和后端确认', tag: '先不改' },
-  Auto: { means: '模型 Logo' },
+  Mdoel: { means: '模型偏好、选择模型（入口按钮）', note: '名字拼错了，应为 Model；代码里在用，改名前要和后端确认', tag: '先不改' },
+  Auto: { means: 'Agent 自动生成模式' },
+  // 模型 Logo（11）
   Gemini: { means: '模型 Logo' },
   Openai: { means: '模型 Logo' },
   Bytedance: { means: '模型 Logo' },
@@ -227,7 +228,7 @@ export const GROUP_INFO: Record<string, { id: string; desc: string }> = {
   '比例': { id: 'ic-ratio', desc: '生成参数里的画面比例。名字里的数字就是比例，比如 Square169 = 16:9。' },
   '对话与反馈': { id: 'ic-chat', desc: 'AI 对话里的点赞点踩、收藏、复制 Trace ID、思考过程、工具调用（查看、知识库、记忆）、反馈。' },
   '系统': { id: 'ic-system', desc: '首页、文档、语言、日历，主站侧栏导航（创作、探索、AI 工具、收起侧栏），积分（Kiwi）等全局入口。' },
-  '模型 Logo': { id: 'ic-models', desc: '模型品牌 Logo，保持原样，不按 Lucide 重画。名字来自后端的模型配置，不要改名（Mdoel 拼错了也先不改，改之前要和后端确认）。' },
+  '模型 Logo': { id: 'ic-models', desc: '模型品牌 Logo，保持原样，不按 Lucide 重画。名字来自后端的模型配置，不要改名。' },
   '品牌': { id: 'ic-brand', desc: 'KIVI 字标等品牌图形。不进 Icon 统一组件，单独用；颜色已绑变量。' },
 };
 

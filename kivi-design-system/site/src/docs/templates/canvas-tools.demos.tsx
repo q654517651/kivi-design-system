@@ -27,6 +27,7 @@ import {
   VideoPlayer,
   placeholderImageSrc,
   type AttachmentItem,
+  type CropRect,
   type SelectOption,
 } from '@kivi';
 import { TemplateFrame } from './frame';
@@ -155,57 +156,127 @@ const CROP_RATIOS: SelectOption[] = [
 ];
 const EXPAND_RATIOS: SelectOption[] = [{ value: 'free', label: '自由比例', icon: 'AutoAspect' }, ...CROP_RATIOS.slice(1)];
 
-/** 宽 × 高：两个数字框，中间一个乘号 */
-function SizeInputs({ name, w, h, onW, onH, lock }: { name: string; w: string; h: string; onW: (v: string) => void; onH: (v: string) => void; lock?: ReactNode }) {
+/** 演示原图 2048 × 2048（1:1） */
+const SOURCE = 2048;
+
+/** 比例名换成宽 / 高：原图比例是 1（演示图 1:1），自由比例是 null */
+function ratioOf(value: string | null): number | null {
+  if (value === 'original') return 1;
+  const m = value?.match(/^(\d+):(\d+)$/);
+  return m ? Number(m[1]) / Number(m[2]) : null;
+}
+
+/** 以 (cx, cy) 为中心放一个 w × h 的框，出了 bounds 就挪回来 */
+function centered(cx: number, cy: number, w: number, h: number, b: CropRect): CropRect {
+  return { w, h, x: Math.min(Math.max(cx - w / 2, b.x), b.x + b.w - w), y: Math.min(Math.max(cy - h / 2, b.y), b.y + b.h - h) };
+}
+
+/** 尺寸数字框：打字时先存着，失焦或 Enter 才提交（照线上）；提交不了的回到原值 */
+function SizeField({ label, value, onCommit }: { label: string; value: number; onCommit: (v: number) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
   return (
-    <>
-      <NumberInput className="tpl-tool__size" aria-label={`${name}宽度`} min={128} max={8192} value={w} onChange={onW} />
-      {lock ?? <span className="tpl-tool__times">×</span>}
-      <NumberInput className="tpl-tool__size" aria-label={`${name}高度`} min={128} max={8192} value={h} onChange={onH} />
-    </>
+    <NumberInput
+      className="tpl-tool__size"
+      aria-label={label}
+      value={draft ?? String(value)}
+      onChange={setDraft}
+      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+      onBlur={(e) => {
+        e.preventDefault();
+        const n = Number(draft);
+        if (draft && n > 0) onCommit(n);
+        setDraft(null);
+      }}
+    />
   );
 }
 
+const CROP_STAGE = 256;
+const CROP_SCALE = SOURCE / CROP_STAGE;
+const CROP_BOUNDS: CropRect = { x: 0, y: 0, w: CROP_STAGE, h: CROP_STAGE };
+const CROP_START: CropRect = { x: 32, y: 32, w: 192, h: 192 };
+
 function CropMode() {
-  const [w, setW] = useState('1024');
-  const [h, setH] = useState('1024');
-  const [ow, setOw] = useState('2048');
-  const [oh, setOh] = useState('2048');
+  const [rect, setRect] = useState(CROP_START);
   const [locked, setLocked] = useState(true);
   const [ratio, setRatio] = useState<string | null>('original');
+  // 解锁再锁上、没选比例时，锁的是锁上那一刻的比例
+  const [freeRatio, setFreeRatio] = useState(1);
+  // 图片缩放：没改过就跟着裁剪尺寸走
+  const [scale, setScale] = useState<{ w: number; h: number } | null>(null);
+
+  const lockRatio = locked ? (ratioOf(ratio) ?? freeRatio) : null;
+  const out = { w: Math.round(rect.w * CROP_SCALE), h: Math.round(rect.h * CROP_SCALE) };
+  const shown = scale ?? out;
+  const change = (next: CropRect) => (setRect(next), setScale(null));
+
+  // 裁剪宽高：夹到 [128, 原图]，锁比例时按比例算另一边，以原来的中心放
+  const commitSize = (side: 'w' | 'h', v: number) => {
+    const n = Math.min(Math.max(v, 128), SOURCE) / CROP_SCALE;
+    let w = side === 'w' ? n : lockRatio ? n * lockRatio : rect.w;
+    let h = side === 'h' ? n : lockRatio ? n / lockRatio : rect.h;
+    const fit = Math.min(1, CROP_STAGE / w, CROP_STAGE / h);
+    w *= fit;
+    h *= fit;
+    change(centered(rect.x + rect.w / 2, rect.y + rect.h / 2, w, h, CROP_BOUNDS));
+  };
+  // 图片缩放：夹到 [128, 8192]，按裁剪比例联动另一边
+  const commitScale = (side: 'w' | 'h', v: number) => {
+    const n = Math.min(Math.max(v, 128), 8192);
+    setScale(side === 'w' ? { w: n, h: Math.round((n * out.h) / out.w) } : { w: Math.round((n * out.w) / out.h), h: n });
+  };
+  // 选比例：锁上，按比例取放得下的最大框，以原来的中心放；原图比例是整张图
+  const pickRatio = (v: string | null) => {
+    const r = ratioOf(v) ?? 1;
+    setRatio(v);
+    setLocked(true);
+    const w = Math.min(CROP_STAGE, CROP_STAGE * r);
+    change(v === 'original' ? CROP_BOUNDS : centered(rect.x + rect.w / 2, rect.y + rect.h / 2, w, w / r, CROP_BOUNDS));
+  };
+  const toggleLock = () => {
+    if (locked) setRatio(null);
+    else setFreeRatio(rect.w / rect.h);
+    setLocked(!locked);
+  };
+  const reset = () => (change(CROP_START), setLocked(true), setRatio('original'));
+
   return (
     <div className="tpl-tool__node">
       <ButtonGroup variant="glass" size={44} className="tpl-tool__bar">
         <span className="tpl-tool__bar-title">图片缩放</span>
-        <SizeInputs name="图片缩放" w={ow} h={oh} onW={setOw} onH={setOh} />
+        <SizeField label="图片缩放宽度" value={shown.w} onCommit={(v) => commitScale('w', v)} />
+        <span className="tpl-tool__times">×</span>
+        <SizeField label="图片缩放高度" value={shown.h} onCommit={(v) => commitScale('h', v)} />
       </ButtonGroup>
       <div className="tpl-tool__crop">
-        <img src={IMAGE} alt="" />
-        <div className="tpl-tool__crop-box">
-          <CropHandles />
+        <div className="tpl-tool__crop-clip">
+          <img src={IMAGE} alt="" />
+          <div className="tpl-tool__crop-shade" style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }} />
         </div>
+        <CropHandles
+          aria-label="裁剪框"
+          value={rect}
+          onValueChange={change}
+          ratio={lockRatio}
+          bounds={CROP_BOUNDS}
+          min={128 / CROP_SCALE}
+          onCancel={reset}
+        />
       </div>
       <ButtonGroup variant="glass" size={44} className="tpl-tool__bar">
-        <IconButton tooltip={false} icon="Close" label="关闭裁剪" variant="text" />
+        <IconButton tooltip={false} icon="Close" label="关闭裁剪" variant="text" onClick={reset} />
         <span className="tpl-tool__bar-title">图片裁剪</span>
-        <SizeInputs
-          name="裁剪"
-          w={w}
-          h={h}
-          onW={setW}
-          onH={setH}
-          lock={
-            <IconButton
-              icon={locked ? 'EnableConstraint' : 'DisableConstraint'}
-              label={locked ? '解绑比例' : '约束比例'}
-              variant="text"
-              size={28}
-              selected={locked}
-              onClick={() => setLocked(!locked)}
-            />
-          }
+        <SizeField label="裁剪宽度" value={out.w} onCommit={(v) => commitSize('w', v)} />
+        <IconButton
+          icon={locked ? 'EnableConstraint' : 'DisableConstraint'}
+          label={locked ? '解绑比例' : '约束比例'}
+          variant="text"
+          size={28}
+          selected={locked}
+          onClick={toggleLock}
         />
-        <Select variant="plain" options={CROP_RATIOS} value={locked ? ratio : null} placeholder="自由比例" onChange={(v) => (setRatio(v), setLocked(true))} aria-label="裁剪比例" />
+        <SizeField label="裁剪高度" value={out.h} onCommit={(v) => commitSize('h', v)} />
+        <Select variant="plain" options={CROP_RATIOS} value={locked ? ratio : null} placeholder="自由比例" onChange={pickRatio} aria-label="裁剪比例" />
         <Divider orientation="vertical" />
         <Button variant="primary">确定</Button>
       </ButtonGroup>
@@ -213,20 +284,42 @@ function CropMode() {
   );
 }
 
+/** 扩图：画布区 320 × 256，原图 144 在正中，扩图框最远拖到画布区边上 */
+const EXPAND_STAGE: CropRect = { x: 0, y: 0, w: 320, h: 256 };
+const EXPAND_IMAGE: CropRect = { x: 88, y: 56, w: 144, h: 144 };
+
 function ExpandMode() {
+  const [frame, setFrame] = useState(EXPAND_IMAGE);
   const [ratio, setRatio] = useState<string | null>('free');
+  // 选比例：撑到包住原图的最小该比例框，以原图中心放；自由比例不动框
+  const pickRatio = (v: string | null) => {
+    setRatio(v);
+    const r = ratioOf(v);
+    if (!r) return;
+    const { x, y, w, h } = EXPAND_IMAGE;
+    setFrame(centered(x + w / 2, y + h / 2, r >= w / h ? h * r : w, r >= w / h ? h : w / r, EXPAND_STAGE));
+  };
+  const reset = () => (setFrame(EXPAND_IMAGE), setRatio('free'));
   return (
     <div className="tpl-tool__node">
       <div className="tpl-tool__expand">
-        <div className="tpl-tool__expand-box">
-          <img src={IMAGE} alt="" />
-          <CropHandles />
-        </div>
+        <div className="tpl-tool__expand-fill" style={{ left: frame.x, top: frame.y, width: frame.w, height: frame.h }} />
+        <img src={IMAGE} alt="" style={{ left: EXPAND_IMAGE.x, top: EXPAND_IMAGE.y, width: EXPAND_IMAGE.w, height: EXPAND_IMAGE.h }} />
+        <CropHandles
+          aria-label="扩图框"
+          value={frame}
+          onValueChange={setFrame}
+          ratio={ratioOf(ratio)}
+          bounds={EXPAND_STAGE}
+          contain={EXPAND_IMAGE}
+          min={0}
+          onCancel={reset}
+        />
       </div>
       <ButtonGroup variant="glass" size={44} className="tpl-tool__bar">
-        <IconButton tooltip={false} icon="Close" label="关闭扩图" variant="text" />
+        <IconButton tooltip={false} icon="Close" label="关闭扩图" variant="text" onClick={reset} />
         <span className="tpl-tool__bar-hint">拖动边框进行扩图</span>
-        <Select variant="plain" options={EXPAND_RATIOS} value={ratio} onChange={setRatio} aria-label="扩图比例" />
+        <Select variant="plain" options={EXPAND_RATIOS} value={ratio} onChange={pickRatio} aria-label="扩图比例" />
         <GenerateButton cost={8} />
       </ButtonGroup>
     </div>

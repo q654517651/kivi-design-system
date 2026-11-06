@@ -49,7 +49,7 @@ import { Icon } from '@kivi';
 - `name` 用图标表里的名字，区分大小写，写错 tsc 会报错。
 - `size`：16 / 20 / 24 / 40 / 64，放进按钮这类组件里时不用传。
 - `spin` 只给 Loading 用。
-- 线上现在用 iconfont：`<i className="iconfont icon-kivi-Close" />`，名字相同。
+- 图标字体在 Iconfont 项目 KIVI_V2，网站也用它：`<span className="iconfont-v2 icon-kivi-v2-Close" />`，名字相同。CSS 地址在 `kivi/iconfont.ts`。Logo 是彩色的，不在字体里，用 SVG。
 
 </details>
 
@@ -67,6 +67,7 @@ import { Icon } from '@kivi';
 3. 描边版放「_源文件 · 图标描边」页；转轮廓、合并后做成组件，放进「图标」页对应分组，加进 Icon 组件的首选值。
 4. 组件描述写「状态：待确认（用在哪）」，设计师确认后转正式。
 5. 在 `icons.demos.tsx` 的 `ICON_INFO` 里补名字和意思，重新导出 `kivi/icons.ts`（默认用的 V3 数据在 `kivi/icons-v3.ts`，`icons.ts` 是 V2 数据和新补的图标）。
+6. 从「图标」页导出 24×24 单色 SVG，传到 Iconfont 项目 KIVI_V2、重新生成代码，把新的 CSS 地址和图标名写进 `kivi/iconfont.ts`。
 
 Hugeicons 里也没有的，由设计师照 Hugeicons 的画法自己画：线端圆头、转折圆角、只描边；方的 19、横竖长边 20、圆的 20；分开的部分之间至少留 2。小四角星只加给同一件事有普通版和 AI 版、要并排区分的图标（像 SmartEditing）；节点类型图标（文字、图片、视频、音频）不加。
 

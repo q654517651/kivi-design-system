@@ -15,7 +15,7 @@ import { Input } from '../inputs/Input';
 import type { IconName } from '../icons';
 import { Tooltip } from '../tooltip/Tooltip';
 import { cx } from '../utils';
-import { composeHandlers, useControllable } from '../hooks';
+import { composeHandlers, useControllable, useJustExpanded } from '../hooks';
 import { useMenuContext } from './context';
 import { Dropdown } from './Dropdown';
 import './menu.css';
@@ -134,6 +134,8 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
 ) {
   const { plain } = useMenuContext();
   const [editing, setEditing] = useControllable(editingProp, defaultEditing, onEditingChange);
+  // 侧栏刚展开那 300ms「⋯」先藏着，不跟着右边滑
+  const justExpanded = useJustExpanded(collapsed);
   const twoLine = description != null && description !== false;
   const lead = icon ? 'icon' : thumb ? 'thumb' : undefined;
   // 里面要放按钮（「⋯」、输入框）时外层不能是 button，改用 div，键盘上补回车、空格
@@ -169,6 +171,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       data-two-line={twoLine ? '' : undefined}
       data-lead={lead}
       data-collapsed={collapsed ? '' : undefined}
+      data-expanding={justExpanded ? '' : undefined}
       data-editing={editing ? '' : undefined}
       onClick={click}
       onKeyDown={composeHandlers(onKeyDown, keys)}

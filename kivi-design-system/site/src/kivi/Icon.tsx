@@ -1,6 +1,7 @@
 import { createContext, forwardRef, useContext, type CSSProperties, type HTMLAttributes } from 'react';
 import { ICONS, ICON_VIEWBOX, type IconName } from './icons';
 import { ICONS_V3 } from './icons-v3';
+import { ICONFONT_FAMILY, ICONFONT_NAMES, ICONFONT_PREFIX, ensureIconfont } from './iconfont';
 import { cx } from './utils';
 
 export type IconSize = 16 | 20 | 24 | 40 | 64;
@@ -40,10 +41,15 @@ function maskOf(set: IconSet, name: IconName, body: string) {
 /** 图标，图形和名字都来自 Figma「图标」页 */
 export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon({ name, size, spin, className, style, ...rest }, ref) {
   const set = useContext(IconSetContext);
+  const cls = cx('kv-icon', size && size !== 16 && `kv-icon--${size}`, spin && 'kv-icon--spin', className);
+  // V3 默认走 Iconfont 字体（11-05），和前端同一份；字体里没有的（Logo、Kiwi）往下走 SVG
+  if (set === 'v3' && ICONFONT_NAMES.has(name)) {
+    ensureIconfont();
+    return <span ref={ref} className={cx(cls, ICONFONT_FAMILY, `${ICONFONT_PREFIX}${name}`)} data-icon={name} data-font="" aria-hidden="true" style={style} {...rest} />;
+  }
   const v3 = set === 'v3' && ICONS_V3[name];
   // 没有这个图标（演示里先留的空位）就给一张空的蒙版：什么都不画，不报错，也不会涂成一个色块
   const body = v3 || ICONS[name] || '';
-  const cls = cx('kv-icon', size && size !== 16 && `kv-icon--${size}`, spin && 'kv-icon--spin', className);
   // 自带颜色的图标（Logo 的绿星）不能走蒙版，蒙版只认形状、颜色会被涂成文字色；照旧直接画，其余部分跟文字色
   if (/fill="#/.test(body)) {
     return (

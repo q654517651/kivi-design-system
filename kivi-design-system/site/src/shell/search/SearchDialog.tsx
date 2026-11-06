@@ -354,7 +354,7 @@ export function SearchButton() {
     <>
       <Button
         size={28}
-        variant="secondary"
+        variant="text"
         leftIcon="Search"
         className="shell-search-btn"
         aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}

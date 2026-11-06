@@ -40,6 +40,40 @@ KIVI 设计规范（技能 + 网站 + 组件库）每一版改了什么。最新
 
 （还没有）
 
+## [0.2.0] - 2026-11-06
+
+### 新增
+
+- 画布模板左下角加视图工具栏（照线上）：整理画布、小地图、适配画布、网格吸附、隐藏连线、缩小 / 比例 / 放大；玻璃按钮条，小地图开着叠在上面。
+- 新图标 AutoLayout（整理画布，Hugeicons dashboard-square-02）。
+- CropHandles 能拖了（原来只摆样子）：加 `value` / `defaultValue` / `onValueChange`、`ratio`、`bounds`、`contain`、`min`、`onConfirm` / `onCancel`。拖四角、四边拉伸，Shift 临时锁比例，Option 从中心拉，裁剪时框里按住挪、方向键挪；拖的时候出九宫格。画布工具模板的裁剪、扩图接上了，宽高输入框和框双向同步，拖的时候不出尺寸标签。
+
+### 改动
+
+- 网站外壳：左侧导航改成悬浮的玻璃块（离边 12、圆角 16），Logo 和版本号挪进导航；顶栏去掉，右上角搜索、Hugeicons、Figma 变成三个独立玻璃胶囊；内容滑到顶部时出模糊带（玻璃 + 模糊 32，下边渐隐）；首页背景特效铺满整个窗口。窄屏导航还是抽屉，手机宽外链胶囊只留 Logo。
+- CropHandles 手柄改小：四边中间的条 120 × 6 → 24 × 4，框的边短于 64 就不画这一边的条；四角 12 的圆点不变。
+- 主站模板右上角：余额和头像拆开，余额放全圆玻璃胶囊（高 32，猕猴桃品牌绿、数字白），头像单独放、24 → 32。
+- 图标页：Mdoel（模型偏好入口）、Auto（Agent 自动生成）从「模型 Logo」挪到「生成与 AI」，图标和名字不变。
+- 玻璃底色 `--color-bg-fill-glass` 从 #181818 50% 改成 65%（深一档），菜单、下拉、节点工具栏、参数面板、PromptBox 等都跟着变；见「旧名对照」。
+- 资产管理模板格子调大：生成历史每格最小 136 → 200，我的素材、我的画布每张最小 200 → 240；还是按宽度自动排列数。
+- 主站模板侧栏收起：Logo 换成绿色渐变底的小 Logo（照原型），大小 Logo 只换透明度；收起按钮原地淡出不往左滑，点收起后鼠标离开过 Logo 行才认悬停（鼠标停着不动时不会冒出「展开侧栏」）；Logo 行高度不变，下面导航不再上移 8。侧栏（Menu plain）收起、展开时贴右边的东西只换透明度不滑动：分组标题的文字和新建按钮、「更多」的文字和箭头改成同时交叉淡化（各 100ms，不再一个淡出一个晚点淡入、中间黑一下），新建按钮和箭头都钉在图标栏的位置，刚展开 300ms 内「⋯」先藏着（新 hook `useJustExpanded`）。
+- 资产管理模板标题行的「查看全部」「新建画布」从 Button 28 改成 32（字 12 → 13）。
+- 按钮页 Button、IconButton 参数表的 `size` 写明每档用在哪：28 给媒体按钮条和小容器，32 默认（工具条、标题行），36 给弹窗底部按钮和 SendButton。
+- Figma「图标」页 V2 换成 V3：组件不删、只换图形（转轮廓合并成一个），全文件引用自动更新；模型 Logo 换成 LobeHub 重下的 Mono 版。「_源文件 · 图标描边」换成 V3 描边，V2 描边留在「_备份 · V2 图标描边」。
+- Figma 补了网站已有的 16 个图标：DoubleLeftArrowSmall、DoubleRightArrowSmall、NewWindow、History、FileCsv、FileDoc、FileJson、FilePdf、FilePpt、FileTxt、FileXls、FileZip、Image、Files、DragSelect、TextEditing（描述标「待确认」）。
+- 图标交付改用 Iconfont 新项目 KIVI_V2（字体名 `iconfont-v2`、类名前缀 `icon-kivi-v2-`），和线上旧项目隔开；单色 SVG 在 `kivi-design-system-workspace/iconfont/v3-svg/`（179 个，Kiwi、Logo 彩色不传）。
+- 网站图标改用 Iconfont 字体（`iconfont-v2 icon-kivi-v2-名字`，CSS 地址只在 `kivi/iconfont.ts`），和前端同一份；`<Icon />` 用法不变，Logo、Kiwi 还是 SVG。
+
+### 改名和删除
+
+- 线上图标 ShowConnections-1 的映射改成 AutoLayout（它是「整理画布」的四个方块，原来误并进 ShowConnections）。
+- CanvasHeader：「⋯」菜单删掉「在新窗口打开」，属性 `onOpenInNewWindow` 一起删（见「旧名对照 · 画布」）。
+
+### 修复
+
+- 画布模板、画布页：选中节点后的工具栏和生成面板毛玻璃不模糊（淡入动画挪到里面那层）。
+- 修复侧栏分组标题（对话、画布）悬停时新建按钮不出现、只出提示：悬停规则优先级比隐藏规则低（11-04 起就坏了）。
+
 ## [0.1.0] - 2026-11-05
 
 第一版。
