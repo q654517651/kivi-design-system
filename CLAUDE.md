@@ -29,7 +29,7 @@
 - `kivi-design-system/workflows/`：子技能（11-03 起）。`build-page.md` 搭页面和原型，`acceptance.md` 验收（给 UI 设计师验开发稿：对照 Figma、前端代码、交互、需求，分「阻塞 / 不一致 / 体验 / 建议」出单文件 HTML 报告）；加图标子技能还没做。所有功能都在这一个技能包里，不放外部目录，用户只装一个包。
 - `kivi-design-system/site/`：规范网站兼组件库，React 18 + TypeScript + Vite + MDX。规范的正文就写在这里。
   - 本地看：在 `site/` 下 `npm install`、`npm run dev`，打开 `http://localhost:4173/`（内网用本机内网地址 `:4173`）。
-  - `src/kivi/`：组件库本体。`tokens.css` 是所有数值唯一的地方；`Icon.tsx` + `icons.ts` 是从 Figma 导出的图标；按组件类型分文件夹（11-04 重排：menu、navigation、inputs、selection、upload、tags-avatar、media、tooltip、generation、reference、agent-process 等，旧页到新页的对应见网站「旧名对照」的「页面改名」）：组件 `.tsx` + 这一类的 `.css` + `index.ts`。
+  - `src/kivi/`：组件库本体。`tokens.css` 是所有数值唯一的地方；`Icon.tsx` + `icons.ts` 是从 Figma 导出的图标；按组件类型分文件夹（11-04 重排：menu、navigation、inputs、selection、upload、tags-avatar、media、tooltip、generation、reference、agent-process 等；11-06 目录再理一轮时文件夹没动，一页可对几个文件夹，旧页到新页的对应见网站「旧名对照」的「页面改名」）：组件 `.tsx` + 这一类的 `.css` + `index.ts`。
   - `src/docs/`：规范页面（`.mdx`，规范文字）+ 旁边的 `.demos.tsx`（属性面板、状态矩阵），文件夹和目录分组跟 `src/kivi/` 一致。
   - `src/docs/templates/`：页面模板（整页怎么拼，只能看），对应 Figma 的「模板 · …」页，目录里放第二组、紧跟「开始」（11-04 用户定，原来放最上面）。外框 `frame.tsx`、布局 `templates.css`。业务页上面不再放整体演示。
   - `src/shell/`：网站自己的外壳（目录、演示、属性面板），不属于组件库。页面清单在 `src/shell/nav.ts`。全局搜索在 `src/shell/search/`，索引由 `scripts/search-index.mjs` 构建时从 nav.ts、MDX、`tokens.demos.tsx`、`icons.ts` 生成，新页进了 nav.ts 就自动能搜。
@@ -47,13 +47,14 @@
 - 先网站、后 Figma（11-04 用户定）：组件先在网站设计好，Figma 不追着改；要改 Figma 的记进 `kivi-design-system-workspace/page-notes/figma-sync-pending.md`，用户说同步时一批做。
 - 不参考代码。前端代码是按 UI 发挥的，不是设计稿。代码库 `ai-design-web` 只读，不改、不提交。
 - 网站是唯一来源，不再另写 md。skill 直接读 `src/docs/` 的 MDX 和 `src/kivi/` 的组件源码。
-- 文件按页分，网站和 Figma 用同一套分页（11-04 用户定按组件类型重排：操作 / 导航 / 录入 / 展示 / 浮层 / 反馈 + 业务组件按产品，Figma 要跟着重新分页）。哪一页改了，就改对应的文档页和 `src/kivi/` 里那一页的文件夹。
+- 文件按页分，网站和 Figma 用同一套分页（11-04 用户定按组件类型重排；11-06 收成操作和导航 / 录入 / 展示 / 浮层和反馈 + 业务组件，Figma 要跟着重新分页）。哪一页改了，就改对应的文档页和 `src/kivi/` 里那一页的文件夹。
 - 页面照 HeroUI 的写法（10-29 用户定，样板是 `src/docs/components/button.mdx`、`button.demos.tsx`）：
   - 组件页、业务页页头不写描述（11-04 用户定：「页面上所有能点的按钮」这种是废话）；每个组件一个 `##`，标题下一句只写两件事「中文名：用处」，比如「标签：展示参数和状态，比如模型名、比例、生成中。」不写废话、不写样子和数值、不写「XX 的外壳 / 里的一项」这种同义反复（11-04 用户定）。再放属性面板，所有尺寸、类型、状态都在面板里切；整屏 / 整块的演示放「页面模板」组，不放业务页上面（11-02 改）。
   - 额外示例只放面板演示不了的，小标题 + 演示，不写字。
   - 最下面 `## 参数`：每个组件一张「属性 / 类型 / 默认 / 说明」表，关键数值写进说明。
   - 除了组件标题下那一句，不写用途、结构、样子、用法，不放状态矩阵；待定、讨论、Figma 和线上的对比、为什么这么定，都不进页面，放 `kivi-design-system-workspace/page-notes/<页>.md`。
   - 属性面板里用不上的开关直接不显示（`rules` 返回 true）；代码超过 8 行默认收起。
+  - 弹出类的属性面板（下拉、参数面板、选择器这类）：触发器放在台子下面、浮层往上弹（`top-start`），默认展开（11-06 用户定）。
   - 属性面板和预览双向同步（11-02 用户定）：组件自己能变的状态（展开、勾选、开关、选中、收藏、输入的字、选的项）写成受控，onChange 里用 `render` 的第二个参数 `update` 写回面板；面板上没有的状态（比如点了第几个选项卡）也记进 `update`。悬停、聚焦这种一碰就变的不写回，面板上的悬停、聚焦是摆静态样子用的。
 - 样子、变量、组件以 Figma V2 为准；交互（点哪出什么、什么时候出）照线上产品。两边不一致的记进 `page-notes/`，不写进页面。
 - 组件用 React（2026-10-29 用户定：前端是 React，纯 HTML 是「毛坯房」）。不引任何 UI 库、定位库、动画库，交互自己写进组件。组件名就是 Figma 组件名，props 英文、和 Figma 属性一一对应、带中文注释，设 `displayName`。样式用普通 CSS：类名 `kv-组件名`，修饰 `--`，部件 `__`，状态用 `disabled`、`aria-*`，没有对应的用 `data-*`，不用 `is-*`。
@@ -92,7 +93,7 @@
 - 生成中不画进度条，进度交给点阵动效（10-29 用户定），NodeCard 的 `progress` 已删。
 - 画布页重写（10-29）：上面一块小画布看整体（5 个节点连线，点选出工具栏和生成面板，悬停、假生成、假上传、拖动和缩放，不放底部工具栏），下面待定清单 + 节点、节点工具栏、生成面板、连线各一个属性面板，其他零件各摆一个，旧名对照收起。属性面板（shell Playground）用不上的开关改成不显示。NodeCard 加了 `hoverActions`，上传中左上改成转圈。Figma 待改：上传中转圈、素材节点「上传」按钮（图标 Upload）。
 - 全站照按钮页的写法重写（10-29）：14 个页面都改了，删下来的说明和待定在 `kivi-design-system-workspace/page-notes/`，旧名对照合成一页。网站字号整体大一档，左侧目录加了 Lucide 图标（只给网站外壳用）。
-- 菜单展开动效（淡入 + 从锚点那边 96% 放大、移 4）、宽 120–240、最高 8 项（324）滚动；参数面板（`NodeParamPanel`、`NodeParamField`、`NodeParamValue`）照 Figma「视频参数调整」做了。
+- 菜单展开动效（淡入 + 从锚点那边 96% 放大、移 4）、宽 160–240（11-06 最窄从 120 改 160）、最高 8 项（324）滚动；参数面板（`NodeParamPanel`、`NodeParamField`、`NodeParamValue`）照 Figma「视频参数调整」做了。
 - Slider 改成 Figma 参数面板里的刻度滑块（20 高灰轨道、8 × 20 白把手、`marks` 刻度），原来的绿色细滑块项目里不用了（10-29 用户说）。Figma「选择控件」页的 Slider 已改成刻度滑块（10-29）。
 - 播放器 VideoPlayer（10-29，「通用组件 · 播放器」页，Figma「播放器」页已补，624:4626）：小号放卡片、大号放预览；节点 NodeMedia 视频、主站 ResultTile 视频都换成它，旧的 PlayBar 删了（旧名对照有映射）。按钮用 IconButton 浮层，平时无底；播放、暂停实心，音量描边（Figma 音量图标已改描边，名字不变）。演示视频在 `assets/placeholders/video/`。
 - 组件库按「组件写法」整了一轮（10-29）：62 个组件都 forwardRef、属性透传、事件合并、受控用 useControllable；状态 `is-*` 改 `data-*`（文档摆静态的 is-hover / is-active / is-focus 例外）；部件类名改 `__`；颜色走变量，Figma 没变量的注释「Figma 没变量」。公用逻辑在 `src/kivi/hooks/`。`npm run check` 通过，浏览器 17 页无报错。改了的公开属性：ReferenceStack `onOpenChange` → `expanded` / `defaultExpanded` / `onExpandedChange`；VideoPlayer 加 `muted`、`volume` 两套和 `onPlay`、`onPause`；ParamPicker 加 `open` 一套。
@@ -103,6 +104,7 @@
 - Tooltip 加「长文」类型和「禁用」（11-02，用户定：不能搞特例，缺什么就给组件加类型和状态）：长文给被截断的长文字看全文，14 / 22、能换行、和触发元素一样宽（至少 240）、内边距 8 / 12；`disabled` 时不出现。GenPrompt 照线上改成复制按钮跟在最后一个字后面、自己量行数超两行收起，看全文用 Tooltip 长文。Figma Tooltip 加了「类型=长文」，文字是 Noto 14 / 22，要改回苹方并套「文字/14 常规」。
 - 待拍板清单：`kivi-design-system-workspace/decisions-2026-10-29.md`。
 - 目录重排（11-04，用户定）：通用组件分操作（按钮）、导航（菜单、导航）、录入（输入框、选择、日期、上传）、展示（标签和头像、图片和视频、正文排版、滚动条）、浮层（提示、弹窗）、反馈六组；业务组件分生成（PromptBox、参考区、附件条、MentionChip、参数面板、Lora）、画布、标注、Agent 对话、Agent 过程（工具调用、思考块、生成结果）、主站，资产待加。`src/kivi/` 文件夹跟着拆：menu、navigation、upload、tags-avatar、media、tooltip、generation、agent-process；组件名不变，页名映射在「旧名对照 · 页面改名」。Figma 还没跟着分页。
+- 目录再理一轮（11-06，用户定，只挪不改样子）：通用组件四组：操作和导航（按钮、菜单、选项卡）/ 录入（输入框、选择、日期、上传）/ 展示（标签和头像、图片和视频、正文排版、布局）/ 浮层和反馈（提示、弹窗、消息、加载和空态）；业务组件：创作输入框、参数和模型、参考和引用、生成记录、画布、标注、Agent 对话、Agent 过程、资产。组名和页名、业务页和模板页不重名。滚动条并进布局；AssetThumb → 图片和视频，DropOverlay → 上传，SendButton → 按钮，MediaGroup → 生成记录。`src/kivi/` 文件夹没动（navigation、scroll-area、feedback、main-site 照旧，一页可以对几个文件夹），旧地址在 `nav.ts` 的 `REDIRECTS` 自动跳。映射在旧名对照「页面改名（11-06）」，Figma 待改记在 figma-sync-pending.md。
 - Figma 模板页整理和重新分页（11-03、11-04）：「模板 · 画布」四个分区照样板排好（分组 + 小标题 + 示例标签，一行最多 3 个，组间距 120）；`_doc/section-bg` 改成 #2A2B2D；Figma 按网站新目录分页：新建菜单、导航、日期、上传、正文排版、滚动条、提示、生成、标注、Agent 过程、资产和三个模板页，改名输入框、选择、标签和头像、图片和视频、Agent 对话，分区照组件挪好，迁移映射写了页面来源，网站页头 Figma 链接已换。脚本挪不动带苹方的东西，挪过的都换成 Noto。还要用户手动：拖两页顺序、把 ProcessGroup 剪到「Agent 过程」、点头后删「菜单和提示」；「模板 · 主站 / Agent / 通用」还没整理，整页稿还没挪到「页面 · …」。记录在 `page-notes/figma-sync-2026-11-02.md` 末尾。
 - 映射表收成一处（11-04，用户定）：网站「旧名对照」补全成唯一的表：变量 146 行（Figma 三张 53 行 + 11-03 + 新增 50 + 线上有、V2 不收 32）、图标、组件补了 56 行，按新页名分节；图标页里重复的那份删了；变量页补了 spring、两个阴影、完整 Figma 路径。Figma 各页的迁移映射已删，换成一句话 + 网页和 Git 链接；`popup-raised` 变量删了。tailwind 新键名和 safelist 是代写的，要前端确认。
 - 11-04 用户定（别再忘）：Agent 回复下的推荐按钮用 Button 类型 = 轻（`light`）；生成中点阵整页同步：不传 `effect` 时整页共用一个方案、共用一个时钟（`useGenerating`、`player.ts`），同一排几张节奏一致；结果叠放只有 MediaGroup 一个，MediaStack 删了，画布模板改用 MediaGroup（点开、点图定位节点）。
@@ -140,6 +142,7 @@
 - 变量收敛（11-05，用户定）：`--color-border-focus` 删了（组件不加聚焦描边，`base.css` 关掉浏览器默认聚焦框，和前端一致）；`--effect-shadow-stack` 删了（叠放用白底加旋转）；背景模糊只有两档、不许例外：32 `--effect-glass-blur` 给玻璃和 on-media，16 `--effect-mask-blur` 给生成中、占位图遮罩，底不透明的不加，`npm run check` 会拦写死的模糊。行高只给多行文字、单行不设（组件库默认 1.4 = Figma 苹方自动行高，单行的 75 处已删）。规则在「设计规则」页，Figma 待改已记。填充色阶（11-05 用户定）：`--color-fill-1~4`（白 6 / 10 / 14 / 18），Container 六个变量改成引用它、名字值不变；`fill-n` 只给 Container 语义不符的静态色块（名单在设计规则：叠层、小地图节点、骨架屏扫光），检查脚本拦名单以外的；开关轨道、文字头像、试听播放中改回 Container 默认。变量只留两层（填充色阶 → 语义变量），不要原始色层（只有深色一套用不上，以后做亮色再加），Figma 隐藏的原始色集合下次同步删。禁用的底和平时一样、只变字色；填充对比度 1.12 不管禁用和遮罩。IconButton 自带提示（label，`tooltip={false}` 关），通用符号不配，名单在设计规则「提示」。SendButton 纳入按钮体系（IconButton 主要 · 36 · `round`，圆形只给规则名单里的专用按钮）。生成失败态统一 EmptyState 生成失败 · 96，可配 `failedTitle` / `failedDescription`。待办（11-05 用户定，都是新增、先不做）：画布生成按钮「10 秒内可停止」、节点和结果格的停止、节点工具栏补框选 / 编辑文字和调顺序、停止图标，细节记在总表 `page-notes/component-inventory.md`「待做」。收藏了的星图标品牌绿（IconButton `data-collected`，设计规则里写成唯一例外）；连线删除改玻璃；音频字数超上限变红（11-05 用户定）；细滑杆暂定给剪辑时间线缩放，记待做。画布底部工具栏「添加」改 IconButton 主要（品牌绿，`__solid` 类删了）；Wan 用 Qwen Logo；Checkbox / Skeleton `shape` → `variant`、Popover `trigger` → `on`；生成结果组不补更多状态、模型面板不做加载 / 失败 / 空态（有缓存）。审查报告 11-05 第二轮又修了 72 条（四个 Sonnet 分组），只剩 6 条：行高 T-11、生成确认卡 L-21 等用户定，L-17 / L-18 待办，侧栏读屏 GPT-PR-09 等前端，C-23 还缺两个属性面板。字号必须对齐变量（11-05 用户定）：两处 9 号字改 10，上传进度环为放下「100%」从 28 放大到 36，`npm run check` 拦写死字号（Markdown 正文 prose 例外）。L-21 用户定按钮不换（确认卡消耗不消耗都有，写在说明里）。T-11 用户定多行行高按表：7 处 14/20 → 14/22、12/16 → 12/20。PromptInput 照线上默认 4 行、最多 6 行（行高乘行数，88 / 132），生成面板和 Agent 输入框一样；粘贴、拖入只取纯文字（不许带进字号颜色），占位文字浮在框上（光标在最前）。L-21 提交中状态也不要。节点工具栏照线上补了框选（DragSelect = Hugeicons select-02，用户挑的）、编辑文字（TextEditing = text-creation），封装挪到剪辑前，图推词 / 视频推词。MediaGroup、AnnotationBox 补了属性面板。审查只剩 L-17（待做）和 GPT-PR-09（读屏）。审查报告剩下的 181 条都分了 P0 / P1 / P2、写了问题和处理（`cur.json` 的 triage），15 条等用户定，其余按已定规矩由我定。
 - Textarea 框内按钮（11-05，用户定）：`actions` 放在框里右下角，按钮 28，字数在按钮左边；点踩原因（MessageFeedback）改成 Textarea + 框内「提交」，去掉关闭（Esc、再点踩收起）。起因是 3.14 记忆管理稿（补齐的状态在 Figma 498:6079，记录在 `page-notes/memory-manager.md`）。Figma Textarea 还没跟。
 - 裁剪框 CropHandles 能拖了（11-05，用户定）：拖动做进组件（`value` / `ratio` / `bounds` / `contain` 等），四角四边拉伸、Shift 锁比例、Option 从中心拉、裁剪框里按住挪和方向键、Enter 确定 Esc 取消，拖的时候出九宫格，裁剪、扩图都不出尺寸标签（用户说不要）。手柄边条 120 × 6 → 24 × 4，边短于 64 不画。吸附、换比例过渡、扩图挪原图放后面。Figma 没跟（记在 figma-sync-pending.md）。
+- AI 工具页演示（11-06）：新模板「AI 工具」（`docs/templates/ai-tools.demos.tsx`），左工具列（不分图片视频）、中间舞台直接扩图 / 涂抹、右历史，参数面板和画布工具面板同一套；生成是假的。多模态编辑 11-06 用户定没有了、以后也不做（演示已删，总表「舍弃」已记）。都待用户确认，记录在 `page-notes/ai-tools.md`。
 - 发布时把网站编译打进 skill（双击能看需单文件打包，或 `npm run preview`），10-29 讨论，没定。
 
 ## 协作方式

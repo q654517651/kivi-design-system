@@ -325,8 +325,8 @@ export function Sidebar({
   collapsed?: boolean;
   defaultCollapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
-  /** 当前在哪个导航页（资产管理模板传 assets），那一项用选中底色 */
-  page?: 'assets';
+  /** 当前在哪个导航页（资产管理模板传 assets，AI 工具模板传 tools），那一项用选中底色 */
+  page?: 'assets' | 'tools';
   /** 一开始选中哪条对话 / 画布，不选传空 */
   defaultSelected?: string;
 }) {
@@ -373,7 +373,7 @@ export function Sidebar({
         <Menu variant="plain" aria-label="主站导航">
           <MenuItem icon="Create" collapsed={collapsed}>创作</MenuItem>
           <MenuItem icon="Explore" collapsed={collapsed}>探索</MenuItem>
-          <MenuItem icon="AITools" collapsed={collapsed}>AI 工具</MenuItem>
+          <MenuItem icon="AITools" collapsed={collapsed} selected={page === 'tools' || undefined}>AI 工具</MenuItem>
           <MenuItem icon="Pack" collapsed={collapsed} selected={page === 'assets' || undefined}>我的资产</MenuItem>
           <div className="tpl-ms__gap" />
           <HistoryGroup

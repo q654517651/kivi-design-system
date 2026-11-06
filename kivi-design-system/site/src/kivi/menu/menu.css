@@ -74,7 +74,7 @@
 /* 玻璃浮层：底 glass（#181818 65%），背景模糊 32，描边 border-subtle（8%），圆角 12，内边距 4，条目间距 4。
    圆角 12 = 条目圆角 8 + 内边距 4，里外的圆角才同心（2026-10-29 从 16 改，用户定）。
    下拉、右键、双击画布的快捷添加、子菜单、Select 的列表都是它。
-   宽 120–240（Figma 里最窄 120、最宽 220），文字太长单行省略；最高 302 = 7.5 项（内边距 4 + 7 × (36 + 4) + 半项 18），
+   宽 160–240（11-06 用户定最窄从 120 改 160，原来短的选项太窄），文字太长单行省略；最高 302 = 7.5 项（内边距 4 + 7 × (36 + 4) + 半项 18），
    最后露半条，一看就知道能滚（11-04 用户定，原来正好 8 项 324 看不出能滚）；
    屏幕剩的地方不够时再缩到剩下的高度（--kv-popup-room，定位时写）。2026-10-29 用户定 */
 .kv-menu {
@@ -91,7 +91,7 @@
   background: var(--color-bg-fill-glass);
   -webkit-backdrop-filter: blur(var(--effect-glass-blur));
   backdrop-filter: blur(var(--effect-glass-blur));
-  min-width: max(120px, var(--kv-menu-min, 0px));
+  min-width: max(160px, var(--kv-menu-min, 0px));
   max-width: 240px;
   max-height: min(302px, var(--kv-popup-room, 302px));
   overflow-x: hidden;

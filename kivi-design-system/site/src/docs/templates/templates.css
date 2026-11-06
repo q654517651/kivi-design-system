@@ -831,3 +831,222 @@
   padding: var(--spacing-32) 0;
 }
 
+
+/* ---------- AI 工具：左工具 200 | 中舞台 | 右历史 104 ---------- */
+
+.tpl-at {
+  position: relative;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 104px;
+  height: 100%;
+  min-height: 0;
+}
+
+.tpl-at__tools {
+  min-height: 0;
+  padding: var(--spacing-12);
+  overflow: hidden auto;
+  border-right: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+/* 舞台：上面留出浮着的工具条（44 + 上下 16），下面是参数面板，中间放图 */
+.tpl-at__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  min-width: 0;
+  min-height: 0;
+  padding: 76px var(--spacing-24) var(--spacing-24);
+}
+
+.tpl-at__area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.tpl-at__dock {
+  display: flex;
+  flex: none;
+  justify-content: center;
+}
+
+.tpl-at__dock > .kv-node-panel {
+  max-width: 100%;
+}
+
+/* 涂抹工具条在上方正中，下载 / 换一张在右上 */
+.tpl-at__top,
+.tpl-at__actions {
+  position: absolute;
+  top: var(--spacing-16);
+  z-index: 2;
+}
+
+.tpl-at__top {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tpl-at__actions {
+  right: var(--spacing-16);
+}
+
+.tpl-at__size {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  width: 160px;
+  padding: 0 var(--spacing-8);
+  color: var(--color-text-fill-secondary);
+}
+
+.tpl-at__size > .kv-slider {
+  flex: 1;
+}
+
+/* 图、视频按比例放进舞台；进出扩图时原图缩放、挪位置 */
+.tpl-at__media {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: var(--border-radius-12);
+  object-fit: cover;
+  transition-property: left, top, width, height;
+  transition-duration: var(--motion-duration-300);
+  transition-timing-function: var(--motion-ease-in-out);
+}
+
+/* 换一版：新的那张淡入 */
+.tpl-at__media--in {
+  animation: tpl-at-in var(--motion-duration-300) var(--motion-ease-out);
+}
+
+@keyframes tpl-at-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 扩出去的地方：浅底，跟着扩图框变 */
+.tpl-at__expand-fill {
+  position: absolute;
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 涂抹层：盖在图上，涂的颜色整层一半透明度，笔画交叠处不叠深；光标换成笔刷大小的圆 */
+.tpl-at__mask {
+  position: absolute;
+  overflow: hidden;
+  border-radius: var(--border-radius-12);
+}
+
+.tpl-at__mask > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: none;
+  opacity: 0.5;
+  touch-action: none;
+}
+
+.tpl-at__brush {
+  position: absolute;
+  box-sizing: border-box;
+  border: var(--border-width-1) solid var(--color-border-strong);
+  border-radius: var(--border-radius-round);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.tpl-at__empty {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  height: fit-content;
+}
+
+.tpl-at__empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-8);
+}
+
+.tpl-at__hint {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  white-space: nowrap;
+}
+
+.tpl-at__strip {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+/* 历史：一列 72 的缩略图，新的在上面；当前这一版外面一圈 2px 白 40%（和选中节点一样） */
+.tpl-at__history {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-12);
+  min-height: 0;
+  padding: var(--spacing-12) 0;
+  overflow: hidden auto;
+  border-left: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+.tpl-at__history-title {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.tpl-at__version {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-fill-secondary);
+  font: inherit;
+  font-size: var(--font-size-12);
+  cursor: pointer;
+}
+
+.tpl-at__version[aria-pressed="true"] {
+  color: var(--color-text-fill-primary);
+}
+
+.tpl-at__thumb {
+  position: relative;
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--border-radius-8);
+}
+
+.tpl-at__thumb > .kv-result-tile {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.tpl-at__thumb::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid #FFFFFF66; /* Figma 没变量，同选中节点 */
+  border-radius: var(--border-radius-12);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tpl-at__version[aria-pressed="true"] > .tpl-at__thumb::after {
+  opacity: 1;
+}

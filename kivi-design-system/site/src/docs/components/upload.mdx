@@ -1,11 +1,11 @@
-import { PageHeader } from '@shell';
+import { Demo, PageHeader } from '@shell';
 import { AddTilePlayground, UploadRingPlayground } from './upload.demos';
 
 <PageHeader
   eyebrow="录入"
   title="上传"
   figma={['上传', '1083:7705']}
-  code="kivi/upload"
+  code="kivi/upload、kivi/generation（DropOverlay）"
 />
 
 ## AddTile
@@ -19,6 +19,22 @@ import { AddTilePlayground, UploadRingPlayground } from './upload.demos';
 上传进度环：显示上传进度，比如参考图、附件上传中。
 
 <UploadRingPlayground />
+
+## DropOverlay
+
+拖入提示：把文件拖到输入框上时，提示「松手上传」或「不支持这种文件」。
+
+### 拖入时的提示：松手上传、不支持这种文件
+
+<Demo stage="base" code={`
+<div style={{ display: 'flex', gap: 16, width: '100%' }}>
+  {[false, true].map((rejected) => (
+    <div key={String(rejected)} style={{ position: 'relative', flex: 1, height: 160, borderRadius: 24, background: 'var(--color-bg-fill-surface)' }}>
+      <DropOverlay rejected={rejected} />
+    </div>
+  ))}
+</div>
+`} />
 
 ## 参数
 
@@ -41,3 +57,14 @@ import { AddTilePlayground, UploadRingPlayground } from './upload.demos';
 |---|---|---|---|
 | `progress` | `number` | `0` | 进度 0–100，超出的夹住 |
 | `aria-label` | `string` | `"上传中"` | 读屏用，说明是什么在上传，比如「图片1上传中」。最外层有 `role="progressbar"` |
+
+### DropOverlay
+
+文件拖到输入框上时的提示：框本身加一圈 1.5 描边（`--color-border-strong`），里面铺遮罩（`--color-bg-fill-mask`，黑 60%），不模糊；正中浮一张 popup 实色小卡（`--color-bg-fill-popup`，圆角 16，内边距 16 / 24），三个 24 的图标（`Image`、`Files`、`Folder`）+ 13 / 20 的字，都是品牌绿（`--color-brand-solid`），间距 12。出现：整层 150ms ease-out 淡入，小卡从 96% 放大；三个图标从中间叠在一起展开，左右两个往外、各歪 12°，中间的往上浮 6，弹簧 400ms（`--motion-ease-spring`），依次晚 40ms。消失：100ms ease-in，图标收回中间。类型不收：描边、图标和字换 danger（`--color-status-danger`）。不挡鼠标。圆角继承所在的框，所以放它的框要 `position: relative`。`PromptBox` 自带；画布 Agent 输入框这类自己拼的框，配合 `useFileDrop`（`hooks/`）用，它给 `dragging`、`rejected`。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `active` | `boolean` | `true` | 显示。文件拖到框上时为 `true`，不显示时淡出 |
+| `rejected` | `boolean` | `false` | 拖来的类型不收 |
+| `text` | `ReactNode` | `"松手上传"` | 收的时候的文字 |
+| `rejectedText` | `ReactNode` | `"不支持这种文件"` | 不收的时候的文字 |

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  AssetThumb,
   Dialog,
   VideoPlayer,
   type VideoPlayerVariant,
@@ -7,6 +8,9 @@ import {
   placeholderImageSrc,
   type ImageFit,
   type PlaceholderImageRatio,
+  type AssetThumbSize,
+  type AssetThumbType,
+  type IconName,
 } from '@kivi';
 import { Playground } from '@shell';
 import './media.demos.css';
@@ -100,6 +104,34 @@ export function ImagePlayground() {
           style={{ width: Number(s.size) }}
         />
       )}
+    />
+  );
+}
+
+// ---------- AssetThumb ----------
+
+const THUMB = './placeholders/kivi-future-1x1.webp';
+
+type ThumbState = { type: string; size: string; icon: string };
+
+function renderThumb(s: ThumbState) {
+  const size = Number(s.size) as AssetThumbSize;
+  const type = s.type as AssetThumbType;
+  if (type === 'image') return <AssetThumb size={size} type="image" src={THUMB} />;
+  return <AssetThumb size={size} type="icon" icon={s.icon as IconName} />;
+}
+
+export function AssetThumbPlayground() {
+  return (
+    <Playground<ThumbState>
+      controls={[
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['icon', '图标']] },
+        { key: 'size', label: '尺寸', type: 'segment', value: '56', options: [['16', '16'], ['24', '24'], ['56', '56'], ['72', '72']] },
+        { key: 'icon', label: '图标', type: 'segment', value: 'Message', options: [['Message', 'Message'], ['Canvas', 'Canvas'], ['Music', 'Music']] },
+      ]}
+      // 图标只有「图标」类型可换
+      rules={(s) => (s.type === 'icon' ? {} : { icon: true })}
+      render={renderThumb}
     />
   );
 }

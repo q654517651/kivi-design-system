@@ -1,8 +1,9 @@
-import { GenPrompt, GenPromptRefs, ResultTile, Tag, type GenPromptRefItem, type IconName, type ResultTileAction, type ResultTileType } from '@kivi';
+import type { CSSProperties } from 'react';
+import { GenPrompt, GenPromptRefs, MediaGroup, ResultTile, Tag, type GenPromptRefItem, type IconName, type MediaGroupItem, type MediaGroupType, type ResultTileAction, type ResultTileType } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 import { openPreview, VIDEO } from '../components/media.demos';
 
-// 主站页的属性面板：任务、长度、类型、状态都在面板里切。参数表在 main-site.mdx
+// 生成记录页的属性面板：任务、长度、类型、状态都在面板里切。参数表在 records.mdx
 
 const IMG = './placeholders/';
 
@@ -68,7 +69,7 @@ type RefsState = { count: string; type: string; label: string };
 
 export function GenPromptRefsPlayground() {
   return (
-    // 悬停浮层往下开，台子留够高度（样式在 main-site.mdx 顶上）
+    // 悬停浮层往下开，台子留够高度（样式在 records.mdx 顶上）
     <div className="ms-pg-gen-prompt">
       <Playground<RefsState>
         controls={[
@@ -88,7 +89,7 @@ export function GenPromptRefsPlayground() {
 
 export function GenPromptPlayground() {
   return (
-    // 这个属性面板里浮层往下开，台子留够高度（样式在 main-site.mdx 顶上）
+    // 这个属性面板里浮层往下开，台子留够高度（样式在 records.mdx 顶上）
     <div className="ms-pg-gen-prompt">
       <Playground<GenPromptState>
         controls={[
@@ -176,6 +177,64 @@ export function ResultTilePlayground() {
       ]}
       rules={(s) => ({ source: s.state !== 'generating', collected: s.state === 'generating' || s.state === 'failed' })}
       render={renderResultTile}
+    />
+  );
+}
+
+// ---------- 生成结果：叠放 ↔ 展开 ----------
+
+
+/** 中间有失败：封面取第一张成功的，叠放比例跟它 */
+const RESULT_MIXED: MediaGroupItem[] = [
+  { id: 'a1', status: 'failed', ratio: '1:1', name: '卡通小猫1' },
+  { id: 'a2', status: 'failed', ratio: '1:1', name: '卡通小猫2' },
+  { id: 'a3', src: `${IMG}bunny-gouache-3x4.webp`, ratio: '3:4', name: '卡通小猫3·奶油色' },
+  { id: 'a4', src: `${IMG}ip-gouache-1x1.webp`, ratio: '1:1', name: '卡通小猫4·白猫蝴蝶结' },
+  { id: 'a5', status: 'failed', ratio: '1:1', name: '卡通小猫5' },
+];
+
+/** 比例不同：封面取第一张，叠放 16:9 */
+const RESULT_RATIOS: MediaGroupItem[] = [
+  { id: 'b1', src: `${IMG}kiwi-light-16x9.webp`, ratio: '16:9', name: '小狗横版 16:9' },
+  { id: 'b2', src: `${IMG}ip-future-16x9.webp`, ratio: '16:9', name: '小狗横版 16:9 · 2' },
+  { id: 'b3', src: `${IMG}monstera-dots-16x9.webp`, ratio: '16:9', name: '小狗横版 16:9 · 3' },
+  { id: 'b4', src: `${IMG}ip-peek-16x9.webp`, ratio: '16:9', name: '小狗横版 16:9 · 4' },
+  { id: 'b5', src: `${IMG}kiwi-light-9x16.webp`, ratio: '9:16', name: '小狗竖版 9:16' },
+  { id: 'b6', src: `${IMG}kivi-future-9x16.webp`, ratio: '9:16', name: '小狗竖版 9:16 · 2' },
+];
+
+type Update = (patch: Partial<PlaygroundState>) => void;
+
+// 画布 Agent 侧栏 500，减去左右内边距大约 420
+const PANEL: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12, minWidth: 0, width: 420, maxWidth: '100%' };
+
+type MediaGroupState = { items: string; type: string; expand: string };
+
+const RESULT_SETS: Record<string, MediaGroupItem[]> = { mixed: RESULT_MIXED, ratios: RESULT_RATIOS };
+
+/** 点标题行或叠放展开，点标题行收起；展开写回面板 */
+function renderMediaGroup(s: MediaGroupState, update: Update) {
+  return (
+    <div style={PANEL}>
+      <MediaGroup
+        items={RESULT_SETS[s.items]}
+        type={s.type as MediaGroupType}
+        expanded={s.expand === 'yes'}
+        onExpandedChange={(v) => update({ expand: v ? 'yes' : 'no' })}
+      />
+    </div>
+  );
+}
+
+export function MediaGroupPlayground() {
+  return (
+    <Playground<MediaGroupState>
+      controls={[
+        { key: 'items', label: '结果', type: 'segment', value: 'mixed', options: [['mixed', '中间有失败'], ['ratios', '比例不同']] },
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频']] },
+        { key: 'expand', label: '展开', type: 'segment', value: 'no', options: [['no', '否'], ['yes', '是']] },
+      ]}
+      render={renderMediaGroup}
     />
   );
 }
