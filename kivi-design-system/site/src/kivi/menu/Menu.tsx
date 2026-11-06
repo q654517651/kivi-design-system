@@ -8,7 +8,7 @@ export type MenuVariant = 'default' | 'plain';
 export interface MenuProps extends HTMLAttributes<HTMLDivElement> {
   /** 类型：默认（玻璃浮层，点开或右键弹出的菜单）/ 平铺（没有玻璃底、描边、内边距、圆角，直接平铺在页面上，给侧栏用），默认 default */
   variant?: MenuVariant;
-  /** 宽度，数字按 px。Figma 里的例子有 120、160、220；不写就跟着内容（平铺的撑满外面）。下拉选择展开的列表要和触发器一样宽，用 Dropdown 的 matchTriggerWidth */
+  /** 宽度，数字按 px，160–240（最窄 160）；不写就跟着内容（平铺的撑满外面）。下拉选择展开的列表要和触发器一样宽，用 Dropdown 的 matchTriggerWidth */
   width?: number | string;
 }
 

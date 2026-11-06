@@ -1,7 +1,7 @@
 import { Tabs, TabItem, type IconName, type TabSize } from '@kivi';
 import { Playground, type PlaygroundState } from '@shell';
 
-// 导航页的属性面板：所有类型、状态都在面板里切。参数表在 navigation.mdx
+// 选项卡页的属性面板：所有类型、状态都在面板里切。参数表在 tabs.mdx
 
 // ---------- TabItem ----------
 

@@ -51,7 +51,7 @@ export function MenuPlayground() {
   return (
     <Playground<MenuState>
       controls={[
-        { key: 'width', label: '宽度', type: 'segment', value: '200', options: [['120', '120'], ['160', '160'], ['200', '200'], ['240', '240']] },
+        { key: 'width', label: '宽度', type: 'segment', value: '200', options: [['160', '160'], ['200', '200'], ['240', '240']] },
         { key: 'count', label: '条目数量', type: 'segment', value: '3', options: [['1', '1'], ['3', '3'], ['5', '5'], ['8', '8'], ['12', '12（滚动）']] },
         { key: 'label', label: '分组标题', type: 'toggle', value: false },
         { key: 'divider', label: '分割线', type: 'toggle', value: false },
@@ -239,7 +239,7 @@ function renderDropdown(s: DropdownState, update: (patch: Partial<PlaygroundStat
         </Button>
       }
     >
-      <Menu width={s.match ? undefined : list ? 120 : 200} role={list ? 'listbox' : undefined}>
+      <Menu width={s.match ? undefined : list ? 160 : 200} role={list ? 'listbox' : undefined}>
         {list
           ? ['1K', '2K', '4K'].map((v) => (
               <MenuItem key={v} selected={v === picked} onClick={() => update({ picked: v })}>

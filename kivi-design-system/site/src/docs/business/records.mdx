@@ -1,6 +1,6 @@
 import { Demo, PageHeader } from '@shell';
 import { PreviewHost } from '../components/media.demos';
-import { GenPromptPlayground, GenPromptRefsPlayground, ResultTilePlayground } from './main-site.demos';
+import { GenPromptPlayground, GenPromptRefsPlayground, MediaGroupPlayground, ResultTilePlayground } from './records.demos';
 
 <style>{`
   /* 这一页的演示用 */
@@ -33,9 +33,9 @@ import { GenPromptPlayground, GenPromptRefsPlayground, ResultTilePlayground } fr
 
 <PageHeader
   eyebrow="业务组件"
-  title="主站"
+  title="生成记录"
   figma={['主站', '422:658']}
-  code="kivi/main-site"
+  code="kivi/main-site、kivi/agent-process（MediaGroup）"
 />
 
 <PreviewHost />
@@ -57,6 +57,12 @@ import { GenPromptPlayground, GenPromptRefsPlayground, ResultTilePlayground } fr
 结果格：生成记录里的一张图或一段视频。
 
 <ResultTilePlayground />
+
+## MediaGroup
+
+生成结果组：Agent 一次生成的多张图或视频，叠成一摞，点开看全部。
+
+<MediaGroupPlayground />
 
 ## 参数
 
@@ -109,3 +115,19 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 | `failedDescription` | `ReactNode` | — | 失败：副标题 |
 
 `ResultTileAction` 每一项：`icon`（`IconName`）、`label`（`string`，读屏和 Tooltip 用）、`onClick`。
+
+### MediaGroup
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `items` | `MediaGroupItem[]` | — | 这一组结果，按生成顺序。每项 `id`、`src`（视频传封面）、`ratio`（数字或「16:9」，限制 9:16–16:9，默认 1:1）、`status`（`done` / `failed`）、`name`（悬停显示在左下） |
+| `type` | `"image"` `"video"` | `"image"` | 产出类型，决定标题行的图标和文字 |
+| `title` | `ReactNode` | 按结果算 | 标题行，比如「图片已生成 ×2，图片生成失败 ×3」 |
+| `failedTitle` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败的那几张：标题。失败态就是 EmptyState 生成失败 · 96，和结果格、节点一样；格子矮于 170（16:9 这类）放不下插图，只留文字 |
+| `failedDescription` | `ReactNode` | — | 失败的那几张：副标题 |
+| `expanded` | `boolean` | — | 展开：受控。只有一张时不叠放，直接平铺 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
+| `onItemClick` | `(item: MediaGroupItem) => void` | — | 展开后点某一张。画布里用来定位到节点 |
+
+叠放：封面取第一张成功的，比例跟封面；后两层往右错开 4、8，旋转 2°、4°，底白 18% `container-light-1-pressed`。展开是瀑布流，至少两列，宽了列数增加（列最小宽 182、间距 12），展开收起卡片只动 transform，容器高度用同一条缓动 `--motion-ease-expand`、同一个时长；展开 400 起每张 +10、最多 700，收起固定 300。

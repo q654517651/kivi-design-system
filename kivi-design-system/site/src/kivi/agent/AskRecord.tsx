@@ -15,11 +15,11 @@ export interface AskRecordItem {
 }
 
 export interface AskRecordProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
-  /** 状态：询问中（等用户回答，扫光）/ 已询问（回答了）/ 询问（跳过了：交给 AI 决策，或用户直接发了新消息），默认已询问 */
+  /** 状态：询问中（等用户回答，扫光）/ 已询问（回答了）/ 询问（跳过了：用户直接发了新消息），默认已询问 */
   status?: AskRecordStatus;
   /** 问了什么、怎么答的，一题一项 */
   items: AskRecordItem[];
-  /** 跳过时写在最后的说明，默认「已跳过」；用户点了「全部交给 AI 决策」传「交给 AI 决策」 */
+  /** 跳过时写在最后的说明，默认「已跳过」 */
   skippedText?: ReactNode;
   /** 这一行的字，默认按状态：询问中 / 已询问 / 询问 */
   label?: ReactNode;

@@ -277,6 +277,105 @@
   font-size: var(--font-size-12);
 }
 
+/* 音频能播（传了 src）：56 缩略图就是播放按钮。平时音符；悬停、播过之后换成播放 / 暂停 24，primary，直接换不交叉淡化。
+   底：悬停 Light 1 hover，按下 pressed，播过之后常驻用默认。下面一条进度：高 2，悬停、拖动 4（同播放器），轨道白 20%，已播白色。
+   照线上 ai-chat AudioHoverCard（11-06 用户定） */
+.kv-preview-card__play {
+  position: relative;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: none;
+  color: var(--color-text-fill-primary);
+  cursor: pointer;
+}
+
+.kv-preview-card__play > .kv-asset-thumb {
+  transition: background-color var(--motion-duration-100) var(--motion-ease-in-out);
+}
+
+.kv-preview-card__play:hover > .kv-asset-thumb {
+  background: var(--color-bg-fill-container-light-1-hover);
+}
+
+.kv-preview-card__play:active > .kv-asset-thumb {
+  background: var(--color-bg-fill-container-light-1-pressed);
+}
+
+.kv-preview-card__play-icon {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.kv-preview-card__play-icon > .kv-icon {
+  width: 24px;
+  height: 24px;
+}
+
+:is(.kv-preview-card__play:hover, .kv-preview-card__play:focus-visible, .kv-preview-card__play[data-active]) > .kv-preview-card__play-icon {
+  display: flex;
+}
+
+:is(.kv-preview-card__play:hover, .kv-preview-card__play:focus-visible, .kv-preview-card__play[data-active]) > .kv-asset-thumb > .kv-icon {
+  visibility: hidden;
+}
+
+.kv-preview-card__play:disabled {
+  cursor: not-allowed;
+}
+
+.kv-preview-card__play:disabled > .kv-asset-thumb {
+  background: var(--color-bg-fill-container-light-1); /* 禁用底和平时一样，只变字色 */
+}
+
+.kv-preview-card__play:disabled > .kv-preview-card__play-icon {
+  display: none;
+}
+
+.kv-preview-card__text--audio {
+  flex: 1;
+}
+
+.kv-preview-card__progress {
+  position: relative;
+  height: var(--spacing-12);
+  cursor: pointer;
+  touch-action: none;
+  outline: none;
+}
+
+.kv-preview-card__progress[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.kv-preview-card__track {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 2px;
+  overflow: hidden;
+  border-radius: var(--border-radius-round);
+  background: var(--color-text-fill-disabled);
+  transform: translateY(-50%);
+  transition: height var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-preview-card__played {
+  display: block;
+  width: var(--value, 0%);
+  height: 100%;
+  background: var(--color-text-fill-primary);
+}
+
+:is(.kv-preview-card__progress:hover, .kv-preview-card__progress:focus-visible) > .kv-preview-card__track {
+  height: 4px;
+}
+
 .kv-preview-card__description {
   display: -webkit-box;
   overflow: hidden;

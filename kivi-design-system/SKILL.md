@@ -80,29 +80,29 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 | 动效 | `docs/foundations/motion.mdx`、`motion-generating.mdx` | `kivi/generating/` | 做任何过渡和动画；生成中的点阵动效 |
 | 图标 | `docs/foundations/icons.mdx` | `kivi/Icon.tsx`、`kivi/icons-v3.ts`（默认用的 V3 数据）、`kivi/icons.ts`（V2 数据和新补的图标） | 选图标、确认图标名、补模型厂 Logo |
 | 占位图 | `docs/foundations/placeholder-images.mdx` | `kivi/placeholder-image/` | 用户作品的位置要放图 |
-| 按钮 | `docs/components/button.mdx` | `kivi/button/` | Button、IconButton、ButtonGroup |
+| 按钮 | `docs/components/button.mdx` | `kivi/button/`、`kivi/agent/`（SendButton） | Button、IconButton、ButtonGroup、发送按钮 |
 | 菜单 | `docs/components/menu.mdx` | `kivi/menu/` | 菜单、下拉、右键菜单 |
-| 导航 | `docs/components/navigation.mdx` | `kivi/navigation/` | 选项卡、分段 |
+| 选项卡 | `docs/components/tabs.mdx` | `kivi/navigation/` | 选项卡、分段 |
 | 输入框 | `docs/components/inputs.mdx` | `kivi/inputs/` | 输入框、数字输入、多行输入 |
 | 选择 | `docs/components/selection.mdx` | `kivi/selection/` | 下拉选择、开关、滑块、勾选框 |
 | 日期 | `docs/components/date.mdx` | `kivi/date/` | 日期范围筛选、日历 |
-| 上传 | `docs/components/upload.mdx` | `kivi/upload/` | 添加素材格（AddTile）、上传进度环（UploadRing）；拖文件进输入框用 DropOverlay（`kivi/generation/`），见「生成」页 |
-| 标签和头像 | `docs/components/tags-avatar.mdx` | `kivi/tags-avatar/` | 标签、头像、素材缩略图 |
+| 上传 | `docs/components/upload.mdx` | `kivi/upload/` | 添加素材格（AddTile）、上传进度环（UploadRing）；拖文件进输入框的提示（DropOverlay，`kivi/generation/`） |
+| 标签和头像 | `docs/components/tags-avatar.mdx` | `kivi/tags-avatar/` | 标签、头像 |
 | 正文排版 | `docs/components/prose.mdx` | `kivi/prose/` | 正文、代码块 |
-| 滚动条 | `docs/components/scroll-area.mdx` | `kivi/scroll-area/` | 自画滚动条、滚动渐隐、触底回调 |
-| 布局 | `docs/components/layout.mdx` | `kivi/divider/`、`kivi/collapse/` | 分割线、展开收起 |
-| 图片和视频 | `docs/components/media.mdx` | `kivi/media/` | 图片（加载、失败、重试）、卡片里和预览里的视频 |
+| 布局 | `docs/components/layout.mdx` | `kivi/divider/`、`kivi/collapse/`、`kivi/scroll-area/` | 分割线、展开收起、滚动条（滚动渐隐、触底回调） |
+| 图片和视频 | `docs/components/media.mdx` | `kivi/media/`、`kivi/tags-avatar/`（AssetThumb） | 图片（加载、失败、重试）、卡片里和预览里的视频、素材缩略图 |
 | 提示 | `docs/components/tooltip.mdx` | `kivi/tooltip/` | Tooltip、Popover |
 | 弹窗 | `docs/components/dialog.mdx` | `kivi/dialog/` | 确认、表单、列表、编辑器弹窗 |
-| 反馈 | `docs/components/feedback.mdx` | `kivi/feedback/` | Toast、加载、骨架屏、空状态 |
-| 生成 | `docs/business/generation.mdx` | `kivi/generation/` | 创作输入框、提示词输入、生成按钮、参数面板、Lora |
+| 消息 | `docs/components/messages.mdx` | `kivi/feedback/` | Toast、通知、横幅 |
+| 加载和空态 | `docs/components/loading-empty.mdx` | `kivi/feedback/` | 加载、骨架屏、空状态 |
+| 创作输入框 | `docs/business/prompt-box.mdx` | `kivi/generation/` | 主站创作输入框、生成按钮、提示词输入 |
+| 参数和模型 | `docs/business/generation.mdx` | `kivi/generation/` | 画布和主站共用的类型、模型、参考类型、参数下拉，参数面板、Lora、模型偏好、技能面板 |
 | 参考和引用 | `docs/business/reference.mdx` | `kivi/reference/` | 主站参考区、参考格、首尾帧、附件条（画布生成面板、发给 Agent 的附件）、所有 @ 引用胶囊、悬停预览 |
 | 画布 | `docs/business/canvas.mdx` | `kivi/canvas/` | 节点、多图节点、连线、生成面板、小地图（节点工具栏、画布工具栏在模板「画布工具」） |
 | 标注 | `docs/business/annotation.mdx` | `kivi/annotation/` | 标注框、标注点、标注评论 |
-| Agent 对话 | `docs/business/agent.mdx` | `kivi/agent/` | 对话里的询问记录、用户消息、追问、确认卡片、技能卡、发送按钮 |
-| Agent 过程 | `docs/business/agent-process.mdx` | `kivi/agent-process/`、`docs/business/agent-tools.ts` | 过程行、工具调用组、思考块、结果叠放；Agent 调的每个工具出不出一行、用什么图标 |
-| 主站 | `docs/business/main-site.mdx` | `kivi/main-site/` | 生成记录、结果格 |
+| Agent 对话 | `docs/business/agent.mdx` | `kivi/agent/` | 对话里的询问记录、用户消息、追问、确认卡片、技能卡（发送按钮在「按钮」页） |
+| Agent 过程 | `docs/business/agent-process.mdx` | `kivi/agent-process/`、`docs/business/agent-tools.ts` | 过程行、工具调用组、思考块；Agent 调的每个工具出不出一行、用什么图标 |
+| 生成记录 | `docs/business/records.mdx` | `kivi/main-site/`、`kivi/agent-process/`（MediaGroup） | 生成记录头、结果格、生成结果组（结果叠放） |
 | 资产 | `docs/business/asset.mdx` | `kivi/asset/` | 封面格、文件夹卡、项目卡、新建卡 |
-| 生成控件 | `docs/business/generation.mdx` | `kivi/generation/` | 画布和主站共用的类型、模型、参考类型、参数下拉，模型偏好、技能面板 |
 | 旧名对照 | `docs/legacy-names.mdx` | — | 遇到旧变量名、旧组件名、旧图标名 |
 | 组件写法 | `docs/component-api.mdx` | `kivi/hooks/` | 写或改 React 组件：forwardRef、受控、事件合并 |
