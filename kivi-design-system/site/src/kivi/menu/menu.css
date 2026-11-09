@@ -259,7 +259,7 @@
   max-width: 320px;
 }
 
-/* 两行：名字 13 / 20 + 说明 12 / 16 secondary，间距 2；上下 8，最矮 52；左图标 24。
+/* 两行：名字 13 / 20 + 说明 12 / 16 secondary，间距 2；上下 8，最矮 52；左图标 20（11-09 从 24 改，和单行 16 差得没那么悬殊）。
    选中不加底，右边打勾（两行的行大，悬停和选中都是底色分不清，11-03 定） */
 .kv-menu-item[data-two-line] {
   height: auto;
@@ -269,8 +269,8 @@
 }
 
 .kv-menu-item[data-two-line] > .kv-icon:first-child {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .kv-menu-item__text {

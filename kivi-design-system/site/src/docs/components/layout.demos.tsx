@@ -1,8 +1,73 @@
 import type { ReactNode } from 'react';
-import { Button, Collapse, Divider, ScrollArea, type CollapseGap, type ScrollAreaOrientation } from '@kivi';
+import { Button, Collapse, Divider, List, ListItem, Menu, MenuItem, ScrollArea, type CollapseGap, type ScrollAreaOrientation } from '@kivi';
 import { Playground } from '@shell';
 
 // 布局页的属性面板。参数表在 layout.mdx
+
+// ---------- List ----------
+
+type ListState = {
+  divider: boolean;
+  label: boolean;
+  description: boolean;
+  more: boolean;
+  editing: string;
+  removed: string;
+  [text: `text${number}`]: string;
+};
+
+const LIST_ROWS = [
+  { label: '用户身份', text: '产品 / 运营，负责 KIVI 主站和画布。', date: '2026/11/02' },
+  { label: '偏好', text: '遇到全新选题或没有参考图时，先出 3 个方案让我挑。', date: '2026/10/31' },
+  { label: '审美', text: '偏简洁、留白多，不喜欢过饱和的颜色。海报类的标题字要大，副标题和正文拉开层级，不要把信息都堆在画面中间。', date: '2026/10/28' },
+];
+
+export function ListPlayground() {
+  return (
+    <Playground<ListState>
+      controls={[
+        { key: 'divider', label: '分割线', type: 'toggle', value: true },
+        { key: 'label', label: '小标题', type: 'toggle', value: false },
+        { key: 'description', label: '说明', type: 'toggle', value: true },
+        { key: 'more', label: '更多', type: 'toggle', value: true },
+      ]}
+      render={(s, update) => {
+        const removed = (s.removed || '').split(',');
+        return (
+          <List divider={s.divider} style={{ width: 480 }}>
+            {LIST_ROWS.map((row, i) =>
+              removed.includes(String(i)) ? null : (
+                <ListItem
+                  key={i}
+                  label={s.label ? row.label : undefined}
+                  description={s.description ? row.date : undefined}
+                  editing={s.editing === String(i)}
+                  onEditingChange={(v) => update({ editing: v ? String(i) : '' })}
+                  onSave={(text) => update({ [`text${i}`]: text })}
+                  more={
+                    s.more ? (
+                      <Menu>
+                        <MenuItem icon="TextEditing" onClick={() => update({ editing: String(i) })}>
+                          编辑
+                        </MenuItem>
+                        <Divider />
+                        <MenuItem variant="danger" icon="Delete" onClick={() => update({ removed: `${s.removed || ''},${i}` })}>
+                          删除
+                        </MenuItem>
+                      </Menu>
+                    ) : undefined
+                  }
+                >
+                  {s[`text${i}`] || row.text}
+                </ListItem>
+              ),
+            )}
+          </List>
+        );
+      }}
+    />
+  );
+}
 
 // ---------- Divider ----------
 

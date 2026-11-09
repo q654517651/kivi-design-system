@@ -24,7 +24,7 @@ import {
 <PageHeader
   eyebrow="业务组件"
   title="参数和模型"
-  figma={['生成', '1083:7797']}
+  figma={['参数和模型', '1210:5617']}
   code="kivi/generation"
 />
 
@@ -146,7 +146,8 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `summary` | `ReactNode` | — | 触发器上的参数摘要，比如「720P · 16:9 · 8s」 |
+| `summary` | `ReactNode` | — | 触发器上的参数摘要，比如「720P · 16:9 · 8s」。触发器是无底的 `Select` |
+| `summaryIcon` | `IconName` | — | 摘要后面跟的小图标（Select 的 `endIcon`），比如视频参数生成音频开着时的音量 |
 | `children` | `ReactNode` | — | 面板里一块块 `ParamField` |
 | `placement` | `DropdownPlacement` | `"bottom-start"` | 面板位置，放不下自己翻到另一边 |
 | `open` | `boolean` | — | 面板展开。传了就是受控 |
@@ -164,6 +165,7 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 | `value` / `defaultValue` / `onChange` | `LoraFieldItem[]` | `[]` | 已选的 Lora。`LoraFieldItem` 是 `{ id, name, cover, weight, triggerWords?, template? }`。改权重、删除时 `onChange` 给新列表；添加不走这里，走 `onAdd` |
 | `max` | `number` | `4` | 最多几个。已选满了，添加格隐藏 |
 | `onAdd` | `() => void` | — | 点添加格。外面打开 `LoraPicker`，选好后把结果放回 `value` |
+| `placement` | `PopoverPlacement` | — | 点卡片弹出的设置面板往哪边弹，不传跟着 Popover（在下面），放不下自己翻 |
 
 一排间距 4（`--spacing-4`）。已选的是 56 见方的 `ReferenceItem`，底部通栏写权重（一位小数）。悬停已选格，延迟 200ms 在上方（`top-start`）弹出 `LoraSettings`（`Popover variant="panel"`），鼠标能挪进去，键盘聚焦也出；悬停或聚焦格子，右上角出删除（右上角离边 4 的 18 小圆，黑 40% + 模糊，同参考区的删除）。添加格是 `AddTile icon="LoraModel" label="Lora"`（见「上传」页）。其余原生 `<div>` 属性都能传。
 
@@ -294,20 +296,20 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 
 ### GenModelPicker
 
-选择模型（模型偏好）：头部「选择模型」+ 分段「图片 / 视频」，点分段平滑滚到那一组，滚动时分段跟着变；行是两行菜单项（Logo 24 + 名字 + 说明），不标选中。宽 320，列表最高 320 自己滚。点一行把模型插进输入框、关面板；同一组已经选了 4 个（`GEN_MODEL_MAX`）时，没选过的行变灰，悬停提示「最多同时选择 4 个图片模型」。模型分组在 `GEN_MODEL_GROUPS`。`ref` 给包住触发器的外壳（同 `Dropdown`）。
+选择模型（模型偏好）：头部「选择模型」+ 分段「图片 / 视频」，点分段平滑滚到那一组，滚动时分段跟着变；行是两行菜单项（Logo 20 + 名字 + 说明），不标选中。宽 320，列表最高 320 自己滚。点一行把模型插进输入框、关面板；同一组已经选了 4 个（`GEN_MODEL_MAX`）时，没选过的行变灰，悬停提示「最多同时选择 4 个图片模型」。模型分组在 `GEN_MODEL_GROUPS`。`ref` 给包住触发器的外壳（同 `Dropdown`）。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `picked` | `string[]` | `[]` | 已经插进输入框的模型（值），用来算每组选满没有 |
 | `onPick` | `(model: SelectOption, type: "image" \| "video") => void` | — | 点了一个模型：插进输入框，面板关上 |
-| `trigger` | `ReactElement` | 方块图标按钮 `Mdoel` | 触发器。画布 Agent 用默认的，主站 Agent 工具条传一个无底按钮 |
-| `placement` | `DropdownPlacement` | `"top-start"` | 面板位置 |
+| `trigger` | `ReactElement` | 方块图标按钮 `Mdoel` | 触发器。画布 Agent 用默认的，主站 Agent 工具条传无底的 `Select` |
+| `placement` | `DropdownPlacement` | `"bottom-start"` | 面板位置，默认往下，放不下自己翻到另一边 |
 | `open` / `defaultOpen` / `onOpenChange` | `boolean` | `false` | 面板展开（受控 / 非受控 / 回调） |
 | 其余 | `DropdownProps` | — | 去掉 `closeOnSelect`、`haspopup` 等面板自己管的 |
 
 ### SkillPicker
 
-技能按钮 + 技能面板：向上弹、左对齐，每次打开回到「推荐」、清空搜索。主站 Agent、画布 Agent 共用。组件里不带任何技能，由外面传进来。`ref` 给包住触发器的外壳（同 `Dropdown`）。
+技能按钮 + 技能面板：默认往下弹、左对齐，放不下自己翻上去，每次打开回到「推荐」、清空搜索。主站 Agent、画布 Agent 共用。组件里不带任何技能，由外面传进来。`ref` 给包住触发器的外壳（同 `Dropdown`）。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
@@ -316,8 +318,8 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 | `onPick` | `(skill: SkillItem) => void` | — | 点了一个技能：插进输入框，面板关上 |
 | `onRetry` / `onCreate` / `onImport` / `onViewAll` / `onDetail` | — | — | 传给面板，说明见 `SkillPanel` |
 | `open` / `defaultOpen` / `onOpenChange` | `boolean` | `false` | 面板展开（受控 / 非受控 / 回调） |
-| `trigger` | `ReactElement` | 图标按钮 `Skill` | 触发器。主站 Agent 工具条传一个无底按钮 |
-| `placement` | `DropdownPlacement` | `"top-start"` | 面板位置 |
+| `trigger` | `ReactElement` | 图标按钮 `Skill` | 触发器。主站 Agent 工具条传无底的 `Select` |
+| `placement` | `DropdownPlacement` | `"bottom-start"` | 面板位置，默认往下，放不下自己翻到另一边 |
 | 其余 | `DropdownProps` | — | 同 `GenModelPicker` |
 
 ### SkillPanel
@@ -353,7 +355,7 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 
 ### AgentControls
 
-切到 Agent 时任务类型后面的那一组：选择模型（`GenModelPicker`，无底按钮「模型」）、技能（`SkillPicker`，无底按钮「技能」）、模式（`AgentModeSelect`）。返回一串并排的控件，`ref` 和其余属性给选择模型。
+切到 Agent 时任务类型后面的那一组：选择模型（`GenModelPicker`，无底 `Select`「模型」）、技能（`SkillPicker`，无底 `Select`「技能」）、模式（`AgentModeSelect`）。返回一串并排的控件，`placement` 三个都用（默认往下，放不下各自翻），`ref` 和其余属性给选择模型。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|

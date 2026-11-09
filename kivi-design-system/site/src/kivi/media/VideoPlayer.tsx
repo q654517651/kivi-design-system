@@ -125,7 +125,7 @@ function Volume({ variant, shown, onVolumeChange, onMuteToggle, hold }: VolumePr
         createPortal(
           <div
             ref={popupRef}
-            className="kv-popup kv-video-player__volume-popup"
+            className="kv-popup kv-video-player__volume-popup" // 借用类名：全屏时浮层要挂进全屏的元素，Popover / Dropdown 只挂 body
             data-state={state}
             onPointerEnter={() => {
               pop.enter();

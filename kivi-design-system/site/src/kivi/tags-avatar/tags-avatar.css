@@ -164,6 +164,11 @@
   pointer-events: none;
 }
 
+/* 不要描边（bordered={false}）：铺满自己带描边的外框时 */
+.kv-asset-thumb[data-borderless]::after {
+  content: none;
+}
+
 .kv-asset-thumb > img {
   display: block;
   width: 100%;

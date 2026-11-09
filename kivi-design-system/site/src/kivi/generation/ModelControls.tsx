@@ -10,6 +10,7 @@ import { DEFAULT_MODEL, VIDEO_FIRST_LAST_ONLY, VIDEO_WITH_AUDIO } from './option
 */
 
 /** 模型下拉能接的属性：值由组件自己管，不能传 */
+/** 其余属性给模型那一格；placement 给这一组所有的下拉（往哪边弹由用的地方定） */
 type ModelSelectRest = Omit<GenSelectProps, 'value' | 'defaultValue' | 'onChange'>;
 
 export interface VideoModelControlsProps extends ModelSelectRest {
@@ -19,7 +20,7 @@ export interface VideoModelControlsProps extends ModelSelectRest {
   defaultModel?: string;
   /** 换了模型时触发，参数是新的模型值 */
   onModelChange?: (model: string) => void;
-  /** 参考方式那一格，默认不受控的 RefModeSelect；要跟着切参考区就自己传一个受控的 */
+  /** 参考方式那一格，默认不受控的 RefModeSelect（跟着这一组的 placement）；要跟着切参考区就自己传一个受控的 */
   refMode?: ReactNode;
 }
 
@@ -29,16 +30,16 @@ export interface VideoModelControlsProps extends ModelSelectRest {
  * refMode 默认是不受控的 RefModeSelect，要跟着切参考区就自己传一个受控的
  */
 export const VideoModelControls = forwardRef<HTMLSpanElement, VideoModelControlsProps>(function VideoModelControls(
-  { model: modelProp, defaultModel = DEFAULT_MODEL.video, onModelChange, refMode = <RefModeSelect />, ...rest },
+  { model: modelProp, defaultModel = DEFAULT_MODEL.video, onModelChange, refMode, placement, ...rest },
   ref,
 ) {
   const [model, setModel] = useControllable(modelProp, defaultModel, onModelChange);
   const audio = VIDEO_WITH_AUDIO.includes(model);
   return (
     <>
-      <ModelSelect ref={ref} type="video" value={model} onChange={setModel} {...rest} />
-      {!VIDEO_FIRST_LAST_ONLY.includes(model) && refMode}
-      <VideoParams audio={audio} />
+      <ModelSelect ref={ref} type="video" value={model} onChange={setModel} placement={placement} {...rest} />
+      {!VIDEO_FIRST_LAST_ONLY.includes(model) && (refMode ?? <RefModeSelect placement={placement} />)}
+      <VideoParams audio={audio} placement={placement} />
     </>
   );
 });
@@ -55,16 +56,16 @@ export interface ImageModelControlsProps extends ModelSelectRest {
 
 /** 图片：模型 + 分辨率 + 比例；GPT Image 多一个背景（Figma 主站「图片生成 · GPT」示例） */
 export const ImageModelControls = forwardRef<HTMLSpanElement, ImageModelControlsProps>(function ImageModelControls(
-  { model: modelProp, defaultModel = DEFAULT_MODEL.image, onModelChange, ...rest },
+  { model: modelProp, defaultModel = DEFAULT_MODEL.image, onModelChange, placement, ...rest },
   ref,
 ) {
   const [model, setModel] = useControllable(modelProp, defaultModel, onModelChange);
   return (
     <>
-      <ModelSelect ref={ref} type="image" value={model} onChange={setModel} {...rest} />
-      <SizeSelect />
-      <RatioSelect />
-      {model.startsWith('gpt-image') && <BackgroundSelect />}
+      <ModelSelect ref={ref} type="image" value={model} onChange={setModel} placement={placement} {...rest} />
+      <SizeSelect placement={placement} />
+      <RatioSelect placement={placement} />
+      {model.startsWith('gpt-image') && <BackgroundSelect placement={placement} />}
     </>
   );
 });
@@ -79,15 +80,15 @@ export interface AudioModelControlsProps extends ModelSelectRest {
 
 /** 音频：模型 + 音色 + 高级设置，跟着模型换（照线上）。没有张数和比例，右边是字数 / 上限 */
 export const AudioModelControls = forwardRef<HTMLSpanElement, AudioModelControlsProps>(function AudioModelControls(
-  { model: modelProp, onModelChange, ...rest },
+  { model: modelProp, onModelChange, placement, ...rest },
   ref,
 ) {
   const [model, change] = useControllable(modelProp, DEFAULT_MODEL.audio, onModelChange);
   return (
     <>
-      <ModelSelect ref={ref} type="audio" value={model} onChange={change} {...rest} />
-      <VoiceSelect key={`v-${model}`} model={model} />
-      <AudioParams key={`p-${model}`} model={model} />
+      <ModelSelect ref={ref} type="audio" value={model} onChange={change} placement={placement} {...rest} />
+      <VoiceSelect key={`v-${model}`} model={model} placement={placement} />
+      <AudioParams key={`p-${model}`} model={model} placement={placement} />
     </>
   );
 });

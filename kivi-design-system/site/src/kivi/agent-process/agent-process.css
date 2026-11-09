@@ -386,14 +386,7 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   justify-content: center;
   padding: var(--spacing-12);
   background: var(--color-bg-fill-container-light-1);
-  container-type: size;
-}
-
-/* 格子矮（16:9 这类）放不下 96 的插图，只留文字 */
-@container (max-height: 169px) {
-  .kv-media-group__failed .kv-empty-state__illustration {
-    display: none;
-  }
+  container-type: size; /* 格子矮时 EmptyState 自己藏插图、只留文字（feedback.css） */
 }
 
 /* 展开后悬停：底部渐变 + 节点名，右上定位 */

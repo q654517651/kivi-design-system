@@ -87,5 +87,6 @@ import { AssetThumbPlayground, ImagePlayground, PreviewHost, VideoPlayerPlaygrou
 | `type` | `"image"` `"icon"` | `"image"` | 图片（图片、视频首帧，铺满）/ 图标（白 10% 底 + 图标，不透明度 30%；音频用它，图标 `Music`）。两种都有 1 的内描边 `--color-border-subtle` |
 | `src` | `string` | — | 图片类型的图片地址 |
 | `icon` | `IconName` | `"Message"` | 图标类型的图标：对话用 `Message`，画布用 `Canvas`，音频用 `Music` |
+| `bordered` | `boolean` | `true` | 描边：盖在图上的 1px `--color-border-subtle`。铺满自己带描边的外框时关掉（参考格 ReferenceItem），不然两圈叠成一圈更亮的 |
 
 其余原生 `<span>` 属性都能传。

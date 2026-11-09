@@ -4,7 +4,7 @@ import { composeHandlers, useAudioPlayer } from '../hooks';
 import './selection.css';
 
 /**
- * Select 选项左边的试听（音色选择用），不从入口导出。24 见方、圆角 6，播放 / 暂停 / 加载中转圈。
+ * Select 选项左边的试听（音色选择用）：拼音色列表时放在 MenuItem 的 thumb 里。24 见方、圆角 6，播放 / 暂停 / 加载中转圈。
  * 菜单项本身是按钮，里面不能再套按钮：这里是一个不进 Tab 顺序的 span，点它只试听，不选中、不关列表。
  * 同一时间只播一个（useAudioPlayer 走 exclusivePlayback）；列表关了就停
  */

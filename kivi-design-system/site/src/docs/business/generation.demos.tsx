@@ -154,6 +154,7 @@ function renderField(s: FieldState, update: (patch: Partial<PlaygroundState>) =>
   return (
     <>
       <LoraField
+        placement="top-start"
         max={Number(s.max)}
         value={items}
         onChange={(next) =>

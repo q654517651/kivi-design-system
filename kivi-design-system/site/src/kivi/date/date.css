@@ -4,7 +4,7 @@
   Calendar          kv-calendar，头 kv-calendar__head（« ‹ 标题 › »，翻页用 IconButton 28，双箭头图标 Double…ArrowSmall），
                     网格 kv-calendar__grid（role="grid"），每格 kv-calendar__day：
                     选中 aria-selected="true"；不能选 aria-disabled="true"；不是这个月 data-outside；今天 aria-current="date"（不画标记，Figma 没定）
-  DateRangeFilter   触发器 kv-date-range-filter__trigger（文字按钮 + 下箭头），面板 kv-date-range（玻璃），
+  DateRangeFilter   触发器 kv-date-range-filter__trigger（无底的 Select），面板 kv-date-range（玻璃），
                     日期框 kv-date-range__field（aria-expanded 是日历开着），日历 kv-date-range__calendar（第二层浮层，浮在点的日期框下面，--end 对齐结束框），
                     预设 kv-date-range__presets 里是 MenuItem（选中用选中底色，不打勾）
 */
@@ -209,11 +209,3 @@
   gap: var(--spacing-4);
 }
 
-/* 触发器箭头：展开时转上去，200ms ease-in-out */
-.kv-date-range-filter__trigger .kv-icon:last-child {
-  transition: transform var(--motion-duration-200) var(--motion-ease-in-out);
-}
-
-.kv-date-range-filter__trigger[aria-expanded="true"] .kv-icon:last-child {
-  transform: rotate(180deg);
-}

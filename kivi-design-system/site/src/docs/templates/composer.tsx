@@ -14,6 +14,9 @@ export interface AgentComposerProps {
   className?: string;
 }
 
+// Agent 输入框贴在侧栏底部：模型偏好、技能面板都往上弹（Dropdown 默认往下，用的地方改方向；放不下自己翻）
+const UP = 'top-start' as const;
+
 /** Agent 输入框：附件条、PromptInput、工具条（添加 / 模型偏好 / 技能 / 手 / 切换对话模型）、发送。拖文件进来盖一层「松手上传」 */
 export function AgentComposer({ attachments: initial = [], skillOpen, className }: AgentComposerProps) {
   const [text, setText] = useState('');
@@ -57,8 +60,9 @@ export function AgentComposer({ attachments: initial = [], skillOpen, className 
       <div className="tpl-cv__tools">
         <div>
           <IconButton icon="Add" label="添加" variant="text" />
-          <GenModelPicker picked={models} onPick={insertModel} />
+          <GenModelPicker placement={UP} picked={models} onPick={insertModel} />
           <SkillPicker
+            placement={UP}
             defaultOpen={skillOpen}
             items={SKILL_ITEMS}
             categories={SKILL_CATEGORIES}

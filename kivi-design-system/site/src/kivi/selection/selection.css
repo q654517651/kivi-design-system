@@ -8,7 +8,10 @@
     <Switch defaultChecked>生成音频</Switch>        没有文字时写 aria-label="生成音频"
     <Slider aria-label="时长" min={1} max={15} defaultValue={12} />
     <Checkbox variant="square" defaultChecked="mixed">选项</Checkbox>
-    <Select variant="fill" placeholder="请选择" options={[{ value: 'png', label: 'PNG' }]} />
+    <Dropdown haspopup="listbox" matchTriggerWidth trigger={<Select placeholder="请选择">{选中项的文字}</Select>}>
+      <Menu role="listbox"><MenuItem selected onClick={…}>PNG</MenuItem>…</Menu>
+    </Dropdown>
+    Select 只是触发器（Figma 也是），列表、面板由外面套的 Dropdown 放，见 Select.tsx
   渲染出来的结构
     <button class="kv-switch" role="switch" aria-checked="true">
       <span class="kv-switch__label">生成音频</span><span class="kv-switch__track"></span>   文字可省，省了写 aria-label
@@ -27,10 +30,12 @@
       <span class="kv-checkbox__box"></span><span>选项</span>
     </button>
 
-    <span class="kv-dropdown kv-select__wrap">
-      <button class="kv-select kv-select--fill" aria-haspopup="menu" aria-expanded="false">
+    <span class="kv-dropdown">
+      <button class="kv-select kv-select--fill" aria-haspopup="listbox" aria-expanded="false">
+        <span class="kv-icon kv-select__lead"></span>                左图标，可省
         <span class="kv-select__text kv-select__text--placeholder">请选择</span>
-        <span class="kv-icon" data-icon="DownArrowSmall"></span>
+        <span class="kv-icon kv-select__end"></span>                 文字后面的小图标，可省
+        <span class="kv-icon kv-select__arrow" data-icon="DownArrowSmall"></span>
       </button>
     </span>
     展开后，Dropdown 把列表挂在 body 上（出现 200ms ease-out，消失 150ms ease-in）：
@@ -52,8 +57,9 @@
             无底（工具条）没选时占位就是入口名（模型、技能），文字、左图标也是白的，不灰
     禁用    disabled
     位置    placement，默认在触发器下方 4、左对齐，放不下会自己翻到上方
-    is-hover 只给文档摆静态的悬停用，项目里不用写；Select 的静态悬停写在最外层的 kv-select__wrap 上
-    点击切换、拖动、方向键、展开收起、选中、点外面和 Esc 关闭都在组件里，受控、非受控都支持
+    is-hover 只给文档摆静态的悬停用，项目里不用写
+    展开收起、方向键、点外面和 Esc 关闭、焦点落到选中项都在 Dropdown 里；记住选了哪个由用的地方管
+  开关、滑块、勾选框的点击切换、拖动、方向键都在组件里，受控、非受控都支持
 */
 
 /* ---------- Switch ---------- */
@@ -352,9 +358,20 @@
 }
 
 .kv-select > .kv-icon {
+  flex: none;
   width: 16px;
   height: 16px;
   color: var(--color-text-fill-tertiary);
+}
+
+/* 箭头靠右：填充的触发器拉宽时文字和后面的小图标挨着，箭头在最右 */
+.kv-select > .kv-select__arrow {
+  margin-left: auto;
+}
+
+/* 文字后面跟的小图标（比如生成音频开着时的音量）：和文字一样白 */
+.kv-select > .kv-select__end {
+  color: var(--color-text-fill-primary);
 }
 
 /* 左图标：选了值以后和文字一样白（Figma Select「已选」），没选时 tertiary */
@@ -363,7 +380,7 @@
 }
 
 .kv-select__text {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -400,9 +417,8 @@
   color: var(--color-text-fill-primary);
 }
 
-/* 悬停、展开。文档摆静态悬停时，is-hover 写在最外层 kv-select__wrap 上 */
-.kv-select:where(:hover, .is-hover):not(:disabled),
-:where(.kv-select__wrap.is-hover) > .kv-select:not(:disabled) {
+/* 悬停、展开 */
+.kv-select:where(:hover, .is-hover):not(:disabled) {
   background: var(--kv-select-fill-hover);
 }
 
@@ -425,19 +441,16 @@
   color: var(--color-text-fill-disabled);
 }
 
-/* 最外层的壳：就是 Dropdown 的壳（kv-dropdown），Dropdown 用它量触发器的位置。
-   填充撑满，无底跟着内容走。
+/* 套在 Dropdown 里时，外面的壳（kv-dropdown）跟着触发器：填充撑满，无底跟着内容走。
    展开的列表由 Dropdown 挂在 body 上：出现 200ms ease-out、消失 150ms ease-in；
-   填充的列表和触发器一样宽；无底的列表按内容撑宽，但不比触发器窄；
-   列表和触发器的间距 Figma 没定，暂用 4 */
-.kv-dropdown.kv-select__wrap {
+   填充的列表和触发器一样宽（matchTriggerWidth）；无底的列表按内容撑宽，但不比触发器窄（Dropdown 量）；
+   列表和触发器的间距 4（点开的浮层都是 4） */
+.kv-dropdown:has(> .kv-select--fill) {
   display: flex;
   width: 100%;
 }
 
-.kv-dropdown.kv-select__wrap--plain {
-  display: inline-flex;
-  width: auto;
+.kv-dropdown:has(> .kv-select--plain) {
   vertical-align: top;
 }
 

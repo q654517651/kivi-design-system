@@ -16,15 +16,20 @@ export interface AssetThumbProps extends Omit<HTMLAttributes<HTMLSpanElement>, '
   src?: string;
   /** 图标类型的图标，默认 Message；对话用 Message，画布用 Canvas，音频用 Music */
   icon?: IconName;
+  /** 描边：盖在图上的 1px border-subtle，默认有。铺满一个自己带描边的外框时（参考格）关掉，免得两圈叠成一圈更亮的 */
+  bordered?: boolean;
 }
 
 /** 素材的小预览。序号、时长这类角标由外层叠加，不放进来。Figma「选项卡、标签和头像」页 AssetThumb */
 export const AssetThumb = forwardRef<HTMLSpanElement, AssetThumbProps>(function AssetThumb(
-  { size = 16, type = 'image', src, icon = 'Message', className, ...rest },
+  { size = 16, type = 'image', src, icon = 'Message', bordered = true, className, ...rest },
   ref,
 ) {
   return (
-    <span ref={ref} className={cx('kv-asset-thumb', `kv-asset-thumb--${size}`, `kv-asset-thumb--${type}`, className)} {...rest}>
+    <span ref={ref} className={cx('kv-asset-thumb', `kv-asset-thumb--${size}`, `kv-asset-thumb--${type}`, className)}
+      data-borderless={bordered ? undefined : ''}
+      {...rest}
+    >
       {type === 'image' && src && <img src={src} alt="" />}
       {type === 'icon' && <Icon name={icon} />}
     </span>

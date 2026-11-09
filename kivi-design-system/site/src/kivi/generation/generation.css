@@ -50,12 +50,6 @@
   pointer-events: none;
 }
 
-/* 参数摘要后面跟的图标（比如生成音频开着时的音量），和文字垂直居中 */
-.kv-param-picker__summary > .kv-icon {
-  display: inline-block;
-  vertical-align: middle;
-}
-
 /* 参数面板：点参数摘要弹出来的玻璃浮层，和菜单一样的底、模糊、描边。圆角 16，内边距 12，块间距 12；
    宽固定 368，视频、音频、高级设置都一样（11-03 用户定，Figma 没变量） */
 .kv-param-panel {

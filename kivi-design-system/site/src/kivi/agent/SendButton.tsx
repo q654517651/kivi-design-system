@@ -21,7 +21,7 @@ export const SendButton = forwardRef<HTMLButtonElement, SendButtonProps>(functio
     <button
       ref={ref}
       type={type}
-      className={cx('kv-icon-button', 'kv-icon-button--36', 'kv-icon-button--primary', 'kv-icon-button--round', 'kv-send-button', className)}
+      className={cx('kv-icon-button', 'kv-icon-button--36', 'kv-icon-button--primary', 'kv-icon-button--round', 'kv-send-button', className)} // 借用类名：生成中要放 12 的停止方块，IconButton 只收图标；停止图标做好后改用 IconButton
       data-generating={generating ? '' : undefined}
       aria-label={ariaLabel ?? (generating ? '停止生成' : '发送')}
       {...rest}

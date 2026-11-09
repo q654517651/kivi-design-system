@@ -17,7 +17,7 @@ export interface GenModelPickerProps
   picked?: string[];
   /** 点了一个模型：插进输入框，面板关上。参数是选项和它在哪一组（图片 / 视频） */
   onPick?: (model: SelectOption, type: GenModelType) => void;
-  /** 触发器，默认工具条上的方块图标按钮（画布 Agent）；主站 Agent 工具条传一个无底按钮 */
+  /** 触发器，默认工具条上的方块图标按钮（画布 Agent）；主站 Agent 工具条传无底的 Select */
   trigger?: ReactElement;
   /** 面板展开。传了就是受控 */
   open?: boolean;
@@ -34,7 +34,7 @@ export interface GenModelPickerProps
  * ref 给包住触发器的外壳 span（和 Dropdown 一样）。
  */
 export const GenModelPicker = forwardRef<HTMLSpanElement, GenModelPickerProps>(function GenModelPicker(
-  { picked = [], onPick, trigger, open: openProp, defaultOpen = false, onOpenChange, placement = 'top-start', ...rest },
+  { picked = [], onPick, trigger, open: openProp, defaultOpen = false, onOpenChange, ...rest },
   ref,
 ) {
   const [open, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
@@ -74,7 +74,6 @@ export const GenModelPicker = forwardRef<HTMLSpanElement, GenModelPickerProps>(f
         setOpen(o);
         if (o) setActive('image');
       }}
-      placement={placement}
       trigger={trigger ?? <IconButton icon="Mdoel" label="选择模型" variant="text" />}
       {...rest}
     >

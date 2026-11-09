@@ -20,6 +20,9 @@ const ATLAS_COLUMNS = 16;
 const FONT_SCALE = 0.78;
 const FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const SHAPES = { horizon: 0, pinch: 1, rise: 2, eclipse: 3 } as const;
+/** 按下这些东西时不出点击波纹 */
+const INTERACTIVE =
+  'button, a, input, textarea, select, label, [contenteditable], [tabindex], [role="button"], [role="menu"], [role="menuitem"], [role="option"], [role="radio"], [role="tab"], [role="slider"], [role="switch"], [role="checkbox"], [role="dialog"], [class*="kv-"]';
 
 export type AsciiShape = keyof typeof SHAPES;
 
@@ -726,6 +729,8 @@ export function AsciiGlow({
     const onPointerDown = (e: PointerEvent) => {
       locate(e);
       if (!pointer.inside || reduce) return;
+      // 点在能操作的东西上（按钮、输入框、菜单……）不出波纹：波纹从半透明的底下穿过去，看着像组件在闪
+      if (e.target instanceof Element && e.target.closest(INTERACTIVE)) return;
       clicks.unshift({ x: pointer.x, y: pointer.y, age: 0 });
       if (clicks.length > MAX_CLICKS) clicks.pop();
       wake();

@@ -1,0 +1,91 @@
+/*
+  KIVI · 列表
+  依赖 tokens.css。
+
+  写法（React，见 List.tsx）
+    <List divider>
+      <ListItem label="用户身份" description="2026/11/02" more={<Menu>…</Menu>}>正文</ListItem>
+    </List>
+  渲染出来的结构
+    <ul class="kv-list" role="list" data-divider>
+      <li class="kv-list-item">
+        <div class="kv-list-item__body">
+          <span class="kv-list-item__label">小标题</span>
+          <span class="kv-list-item__content">正文</span>      编辑中换成 Textarea（kv-list-item__field）
+          <span class="kv-list-item__description">说明</span>
+        </div>
+        「⋯」kv-list-item__more：悬停、键盘聚焦、菜单开着时才显示；不显示时也占位，正文不跟着换行
+      </li>
+    </ul>
+
+  条目上下 12、左右不留，左右边距由外面的容器给。条目没有悬停底色。
+  分割线 data-divider：条目之间 1px，颜色和 Divider 共用 --kv-divider-color（默认 --color-border），不带左右留白。
+*/
+
+.kv-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kv-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-12) 0;
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.kv-list[data-divider] > .kv-list-item + .kv-list-item {
+  border-top: var(--border-width-1) solid var(--kv-divider-color, var(--color-border));
+}
+
+.kv-list-item__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.kv-list-item__label,
+.kv-list-item__description {
+  overflow: hidden;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 正文多行：14 / 22，保留换行符，长串（链接）也能折 */
+.kv-list-item__content {
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.kv-list-item__field {
+  width: 100%;
+}
+
+/* 「⋯」：平时透明但占位（还能 Tab 到），悬停这一条、键盘聚焦、菜单开着时出现 */
+.kv-list-item > .kv-list-item__more {
+  flex: none;
+  opacity: 0;
+}
+
+.kv-list-item:where(:hover, :focus-within, .is-hover) > .kv-list-item__more,
+.kv-list-item:has([aria-expanded="true"]) > .kv-list-item__more {
+  opacity: 1;
+}
+
+/* 触屏没有悬停，一直显示 */
+@media (hover: none) {
+  .kv-list-item > .kv-list-item__more {
+    opacity: 1;
+  }
+}

@@ -24,11 +24,11 @@ export interface SkillPickerProps
 }
 
 /**
- * 技能按钮 + 面板（SkillPanel）：向上弹、左对齐，每次打开回到「推荐」、清空搜索（照线上）。
+ * 技能按钮 + 面板（SkillPanel）：每次打开回到「推荐」、清空搜索（照线上）。往哪边弹跟着 Dropdown（默认往下，用的地方传 placement 改）。
  * 离按钮 4（点开的浮层都是 4）。点外面、按 Esc、选中技能都会关上。ref 给包住触发器的外壳 span（和 Dropdown 一样）
  */
 export const SkillPicker = forwardRef<HTMLSpanElement, SkillPickerProps>(function SkillPicker(
-  { trigger, items, categories, onPick, onRetry, onCreate, onImport, onViewAll, onDetail, open: openProp, defaultOpen = false, onOpenChange, placement = 'top-start', ...rest },
+  { trigger, items, categories, onPick, onRetry, onCreate, onImport, onViewAll, onDetail, open: openProp, defaultOpen = false, onOpenChange, ...rest },
   ref,
 ) {
   const [open, setOpenState] = useControllable(openProp, defaultOpen, onOpenChange);
@@ -42,7 +42,6 @@ export const SkillPicker = forwardRef<HTMLSpanElement, SkillPickerProps>(functio
       ref={ref}
       open={open}
       onOpenChange={setOpen}
-      placement={placement}
       haspopup="dialog"
       closeOnSelect={false}
       trigger={trigger ?? <IconButton icon="Skill" label="技能" variant="text" />}

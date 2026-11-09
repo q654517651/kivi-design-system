@@ -1,11 +1,11 @@
 import { Demo, PageHeader } from '@shell';
-import { CollapsePlayground, DividerPlayground, ScrollAreaPlayground } from './layout.demos';
+import { CollapsePlayground, DividerPlayground, ListPlayground, ScrollAreaPlayground } from './layout.demos';
 
 <PageHeader
   eyebrow="展示"
   title="布局"
-  figma={['滚动条', '1083:7751']}
-  code="kivi/divider、kivi/collapse、kivi/scroll-area"
+  figma={['布局', '1083:7751']}
+  code="kivi/divider、kivi/list、kivi/collapse、kivi/scroll-area"
 />
 
 ## Divider
@@ -13,6 +13,12 @@ import { CollapsePlayground, DividerPlayground, ScrollAreaPlayground } from './l
 分割线：隔开不同类的内容，比如菜单分组、按钮条里分开图标按钮和文字按钮。
 
 <DividerPlayground />
+
+## List
+
+列表：一条一条的记录，比如记忆管理。
+
+<ListPlayground />
 
 ## Collapse
 
@@ -66,6 +72,30 @@ import { CollapsePlayground, DividerPlayground, ScrollAreaPlayground } from './l
 | `orientation` | `"horizontal"` `"vertical"` | `"horizontal"` | 方向。横向宽撑满、高 1；竖向宽 1，高度取所在条写的 `--kv-divider-size`，没有条时 16（`--spacing-16`），不加 size 属性：ButtonGroup 32 里是 16，44、56 里是 20 |
 
 颜色 `--color-border`。放在 Menu 里由菜单换成 `--color-border-subtle`，上下留白 4、左右缩进 8。放在 ButtonGroup 里把不同类的按钮隔开，也用在工具条里隔开不同类的控件。`role="separator"`，其余原生 `<div>` 属性都能传。
+
+### List
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `divider` | `boolean` | `false` | 条目之间加 1px 横线，颜色和 Divider 一样（`--color-border`，可用 `--kv-divider-color` 换），不带左右留白 |
+
+`<ul role="list">`，其余原生属性都能传。左右不留边距，由外面的容器给。
+
+### ListItem
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `children` | `ReactNode` | — | 正文，14 / 22 primary，能换行，保留换行符。要编辑的写字符串 |
+| `label` | `ReactNode` | — | 小标题，正文上面，12 tertiary，一行省略 |
+| `description` | `ReactNode` | — | 说明，正文下面，比如日期，12 tertiary，一行省略 |
+| `more` | `ReactNode` | — | 右边的「⋯」（IconButton 28 轻），点开弹出这里的菜单，一般是编辑、删除。悬停这一条、键盘聚焦、菜单开着时出现，平时透明但占位；触屏一直显示 |
+| `moreLabel` | `string` | `"更多"` | 「⋯」的读屏文字 |
+| `editing` | `boolean` | — | 编辑中（受控）。正文原地换成 Textarea，框里右下角取消（次要）/ 保存（主要），按钮 28；说明和「⋯」不显示 |
+| `defaultEditing` | `boolean` | `false` | 默认是否在编辑（非受控） |
+| `onEditingChange` | `(editing: boolean) => void` | — | 进入、退出编辑 |
+| `onSave` | `(text: string) => void` | — | 保存，传去掉首尾空格的内容。回车或点「保存」保存，Shift + 回车换行；空的不能保存；Esc 或「取消」退出不保存，不连外层弹窗一起关 |
+
+上下内边距 12，小标题、正文、说明之间 4，「⋯」离正文 8、上下居中。没有悬停底色。`<li>`，其余原生属性都能传。
 
 ### Collapse
 

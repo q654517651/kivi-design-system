@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type KeyboardEvent, type MouseEvent } from 'react';
-import { Button } from '../button';
+import { Select } from '../selection';
 import { Dropdown, MenuItem, type DropdownPlacement } from '../menu';
 import { Icon } from '../Icon';
 import { cx } from '../utils';
@@ -212,15 +212,9 @@ export const DateRangeFilter = forwardRef<HTMLSpanElement, DateRangeFilterProps>
       placement={placement}
       haspopup="dialog"
       trigger={
-        <Button
-          variant="text"
-          rightIcon="DownArrowSmall"
-          disabled={disabled}
-          className="kv-date-range-filter__trigger"
-          data-filled={label !== placeholder ? '' : undefined}
-        >
+        <Select variant="plain" disabled={disabled} className="kv-date-range-filter__trigger">
           {label}
-        </Button>
+        </Select>
       }
       {...rest}
     >
