@@ -1,7 +1,7 @@
 import { forwardRef, type HTMLAttributes } from 'react';
 import { Icon } from '../Icon';
 import { ReferenceItem } from '../reference/ReferenceItem';
-import { Popover } from '../tooltip';
+import { Popover, type PopoverProps } from '../tooltip';
 import { useControllable } from '../hooks';
 import { AddTile } from '../upload';
 import { cx } from '../utils';
@@ -34,6 +34,8 @@ export interface LoraFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
   max?: number;
   /** 点添加格 */
   onAdd?: () => void;
+  /** 点卡片弹出的设置面板往哪边弹，跟着 Popover（默认在下面），用的地方传 */
+  placement?: PopoverProps['placement'];
 }
 
 /**
@@ -41,7 +43,7 @@ export interface LoraFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
  * 悬停弹出设置面板（`LoraSettings`，鼠标能挪进去），悬停格子右上角出删除。
  */
 export const LoraField = forwardRef<HTMLDivElement, LoraFieldProps>(function LoraField(
-  { value, defaultValue = [], onChange, max = 4, onAdd, className, ...rest },
+  { value, defaultValue = [], onChange, max = 4, onAdd, placement, className, ...rest },
   ref,
 ) {
   const [items, setItems] = useControllable(value, defaultValue, onChange);
@@ -52,7 +54,7 @@ export const LoraField = forwardRef<HTMLDivElement, LoraFieldProps>(function Lor
         <Popover
           key={item.id}
           variant="panel"
-          placement="top-start"
+          placement={placement}
           content={
             <LoraSettings
               name={item.name}

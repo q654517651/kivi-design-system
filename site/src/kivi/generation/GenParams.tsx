@@ -1,5 +1,4 @@
 import { forwardRef, useState } from 'react';
-import { Icon } from '../Icon';
 import { NumberInput } from '../inputs';
 import { TabItem, Tabs } from '../navigation';
 import { Slider, type SelectOption, type SliderMark } from '../selection';
@@ -79,12 +78,8 @@ export const VideoParams = forwardRef<HTMLSpanElement, VideoParamsProps>(functio
   return (
     <ParamPicker
       ref={ref}
-      summary={
-        <>
-          {`${res} · ${ratio} · ${sec}s`}
-          {audio && sound === 'on' && <> · <Icon name="VolumeHalf" /></>}
-        </>
-      }
+      summary={`${res} · ${ratio} · ${sec}s${audio && sound === 'on' ? ' ·' : ''}`}
+      summaryIcon={audio && sound === 'on' ? 'VolumeHalf' : undefined}
       {...rest}
     >
       <ParamField label="选择比例">

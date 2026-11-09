@@ -1,12 +1,12 @@
+import { cloneElement, type CSSProperties, type ReactElement } from 'react';
 import {
-  cx,
-  Icon,
+  Dropdown,
+  type DropdownProps,
   Menu,
   MenuItem,
   Select,
   type IconName,
   type SelectOption,
-  type SelectProps,
   type SelectVariant,
   Checkbox,
   Slider,
@@ -31,7 +31,7 @@ const HOVER = { hover: 'is-hover' } as Record<string, string | undefined>;
 
 // ---------- Select ----------
 
-type SelectState = { variant: string; state: string; icon: boolean; optIcon: boolean; placeholder: string; text: string };
+type SelectState = { variant: string; state: string; icon: boolean; endIcon: boolean; optIcon: boolean; placeholder: string; text: string };
 
 const OPTION_ICONS: IconName[] = ['ImageGeneration', 'VideoGeneration', 'Audio'];
 
@@ -49,40 +49,25 @@ function showsValue(variant: string, state: string) {
 }
 
 /**
- * 文档里摆静态的「展开」：触发器按展开的样子画（底色变、箭头朝上），列表是一个直接摊开的 Menu，当前项是「选中」状态。
+ * 文档里摆静态的「展开」：触发器按展开的样子画（aria-expanded，底色变、箭头朝上），列表是一个直接摊开的 Menu，当前项是「选中」状态。
  * 真正的列表是挂在 body 上、跟着触发器走的弹出层，一直开着会在页面滚动时盖住别的内容，所以文档里不用它摆静态。
+ * 生成的代码照常写 <Dropdown … open>
  */
-function StaticSelect({ variant = 'fill', options, value, placeholder, leftIcon, className, style, onChange }: SelectProps) {
-  const selected = options.find((o) => o.value === value);
-  const plain = variant === 'plain';
-  const icon = selected?.icon ?? leftIcon;
+function StaticDropdown({ trigger, children, matchTriggerWidth }: DropdownProps) {
   return (
-    <span
-      className={cx('kv-dropdown', 'kv-select__wrap', plain && 'kv-select__wrap--plain', className)}
-      style={{ position: 'relative', ...style }}
-    >
-      <button type="button" tabIndex={-1} className={`kv-select kv-select--${variant}`} aria-haspopup="listbox" aria-expanded="true">
-        {icon && <Icon name={icon} className="kv-select__lead" data-filled={selected ? '' : undefined} />}
-        <span className={cx('kv-select__text', !selected && 'kv-select__text--placeholder')}>{selected ? selected.label : placeholder}</span>
-        <Icon name="UpArrowSmall" />
-      </button>
-      <Menu role="listbox" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 1, width: plain ? undefined : '100%', minWidth: plain ? '100%' : undefined }}>
-        {options.map((o) => (
-          <MenuItem key={o.value} icon={o.icon} selected={o.value === value} onClick={() => onChange?.(o.value)}>
-            {o.label}
-          </MenuItem>
-        ))}
-      </Menu>
+    <span className="kv-dropdown" style={{ position: 'relative' }}>
+      {cloneElement(trigger as ReactElement<Record<string, unknown>>, { 'aria-expanded': true, 'aria-haspopup': 'listbox', tabIndex: -1 })}
+      {/* kv-popup--match：列表和触发器一样宽（同真的弹出层）；无底的列表不比触发器窄 */}
+      <div
+        className={matchTriggerWidth ? 'kv-popup--match' : undefined}
+        style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 1, width: matchTriggerWidth ? '100%' : undefined, minWidth: '100%', '--kv-menu-min': '100%' } as CSSProperties}
+      >
+        {children}
+      </div>
     </span>
   );
 }
-
-/** 属性面板里的 Select：选「展开」时换成静态的展开样子，生成的代码仍然写 <Select … open /> */
-function DocSelect(props: SelectProps) {
-  if (!props.open) return <Select {...props} />;
-  return <StaticSelect {...props} value={props.value ?? props.defaultValue} />;
-}
-DocSelect.displayName = 'Select';
+StaticDropdown.displayName = 'Dropdown';
 
 // 选了哪项记在面板上不显示的 picked 里；选了以后「状态」变成「已选」（无底一直有值，状态不动）。
 // 点开真的下拉不写回「展开」：面板的「展开」是摆静态样子用的
@@ -90,20 +75,41 @@ function renderSelect(s: SelectState, update: Update) {
   const raw = (s as Record<string, unknown>).picked;
   const picked = typeof raw === 'string' ? raw : 'a';
   const show = showsValue(s.variant, s.state) || (s.state === 'open' && typeof raw === 'string');
+  const options = optionsOf(s.text, s.optIcon);
+  const value = show ? picked : null;
+  const selected = options.find((o) => o.value === value);
+  const fill = s.variant === 'fill';
+  const pick = (v: string) => update({ picked: v, state: s.variant === 'plain' || s.state === 'disabled' ? s.state : 'selected' });
+  const open = s.state === 'open';
+  const Wrap = open ? StaticDropdown : Dropdown;
   return (
-    <DocSelect
+    <Wrap
       key={s.variant}
-      variant={s.variant as SelectVariant}
-      className={s.state === 'hover' ? 'is-hover' : undefined}
-      options={optionsOf(s.text, s.optIcon)}
-      value={show ? picked : null}
-      onChange={(v) => update({ picked: v, state: s.variant === 'plain' || s.state === 'disabled' ? s.state : 'selected' })}
-      placeholder={s.placeholder}
-      leftIcon={s.icon ? 'Add' : undefined}
-      disabled={s.state === 'disabled' || undefined}
-      open={s.state === 'open' || undefined}
-      aria-label="下拉选择"
-    />
+      haspopup="listbox"
+      matchTriggerWidth={fill || undefined}
+      open={open || undefined}
+      trigger={
+        <Select
+          variant={s.variant as SelectVariant}
+          className={s.state === 'hover' ? 'is-hover' : undefined}
+          leftIcon={selected?.icon ?? (s.icon ? 'Add' : undefined)}
+          endIcon={s.endIcon ? 'VolumeHalf' : undefined}
+          placeholder={s.placeholder}
+          disabled={s.state === 'disabled' || undefined}
+          aria-label="下拉选择"
+        >
+          {selected?.label}
+        </Select>
+      }
+    >
+      <Menu role="listbox" aria-label="下拉选择">
+        {options.map((o) => (
+          <MenuItem key={o.value} icon={o.icon} selected={o.value === value} onClick={() => pick(o.value)}>
+            {o.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </Wrap>
   );
 }
 
@@ -113,7 +119,7 @@ export function SelectPlayground() {
       <DocStyle
         css={`
           .in-pg-select .shell-pg-stage { align-items: flex-start; padding-top: 56px; }
-          .in-pg-select .shell-pg-stage .kv-select__wrap:not(.kv-select__wrap--plain) { width: 200px; }
+          .in-pg-select .shell-pg-stage .kv-dropdown:has(> .kv-select--fill) { width: 200px; }
         `}
       />
       <Playground<SelectState>
@@ -121,6 +127,7 @@ export function SelectPlayground() {
           { key: 'variant', label: '样式', type: 'segment', value: 'fill', options: [['fill', '填充'], ['plain', '无底']] },
           { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['open', '展开'], ['selected', '已选'], ['disabled', '禁用']] },
           { key: 'icon', label: '左图标', type: 'toggle', value: false },
+          { key: 'endIcon', label: '后面图标', type: 'toggle', value: false },
           { key: 'optIcon', label: '选项图标', type: 'toggle', value: false },
           { key: 'placeholder', label: '占位文字', type: 'text', value: '请选择' },
           { key: 'text', label: '文字', type: 'text', value: '选项一' },

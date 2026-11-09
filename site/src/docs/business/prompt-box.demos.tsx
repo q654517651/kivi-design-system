@@ -42,12 +42,12 @@ const pic = (i: number) => `./placeholders/${PICS[i % PICS.length]}-1x1.webp`;
 const SAMPLE: ReferenceStackItem[] = [
   { id: 's1', type: 'image', name: '图片1', src: pic(0) },
   { id: 's2', type: 'image', name: '图片2', src: pic(1) },
-  { id: 's3', type: 'video', name: '视频1', src: pic(2), duration: '5s' },
-  { id: 's4', type: 'video', name: '视频2', src: pic(3), duration: '8s' },
-  { id: 's5', type: 'video', name: '视频3', src: pic(4), duration: '12s' },
+  { id: 's3', type: 'video', name: '视频1', src: pic(2), duration: '5s', video: './placeholders/video/kivi-demo-16x9.mp4' },
+  { id: 's4', type: 'video', name: '视频2', src: pic(3), duration: '8s', video: './placeholders/video/kivi-demo-16x9.mp4' },
+  { id: 's5', type: 'video', name: '视频3', src: pic(4), duration: '12s', video: './placeholders/video/kivi-demo-16x9.mp4' },
   { id: 's6', type: 'audio', name: '音频1', duration: '15s', src: AUDIO },
   { id: 's7', type: 'image', name: '图片3', src: pic(5) },
-  { id: 's8', type: 'video', name: '视频4', src: pic(6), duration: '5s' },
+  { id: 's8', type: 'video', name: '视频4', src: pic(6), duration: '5s', video: './placeholders/video/kivi-demo-16x9.mp4' },
 ];
 
 const SHORT = '生成一张赛博朋克风格的猕猴桃海报';
@@ -57,6 +57,9 @@ const HUGE = [LONG, LONG, LONG].join('\n');
 
 const noop = () => {};
 
+// 主站输入框贴在页面底部：工具条里的下拉、面板都往上弹（Dropdown 默认往下，用的地方改方向；放不下自己翻）
+const UP = 'top-start' as const;
+
 // ---------- 工具条 ----------
 // 下拉、参数面板都用 generation.tsx 里共用的那一份，和画布生成面板一样：选项、顺序、图标、展开方向都一致
 
@@ -64,32 +67,32 @@ const noop = () => {};
 const TOOLBARS: Record<string, (model?: string, onModelChange?: (m: string) => void) => JSX.Element> = {
   agent: () => (
     <>
-      <TaskSelect defaultValue="agent" />
-      <AgentControls skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />
+      <TaskSelect placement={UP} defaultValue="agent" />
+      <AgentControls placement={UP} skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />
     </>
   ),
   image: (model, onModelChange) => (
     <>
-      <TaskSelect defaultValue="image" />
-      <ImageModelControls model={model} onModelChange={onModelChange} />
+      <TaskSelect placement={UP} defaultValue="image" />
+      <ImageModelControls placement={UP} model={model} onModelChange={onModelChange} />
     </>
   ),
   video: (model, onModelChange) => (
     <>
-      <TaskSelect defaultValue="video" />
-      <VideoModelControls model={model} onModelChange={onModelChange} />
+      <TaskSelect placement={UP} defaultValue="video" />
+      <VideoModelControls placement={UP} model={model} onModelChange={onModelChange} />
     </>
   ),
   audio: (model, onModelChange) => (
     <>
-      <TaskSelect defaultValue="audio" />
-      <AudioModelControls model={model} onModelChange={onModelChange} />
+      <TaskSelect placement={UP} defaultValue="audio" />
+      <AudioModelControls placement={UP} model={model} onModelChange={onModelChange} />
     </>
   ),
 };
 
 const videoToolbar = TOOLBARS.video;
-const countSelect = <CountSelect />;
+const countSelect = <CountSelect placement={UP} />;
 
 // ---------- 属性面板：整个输入框 ----------
 
@@ -174,11 +177,11 @@ const DURATIONS = ['5s', '8s', '12s'];
 /** 演示一开始放 6 个素材，和参考区演示一样 */
 const LAB_START: ReferenceStackItem[] = [
   { id: 'l1', type: 'image', name: '图片1', src: pic(0) },
-  { id: 'l2', type: 'video', name: '视频1', src: pic(1), duration: '5s' },
-  { id: 'l3', type: 'video', name: '视频2', src: pic(2), duration: '8s' },
-  { id: 'l4', type: 'video', name: '视频3', src: pic(3), duration: '12s' },
+  { id: 'l2', type: 'video', name: '视频1', src: pic(1), duration: '5s', video: './placeholders/video/kivi-demo-16x9.mp4' },
+  { id: 'l3', type: 'video', name: '视频2', src: pic(2), duration: '8s', video: './placeholders/video/kivi-demo-16x9.mp4' },
+  { id: 'l4', type: 'video', name: '视频3', src: pic(3), duration: '12s', video: './placeholders/video/kivi-demo-16x9.mp4' },
   { id: 'l5', type: 'audio', name: '音频1', duration: '15s', src: AUDIO },
-  { id: 'l6', type: 'video', name: '视频4', src: pic(4), duration: '5s' },
+  { id: 'l6', type: 'video', name: '视频4', src: pic(4), duration: '5s', video: './placeholders/video/kivi-demo-16x9.mp4' },
 ];
 
 /** 参考区的增删：加图片、视频、音频，模拟上传，删除，清空。上传中的进度自己走，2.4 秒走完 */

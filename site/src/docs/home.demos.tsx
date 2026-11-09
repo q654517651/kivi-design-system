@@ -7,6 +7,7 @@ import {
   Button,
   Checkbox,
   Divider,
+  Dropdown,
   GenerateButton,
   Input,
   Menu,
@@ -101,7 +102,23 @@ function LeftColumn() {
         onChange={(e) => setQuery(e.target.value)}
         onClear={() => setQuery('')}
       />
-      <Select options={RATIOS} value={ratio} onChange={setRatio} aria-label="比例" />
+      <Dropdown
+        haspopup="listbox"
+        matchTriggerWidth
+        trigger={
+          <Select leftIcon={RATIOS.find((o) => o.value === ratio)?.icon} aria-label="比例">
+            {RATIOS.find((o) => o.value === ratio)?.label}
+          </Select>
+        }
+      >
+        <Menu role="listbox" aria-label="比例">
+          {RATIOS.map((o) => (
+            <MenuItem key={o.value} icon={o.icon} selected={o.value === ratio} onClick={() => setRatio(o.value)}>
+              {o.label}
+            </MenuItem>
+          ))}
+        </Menu>
+      </Dropdown>
       <Tabs variant="segment" value={kind} onChange={setKind} aria-label="类型">
         <TabItem value="image">图片</TabItem>
         <TabItem value="video">视频</TabItem>
@@ -126,7 +143,7 @@ function LeftColumn() {
 // 附件条一排 6 个刚好 360 宽，四种类型都放一个
 const ATTACHMENTS: AttachmentItem[] = [
   { id: 'a1', type: 'image', name: '图片1', src: `${IMG}kivi-future-1x1.webp` },
-  { id: 'a2', type: 'video', name: '视频1', src: `${IMG}kiwi-light-1x1.webp`, duration: '0:05' },
+  { id: 'a2', type: 'video', name: '视频1', src: `${IMG}kiwi-light-1x1.webp`, duration: '0:05', video: './placeholders/video/kivi-demo-16x9.mp4' },
   { id: 'a3', type: 'image', name: '图片2', src: `${IMG}monstera-dots-1x1.webp` },
   { id: 'a4', type: 'audio', name: '旁白.mp3', duration: '0:12', src: './placeholders/video/kivi-demo-9x16.mp4' },
   { id: 'a5', type: 'image', name: '图片3', src: `${IMG}ip-gouache-1x1.webp` },

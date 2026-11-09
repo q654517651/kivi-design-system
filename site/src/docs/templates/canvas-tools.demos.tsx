@@ -10,6 +10,7 @@ import {
   GenerateButton,
   IconButton,
   Input,
+  Menu,
   MenuItem,
   NodeCard,
   NodeMedia,
@@ -20,6 +21,7 @@ import {
   ParamField,
   PlaceholderImage,
   Select,
+  Dropdown,
   Slider,
   Switch,
   TabItem,
@@ -101,7 +103,7 @@ function VideoHdPanel() {
   const [res, setRes] = useState('1080P');
   const [fps, setFps] = useState(30);
   return (
-    <ToolPanel refs={[{ id: 'video', type: 'video', name: '视频节点', src: IMAGE, duration: '0:08', badge: '1' }]} cost={fps > 30 ? 40 : 20}>
+    <ToolPanel refs={[{ id: 'video', type: 'video', name: '视频节点', src: IMAGE, duration: '0:08', badge: '1', video: './placeholders/video/kivi-demo-16x9.mp4' }]} cost={fps > 30 ? 40 : 20}>
       <ParamField label="分辨率">
         <Tabs variant="segment" value={res} onChange={setRes} aria-label="分辨率">
           {['720P', '1080P', '4K'].map((r) => (
@@ -276,7 +278,22 @@ function CropMode() {
           onClick={toggleLock}
         />
         <SizeField label="裁剪高度" value={out.h} onCommit={(v) => commitSize('h', v)} />
-        <Select variant="plain" options={CROP_RATIOS} value={locked ? ratio : null} placeholder="自由比例" onChange={pickRatio} aria-label="裁剪比例" />
+        <Dropdown
+          haspopup="listbox"
+          trigger={
+            <Select variant="plain" leftIcon={CROP_RATIOS.find((o) => o.value === (locked ? ratio : null))?.icon} placeholder="自由比例" aria-label="裁剪比例">
+              {CROP_RATIOS.find((o) => o.value === (locked ? ratio : null))?.label}
+            </Select>
+          }
+        >
+          <Menu role="listbox" aria-label="裁剪比例">
+            {CROP_RATIOS.map((o) => (
+              <MenuItem key={o.value} icon={o.icon} selected={o.value === (locked ? ratio : null)} disabled={o.disabled} onClick={() => pickRatio(o.value)}>
+                {o.label}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Dropdown>
         <Divider orientation="vertical" />
         <Button variant="primary">确定</Button>
       </ButtonGroup>
@@ -319,7 +336,22 @@ function ExpandMode() {
       <ButtonGroup variant="glass" size={44} className="tpl-tool__bar">
         <IconButton tooltip={false} icon="Close" label="关闭扩图" variant="text" onClick={reset} />
         <span className="tpl-tool__bar-hint">拖动边框进行扩图</span>
-        <Select variant="plain" options={EXPAND_RATIOS} value={ratio} onChange={pickRatio} aria-label="扩图比例" />
+        <Dropdown
+          haspopup="listbox"
+          trigger={
+            <Select variant="plain" leftIcon={EXPAND_RATIOS.find((o) => o.value === ratio)?.icon} aria-label="扩图比例">
+              {EXPAND_RATIOS.find((o) => o.value === ratio)?.label}
+            </Select>
+          }
+        >
+          <Menu role="listbox" aria-label="扩图比例">
+            {EXPAND_RATIOS.map((o) => (
+              <MenuItem key={o.value} icon={o.icon} selected={o.value === ratio} disabled={o.disabled} onClick={() => pickRatio(o.value)}>
+                {o.label}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Dropdown>
         <GenerateButton cost={8} />
       </ButtonGroup>
     </div>
@@ -390,6 +422,8 @@ function PackInspector({ type }: { type: PackType }) {
   const [fadeIn, setFadeIn] = useState(0.5);
   const [fadeOut, setFadeOut] = useState(0.5);
   const [quality, setQuality] = useState(80);
+  const [format, setFormat] = useState('mp4');
+  const [fps, setFps] = useState('30');
   return (
     <div className="tpl-pack__spec">
       {type === 'vehicle' && <Banner type="warning">视频比例不符合规范</Banner>}
@@ -434,10 +468,42 @@ function PackInspector({ type }: { type: PackType }) {
             </div>
           </ParamField>
           <ParamField label="封装格式">
-            <Select options={FORMATS} defaultValue="mp4" aria-label="封装格式" />
+            <Dropdown
+              haspopup="listbox"
+              matchTriggerWidth
+              trigger={
+                <Select leftIcon={FORMATS.find((o) => o.value === format)?.icon} aria-label="封装格式">
+                  {FORMATS.find((o) => o.value === format)?.label}
+                </Select>
+              }
+            >
+              <Menu role="listbox" aria-label="封装格式">
+                {FORMATS.map((o) => (
+                  <MenuItem key={o.value} icon={o.icon} selected={o.value === format} disabled={o.disabled} onClick={() => setFormat(o.value)}>
+                    {o.label}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Dropdown>
           </ParamField>
           <ParamField label="帧速率">
-            <Select options={FPS} defaultValue="30" aria-label="帧速率" />
+            <Dropdown
+              haspopup="listbox"
+              matchTriggerWidth
+              trigger={
+                <Select leftIcon={FPS.find((o) => o.value === fps)?.icon} aria-label="帧速率">
+                  {FPS.find((o) => o.value === fps)?.label}
+                </Select>
+              }
+            >
+              <Menu role="listbox" aria-label="帧速率">
+                {FPS.map((o) => (
+                  <MenuItem key={o.value} icon={o.icon} selected={o.value === fps} disabled={o.disabled} onClick={() => setFps(o.value)}>
+                    {o.label}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Dropdown>
           </ParamField>
           <ParamField label="质量">
             <SliderInput label="质量" min={1} max={100} unit="%" value={quality} onChange={setQuality} />

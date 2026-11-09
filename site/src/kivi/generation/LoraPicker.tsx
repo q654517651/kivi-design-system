@@ -1,6 +1,7 @@
 import { forwardRef, useMemo, useState } from 'react';
 import { Dialog, type DialogProps } from '../dialog';
 import { EmptyState, toast } from '../feedback';
+import { Dropdown, Menu, MenuItem } from '../menu';
 import { Select } from '../selection';
 import { TabItem, Tabs } from '../navigation';
 import { useControllable } from '../hooks';
@@ -84,14 +85,21 @@ export const LoraPicker = forwardRef<HTMLDivElement, LoraPickerProps>(function L
             <TabItem value="all">全部</TabItem>
             <TabItem value="collected">收藏</TabItem>
           </Tabs>
-          <Select
+          <Dropdown
             className="kv-lora-picker__base"
-            style={{ flex: 'none', width: 160 }} // 宽 160，Figma 没变量；Select 填充的外壳宽 100%，用行内样式盖过
-            aria-label="底模"
-            value={base}
-            onChange={setBase}
-            options={[{ value: ALL, label: '全部类型' }, ...BASES.map((b) => ({ value: b, label: b }))]}
-          />
+            style={{ flex: 'none', width: 160 }} // 宽 160，Figma 没变量；填充下拉的外壳宽 100%，用行内样式盖过
+            haspopup="listbox"
+            matchTriggerWidth
+            trigger={<Select aria-label="底模">{base === ALL ? '全部类型' : base}</Select>}
+          >
+            <Menu role="listbox" aria-label="底模">
+              {[ALL, ...BASES].map((b) => (
+                <MenuItem key={b} selected={b === base} onClick={() => setBase(b)}>
+                  {b === ALL ? '全部类型' : b}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Dropdown>
         </div>
         {shown.length ? (
           <div className="kv-lora-picker__grid">

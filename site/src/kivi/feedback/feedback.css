@@ -606,6 +606,13 @@
   line-height: var(--font-line-height-20);
 }
 
+/* 小号放在矮格子里（16:9 这类，外层设了 container-type: size、高不到 170）：放不下 96 的插图，只留文字 */
+@container (max-height: 169px) {
+  .kv-empty-state--96 .kv-empty-state__illustration {
+    display: none;
+  }
+}
+
 /* 引导操作：下面放一个中号次要按钮，离文字 24（外层间距已经有了，这里补差） */
 .kv-empty-state__action {
   margin-top: calc(var(--spacing-24) - var(--kv-empty-gap));

@@ -1,9 +1,8 @@
 import { forwardRef, type ReactNode } from 'react';
 import { useControllable } from '../hooks';
 import { Dropdown, type DropdownPlacement, type DropdownProps } from '../menu';
-import { Icon } from '../Icon';
-import { cx } from '../utils';
-import '../selection/selection.css';
+import type { IconName } from '../icons';
+import { Select } from '../selection';
 import './generation.css';
 import { ParamPanel } from './ParamPanel';
 
@@ -11,6 +10,8 @@ export interface ParamPickerProps
   extends Omit<DropdownProps, 'trigger' | 'children' | 'matchTriggerWidth' | 'anchorPoint' | 'closeOnSelect' | 'haspopup'> {
   /** 触发器上的参数摘要，比如「720P · 16:9 · 8s」，跟着面板里的选择变 */
   summary: ReactNode;
+  /** 摘要后面跟的小图标，比如视频参数生成音频开着时的音量（Select 的 endIcon） */
+  summaryIcon?: IconName;
   /** 面板里的内容：一块块 ParamField */
   children?: ReactNode;
   /** 面板出现的位置，默认 bottom-start（下方、左对齐），放不下自己翻到上方。和下拉选择一样 */
@@ -26,13 +27,14 @@ export interface ParamPickerProps
 }
 
 /**
- * 参数选择：长得和无底的 Select 一样，点开的是参数面板（ParamPanel），不是列表。
+ * 参数选择：触发器是无底的 Select，点开的是参数面板（ParamPanel），不是列表。
  * 画布生成面板和主站输入框共用，比例、时长、分辨率、生成音频这类放在一起调的参数都用它。
  * ref 给包住触发器的外壳 span（和 Dropdown 一样）。
  */
 export const ParamPicker = forwardRef<HTMLSpanElement, ParamPickerProps>(function ParamPicker(
   {
     summary,
+    summaryIcon,
     children,
     placement,
     open: openProp,
@@ -53,12 +55,11 @@ export const ParamPicker = forwardRef<HTMLSpanElement, ParamPickerProps>(functio
       placement={placement}
       closeOnSelect={false}
       haspopup="dialog"
-      className={cx('kv-select__wrap kv-select__wrap--plain', className)}
+      className={className}
       trigger={
-        <button type="button" className="kv-select kv-select--plain" aria-label={ariaLabel}>
-          <span className="kv-select__text kv-param-picker__summary">{summary}</span>
-          <Icon name={open ? 'UpArrowSmall' : 'DownArrowSmall'} />
-        </button>
+        <Select variant="plain" endIcon={summaryIcon} aria-label={ariaLabel}>
+          {summary}
+        </Select>
       }
       {...rest}
     >

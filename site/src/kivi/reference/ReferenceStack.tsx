@@ -26,8 +26,10 @@ export interface ReferenceStackItem {
   type: ReferenceType;
   /** 名字，比如「图片1」：提示词里 @ 引用和读屏用，要和 @ 出来的一致，用 referenceName() 按类型编号。卡片上不写名字，右上角写序号 */
   name: string;
-  /** 缩略图地址：图片、视频封面用。音频不用 */
+  /** 缩略图地址：图片、视频封面用；音频传音频地址，悬停预览里能播 */
   src?: string;
+  /** 视频文件地址，视频用：悬停预览里自动静音循环播放 */
+  video?: string;
   /** 时长文字，视频、音频用，比如「8s」「0:15」。展开时显示在卡片左下角 */
   duration?: string;
   /** 上传进度 0–100。不传就是已经上传完；传了卡片盖一层暗色加进度环 */
@@ -449,7 +451,7 @@ function ReferenceStackCard({ item, index, layout, ghost, enter, open, onRemove,
       {/* 展开后悬停出预览卡（和附件条同一个）：图片、视频看大图，音频看名字和时长；上传中、没有图的不出 */}
       <PreviewPopover
         disabled={!open || ghost || uploading || (item.type !== 'audio' && !item.src)}
-        preview={{ type: item.type, src: item.src, name: item.name, duration: item.duration }}
+        preview={{ type: item.type, src: item.src, video: item.video, name: item.name, duration: item.duration }}
       >
         <ReferenceItem size={72} type={item.type === 'audio' ? 'audio' : 'image'} src={item.src} badge={String(index + 1)} />
       </PreviewPopover>

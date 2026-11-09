@@ -416,12 +416,15 @@ const PLACEHOLDER: Record<string, string> = {
   audio: '描述你想生成的声音，或者输入要念的文字',
 };
 
+// 主站输入框贴在页面底部：工具条里的下拉、面板都往上弹（Dropdown 默认往下，用的地方改方向；放不下自己翻）
+const UP = 'top-start' as const;
+
 /** 任务类型后面那一组：Agent 是模型、技能、模式；图片、视频、音频是各自的模型和参数（kivi/generation 那一份） */
 const TOOLBAR: Record<string, (model: string, setModel: (m: string) => void) => JSX.Element> = {
-  agent: () => <AgentControls skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />,
-  image: (model, setModel) => <ImageModelControls model={model} onModelChange={setModel} />,
-  video: (model, setModel) => <VideoModelControls model={model} onModelChange={setModel} />,
-  audio: (model, setModel) => <AudioModelControls model={model} onModelChange={setModel} />,
+  agent: () => <AgentControls placement={UP} skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />,
+  image: (model, setModel) => <ImageModelControls placement={UP} model={model} onModelChange={setModel} />,
+  video: (model, setModel) => <VideoModelControls placement={UP} model={model} onModelChange={setModel} />,
+  audio: (model, setModel) => <AudioModelControls placement={UP} model={model} onModelChange={setModel} />,
 };
 
 function Composer() {
@@ -458,14 +461,14 @@ function Composer() {
       references={<ReferenceStack items={items} onAdd={add} onRemove={(id) => setItems((list) => list.filter((i) => i.id !== id))} />}
       toolbar={
         <>
-          <TaskSelect value={task} onChange={setTask} />
+          <TaskSelect placement={UP} value={task} onChange={setTask} />
           {TOOLBAR[task](models[task], setModel)}
         </>
       }
       actions={
         // 主站一律用猕猴桃生成按钮（圆形发送按钮只给画布 Agent）。音频没有张数，换成字数 / 上限。只能看，点了不生成
         <>
-          {task === 'audio' ? <AudioCharCount count={text.length} model={audioModel} /> : <CountSelect />}
+          {task === 'audio' ? <AudioCharCount count={text.length} model={audioModel} /> : <CountSelect placement={UP} />}
           <GenerateButton cost={demoCost(task, models[task])} />
         </>
       }

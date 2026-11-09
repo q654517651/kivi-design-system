@@ -8,6 +8,9 @@ import {
   ProjectCard,
   ResultTile,
   Select,
+  Dropdown,
+  Menu,
+  MenuItem,
   TabItem,
   Tabs,
   Toaster,
@@ -179,7 +182,22 @@ function AssetsPage() {
         {/* 筛选条：滚动时吸顶 */}
         <div className="tpl-as__filters">
           <span className="tpl-as__label">来源</span>
-          <Select variant="plain" options={SOURCE_OPTIONS} value={source} onChange={setSource} aria-label="生成历史来源" />
+          <Dropdown
+            haspopup="listbox"
+            trigger={
+              <Select variant="plain" leftIcon={SOURCE_OPTIONS.find((o) => o.value === source)?.icon} aria-label="生成历史来源">
+                {SOURCE_OPTIONS.find((o) => o.value === source)?.label}
+              </Select>
+            }
+          >
+            <Menu role="listbox" aria-label="生成历史来源">
+              {SOURCE_OPTIONS.map((o) => (
+                <MenuItem key={o.value} icon={o.icon} selected={o.value === source} disabled={o.disabled} onClick={() => setSource(o.value)}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Dropdown>
           <span className="tpl-as__label">类型</span>
           <Tabs value={type} onChange={setType} aria-label="生成历史类型">
             <TabItem value="all">全部</TabItem>
