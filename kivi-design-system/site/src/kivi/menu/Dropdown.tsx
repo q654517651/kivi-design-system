@@ -6,7 +6,10 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
+  useState,
+  type CSSProperties,
   type FocusEvent,
   type HTMLAttributes,
   type KeyboardEvent,
@@ -43,7 +46,11 @@ export interface DropdownProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'ch
   anchorPoint?: { x: number; y: number };
   /** 点了菜单项就关闭，默认开。多选菜单要保持展开时关掉 */
   closeOnSelect?: boolean;
-  /** 弹出的是菜单还是单选列表，写在触发器的 aria-haspopup 上，默认 menu。下拉选择用 listbox，弹出的是一块带输入的面板（时间筛选、参数）用 dialog：Tab 在面板里正常走，走出面板才关闭 */
+  /**
+   * 弹出的是菜单还是单选列表，写在触发器的 aria-haspopup 上，默认 menu。
+   * 下拉选择用 listbox：打开时滚到选中的那一项（键盘打开的焦点也落在它上面），不和触发器一样宽时列表不比触发器窄。
+   * 弹出的是一块带输入的面板（时间筛选、参数）用 dialog：Tab 在面板里正常走，走出面板才关闭
+   */
   haspopup?: 'menu' | 'listbox' | 'dialog';
 }
 
@@ -111,6 +118,12 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
   );
   const match = Boolean(matchTriggerWidth && !anchorPoint);
 
+  // 单选列表不和触发器一样宽时（无底的 Select 很窄）：打开时量一下触发器，列表按内容撑宽，但不比它窄
+  const [minWidth, setMinWidth] = useState<number>();
+  useLayoutEffect(() => {
+    if (open && haspopup === 'listbox' && !match) setMinWidth(anchorRef.current?.offsetWidth);
+  }, [open, haspopup, match]);
+
   const close = (restoreFocus = false) => {
     setOpen(false);
     if (restoreFocus) (anchorRef.current?.firstElementChild as HTMLElement | null)?.focus();
@@ -137,7 +150,10 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     if (!open) return;
     const el = popupRef.current;
     if (!el) return;
-    const first = el.querySelector<HTMLElement>(ITEMS);
+    // 单选列表有选中的：落在选中的那一项，长列表先滚到它
+    const current = haspopup === 'listbox' ? el.querySelector<HTMLElement>(`${ITEMS}[aria-selected="true"]`) : null;
+    current?.scrollIntoView({ block: 'nearest' });
+    const first = current ?? el.querySelector<HTMLElement>(ITEMS);
     (viaKeyboard.current && first ? first : el).focus({ preventScroll: true });
     viaKeyboard.current = false;
   }, [open, anchorPoint?.x, anchorPoint?.y]);
@@ -223,6 +239,7 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
         ref={popupRef}
         id={id}
         className={cx('kv-popup', match && 'kv-popup--match')}
+        style={minWidth ? ({ '--kv-menu-min': `${minWidth}px` } as CSSProperties) : undefined}
         data-state={state}
         tabIndex={-1}
         onKeyDown={onPopupKeyDown}

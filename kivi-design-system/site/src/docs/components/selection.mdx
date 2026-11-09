@@ -10,7 +10,7 @@ import { CheckboxPlayground, SelectPlayground, SliderPlayground, SwitchPlaygroun
 
 ## Select
 
-下拉选择：在多个选项里选一个，比如模型、比例、生成模式。
+下拉选择：点开在几个选项里选一个，或打开参数、日期这类面板，比如比例、模型、技能。
 
 <SelectPlayground />
 
@@ -105,21 +105,19 @@ import { CheckboxPlayground, SelectPlayground, SliderPlayground, SwitchPlaygroun
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `options` | `SelectOption[]` | — | 选项 `{ value, label, icon?, description?, preview?, disabled? }`。`icon` 是这一项的左图标（比如模型 logo），选中后触发器的左图标跟着换；`description` 是第二行说明，写了这一项就是两行菜单项（图标 24，当前项打勾不加底），触发器上只显示 `label`；`preview` 是试听音频地址（音色选择用），左边出圆形试听按钮，点它只试听、不选中、不关列表，和 `icon` 二选一；`disabled` 灰色，选不了。列表是 Menu + MenuItem，当前项是 MenuItem 的「选中」状态：白 10% 底，不打勾 |
 | `variant` | `"fill"` `"plain"` | `"fill"` | 填充 / 无底。填充用在表单和面板，宽度拉伸，内边距 12，底白 10%，悬停白 14%；无底用在工具条，宽度跟着内容走，内边距 8，底透明，悬停白 14%（Light 1 hover），展开白 10%（常驻底色）。高 32，圆角 8（`--border-radius-8`） |
-| `value` | `string` `null` | — | 选中的值，没选传 `null`。传了就是受控，要自己在 `onChange` 里更新 |
-| `defaultValue` | `string` `null` | `null` | 非受控时的初始值 |
-| `onChange` | `(value: string) => void` | — | 选了一项时触发，参数是选项的值 |
-| `placeholder` | `string` | — | 没选时显示的占位文字。填充是灰的（`--color-text-fill-placeholder`）；无底放在工具条上当入口名（比如「模型」「技能」），和选了值一样白，左图标也白 |
-| `leftIcon` | `IconName` | — | 左图标，16，tertiary。选中的选项带 `icon` 时用选项的 |
-| `disabled` | `boolean` | `false` | 禁用：占位文字和箭头变灰，不能展开；开着时变禁用会收起，选项不响应、不触发 `onChange` |
-| `open` | `boolean` | — | 展开。传了就是受控；展开时右箭头从 `DownArrowSmall` 换成 `UpArrowSmall` |
-| `defaultOpen` | `boolean` | `false` | 非受控时一开始是不是展开 |
-| `onOpenChange` | `(open: boolean) => void` | — | 展开、收起时触发 |
-| `placement` | `DropdownPlacement` | `"bottom-start"` | 列表出现的位置，放不下会自己翻到另一边。工具条贴着屏幕底部时写 `"top-start"` |
+| `children` | `ReactNode` | — | 显示的值：选中项的文字，或者参数摘要（「720P · 16:9 · 5s」）。没有时显示 `placeholder` |
+| `placeholder` | `ReactNode` | — | 没有值时的占位文字。填充是灰的（`--color-text-fill-placeholder`）；无底放在工具条上当入口名（比如「模型」「技能」），和有值一样白，左图标也白 |
+| `leftIcon` | `IconName` | — | 左图标，16，tertiary，有值时白。选中的选项带图标时传选项的（比如模型 logo） |
+| `endIcon` | `IconName` | — | 文字后面跟的小图标，16，和文字一样白，间距 4。比如视频参数生成音频开着时的音量 |
+| `disabled` | `boolean` | `false` | 禁用：文字和箭头变灰，点不开 |
 | `aria-label` | `string` | — | 触发器上的说明，没有可见标签时必须写 |
 
-`className`、`style`、`ref` 和其余原生 `<span>` 属性加在最外层的壳上，填充的宽度在这里设。列表挂在 body 上，和触发器一样宽，最窄 160（无底的按内容撑宽，但不比触发器窄）。
+Select 只是触发器（Figma 里也是），点开什么由外面套的 `Dropdown` 决定。展开时 Dropdown 给它写 `aria-expanded`，右箭头从 `DownArrowSmall` 换成 `UpArrowSmall`。`ref` 和其余原生 `<button>` 属性都能传。
+
+- 选一个值：`Dropdown haspopup="listbox"` + `Menu role="listbox"` + `MenuItem selected`。当前项是 MenuItem 的「选中」状态，白 10% 底，不打勾；带 `description` 的两行项打勾不加底。打开时滚到选中项，键盘打开的焦点也落在它上面。填充写 `matchTriggerWidth`，列表和触发器一样宽；无底的列表按内容撑宽，不比触发器窄，最窄 160。
+- 打开一块面板：Dropdown 里放面板，比如参数 `ParamPicker`、日期 `DateRangeFilter`、选择模型 `GenModelPicker`、技能 `SkillPicker`。
+- 选项数据用 `SelectOption`：`{ value, label, icon?, description?, preview?, disabled? }`。`preview` 是试听音频地址（音色），MenuItem 的 `thumb` 放 `SelectPreview`，点它只试听，不选中、不关列表。生成用的下拉（任务类型、比例、模型、音色…）在 `kivi/generation/GenSelects.tsx` 里拼好了，直接用。
 
 ### Switch
 

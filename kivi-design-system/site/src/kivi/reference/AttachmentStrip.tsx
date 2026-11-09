@@ -15,8 +15,10 @@ export interface AttachmentItem {
   type: AttachmentType;
   /** 名字，比如「图片1」「产品演示.mp4」：悬停预览里显示，读屏用 */
   name: string;
-  /** 缩略图地址：图片、视频封面用。图片、视频没有地址就没有悬停预览 */
+  /** 缩略图地址：图片、视频封面用；音频传音频地址，悬停预览里能播。图片、视频没有地址就没有悬停预览 */
   src?: string;
+  /** 视频文件地址，视频用：悬停预览里自动静音循环播放 */
+  video?: string;
   /** 时长，视频、音频用，比如「0:12」 */
   duration?: string;
   /** 文件扩展名，文件用，比如「PDF」 */
@@ -61,7 +63,7 @@ export const AttachmentStrip = forwardRef<HTMLDivElement, AttachmentStripProps>(
           <PreviewPopover
             key={item.id}
             disabled={!previewable}
-            preview={{ type: item.type, src: item.src, name: item.name, duration: item.duration, ext: item.ext }}
+            preview={{ type: item.type, src: item.src, video: item.video, name: item.name, duration: item.duration, ext: item.ext }}
           >
             <div
               className="kv-attachment-strip__item"

@@ -34,7 +34,7 @@ const RESULTS: { node: CanvasNodeKey; type: MediaGroupType; items: MediaGroupIte
 /** 输入框里已经添加的附件 */
 const ATTACHMENTS: AttachmentItem[] = [
   { id: 'a1', type: 'image', name: '图片1', src: `${IMG}kiwi-light-1x1.webp` },
-  { id: 'a2', type: 'video', name: '产品演示.mp4', src: `${IMG}kivi-future-1x1.webp`, duration: '0:12' },
+  { id: 'a2', type: 'video', name: '产品演示.mp4', src: `${IMG}kivi-future-1x1.webp`, duration: '0:12', video: './placeholders/video/kivi-demo-16x9.mp4' },
   { id: 'a3', type: 'file', name: '活动策划案.pdf', ext: 'PDF' },
 ];
 

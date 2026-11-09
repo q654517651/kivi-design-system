@@ -29,9 +29,9 @@ export const ReferenceItem = forwardRef<HTMLDivElement, ReferenceItemProps>(func
   return (
     <div ref={ref} className={cx('kv-reference-item', size === 72 && 'kv-reference-item--72', className)} {...rest}>
       {/* 音频和文件一个样子：图标占位底 + 图标（11-04 用户定，音频不再用渐变底），左下写时长或扩展名 */}
-      {type === 'audio' && <AssetThumb size={size} type="icon" icon="Music" />}
-      {type === 'file' && <AssetThumb size={size} type="icon" icon={fileIcon(ext)} />}
-      {(type === 'image' || type === 'video') && <AssetThumb size={size} type="image" src={src} />}
+      {type === 'audio' && <AssetThumb size={size} type="icon" icon="Music" bordered={false} />}
+      {type === 'file' && <AssetThumb size={size} type="icon" icon={fileIcon(ext)} bordered={false} />}
+      {(type === 'image' || type === 'video') && <AssetThumb size={size} type="image" src={src} bordered={false} />}
       {badge && <span className="kv-reference-item__badge">{badge}</span>}
       {(duration || (type === 'file' && ext)) && <span className="kv-reference-item__duration">{duration ?? ext}</span>}
       {weight && <span className="kv-reference-item__weight">{weight}</span>}

@@ -20,6 +20,7 @@ import {
   ReferenceItem,
   ResultTile,
   Select,
+  Dropdown,
   Slider,
   TabItem,
   Tabs,
@@ -403,7 +404,24 @@ function ToolsPage() {
         <NodePanel className="tpl-at__panel">
           <Prompt key={promptKey} placeholder="描述扩出去的地方画什么，不填由 AI 自己补全" onText={setPrompt} />
           <NodePanelBar
-            left={<Select variant="plain" options={EXPAND_RATIOS} value={st.expandRatio} onChange={pickExpandRatio} aria-label="扩图比例" />}
+            left={
+              <Dropdown
+                haspopup="listbox"
+                trigger={
+                  <Select variant="plain" leftIcon={EXPAND_RATIOS.find((o) => o.value === st.expandRatio)?.icon} aria-label="扩图比例">
+                    {EXPAND_RATIOS.find((o) => o.value === st.expandRatio)?.label}
+                  </Select>
+                }
+              >
+                <Menu role="listbox" aria-label="扩图比例">
+                  {EXPAND_RATIOS.map((o) => (
+                    <MenuItem key={o.value} icon={o.icon} selected={o.value === st.expandRatio} disabled={o.disabled} onClick={() => pickExpandRatio(o.value)}>
+                      {o.label}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </Dropdown>
+            }
             right={gen}
           />
         </NodePanel>
@@ -422,7 +440,22 @@ function ToolsPage() {
           <NodePanelBar
             left={
               <>
-                <Select variant="plain" options={EDIT_MODES} value={st.editMode} onChange={(v) => v && set('editMode', v)} aria-label="编辑方式" />
+                <Dropdown
+                  haspopup="listbox"
+                  trigger={
+                    <Select variant="plain" leftIcon={EDIT_MODES.find((o) => o.value === st.editMode)?.icon} aria-label="编辑方式">
+                      {EDIT_MODES.find((o) => o.value === st.editMode)?.label}
+                    </Select>
+                  }
+                >
+                  <Menu role="listbox" aria-label="编辑方式">
+                    {EDIT_MODES.map((o) => (
+                      <MenuItem key={o.value} icon={o.icon} selected={o.value === st.editMode} disabled={o.disabled} onClick={() => ((v: string) => set('editMode', v))(o.value)}>
+                        {o.label}
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </Dropdown>
                 {st.editMode === 'remove' && <Hint>涂抹要去掉的东西</Hint>}
               </>
             }

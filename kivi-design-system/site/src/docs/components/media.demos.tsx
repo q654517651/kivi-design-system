@@ -112,13 +112,14 @@ export function ImagePlayground() {
 
 const THUMB = './placeholders/kivi-future-1x1.webp';
 
-type ThumbState = { type: string; size: string; icon: string };
+type ThumbState = { type: string; size: string; icon: string; bordered: boolean };
 
 function renderThumb(s: ThumbState) {
   const size = Number(s.size) as AssetThumbSize;
   const type = s.type as AssetThumbType;
-  if (type === 'image') return <AssetThumb size={size} type="image" src={THUMB} />;
-  return <AssetThumb size={size} type="icon" icon={s.icon as IconName} />;
+  const bordered = s.bordered ? undefined : false;
+  if (type === 'image') return <AssetThumb size={size} type="image" src={THUMB} bordered={bordered} />;
+  return <AssetThumb size={size} type="icon" icon={s.icon as IconName} bordered={bordered} />;
 }
 
 export function AssetThumbPlayground() {
@@ -128,6 +129,7 @@ export function AssetThumbPlayground() {
         { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['icon', '图标']] },
         { key: 'size', label: '尺寸', type: 'segment', value: '56', options: [['16', '16'], ['24', '24'], ['56', '56'], ['72', '72']] },
         { key: 'icon', label: '图标', type: 'segment', value: 'Message', options: [['Message', 'Message'], ['Canvas', 'Canvas'], ['Music', 'Music']] },
+        { key: 'bordered', label: '描边', type: 'toggle', value: true },
       ]}
       // 图标只有「图标」类型可换
       rules={(s) => (s.type === 'icon' ? {} : { icon: true })}

@@ -4,7 +4,7 @@ import { EmptyStatePlayground, LoadingPlayground, SkeletonPlayground } from './l
 <PageHeader
   eyebrow="浮层和反馈"
   title="加载和空态"
-  figma={['反馈', '177:714']}
+  figma={['加载和空态', '177:714']}
   code="kivi/feedback"
 />
 
@@ -65,7 +65,7 @@ import { EmptyStatePlayground, LoadingPlayground, SkeletonPlayground } from './l
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `type` | `"empty"` `"favorite"` `"offline"` `"failed"` | `"empty"` | 暂无内容 / 暂无收藏 / 无网络 / 生成失败。换的是 IP 图，样式一样 |
-| `size` | `160` `96` | `160` | 插图边长。160（页面、大面板）：间距 16，标题 16 / 24 粗 primary，描述 14 / 22 tertiary。96（下拉、侧栏）：间距 8，标题 14 / 22 粗 secondary，描述 12 / 20 tertiary。标题和描述间距都是 4 |
+| `size` | `160` `96` | `160` | 插图边长。160（页面、大面板）：间距 16，标题 16 / 24 粗 primary，描述 14 / 22 tertiary。96（下拉、侧栏）：间距 8，标题 14 / 22 粗 secondary，描述 12 / 20 tertiary。标题和描述间距都是 4。96 放在矮格子里（外层设 `container-type: size`、高不到 170，比如 16:9 的结果格）自动藏插图、只留文字 |
 | `title` | `ReactNode` | — | 标题，必填，一句话说清楚现在是什么情况 |
 | `description` | `ReactNode` | — | 说明，写清楚下一步做什么。下拉里不要 |
 | `action` | `ReactNode` | — | 引导操作，放一个 32 的轻 `Button`（占位处的按钮都减弱一档，文字灰），离文字 24 |

@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, type CSSProperties, type HTMLAttributes, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
+import { forwardRef, useEffect, useRef, type CSSProperties, type HTMLAttributes, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
 import { Icon } from '../Icon';
 import { usePointerDrag, useAudioPlayer } from '../hooks';
 import { Popover } from '../tooltip';
@@ -22,6 +22,8 @@ export interface PreviewCardProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   type?: PreviewCardType;
   /** 图片、视频：大图地址（视频传封面）。音频：音频地址，传了就能在卡片里播放 */
   src?: string;
+  /** 视频文件地址，视频用：传了大图位置自动静音循环播放（照线上），封面用 `src`；系统开了减少动态效果只放封面 */
+  video?: string;
   /** 名字，比如「图片1」「产品演示.mp4」，一行，超出省略 */
   name?: ReactNode;
   /** 说明：12 号 tertiary，最多 4 行。标注点的描述写这里 */
@@ -39,13 +41,14 @@ export interface PreviewCardProps extends Omit<HTMLAttributes<HTMLDivElement>, '
  * 只是内容，不带底；悬停出预览一律用下面的 `PreviewPopover`，别自己再包 Popover。
  */
 export const PreviewCard = forwardRef<HTMLDivElement, PreviewCardProps>(function PreviewCard(
-  { type = 'image', src, name, description, duration, ext, box, className, ...rest },
+  { type = 'image', src, video, name, description, duration, ext, box, className, ...rest },
   ref,
 ) {
   const big = type === 'image' || type === 'video';
   if (type === 'audio' && src) {
     return <AudioRow ref={ref} src={src} name={name} description={description} duration={duration} className={className} {...rest} />;
   }
+  const playVideo = type === 'video' && video && !prefersReducedMotion();
   const boxStyle: CSSProperties | undefined = box
     ? { left: `${box.x * 100}%`, top: `${box.y * 100}%`, width: `${box.width * 100}%`, height: `${box.height * 100}%` }
     : undefined;
@@ -53,7 +56,7 @@ export const PreviewCard = forwardRef<HTMLDivElement, PreviewCardProps>(function
     <div ref={ref} className={cx('kv-preview-card', big ? 'kv-preview-card--big' : 'kv-preview-card--row', className)} {...rest}>
       {big ? (
         <div className="kv-preview-card__media">
-          {src && <img src={src} alt="" />}
+          {playVideo ? <video src={video} poster={src} autoPlay muted loop playsInline /> : src && <img src={src} alt="" />}
           {boxStyle && <span className="kv-preview-card__box" style={boxStyle} />}
           {type === 'video' && duration && <span className="kv-preview-card__duration">{duration}</span>}
         </div>
@@ -72,24 +75,30 @@ export const PreviewCard = forwardRef<HTMLDivElement, PreviewCardProps>(function
 });
 PreviewCard.displayName = 'PreviewCard';
 
+/** 系统开了减少动态效果：视频不自动播 */
+const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
 /** 秒 → 「0:36」 */
 const clock = (sec: number) => {
   const t = Math.max(0, Math.floor(sec));
   return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
 };
 
-type AudioRowProps = Omit<PreviewCardProps, 'type' | 'ext' | 'box'> & { src: string };
+type AudioRowProps = Omit<PreviewCardProps, 'type' | 'ext' | 'box' | 'video'> & { src: string };
 
 /**
  * 音频预览卡：照线上（ai-chat AudioHoverCard）能播。56 缩略图就是播放按钮：平时音符，悬停、播放中换成播放 / 暂停；
- * 第二行平时是时长，播过之后是「已播 / 总长」；下面一条细进度条，点、拖跳到那里，方向键前后 5 秒。
+ * 第二行一直是「已播 / 总长」（没播是 0:00），播完回到开头（照线上）；下面一条细进度条，点、拖跳到那里，方向键前后 5 秒。
  * 同一时间只播一个（useAudioPlayer 走 exclusivePlayback），卡片收起（卸载）就停。
  */
 const AudioRow = forwardRef<HTMLDivElement, AudioRowProps>(function AudioRow(
   { src, name, description, duration: durationText, className, ...rest },
   ref,
 ) {
-  const { audioRef, audioProps, playing, currentTime, duration, status, toggle, seek, seekBy } = useAudioPlayer({ src });
+  // 播完回到开头（照线上）
+  const toStart = useRef<(time: number) => void>();
+  const { audioRef, audioProps, playing, currentTime, duration, status, toggle, seek, seekBy } = useAudioPlayer({ src, onEnded: () => toStart.current?.(0) });
+  toStart.current = seek;
   useEffect(() => {
     const el = audioRef.current;
     return () => el?.pause();
@@ -129,7 +138,7 @@ const AudioRow = forwardRef<HTMLDivElement, AudioRowProps>(function AudioRow(
       </button>
       <div className="kv-preview-card__text kv-preview-card__text--audio">
         {name != null && <div className="kv-preview-card__name">{name}</div>}
-        <div className="kv-preview-card__meta">{failed ? '加载失败' : started ? `${clock(currentTime)} / ${total ?? '—'}` : total}</div>
+        <div className="kv-preview-card__meta">{failed ? '加载失败' : `${clock(currentTime)} / ${total ?? '—'}`}</div>
         <div
           className="kv-preview-card__progress"
           role="slider"

@@ -25,11 +25,11 @@ export type MenuItemVariant = 'default' | 'danger';
 export interface MenuItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
   /** 文字 */
   children?: ReactNode;
-  /** 说明：写了就是两行，第二行 12 号 secondary，一行省略。两行时左图标 24；选中（selected）不加底、在右边打勾，因为两行的行大，悬停和选中都是底色分不清（11-03 定） */
+  /** 说明：写了就是两行，第二行 12 号 secondary，一行省略。两行时左图标 20；选中（selected）不加底、在右边打勾，因为两行的行大，悬停和选中都是底色分不清（11-03 定） */
   description?: ReactNode;
   /** 类型：普通 / 危险，默认普通。危险只有默认、悬停、禁用，没有选中；放在菜单最后，用 Divider 和上面隔开 */
   variant?: MenuItemVariant;
-  /** 左图标：16，两行时 24；平铺（侧栏）里 20。和 thumb 二选一 */
+  /** 左图标：16，两行时 20；平铺（侧栏）里 20。和 thumb 二选一 */
   icon?: IconName;
   /** 缩略图：放一个 AssetThumb 24，比如 `<AssetThumb size={24} src="…" />`，可以是图片、音频、图标（对话、画布的封面）。和 icon 二选一 */
   thumb?: ReactNode;

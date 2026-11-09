@@ -1,8 +1,8 @@
 // 查组件库 src/kivi/ 是否按「组件写法」页写的。npm run check 会跑。
-// 只查能机械判断的：forwardRef、displayName、...rest、is-* 类名、部件类名、CSS 里写死的颜色和背景模糊。
+// 只查能机械判断的：forwardRef、displayName、...rest、is-* 类名、部件类名、手抄别的组件的类名、CSS 里写死的颜色和背景模糊。
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../src/kivi/', import.meta.url));
@@ -104,6 +104,35 @@ for (const file of css) {
     if (raw.includes(NO_TOKEN_MARK)) return;
     if (/#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?)\(/.test(code)) report(file, i + 1, `写死了颜色：${code.trim()}（用变量；Figma 没变量就在这一行注释「${NO_TOKEN_MARK}」）`);
   });
+}
+
+// 别的组件的类名不手抄（11-09）：组件里写了另一个文件夹的 kv-xxx 类名，那个组件改了样子这里不会跟着变，应该直接用那个组件。
+// 确实只能借的，在那一行注释「借用类名」并写清原因
+const BORROW_MARK = '借用类名';
+{
+  const owners = new Map();
+  for (const file of css) {
+    const dir = dirname(relative(root, file));
+    if (dir === '.') continue;
+    // 属于谁：在哪个文件夹的 CSS 里当选择器的开头（行首）定义；写在后代选择器里的（.kv-menu-item > .kv-icon）不算
+    for (const m of readFileSync(file, 'utf8').matchAll(/^\.(kv-[a-z0-9]+(?:-[a-z0-9]+)*)/gm)) {
+      if (!owners.has(m[1])) owners.set(m[1], new Set());
+      owners.get(m[1]).add(dir);
+    }
+  }
+  for (const [file, src] of sources) {
+    const dir = dirname(relative(root, file));
+    src.split('\n').forEach((raw, i) => {
+      if (!/class/.test(raw) || raw.includes(BORROW_MARK)) return;
+      const seen = new Set();
+      for (const m of raw.matchAll(/['"`\s(](kv-[a-z0-9]+(?:-[a-z0-9]+)*)(?:__|--|(?=['"`\s)]))/g)) {
+        const own = owners.get(m[1]);
+        if (seen.has(m[1])) continue;
+        seen.add(m[1]);
+        if (own && !own.has(dir)) report(file, i + 1, `手抄了别的组件的类名 ${m[1]}（属于 ${[...own].join('、')}）：直接用那个组件；确实只能借就注释「${BORROW_MARK}」写原因`);
+      }
+    });
+  }
 }
 
 // tokens.css 里的值也一律十六进制（11-05 用户定）

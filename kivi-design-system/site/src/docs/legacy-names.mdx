@@ -602,6 +602,22 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | QuestionPanel | 「全部由 AI 决策」按钮：`aiDecide`、`aiDecideText`、`onAiDecide` | 删掉这三个属性，以后也不会有；底部只剩「忽略」和「确认提交」 |
 | AskRecord | `skippedText="交给 AI 决策"` 这种用法 | 不再传，跳过时用默认「已跳过」 |
 
+## Select 拆成触发器（11-09）
+
+Select 原来把触发器和选项列表绑在一起，点开只能是一份单选列表。现在 Select 只是触发器（和 Figma 一样），列表、面板由外面套的 Dropdown 放。生成用的预设（TaskSelect、ModelSelect、VoiceSelect…）对外用法不变。
+
+| 旧 | 新 | 怎么改 |
+|---|---|---|
+| `<Select options={…} value={v} onChange={set} />` | `<Dropdown haspopup="listbox" matchTriggerWidth trigger={<Select>{选中项.label}</Select>}><Menu role="listbox">{options.map(o => <MenuItem selected={o.value === v} onClick={() => set(o.value)}>…</MenuItem>)}</Menu></Dropdown>` | 无底的不写 `matchTriggerWidth`；选中项带图标时 `leftIcon` 传选项的图标 |
+| Select 的 `options` `value` `defaultValue` `onChange` | 删了，自己记选中值 | 选项数据结构 `SelectOption` 还在 |
+| Select 的 `open` `defaultOpen` `onOpenChange` `placement` | 写在 Dropdown 上 | 名字和用法一样 |
+| Select 的 `ref`、其余属性给外壳 `<span>` | `ref`、其余属性给触发器 `<button>`；外壳是 Dropdown 的 | 设宽度写在 Dropdown 上 |
+| 类名 `kv-select__wrap` `kv-select__wrap--plain` | 删了 | 外壳就是 `kv-dropdown`，填充撑满由 CSS 认 `.kv-select--fill` |
+| 选择模型、技能的触发器：Button 文字 + 下箭头（图标 20、字 500） | Select 无底（图标 16、字常规） | 和别的下拉入口一样大 |
+| 日期筛选 DateRangeFilter 的触发器：Button 文字 + 下箭头（箭头展开时转 180°） | Select 无底（箭头换成朝上） | 和别的下拉入口一样 |
+| 参数选择 ParamPicker：手写的无底下拉触发器；摘要里塞音量图标 | Select 无底；图标用 `summaryIcon` | `kv-param-picker__summary` 删了 |
+| SelectPreview（不导出） | 从组件库导出 | 音色列表自己拼时用 |
+
 ## 页面改名（11-06）
 
 目录再理一轮：通用组件从六组收成四组，名字和页名不再重复，太大的页拆开，放错页的组件挪回去。只挪位置、改页名，组件名、属性、样子和 `src/kivi/` 的文件夹都没变，`import { X } from '@kivi'` 照旧能用。旧地址打开会自动跳到新页。

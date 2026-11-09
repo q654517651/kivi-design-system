@@ -55,6 +55,14 @@ Foo.displayName = 'Foo';
 - 属性用英文，和 Figma 属性一一对应，带中文注释，写默认值。
 - 导出组件、`FooProps` 和可选值的类型（`FooSize`、`FooVariant`）。
 
+### 业务组件
+
+业务组件（`generation`、`reference`、`canvas`、`agent` 这些文件夹）是拿通用组件拼的，只填自己的内容：传哪个图标、写什么文字、有哪些选项和参数。
+
+- 不改通用组件定好的东西：方向（`placement`）、离开多远（`offset`）、尺寸、颜色、圆角、动效。通用组件的默认值就是规范，业务组件不另写默认值去盖它。
+- 往哪边弹、多宽这类跟着用的地方走的，由用的地方传：业务组件把 `placement` 这类属性透传给里面的通用组件，一组控件（比如 `AgentControls`、`VideoModelControls`）传进来的要给组里每一个。
+- 业务组件的 CSS 只管自己的排版（几个零件怎么排、间距），不写选择器去改里面通用组件的样子；要别的样子就给通用组件加类型、状态（「设计规则 · 组件」：不搞特例）。
+
 ## 状态
 
 - 外面可能要控制的状态，成套给三个：
@@ -80,6 +88,7 @@ Foo.displayName = 'Foo';
 ## 样式
 
 - 类名：组件 `kv-组件名`，修饰 `kv-组件名--尺寸`，部件 `kv-组件名__部件`。部件类名也是对外的接口，前端改样式靠它。
+- 不手抄别的组件的类名：要那个样子就直接用那个组件，不然它改了这里不会跟着变。确实只能借的（比如组件少一个属性），在那一行注释「借用类名」写清原因，之后补属性换掉。
 - 颜色、间距、圆角、字号、时长、缓动只用 `tokens.css` 的变量。要透明度的用 `color-mix(in srgb, var(--变量) 30%, transparent)`。Figma 没有变量的值直接写数字，同一行写注释「Figma 没变量」。
 - 遮罩（mask）只看透明度，用 `black`、`transparent`。
 - Container 底色按所在的底选档（见「设计规则 · 颜色和底色」）。组件自己不知道放在哪时：自己的底写 `var(--kv-nested-fill, var(--color-bg-fill-container-light-1))`；本身带 Light 1 底、里面还会放别的组件的容器（MentionChip、ReferenceItem、LoraCard），设 `--kv-nested-fill: var(--color-bg-fill-container-light-2)`。悬停、按下同理用 `--kv-nested-fill-hover`、`--kv-nested-fill-pressed`（文字、轻类型的按钮读它们；菜单项的行也设了，给「⋯」用）。
@@ -111,4 +120,4 @@ Foo.displayName = 'Foo';
 
 ## 检查
 
-在 `site/` 下跑 `npm run check`：类型检查，再查组件有没有 `forwardRef`、`displayName`、`...rest`，有没有 `is-*` 类名，CSS 里有没有写死的颜色。
+在 `site/` 下跑 `npm run check`：类型检查，再查组件有没有 `forwardRef`、`displayName`、`...rest`，有没有 `is-*` 类名，有没有手抄别的组件的类名，CSS 里有没有写死的颜色。

@@ -35,12 +35,12 @@ const pic = (i: number) => `./placeholders/${PICS[i % PICS.length]}-1x1.webp`;
 const SAMPLE: ReferenceStackItem[] = [
   { id: 's1', type: 'image', name: '图片1', src: pic(0) },
   { id: 's2', type: 'image', name: '图片2', src: pic(1) },
-  { id: 's3', type: 'video', name: '视频1', src: pic(2), duration: '5s' },
-  { id: 's4', type: 'video', name: '视频2', src: pic(3), duration: '8s' },
-  { id: 's5', type: 'video', name: '视频3', src: pic(4), duration: '12s' },
+  { id: 's3', type: 'video', name: '视频1', src: pic(2), duration: '5s', video: './placeholders/video/kivi-demo-16x9.mp4' },
+  { id: 's4', type: 'video', name: '视频2', src: pic(3), duration: '8s', video: './placeholders/video/kivi-demo-16x9.mp4' },
+  { id: 's5', type: 'video', name: '视频3', src: pic(4), duration: '12s', video: './placeholders/video/kivi-demo-16x9.mp4' },
   { id: 's6', type: 'audio', name: '音频1', duration: '15s', src: AUDIO },
   { id: 's7', type: 'image', name: '图片3', src: pic(5) },
-  { id: 's8', type: 'video', name: '视频4', src: pic(6), duration: '5s' },
+  { id: 's8', type: 'video', name: '视频4', src: pic(6), duration: '5s', video: './placeholders/video/kivi-demo-16x9.mp4' },
 ];
 
 const LONG =
@@ -87,7 +87,7 @@ export function ReferenceStackPlayground() {
 
 const ATTACHMENTS: AttachmentItem[] = [
   { id: 'a1', type: 'image', name: '图片1', src: pic(0) },
-  { id: 'a2', type: 'video', name: '产品演示.mp4', src: pic(2), duration: '0:12' },
+  { id: 'a2', type: 'video', name: '产品演示.mp4', src: pic(2), duration: '0:12', video: './placeholders/video/kivi-demo-16x9.mp4' },
   { id: 'a3', type: 'audio', name: '配乐.mp3', duration: '0:36', src: AUDIO },
   { id: 'a4', type: 'file', name: '活动策划案.pdf', ext: 'PDF' },
   { id: 'a5', type: 'file', name: '分镜数据.json', ext: 'JSON' },
@@ -252,6 +252,7 @@ export function PreviewCardPlayground() {
               <PreviewCard
                 type={s.type}
                 src={s.type === 'image' || s.type === 'video' ? PREVIEW_SRC : s.type === 'audio' ? AUDIO : undefined}
+                video={s.type === 'video' ? './placeholders/video/kivi-demo-16x9.mp4' : undefined}
                 name={s.name || undefined}
                 description={s.description || undefined}
                 duration={(s.type === 'video' || s.type === 'audio') && s.duration ? s.duration : undefined}
@@ -287,6 +288,7 @@ export function PreviewPopoverPlayground() {
             preview={{
               type: s.type,
               src: s.type === 'image' || s.type === 'video' ? PREVIEW_SRC : s.type === 'audio' ? AUDIO : undefined,
+              video: s.type === 'video' ? './placeholders/video/kivi-demo-16x9.mp4' : undefined,
               name: s.type === 'file' ? '活动策划案.pdf' : s.type === 'audio' ? '配乐.mp3' : s.type === 'video' ? '视频1' : '图片1',
               duration: s.type === 'video' || s.type === 'audio' ? '0:12' : undefined,
               ext: s.type === 'file' ? 'PDF' : undefined,

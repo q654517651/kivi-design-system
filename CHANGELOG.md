@@ -40,11 +40,38 @@ KIVI 设计规范（技能 + 网站 + 组件库）每一版改了什么。最新
 
 （还没有）
 
+## [0.4.0] - 2026-11-09
+
+### 新增
+
+- AssetThumb 加 `bordered`（默认有描边，铺满自带描边的外框时关）；LoraField 加 `placement`（设置面板往哪边弹，由用的地方传）。
+- 列表 List / ListItem（「展示 · 布局」页）：一条一条的记录，比如记忆管理。`divider` 条目之间加分割线；ListItem 有小标题 `label`、能换行的正文、说明 `description`（比如日期），悬停出「⋯」（`more`），`editing` 原地换成 Textarea + 取消 / 保存。
+- Select 加 `endIcon`：文字后面跟的小图标，比如视频参数生成音频开着时的音量；ParamPicker 加 `summaryIcon` 传它。SelectPreview（音色试听）从组件库导出。
+
+### 改名和删除
+
+- Select 拆成触发器（和 Figma 一样）：`options`、`value`、`defaultValue`、`onChange` 删了，`open` 一套、`placement` 写到 Dropdown 上；选一个值改成 `Dropdown haspopup="listbox"` + `Select` + `Menu` + `MenuItem` 拼。`kv-select__wrap` 删了。生成用的预设（TaskSelect、ModelSelect、VoiceSelect…）用法不变。写法见网站「旧名对照 · Select 拆成触发器」。
+
+### 改动
+
+- 下拉入口统一用 Select：选择模型、技能、日期筛选的触发器从文字按钮（图标 20、字加粗）改成无底 Select（图标 16、字常规），日期筛选的箭头从转 180° 改成换成朝上；参数选择 ParamPicker 也用 Select，不再手写。
+- Dropdown：`haspopup="listbox"` 时打开滚到选中项、键盘打开焦点落在它上面，不和触发器一样宽时列表不比触发器窄（原来是 Select 自己做的）。
+- 检查脚本拦「手抄别的组件的类名」；设计规则加「下拉入口一律用 Select」。
+- 两行菜单项（MenuItem 带 `description`）的左图标 24 → 20，和单行的 16 差得没那么悬殊。用到的：Agent 手动 / 自动、生成模式、模型偏好、音色。
+- 业务组件不再写死弹出方向：选择模型 GenModelPicker、技能 SkillPicker 去掉自己的「往上」，跟着 Dropdown 默认往下、放不下自动翻；AgentControls、Image / Video / AudioModelControls 传进来的 `placement` 给组里每个下拉。主站输入框、画布 Agent 输入框在用的地方传 `placement="top-start"`，整排往上。设计规则「浮层」、组件写法「业务组件」各加了一条。
+- 业务组件不再改通用组件的样子：参考格不再用 CSS 去掉缩略图描边，改传 `bordered={false}`；生成结果组矮格子藏插图挪进 EmptyState 自己（96 放在矮格子里自动只留文字）；LoraField 不再写死往上。样子都没变。
+
+### 修复
+
+- 页头的 Figma 链接换成 Figma 分页后的新页：选项卡、布局、消息、加载和空态、创作输入框、参数和模型、生成记录；参考和引用、资产补了链接。
+- 首页：点按钮、分段这些组件时背景字符画不再出点击波纹（波纹从半透明的底下穿过，看着像组件在闪）；点空白处照旧。
+
 ## [0.3.0] - 2026-11-06
 
 ### 新增
 
-- 悬停预览卡（PreviewCard）音频能播放（照线上）：音频的 `src` 传音频地址，56 缩略图就是播放 / 暂停，时长那行播过之后写「已播 / 总长」，下面一条能点、能拖的细进度条；同一时间只播一个，卡片收起就停。附件条、参考区的音频悬停预览都有。
+- 悬停预览卡（PreviewCard）音频能播放（照线上）：音频的 `src` 传音频地址，56 缩略图就是播放 / 暂停，时长那行一直写「已播 / 总长」、播完回到开头，下面一条能点、能拖的细进度条；同一时间只播一个，卡片收起就停。附件条、参考区的音频悬停预览都有。
+- 悬停预览卡视频能播（照线上）：PreviewCard、附件条和参考区的每一项加 `video`（视频文件地址），传了悬停预览里自动静音循环播放，封面还是 `src`；减少动态效果时只放封面。
 - 页面模板「AI 工具」：左边切工具（图片、视频不分开），中间舞台直接扩图、涂抹，右边历史；参数面板和画布工具面板同一套。演示稿，待定的在 `page-notes/ai-tools.md`。
 
 ### 改名和删除

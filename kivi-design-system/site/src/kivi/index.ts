@@ -17,6 +17,7 @@ export * from './placeholder-image';
 export * from './button';
 export * from './divider';
 export * from './collapse';
+export * from './list';
 export * from './menu';
 export * from './navigation';
 export * from './inputs';

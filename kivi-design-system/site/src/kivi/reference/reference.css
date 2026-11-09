@@ -104,10 +104,7 @@
 }
 
 /* 缩略图用 kv-asset-thumb（56 或 72，和外框一致），铺满外框。
-   只留外框那圈 12%：缩略图自己的 8% 描边和它压在同一个像素上会叠成约 19%（11-05） */
-.kv-reference-item .kv-asset-thumb::after {
-  content: none;
-}
+   只留外框那圈 12%：缩略图自己的 8% 描边和它压在同一个像素上会叠成约 19%（11-05），所以 ReferenceItem 传 bordered={false} */
 /* 右上角标：序号或首帧 / 尾帧，最小 20 × 20，左右留 4（2026-10-29 用户在 Figma 里加的，不然「首帧」贴边）。
    左下圆角 4；右上也要跟外框一样做 8 的圆角：角标带背景模糊，Chrome 里外框的圆角裁不掉它，不写就会露出直角 */
 .kv-reference-item__badge {
@@ -227,7 +224,7 @@
   background: var(--color-bg-fill-container-light-1);
 }
 
-.kv-preview-card__media > img {
+.kv-preview-card__media > :is(img, video) {
   display: block;
   width: 100%;
   height: 100%;
