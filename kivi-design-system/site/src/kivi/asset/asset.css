@@ -56,8 +56,6 @@
 /* 出现 150ms ease-out，消失 150ms ease-in */
 .kv-folder-card__more,
 .kv-project-card__more {
-  position: relative;
-  z-index: 1;
   opacity: 0;
   visibility: hidden;
   transition:
@@ -76,37 +74,61 @@
     visibility 0s;
 }
 
-/* ---------- FolderCard ---------- */
+/* ---------- FolderCard、ProjectCard：封面卡 ----------
+   两种卡一个样子（11-11 用户定，照创作首页「最近项目」、即梦首页的画布卡）：
+   整张卡 16:9、圆角 16、描边 border-subtle，封面铺满（CoverGrid；空文件夹是 Light 1 底 + 文件夹图标）；
+   底部一条（高 64）压名字 14 / 22 中粗（左右 12、离底 8），这一条从上往下渐渐模糊（on-media 模糊，遮罩从透明到实）再叠一层渐变（透明 → 黑 60%），名字压在亮图上也看得清。
+   悬停（300ms ease-in-out）：封面放大到 1.035；底部这一条往上长一截；有修改时间的（画布卡）名字上移 20、下面淡入时间 12 / 20；右下出「⋯」（IconButton 浮层无底 28，离边 8）。
+   文件夹卡：名字后面跟「(数量)」不省略；置顶的右上挂「置顶」标签（离边 8） */
 
-/* 一格：封面 + 名字和数量，间距 8。封面 223:155 */
-.kv-folder-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-8);
-  min-width: 0;
-  font-family: var(--font-family);
-}
-
-.kv-folder-card__cover {
+.kv-folder-card,
+.kv-project-card {
   position: relative;
-  aspect-ratio: 223 / 155;
+  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
-  border-radius: var(--border-radius-8);
-  outline: var(--border-width-1) solid var(--color-border);
+  border-radius: var(--border-radius-16);
+  outline: var(--border-width-1) solid var(--color-border-subtle);
   outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-container-light-1);
-  transition: background-color var(--motion-duration-150) var(--motion-ease-out);
+  --kv-nested-fill: var(--color-bg-fill-container-light-1); /* 封面铺满整张卡，没图时的空底就是卡的底 */
+  font-family: var(--font-family);
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-/* 悬停：和画布卡、新建卡一样，卡的底变 Light 1 悬停，「⋯」悬停才出（11-05 统一）。文件夹卡的「卡」就是封面这块 */
-.kv-folder-card:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) .kv-folder-card__cover {
-  background: var(--color-bg-fill-container-light-1-hover);
+/* 点卡片打开：一层透明按钮盖满 */
+.kv-folder-card__open,
+.kv-project-card__open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 
-/* 空文件夹：浅底正中一个文件夹图标（线上是一张小插图，11-04 改成图标） */
+.kv-folder-card__cover,
+.kv-project-card__cover {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+:is(.kv-folder-card, .kv-project-card):where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) > :is(.kv-folder-card__cover, .kv-project-card__cover) {
+  transform: scale(1.035);
+}
+
+/* 空文件夹：正中一个文件夹图标 40，tertiary（线上是一张小插图，11-04 改成图标）；往上挪一点，让开底部名字 */
 .kv-folder-card__cover[data-empty] {
   display: grid;
   place-items: center;
+  padding-bottom: var(--spacing-24);
 }
 
 .kv-folder-card__empty {
@@ -115,232 +137,134 @@
   color: var(--color-text-fill-tertiary);
 }
 
-/* 点封面进文件夹：一层透明按钮盖满封面 */
-.kv-folder-card__open,
-.kv-project-card__open {
+/* 底部一条：高 64，平时往下藏一截只露底下 36，悬停整条升上来 */
+.kv-folder-card__meta,
+.kv-project-card__meta {
   position: absolute;
-  inset: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-
-/* 置顶标签：右上，离边 6 */
-.kv-folder-card__pin {
-  position: absolute;
-  top: var(--spacing-6);
-  right: var(--spacing-6);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  height: 64px;
   pointer-events: none;
 }
 
-/* 「⋯」：右下，离边 6 */
-.kv-folder-card__more {
+/* 渐进模糊（11-11 用户要的）：on-media 那档模糊，遮罩从上到下由透明到实，越往下越糊。
+   上面再叠渐变（透明 → 黑 60%，on-media 最深那档）。两层和这一条一起升降 */
+:is(.kv-folder-card__meta, .kv-project-card__meta)::before,
+:is(.kv-folder-card__meta, .kv-project-card__meta)::after {
+  content: "";
   position: absolute;
-  right: var(--spacing-6);
-  bottom: var(--spacing-6);
+  inset: 0;
+  transform: translateY(28px);
+  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
-/* 名字 (数量)：一行，14 / 22，primary，名字一行省略、数量跟在后面不省略，间距 4（照线上） */
-.kv-folder-card__meta {
+:is(.kv-folder-card__meta, .kv-project-card__meta)::before {
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000); /* 遮罩只看透明度，Figma 没变量 */
+  mask-image: linear-gradient(180deg, transparent, #000); /* 遮罩只看透明度，Figma 没变量 */
+}
+
+:is(.kv-folder-card__meta, .kv-project-card__meta)::after {
+  background: linear-gradient(180deg, transparent, var(--color-on-media-fill-hover));
+}
+
+:is(.kv-folder-card, .kv-project-card):where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) :is(.kv-folder-card__meta, .kv-project-card__meta)::before,
+:is(.kv-folder-card, .kv-project-card):where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) :is(.kv-folder-card__meta, .kv-project-card__meta)::after {
+  transform: none;
+}
+
+/* 名字（和时间）：左 12、离底 8，右边给「⋯」让位（28 + 离边 8 + 间距 12） */
+.kv-folder-card__text,
+.kv-project-card__text {
+  position: absolute;
+  right: 48px;
+  bottom: var(--spacing-8);
+  left: var(--spacing-12);
+  z-index: 1;
+}
+
+.kv-folder-card__title,
+.kv-project-card__name {
   display: flex;
   gap: var(--spacing-4);
   min-width: 0;
-  color: var(--color-text-fill-primary);
+  color: var(--color-on-media-text);
   font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
   white-space: nowrap;
+  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
+.kv-project-card__name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 文件夹名一行省略，数量跟在后面不省略（照线上） */
 .kv-folder-card__name {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ---------- ProjectCard ---------- */
-
-/* 圆角 12，浅底 + 描边，悬停底色变亮。封面 257:157，下面名字和时间，左右 8、下 8，间距 8。
-   整张不定比例：封面按比例、下面两行按字高，卡窄了字不会被挤掉（线上固定 257:210，257 宽时差不多） */
-.kv-project-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-8);
-  box-sizing: border-box;
-  min-width: 0;
-  padding-bottom: var(--spacing-8);
-  overflow: hidden;
-  border-radius: var(--border-radius-12);
-  outline: var(--border-width-1) solid var(--color-border);
-  outline-offset: calc(var(--border-width-1) * -1);
-  background: var(--color-bg-fill-container-light-1);
-  --kv-nested-fill: var(--color-bg-fill-container-light-2); /* 自己是 Light 1 底，里面的封面拼图（没图时的空底）叠在上面用 Light 2 */
-  font-family: var(--font-family);
-  -webkit-user-select: none;
-  user-select: none;
-  transition: background-color var(--motion-duration-150) var(--motion-ease-out);
-}
-
-.kv-project-card:where(:hover, :has(:focus-visible), .is-hover) {
-  background: var(--color-bg-fill-container-light-1-hover);
-}
-
-.kv-project-card__cover {
+.kv-folder-card__count {
   flex: none;
-  height: auto;
-  aspect-ratio: 257 / 157;
-  pointer-events: none;
 }
 
-.kv-project-card__meta {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: var(--spacing-8);
-  min-height: 0;
-  padding: 0 var(--spacing-4) 0 var(--spacing-8);
-  pointer-events: none;
-}
-
-.kv-project-card__more {
-  pointer-events: auto;
-}
-
-.kv-project-card__text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  min-width: 0;
-}
-
-.kv-project-card__name,
+/* 修改时间：藏在名字下面一行，悬停和名字一起上移 20，落在名字原来的位置（离底 8） */
 .kv-project-card__time {
+  position: absolute;
+  right: 0;
+  bottom: -20px;
+  left: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.kv-project-card__name {
-  color: var(--color-text-fill-primary);
-  font-size: var(--font-size-14);
-  line-height: var(--font-line-height-22);
-}
-
-.kv-project-card__time {
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
-}
-
-/* 样式：封面（创作首页「最近项目」，11-10 用户定，照即梦）。
-   整张卡 16:9，圆角 16，描边 border-subtle，封面铺满；底部一条渐变（透明 → 黑 60%，on-media 最深那档）上压名字 14 / 22 中粗（左右 12、离底 8）。
-   悬停（300ms ease-in-out）：封面放大到 1.035；渐变往上长一截；名字上移 20，下面淡入修改时间 12 / 20；右下出「⋯」（IconButton 浮层无底 28，离边 8） */
-.kv-project-card--cover {
-  display: block;
-  aspect-ratio: 16 / 9;
-  padding: 0;
-  border-radius: var(--border-radius-16);
-  outline-color: var(--color-border-subtle);
-  background: var(--color-bg-fill-container-light-1);
-  --kv-nested-fill: var(--color-bg-fill-container-light-1); /* 封面铺满整张卡，没图时的空底就是卡的底 */
-}
-
-.kv-project-card--cover:where(:hover, :has(:focus-visible), .is-hover) {
-  background: var(--color-bg-fill-container-light-1);
-}
-
-.kv-project-card--cover > .kv-project-card__cover {
-  position: absolute;
-  inset: 0;
-  aspect-ratio: auto;
-  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
-}
-
-.kv-project-card--cover:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) > .kv-project-card__cover {
-  transform: scale(1.035);
-}
-
-/* 名字条：贴底，高 64 的渐变，平时往下藏一截只露底下 36，悬停整条升上来 */
-.kv-project-card--cover > .kv-project-card__meta {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  display: block;
-  height: 64px;
-  padding: 0;
-  pointer-events: none;
-}
-
-.kv-project-card--cover > .kv-project-card__meta::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent, var(--color-on-media-fill-hover)); /* 压在亮图上也要看得清名字，渐变底到 on-media 最深的那档（黑 60%） */
-  transform: translateY(28px);
-  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
-}
-
-.kv-project-card--cover:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) > .kv-project-card__meta::before {
-  transform: none;
-}
-
-.kv-project-card--cover .kv-project-card__text {
-  position: absolute;
-  right: 48px; /* 给右下「⋯」让位：28 + 离边 8 + 间距 12 */
-  bottom: var(--spacing-8);
-  left: var(--spacing-12);
-  display: block;
-}
-
-.kv-project-card--cover .kv-project-card__name {
-  display: block;
-  color: var(--color-on-media-text);
-  font-weight: var(--font-weight-medium);
-  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
-}
-
-.kv-project-card--cover .kv-project-card__time {
-  position: absolute;
-  right: 0;
-  bottom: -20px; /* 藏在名字下面一行，悬停和名字一起上移 20，落在名字原来的位置（离底 8） */
-  left: 0;
   line-height: var(--font-line-height-20);
+  text-overflow: ellipsis;
+  white-space: nowrap;
   opacity: 0;
   transition:
     opacity var(--motion-duration-300) var(--motion-ease-in-out),
     transform var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
-.kv-project-card--cover[data-has-meta]:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) .kv-project-card__name {
+.kv-project-card[data-has-meta]:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) .kv-project-card__name {
   transform: translateY(-20px);
 }
 
-.kv-project-card--cover[data-has-meta]:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) .kv-project-card__time {
+.kv-project-card[data-has-meta]:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) .kv-project-card__time {
   opacity: 1;
   transform: translateY(-20px);
 }
 
-.kv-project-card--cover .kv-project-card__more {
+/* 「⋯」：右下，离边 8 */
+.kv-folder-card__more,
+.kv-project-card__more {
   position: absolute;
   right: var(--spacing-8);
   bottom: var(--spacing-8);
+  z-index: 3;
+  pointer-events: auto;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .kv-project-card--cover > .kv-project-card__cover,
-  .kv-project-card--cover > .kv-project-card__meta::before,
-  .kv-project-card--cover .kv-project-card__name,
-  .kv-project-card--cover .kv-project-card__time {
-    transition: none;
-  }
+/* 置顶标签：右上，离边 8 */
+.kv-folder-card__pin {
+  position: absolute;
+  top: var(--spacing-8);
+  right: var(--spacing-8);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* ---------- CreateCard ---------- */
 
-/* 和 ProjectCard 同一个外观：浅底 + 描边，圆角 12，悬停变亮。中间加号 24 + 文字 14，间距 2。大小填满所在格子 */
+/* 浅底 + 描边，圆角 12，悬停变亮（原来和 ProjectCard 一个外观，11-11 ProjectCard 改成封面卡后没跟着改）。中间加号 24 + 文字 14，间距 2。大小填满所在格子 */
 .kv-create-card {
   display: flex;
   flex-direction: column;

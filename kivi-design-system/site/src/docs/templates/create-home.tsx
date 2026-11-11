@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { MeshGradient } from '@paper-design/shaders-react';
 import {
   Button,
   CreateCard,
@@ -62,6 +63,48 @@ const FEATURED = flowsOf('featured').slice(0, HOME_COUNT);
 const WORKFLOWS = flowsOf('workflow').slice(0, HOME_COUNT);
 const HOME_SKILLS = SKILLS.slice(0, HOME_COUNT);
 const HOME_WORKS = WORKS.slice(0, 16);
+
+/**
+ * 输入框的流动底（11-11 用户要看效果，照即梦首页输入框里那层；扩到整屏试过，效果不好撤回了）：Paper Shaders 的 MeshGradient（Apache-2.0），参数照即梦深色那套（颜色换成品牌绿色调），
+ * 记录在 page-notes/jimeng-motion-background.md。铺满输入框外壳、在内容下面，准备好了淡入；系统开了「减少动态效果」不出（底是原来的玻璃）
+ */
+const MOTION = {
+  // Figma 没变量：着色器要的颜色。即梦是蓝青调（#151D21 #212A2E #263034 #0F161A），11-11 用户要带品牌绿：
+  // 每个色的 OKLCH 色相换成品牌绿 #2BFF75 的（149°）、彩度 × 1.4；用户又要渐变弱一点：四色亮度往平均值收 25%（平均亮度不变）
+  colors: ['#172018', '#202A21', '#242E25', '#121A13'],
+  // 流动也弱一点（用户定）：即梦是 distortion 0.25、swirl 0.6、speed 1.4
+  distortion: 0.2,
+  swirl: 0.5,
+  scale: 2.8,
+  speed: 1.1,
+  frame: 9062243.995, // 起始时间固定，每次打开画面一样
+  grainMixer: 0,
+  grainOverlay: 0,
+};
+
+function ComposerMotion() {
+  const [reduce, setReduce] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!mq) return;
+    const on = () => setReduce(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  // 挂上后下一帧再淡入，免得着色器还没画就露出黑块
+  useEffect(() => {
+    if (reduce) return;
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [reduce]);
+  if (reduce) return null;
+  return (
+    <div className="tpl-home__motion" data-ready={ready || undefined} aria-hidden>
+      <MeshGradient className="tpl-home__motion-shader" {...MOTION} />
+    </div>
+  );
+}
 
 function HomeHead({ title, onMore, children }: { title?: string; onMore: () => void; children?: React.ReactNode }) {
   return (
@@ -162,6 +205,7 @@ export function CreateHome({
               一格的高度取两套里高的那个，所以两个一样高 */}
           <div className="tpl-home__composer">
             <div className="tpl-home__shell">
+              <ComposerMotion />
               <div className="tpl-home__box" data-active={mode === 'generate' || undefined}>
                 <Composer placement="bottom-start" onSubmit={onSubmit} />
               </div>
@@ -182,7 +226,7 @@ export function CreateHome({
                   {/* 一排 5 格：新建画布占掉最近项目没占的格子，一个画布都没有时铺满整排（11-10 用户定，照即梦） */}
 <CreateCard variant="canvas" label="新建画布" onClick={onOpenCanvas} />
                   {RECENT.map((c) => (
-                    <ProjectCard key={c.id} variant="cover" name={c.name} covers={c.covers} updatedAt={c.updatedAt} onOpen={onOpenCanvas} />
+                    <ProjectCard key={c.id} name={c.name} covers={c.covers} updatedAt={c.updatedAt} onOpen={onOpenCanvas} />
                   ))}
                 </div>
               </section>

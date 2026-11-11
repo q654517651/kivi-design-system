@@ -4,7 +4,7 @@ import { TabItem, Tabs } from '../navigation';
 import { Slider, type SelectOption, type SliderMark } from '../selection';
 import { ParamField } from './ParamPanel';
 import { ParamPicker, type ParamPickerProps } from './ParamPicker';
-import { DEFAULT_MODEL, VIDEO_RATIOS, plainOptions, ticks } from './options';
+import { DEFAULT_MODEL, RATIOS, SIZES, VIDEO_RATIOS, plainOptions, ticks } from './options';
 
 /*
   生成用的参数面板：视频参数、音频高级设置。点触发器弹出 ParamPanel，里面一块块 ParamField。
@@ -66,6 +66,9 @@ export interface VideoParamsProps extends Omit<ParamPickerProps, 'summary' | 'ch
   audio?: boolean;
 }
 
+const VIDEO_RES = ['720P', '1080P'];
+const VIDEO_SEC = { min: 4, max: 15 };
+
 /**
  * 视频参数：Figma「模板 · 画布」页「视频参数调整」（210:1514）。比例、时长、分辨率，Seedance 多一个生成音频。
  * 摘要照 Figma 主站输入框写成「分辨率 · 比例 · 时长」；生成音频开着时，后面跟一个音量图标（Figma 画布摘要「智能 · 8s · 2K ·」后面那个）
@@ -91,13 +94,39 @@ export const VideoParams = forwardRef<HTMLSpanElement, VideoParamsProps>(functio
           ))}
         </Tabs>
       </ParamField>
-      <SliderField label="选择视频生成时长" min={4} max={15} value={sec} unit="S" marks={ticks(5, 15, 5, 5)} onChange={setSec} />
-      <Segment label="选择分辨率" value={res} options={plainOptions(['720P', '1080P'])} onChange={setRes} />
+      <SliderField label="选择视频生成时长" min={VIDEO_SEC.min} max={VIDEO_SEC.max} value={sec} unit="S" marks={ticks(5, 15, 5, 5)} onChange={setSec} />
+      <Segment label="选择分辨率" value={res} options={plainOptions(VIDEO_RES)} onChange={setRes} />
       {audio && <Segment label="生成音频" value={sound} options={ON_OFF} onChange={setSound} />}
     </ParamPicker>
   );
 });
 VideoParams.displayName = 'VideoParams';
+
+export type ImageParamsProps = Omit<ParamPickerProps, 'summary' | 'children'>;
+
+/**
+ * 图片参数：比例、分辨率放进一个参数面板，交互照视频参数（11-11 用户定，原来是分辨率、比例两个下拉）。
+ * 摘要写成「分辨率 · 比例」；比例 11 个，竖排分段一排 6 个
+ */
+export const ImageParams = forwardRef<HTMLSpanElement, ImageParamsProps>(function ImageParams(props, ref) {
+  const [ratio, setRatio] = useState('1:1');
+  const [size, setSize] = useState('2K');
+  return (
+    <ParamPicker ref={ref} summary={`${size} · ${ratio}`} {...props}>
+      <ParamField label="选择比例">
+        <Tabs variant="segment" layout="vertical" columns={6} value={ratio} onChange={setRatio} aria-label="比例">
+          {RATIOS.map((o) => (
+            <TabItem key={o.value} value={o.value} icon={o.icon}>
+              {o.label}
+            </TabItem>
+          ))}
+        </Tabs>
+      </ParamField>
+      <Segment label="选择分辨率" value={size} options={SIZES} onChange={setSize} />
+    </ParamPicker>
+  );
+});
+ImageParams.displayName = 'ImageParams';
 
 export interface AudioParamsProps extends Omit<ParamPickerProps, 'summary' | 'children'> {
   /** 音频模型的值，面板里有什么跟着它变：MiniMax 多情绪，Eleven 多稳定性，Seed 和 Eleven 有生成字幕。默认 Seed Audio */

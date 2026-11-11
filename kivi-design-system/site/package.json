@@ -1,7 +1,7 @@
 {
   "name": "kivi-design-site",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 4173",
@@ -12,6 +12,7 @@
     "check:kivi": "node scripts/check-kivi.mjs"
   },
   "dependencies": {
+    "@paper-design/shaders-react": "0.0.82",
     "lucide-react": "0.454.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
