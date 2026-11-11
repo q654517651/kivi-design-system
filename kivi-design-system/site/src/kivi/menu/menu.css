@@ -318,14 +318,22 @@
 }
 
 /* 右边的「⋯」：IconButton 28 轻，悬停、键盘聚焦、选中、菜单开着时才显示 */
-.kv-menu-item > .kv-menu-item__more {
+/* 「⋯」左边的按钮（actions）跟着「⋯」一起出现、一起藏 */
+.kv-menu-item > :is(.kv-menu-item__more, .kv-menu-item__actions) {
   display: none;
   flex: none;
 }
 
-.kv-menu-item:where(:hover, :focus-visible, :has(:focus-visible), .is-hover, [aria-current="page"]) > .kv-menu-item__more,
-.kv-menu-item:has([aria-expanded="true"]) > .kv-menu-item__more {
+.kv-menu-item:where(:hover, :focus-visible, :has(:focus-visible), .is-hover, [aria-current="page"]) > :is(.kv-menu-item__more, .kv-menu-item__actions),
+.kv-menu-item:has([aria-expanded="true"]) > :is(.kv-menu-item__more, .kv-menu-item__actions) {
   display: inline-flex;
+}
+
+/* actions 里几个按钮间距 4，和「⋯」也离 4（条目本身间距 8，这里往回收 4） */
+.kv-menu-item > .kv-menu-item__actions {
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-right: calc(var(--spacing-4) - var(--spacing-8));
 }
 
 /* 弹出菜单里（比如画布切换）：带「⋯」的条目右边内边距 4，「⋯」28 在 36 的行里上、下、右都离 4；
@@ -341,12 +349,12 @@
   transition: opacity var(--motion-duration-100) var(--motion-ease-in);
 }
 
-.kv-menu-item[data-collapsed] > .kv-menu-item__more {
+.kv-menu-item[data-collapsed] > :is(.kv-menu-item__more, .kv-menu-item__actions) {
   display: none;
 }
 
 /* 侧栏刚展开（data-expanding，300ms）：「⋯」先不显示，等宽度定了再在原位出现，不跟着右边滑 */
-.kv-menu-item[data-expanding] > .kv-menu-item__more {
+.kv-menu-item[data-expanding] > :is(.kv-menu-item__more, .kv-menu-item__actions) {
   display: none;
 }
 
@@ -537,6 +545,8 @@
 .kv-menu-label__action {
   display: inline-flex;
   flex: none;
+  align-items: center;
+  gap: var(--spacing-4);
 }
 
 /* 箭头和按钮平时藏着，悬停这一行（或键盘 Tab 进来）才出现（11-02 用户定）。
