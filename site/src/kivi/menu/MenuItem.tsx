@@ -45,6 +45,8 @@ export interface MenuItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonEleme
   collapsed?: boolean;
   /** 右边悬停和选中时才出现的「⋯」：写了就出一个 IconButton 28 轻，点开弹出这里的菜单（一般是一个 Menu，由 Dropdown 管开关）。写了之后外层改用 div（里面有按钮） */
   more?: ReactNode;
+  /** 「⋯」左边的按钮（IconButton 28 轻，比如画布的「在新标签页打开」）：和「⋯」一起悬停、选中时才出现，收起、重命名时不显示；点它不触发条目的点击。写了之后外层也改用 div */
+  actions?: ReactNode;
   /** 「⋯」的说明，读屏用，默认「更多」 */
   moreLabel?: string;
   /** 重命名中（受控）：文字换成输入框（Input，右边「字数/上限」），自动聚焦、全选；「⋯」不显示。照线上：回车提交，点外面取消，Esc 也取消。children 要是字符串 */
@@ -116,6 +118,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
     checked,
     collapsed,
     more,
+    actions,
     moreLabel = '更多',
     editing: editingProp,
     defaultEditing = false,
@@ -139,7 +142,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
   const twoLine = description != null && description !== false;
   const lead = icon ? 'icon' : thumb ? 'thumb' : undefined;
   // 里面要放按钮（「⋯」、输入框）时外层不能是 button，改用 div，键盘上补回车、空格
-  const row = more != null || editing;
+  const row = more != null || actions != null || editing;
   const Root = (row ? 'div' : 'button') as unknown as ComponentType<Record<string, unknown>>;
   const r = role ?? (plain ? undefined : checked !== undefined ? 'menuitemcheckbox' : selected !== undefined ? 'option' : 'menuitem');
 
@@ -202,6 +205,11 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       {shortcut && <span className="kv-menu-item__shortcut">{shortcut}</span>}
       {submenu && <Icon name="RightArrowSmall" className="kv-menu-item__arrow" />}
       {(checked || (twoLine && selected)) && <Icon name="CheckSmall" className="kv-menu-item__check" />}
+      {actions != null && !editing && (
+        <span className="kv-menu-item__actions" onClick={(e) => e.stopPropagation()}>
+          {actions}
+        </span>
+      )}
       {more != null && !editing && (
         <Dropdown
           className="kv-menu-item__more"

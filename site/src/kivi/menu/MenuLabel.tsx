@@ -20,6 +20,8 @@ export interface MenuLabelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
   items?: ReactNode;
   /** 右边的按钮，比如新建（侧栏 plain 里悬停这一行才出现，弹出的菜单里一直显示）：传一个 IconButton 28 轻（`<IconButton icon="NewChat" label="新建对话" size={28} variant="light" />`），出现 150ms ease-out、消失 100ms ease-in。收起时一直显示 */
   action?: ReactElement;
+  /** action 左边再放的入口，比如画布的「全部」（Button 28 无底）：和 action 一起悬停才出现，收起成图标栏时不显示 */
+  extra?: ReactNode;
   /** 收起：侧栏收成图标栏时用。标题、箭头淡出，只留 action（图标栏里宽 36，按钮居中），悬停在右边出 Tooltip 写 action 的 label */
   collapsed?: boolean;
 }
@@ -37,6 +39,7 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
     onExpandedChange,
     items,
     action,
+    extra,
     collapsed,
     className,
     ...rest
@@ -52,8 +55,9 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
   // 收起后只剩 action；action 的 label 就是提示文字
   const actionLabel = isValidElement(action) ? (action.props as { label?: string }).label : undefined;
   // action 一般是 IconButton，自带提示：收起时出在右边，展开时在下方
-  const actionNode = action && (
+  const actionNode = (action || extra) && (
     <span className="kv-menu-label__action">
+      {!collapsed && extra}
       {actionLabel && isValidElement(action) ? cloneElement(action as ReactElement<{ tooltip?: unknown }>, { tooltip: { placement: collapsed ? 'right' : 'bottom' } }) : action}
     </span>
   );
