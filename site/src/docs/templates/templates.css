@@ -1177,14 +1177,49 @@
   width: 100%;
   max-width: 1040px;
   border-radius: var(--border-radius-24);
-  box-shadow: inset 0 0 0 var(--border-width-1) var(--color-border-subtle);
   background: var(--color-bg-fill-glass-gradient);
   -webkit-backdrop-filter: blur(var(--effect-glass-blur));
   backdrop-filter: blur(var(--effect-glass-blur));
 }
 
+/* 流动底（MeshGradient，照即梦）：铺满输入框外壳、在内容下面，跟着圆角裁掉；着色器画上了才淡入（400ms ease-out）。
+   描边挪到 ::after 压在最上面，不被流动底盖住 */
+.tpl-home__motion {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-400) var(--motion-ease-out);
+}
+
+.tpl-home__motion[data-ready] {
+  opacity: 1;
+}
+
+.tpl-home__motion-shader,
+.tpl-home__motion-shader canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tpl-home__shell::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--border-width-1) var(--color-border-subtle);
+  pointer-events: none;
+  content: "";
+}
+
 /* 两套内容：当前那套显示，另一套透明、点不到。切换时交叉淡化 200ms ease-in-out，同时进行 */
 .tpl-home__box {
+  position: relative;
+  z-index: 1;
   display: flex;
   grid-area: 1 / 1;
   min-width: 0;

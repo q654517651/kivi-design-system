@@ -602,6 +602,13 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | QuestionPanel | 「全部由 AI 决策」按钮：`aiDecide`、`aiDecideText`、`onAiDecide` | 删掉这三个属性，以后也不会有；底部只剩「忽略」和「确认提交」 |
 | AskRecord | `skippedText="交给 AI 决策"` 这种用法 | 不再传，跳过时用默认「已跳过」 |
 
+## 资产卡统一成封面卡（11-11）
+
+| 组件 | 删了什么 | 怎么改 |
+|---|---|---|
+| ProjectCard | `variant`（`"default"` `"cover"`）和类名 `kv-project-card--cover` | 不再传，只有一种样子：原来的封面样式（16:9，名字压在封面底部），底部加了渐进模糊。原来「上面封面、下面名字和时间」那种没有了 |
+| FolderCard | 封面 223:155 + 下面「名字 (数量)」 | 用法不变，样子换成和 ProjectCard 一样的 16:9 封面卡，名字和数量压在封面底部；类名 `kv-folder-card__meta` 挪到封面里，名字外面多一层 `kv-folder-card__text`、`kv-folder-card__title`，数量是 `kv-folder-card__count` |
+
 ## Select 拆成触发器（11-09）
 
 Select 原来把触发器和选项列表绑在一起，点开只能是一份单选列表。现在 Select 只是触发器（和 Figma 一样），列表、面板由外面套的 Dropdown 放。生成用的预设（TaskSelect、ModelSelect、VoiceSelect…）对外用法不变。

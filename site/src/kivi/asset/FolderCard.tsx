@@ -28,8 +28,9 @@ export interface FolderCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'o
 }
 
 /**
- * 文件夹卡：资产页「我的素材」一排文件夹。上面封面（223:155，圆角 8），下面「名字 (数量)」，名字一行省略、数量不省略（照线上）。
- * 悬停封面右下出「⋯」（IconButton 28 · 媒体上），菜单：重命名、置顶、删除。照线上 FolderItem
+ * 文件夹卡：资产页「我的素材」一排文件夹。和 ProjectCard 一个样子（11-11 用户定）：整张卡 16:9 都是封面，
+ * 底部（渐进模糊 + 渐变）上压「名字 (数量)」，名字一行省略、数量不省略（照线上）。置顶的右上挂「置顶」标签。
+ * 悬停封面放大一点、右下出「⋯」（IconButton 浮层无底 28），菜单：重命名、置顶、删除。照线上 FolderItem
  */
 export const FolderCard = forwardRef<HTMLDivElement, FolderCardProps>(function FolderCard(
   { name, count, covers = [], pinned, onOpen, onRename, onPinnedChange, onDelete, className, ...rest },
@@ -38,38 +39,42 @@ export const FolderCard = forwardRef<HTMLDivElement, FolderCardProps>(function F
   const empty = covers.length === 0;
   return (
     <div ref={ref} className={cx('kv-folder-card', className)} {...rest}>
+      {/* 整张卡是一个按钮：点了进文件夹。「⋯」和标签盖在它上面 */}
+      <button type="button" className="kv-folder-card__open" aria-label={`打开文件夹 ${name}`} onClick={onOpen} />
       <div className="kv-folder-card__cover" data-empty={empty ? '' : undefined}>
         {empty ? <Icon name="Folder" className="kv-folder-card__empty" /> : <CoverGrid images={covers} />}
-        {/* 整块封面是一个按钮：点了进文件夹。「⋯」和标签盖在它上面 */}
-        <button type="button" className="kv-folder-card__open" aria-label={`打开文件夹 ${name}`} onClick={onOpen} />
-        {pinned && (
-          <Tag variant="on-media" className="kv-folder-card__pin">
-            置顶
-          </Tag>
-        )}
-        <Dropdown
-          className="kv-folder-card__more"
-          placement="bottom-end"
-          trigger={<IconButton tooltip={false} icon="More" label="更多" variant="on-media" size={28} />}
-        >
-          <Menu>
-            <MenuItem icon="Rename" onClick={onRename}>
-              重命名
-            </MenuItem>
-            <MenuItem icon="StickyOnTop" onClick={() => onPinnedChange?.(!pinned)}>
-              {pinned ? '取消置顶' : '置顶'}
-            </MenuItem>
-            <Divider />
-            <MenuItem variant="danger" icon="Delete" onClick={onDelete}>
-              删除
-            </MenuItem>
-          </Menu>
-        </Dropdown>
       </div>
-      <div className="kv-folder-card__meta" title={name}>
-        <span className="kv-folder-card__name">{name}</span>
-        {count != null && <span>({count})</span>}
+      {pinned && (
+        <Tag variant="on-media" className="kv-folder-card__pin">
+          置顶
+        </Tag>
+      )}
+      <div className="kv-folder-card__meta">
+        <div className="kv-folder-card__text">
+          <span className="kv-folder-card__title" title={name}>
+            <span className="kv-folder-card__name">{name}</span>
+            {count != null && <span className="kv-folder-card__count">({count})</span>}
+          </span>
+        </div>
       </div>
+      <Dropdown
+        className="kv-folder-card__more"
+        placement="bottom-end"
+        trigger={<IconButton tooltip={false} icon="More" label="更多" variant="on-media-ghost" size={28} />}
+      >
+        <Menu>
+          <MenuItem icon="Rename" onClick={onRename}>
+            重命名
+          </MenuItem>
+          <MenuItem icon="StickyOnTop" onClick={() => onPinnedChange?.(!pinned)}>
+            {pinned ? '取消置顶' : '置顶'}
+          </MenuItem>
+          <Divider />
+          <MenuItem variant="danger" icon="Delete" onClick={onDelete}>
+            删除
+          </MenuItem>
+        </Menu>
+      </Dropdown>
     </div>
   );
 });

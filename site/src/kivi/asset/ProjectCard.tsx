@@ -19,15 +19,7 @@ export function formatUpdatedAt(time: Date | number, now: Date | number = Date.n
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日修改`;
 }
 
-export type ProjectCardVariant = 'default' | 'cover';
-
 export interface ProjectCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onClick'> {
-  /**
-   * 样式：默认 / 封面，默认是默认。
-   * 默认：上面封面、下面名字和修改时间（画布管理页、资产页）。
-   * 封面：整张卡 16:9 都是封面，名字压在底部渐变上；悬停封面放大一点、名字上移露出修改时间、右下出「⋯」（创作首页「最近项目」，11-10 用户定，照即梦）
-   */
-  variant?: ProjectCardVariant;
   /** 画布名，最多 20 字，一行省略 */
   name: string;
   /** 封面：画布里的几张图，最多用 4 张（CoverGrid）。没有就是空底 */
@@ -47,20 +39,20 @@ export interface ProjectCardProps extends Omit<HTMLAttributes<HTMLDivElement>, '
 }
 
 /**
- * 画布项目卡：画布管理页的一格。圆角 12，上面封面（257:157），下面名字和修改时间。
- * 悬停卡片底色变亮、右下出「⋯」（IconButton 32 · 文字），菜单：分享、重命名、删除。照线上 ProjectCard
+ * 画布项目卡：资产页「我的画布」、创作首页「最近项目」的一格。整张卡 16:9 都是封面，名字压在底部（渐进模糊 + 渐变）上；
+ * 悬停封面放大一点、名字上移露出修改时间、右下出「⋯」（IconButton 浮层无底 28），菜单：分享、重命名、删除。
+ * 11-11 用户定只留这一种样子（原来的「字在外面」那种删了），和 FolderCard 一样
  */
 export const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function ProjectCard(
-  { variant = 'default', name, covers = [], updatedAt, meta, onOpen, onShare, onRename, onDelete, className, ...rest },
+  { name, covers = [], updatedAt, meta, onOpen, onShare, onRename, onDelete, className, ...rest },
   ref,
 ) {
   const sub = meta ?? (updatedAt != null ? formatUpdatedAt(updatedAt) : undefined);
-  const cover = variant === 'cover';
   return (
     <div
       ref={ref}
-      className={cx('kv-project-card', cover && 'kv-project-card--cover', className)}
-      data-has-meta={cover && sub != null ? '' : undefined}
+      className={cx('kv-project-card', className)}
+      data-has-meta={sub != null ? '' : undefined}
       {...rest}
     >
       {/* 整张卡是一个按钮：点了打开画布。「⋯」盖在它上面 */}
@@ -76,7 +68,7 @@ export const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function
         <Dropdown
           className="kv-project-card__more"
           placement="bottom-end"
-          trigger={<IconButton tooltip={false} icon="More" label="更多" variant={cover ? 'on-media-ghost' : 'text'} size={cover ? 28 : 32} />}
+          trigger={<IconButton tooltip={false} icon="More" label="更多" variant="on-media-ghost" size={28} />}
         >
           <Menu>
             <MenuItem icon="Share" onClick={onShare}>
