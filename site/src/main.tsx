@@ -1,4 +1,4 @@
-import { lazy, StrictMode } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import '@kivi';
@@ -8,6 +8,8 @@ import { PAGES, REDIRECTS } from './shell/nav';
 import './shell/shell.css';
 
 const pages = PAGES.map((p) => ({ ...p, Page: lazy(p.load) }));
+// UI 页面预览单独开的 Tab：只有产品界面，不套网站外壳
+const KiviApp = lazy(() => import('./docs/templates/app'));
 
 // 「浮层」类型要放在图片上看：演示区的图片底
 document.documentElement.style.setProperty(
@@ -19,6 +21,15 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HashRouter>
       <Routes>
+        <Route path="/app" element={<Navigate to="/app/create" replace />} />
+        <Route
+          path="/app/:page"
+          element={
+            <Suspense fallback={null}>
+              <KiviApp />
+            </Suspense>
+          }
+        />
         <Route element={<Layout />}>
           {pages.map(({ id, path, Page }) => (
             <Route key={id} path={path} element={<Page components={mdxComponents} />} />

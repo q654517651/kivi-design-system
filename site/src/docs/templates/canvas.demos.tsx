@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
-import { AskRecord, Button, CanvasHeader, Icon, IconButton, MediaGroup, MessageFeedback, ProcessGroup, Toaster, UserMessage, type AttachmentItem, type MediaGroupItem, type MediaGroupType, type ProcessStep } from '@kivi';
+import { AskRecord, Button, ButtonGroup, CanvasHeader, Dropdown, Menu, MenuItem, MenuLabel, Icon, IconButton, MediaGroup, MessageFeedback, ProcessGroup, Toaster, UserMessage, type AttachmentItem, type MediaGroupItem, type MediaGroupType, type ProcessStep } from '@kivi';
 import { MiniCanvas, type CanvasNodeKey, type MiniCanvasHandle } from '../business/canvas.demos';
 import { AgentComposer } from './composer';
 import { TemplateFrame } from './frame';
@@ -31,6 +31,15 @@ const RESULTS: { node: CanvasNodeKey; type: MediaGroupType; items: MediaGroupIte
   { node: 'video', type: 'video', items: [{ id: 'v1', src: `${IMG}kivi-future-16x9.webp`, ratio: '16:9', name: '短视频' }] },
 ];
 
+/** 底部「添加」弹出的节点，照线上画布的添加节点面板（node-list）：上传在工具栏上单独有，这里不放 */
+const ADD_NODES = [
+  { icon: 'Text', label: '文本生成' },
+  { icon: 'ImageGeneration', label: '图片生成' },
+  { icon: 'VideoGeneration', label: '视频生成' },
+  { icon: 'Audio', label: '音频生成' },
+  { icon: 'Cutting', label: '视频剪辑' },
+] as const;
+
 /** 输入框里已经添加的附件 */
 const ATTACHMENTS: AttachmentItem[] = [
   { id: 'a1', type: 'image', name: '图片1', src: `${IMG}kiwi-light-1x1.webp` },
@@ -38,7 +47,8 @@ const ATTACHMENTS: AttachmentItem[] = [
   { id: 'a3', type: 'file', name: '活动策划案.pdf', ext: 'PDF' },
 ];
 
-function AgentPanel({ onLocate }: { onLocate: (key: CanvasNodeKey) => void }) {
+/** skill：新建的画布、对话是空的，输入框里带着这个技能的引用（探索页技能「使用」进来的） */
+function AgentPanel({ onLocate, skill }: { onLocate: (key: CanvasNodeKey) => void; skill?: string }) {
   const stream = useRef<HTMLDivElement>(null);
 
   // 进来停在最新一条
@@ -51,7 +61,7 @@ function AgentPanel({ onLocate }: { onLocate: (key: CanvasNodeKey) => void }) {
     <aside className="tpl-cv__agent" aria-label="Agent">
       <div className="tpl-cv__head">
         <span className="tpl-cv__title">
-          猕猴桃饮料短视频
+          {skill ? '新对话' : '猕猴桃饮料短视频'}
           <Icon name="DownArrowSmall" />
         </span>
         <span style={{ display: 'flex', gap: 4 }}>
@@ -61,6 +71,8 @@ function AgentPanel({ onLocate }: { onLocate: (key: CanvasNodeKey) => void }) {
       </div>
 
       <div ref={stream} className="tpl-cv__stream">
+        {!skill && (
+          <>
         <UserMessage>帮我做一条猕猴桃饮料的短视频：先出一张主视觉，再做成 16:9 的视频</UserMessage>
         <div className="tpl-text">好的，我先看看画布上已有的素材。</div>
         <ProcessGroup steps={STEPS} />
@@ -75,35 +87,66 @@ function AgentPanel({ onLocate }: { onLocate: (key: CanvasNodeKey) => void }) {
           <Button variant="light">换个风格</Button>
         </div>
         <MessageFeedback text="主视觉和视频都生成好了。" traceId="trace-8f3a21" />
+          </>
+        )}
       </div>
 
-      <AgentComposer attachments={ATTACHMENTS} />
+      <AgentComposer attachments={skill ? undefined : ATTACHMENTS} skill={skill} />
     </aside>
   );
 }
 
-/** 画布 + Agent 侧栏：只能看 */
-export function CanvasTemplate() {
+/**
+ * 画布页：画布 + Agent 侧栏，只能看。点左上角 Logo 回首页（UI 页面预览里回创作页）。
+ * skill：探索页技能「使用」进来，新建一个画布（画布名「未命名画布」、对话是空的），Agent 输入框里带着技能引用。小画布还是那几个演示节点
+ */
+export function CanvasPage({ onHome, skill }: { onHome?: () => void; skill?: string }) {
   const canvas = useRef<MiniCanvasHandle>(null);
   return (
-    <TemplateFrame>
-      <Toaster />
-      <div className="tpl-cv">
-        <div className="tpl-cv__main">
-          <MiniCanvas ref={canvas} chrome={false} fake={false} viewBar phases={{ video: 'done' }} className="tpl-cv__canvas" />
-          {/* 左上角：Logo｜工作区｜画布切换 */}
-          <CanvasHeader
-            className="tpl-cv__header"
-            workspace="618 大促活动"
-            defaultCanvases={[
-              { id: 'c1', name: '头图' },
-              { id: 'c2', name: 'Banner' },
-              { id: 'c3', name: '画布 3' },
-            ]}
-          />
-        </div>
-        <AgentPanel onLocate={(key) => canvas.current?.focus(key)} />
+    <div className="tpl-cv">
+      <div className="tpl-cv__main">
+        <MiniCanvas ref={canvas} chrome={false} fake={false} viewBar phases={{ video: 'done' }} className="tpl-cv__canvas" />
+        {/* 左上角：Logo｜工作区｜画布切换 */}
+        <CanvasHeader
+          className="tpl-cv__header"
+          workspace="618 大促活动"
+          defaultCanvases={[
+            ...(skill ? [{ id: 'new', name: '未命名画布' }] : []),
+            { id: 'c1', name: '头图' },
+            { id: 'c2', name: 'Banner' },
+            { id: 'c3', name: '画布 3' },
+          ]}
+          onLogoClick={onHome}
+        />
+        {/* 底部正中：画布工具栏（ButtonGroup 实色 · 56），左边添加（主要），右边工作流、上传、历史。
+            点添加往上弹添加节点菜单；只能看，点了节点不真的加。工作流、上传、历史点了没反应 */}
+        <ButtonGroup variant="surface" size={56} aria-label="画布工具栏" className="tpl-cv__toolbar">
+          <Dropdown placement="top-start" trigger={<IconButton icon="Add" label="添加" variant="primary" />}>
+            <Menu width={200}>
+              <MenuLabel>添加节点</MenuLabel>
+              {ADD_NODES.map((n) => (
+                <MenuItem key={n.label} icon={n.icon}>
+                  {n.label}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Dropdown>
+          <IconButton icon="Template" label="工作流" />
+          <IconButton icon="Upload" label="上传" />
+          <IconButton icon="History" label="历史" />
+        </ButtonGroup>
       </div>
+      <AgentPanel onLocate={(key) => canvas.current?.focus(key)} skill={skill} />
+    </div>
+  );
+}
+
+/** 画布模板：只能看，右上「新 Tab 打开」开 UI 页面预览的画布页 */
+export function CanvasTemplate() {
+  return (
+    <TemplateFrame href="/app/canvas">
+      <Toaster />
+      <CanvasPage />
     </TemplateFrame>
   );
 }

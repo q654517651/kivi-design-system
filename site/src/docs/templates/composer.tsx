@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AttachmentStrip, DropOverlay, GenModelPicker, IconButton, MentionChip, PromptInput, SendButton, SkillPicker, toast, type AttachmentItem, type IconName } from '@kivi';
 import { rejectMessage, useFileDrop } from '../../kivi/hooks';
@@ -11,6 +11,12 @@ export interface AgentComposerProps {
   attachments?: AttachmentItem[];
   /** 技能面板一进来就开着（技能面板模板用） */
   skillOpen?: boolean;
+  /** 一进来输入框里就带着这个技能的引用（探索页技能点「使用」进来的） */
+  skill?: string;
+  /** 模型偏好、技能面板往哪边弹：贴底部时往上（默认），创作首页在上面往下 */
+  placement?: 'top-start' | 'bottom-start';
+  /** 点发送（有字时）：创作首页「画布」提交新建画布。不传就只能看 */
+  onSend?: () => void;
   className?: string;
 }
 
@@ -18,7 +24,7 @@ export interface AgentComposerProps {
 const UP = 'top-start' as const;
 
 /** Agent 输入框：附件条、PromptInput、工具条（添加 / 模型偏好 / 技能 / 手 / 切换对话模型）、发送。拖文件进来盖一层「松手上传」 */
-export function AgentComposer({ attachments: initial = [], skillOpen, className }: AgentComposerProps) {
+export function AgentComposer({ attachments: initial = [], skillOpen, skill, placement = UP, onSend, className }: AgentComposerProps) {
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState(initial);
   // 输入框是 contentEditable：模型、技能插进去是 MentionChip（data-model 记值），删了标签就不算，用来判断每组选满没有
@@ -46,6 +52,19 @@ export function AgentComposer({ attachments: initial = [], skillOpen, className 
       </MentionChip>,
     );
 
+  // 带进来的技能：挂上就插一个技能引用，只插一次（开发模式挂载时 effect 会跑两遍）
+  const skillInserted = useRef(false);
+  useEffect(() => {
+    if (!skill || skillInserted.current) return;
+    skillInserted.current = true;
+    insertChip(
+        <MentionChip type="skill" data-skill={skill}>
+          {skill}
+        </MentionChip>,
+      );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 把文件拖到输入框上：盖一层「松手上传」，不收的类型提示不支持。模板只能看，放下只弹一条提示
   const { dragging, rejected, bind } = useFileDrop({
     accept: 'image/*,video/*,audio/*',
@@ -60,9 +79,9 @@ export function AgentComposer({ attachments: initial = [], skillOpen, className 
       <div className="tpl-cv__tools">
         <div>
           <IconButton icon="Add" label="添加" variant="text" />
-          <GenModelPicker placement={UP} picked={models} onPick={insertModel} />
+          <GenModelPicker placement={placement} picked={models} onPick={insertModel} />
           <SkillPicker
-            placement={UP}
+            placement={placement}
             defaultOpen={skillOpen}
             items={SKILL_ITEMS}
             categories={SKILL_CATEGORIES}
@@ -78,8 +97,8 @@ export function AgentComposer({ attachments: initial = [], skillOpen, className 
           {/* 切换对话用的大模型（GPT、Claude、千问…）：内部测试用的隐藏功能，图标是当前模型的厂商 Logo */}
           <IconButton icon="Openai" label="切换对话模型（内部测试）" variant="text" />
         </div>
-        {/* 只能看：有字也发不出去 */}
-        <SendButton disabled={!text.trim()} />
+        {/* 模板里只能看：有字也发不出去；创作首页传了 onSend，点了进画布 */}
+        <SendButton disabled={!text.trim()} onClick={onSend} />
       </div>
       <DropOverlay active={dragging} rejected={rejected} />
     </div>

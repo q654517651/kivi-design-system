@@ -86,7 +86,7 @@ import { GenerateButtonPlayground, PromptBoxLab, PromptBoxPlayground, PromptInpu
 
 ### PromptBox
 
-外框是玻璃：底 glass `--color-bg-fill-glass` + 背景模糊 32 `--effect-glass-blur`，浮在生成记录上、下面的内容透出来；描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`；内容区和工具条间距 12 `--spacing-12`。宽度跟着外面走，最宽 1040；最窄是工具条所有控件按原宽排成一行时的宽度，工具条不折行、控件不压缩，再窄就不缩了，由外面的页面横向滚动。提示词 14 / 22 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32，左右两组间距至少 8。其余原生 `<div>` 属性都能传。
+外框是渐变玻璃：底 `--color-bg-fill-glass-gradient`（#181818 80% 上暗下亮到 #282828 80%，只有这里用）+ 背景模糊 80 `--effect-glass-blur`，浮在生成记录上、下面的内容透出来；描边 border-subtle 1，圆角 24 `--border-radius-24`，内边距 16 `--spacing-16`；内容区和工具条间距 12 `--spacing-12`。宽度跟着外面走，最宽 1040；最窄是工具条所有控件按原宽排成一行时的宽度，工具条不折行、控件不压缩，再窄就不缩了，由外面的页面横向滚动。提示词 14 / 22 常规，primary，无底无描边，聚焦也不加描边，最矮 120，随内容长高。工具条高 32，左右两组间距至少 8。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|

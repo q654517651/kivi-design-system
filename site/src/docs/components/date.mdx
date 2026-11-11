@@ -36,7 +36,7 @@ import { CalendarPlayground, DateRangeFilterPlayground } from './date.demos';
 | `placement` | `"bottom-start"` `"bottom"` `"bottom-end"` `"top-start"` `"top"` `"top-end"` | `"bottom-start"` | 面板出在哪边：放在一行最右边时用右对齐；放不下翻到另一边 |
 | `disabled` | `boolean` | `false` | 禁用 |
 
-触发器是 32 的文字 Button，一直是 primary 的字，没选也不变灰；展开时箭头转上去（200ms ease-in-out）。面板：宽 272，玻璃底（`--color-bg-fill-glass` + 模糊 32）+ 描边 `--color-border-subtle`，圆角 16，内边距 8，离触发器 4，出现、消失同菜单。上面起止两个日期框：高 36，底白 10%（`--color-bg-fill-container-light-1`，玻璃是深底），悬停白 14%（`-hover`），日历开着时是常驻底色、用默认 10%，右边 `Calendar` 图标 16 tertiary，没值时是「开始日期」「结束日期」。下面预设是 `MenuItem`，当前项用选中底色、不打勾；点了立刻生效并收起面板。点日期框，在这个框下面浮出第二层日历：和框左对齐、离 4，压在预设上、可以伸出面板；同样是玻璃，圆角 16，内边距 8，出现同菜单。点一天填进去、日历收起，面板不关。Esc 先关日历再关面板；面板里 Tab 照常在控件之间走。两层都是玻璃。其余原生 `<span>` 属性都能传，给包住触发器的外壳。
+触发器是 32 的文字 Button，一直是 primary 的字，没选也不变灰；展开时箭头转上去（200ms ease-in-out）。面板：宽 272，玻璃底（`--color-bg-fill-glass` + 模糊 80）+ 描边 `--color-border-subtle`，圆角 16，内边距 8，离触发器 4，出现、消失同菜单。上面起止两个日期框：高 36，底白 10%（`--color-bg-fill-container-light-1`，玻璃是深底），悬停白 14%（`-hover`），日历开着时是常驻底色、用默认 10%，右边 `Calendar` 图标 16 tertiary，没值时是「开始日期」「结束日期」。下面预设是 `MenuItem`，当前项用选中底色、不打勾；点了立刻生效并收起面板。点日期框，在这个框下面浮出第二层日历：和框左对齐、离 4，压在预设上、可以伸出面板；同样是玻璃，圆角 16，内边距 8，出现同菜单。点一天填进去、日历收起，面板不关。Esc 先关日历再关面板；面板里 Tab 照常在控件之间走。两层都是玻璃。其余原生 `<span>` 属性都能传，给包住触发器的外壳。
 
 ### Calendar
 

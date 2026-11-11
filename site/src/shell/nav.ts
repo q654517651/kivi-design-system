@@ -3,6 +3,7 @@ import {
   AppWindow,
   ArrowRightLeft,
   Bell,
+  Compass,
   Folder,
   GalleryVerticalEnd,
   Loader,
@@ -17,7 +18,6 @@ import {
   CalendarDays,
   Braces,
   Download,
-  FolderOpen,
   House,
   Image,
   LayoutTemplate,
@@ -36,7 +36,6 @@ import {
   Upload,
   Workflow,
   Wrench,
-  Wand2,
   SquarePlay,
   type LucideIcon,
   LayoutPanelTop,
@@ -70,12 +69,10 @@ export const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: '页面模板',
     items: [
-      { id: 'tpl-main-site', icon: LayoutTemplate, title: '主站', path: '/templates/main-site', load: () => import('../docs/templates/main-site.mdx') },
+      { id: 'tpl-ui-preview', icon: LayoutTemplate, title: 'UI 页面预览', path: '/templates/ui-preview', load: () => import('../docs/templates/ui-preview.mdx') },
       { id: 'tpl-canvas', icon: Workflow, title: '画布', path: '/templates/canvas', load: () => import('../docs/templates/canvas.mdx') },
       { id: 'tpl-canvas-tools', icon: Wrench, title: '画布工具', path: '/templates/canvas-tools', load: () => import('../docs/templates/canvas-tools.mdx') },
-      { id: 'tpl-ai-tools', icon: Wand2, title: 'AI 工具', path: '/templates/ai-tools', load: () => import('../docs/templates/ai-tools.mdx') },
       { id: 'tpl-skills', icon: Puzzle, title: '技能面板', path: '/templates/skills', load: () => import('../docs/templates/skills.mdx') },
-      { id: 'tpl-assets', icon: FolderOpen, title: '资产管理', path: '/templates/assets', load: () => import('../docs/templates/assets.mdx') },
     ],
   },
   {
@@ -135,6 +132,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
       { id: 'agent', icon: Bot, title: 'Agent 对话', path: '/business/agent', load: () => import('../docs/business/agent.mdx') },
       { id: 'agent-process', icon: ListChecks, title: 'Agent 过程', path: '/business/agent-process', load: () => import('../docs/business/agent-process.mdx') },
       { id: 'asset', icon: Folder, title: '资产', path: '/business/asset', load: () => import('../docs/business/asset.mdx') },
+      { id: 'explore', icon: Compass, title: '探索', path: '/business/explore', load: () => import('../docs/business/explore.mdx') },
     ],
   },
 ];
@@ -145,6 +143,9 @@ export const REDIRECTS: Record<string, string> = {
   '/components/scroll-area': '/components/layout',
   '/components/feedback': '/components/messages',
   '/business/main-site': '/business/records',
+  '/templates/main-site': '/templates/ui-preview',
+  '/templates/ai-tools': '/templates/ui-preview',
+  '/templates/assets': '/templates/ui-preview',
 };
 
 export const PAGES = NAV.flatMap((g) => g.items).filter(

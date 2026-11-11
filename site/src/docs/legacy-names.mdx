@@ -92,11 +92,11 @@ import { PageHeader } from '@shell';
 |---|---|---|---|
 | `color/bg/fill/glass` · `--color-bg-fill-glass` = #181818 70% | 同名，黑 50% | 写死的 rgba(24, 24, 24, 0.7) 17 处，见上 | 改值 |
 | 效果样式「玻璃/背景模糊」16 | 同名，32 | 画布里已经是 32，其他 `blur(16px)` 统一成 32 | 改值 |
-| on-media 按钮背景模糊 24（写死） | `--effect-glass-blur` 32 | 写死的 24 | 改值 |
+| on-media 按钮背景模糊 24（写死） | `--effect-glass-blur` 80 | 写死的 24 | 改值 |
 | 角上按钮的底：写死黑 40%（ToolbarItem 填充款手动改） | `color/on-media/fill` · `--color-on-media-fill` = 黑 40% | 倒计时、上传中、上传、设为封面、下载这几个按钮 | 合并 |
-| 缩略图上的标签和删除（序号角标、时长、Lora 权重、删除小圆）：写死 `container-dark` + 模糊 16 / 24 | `--color-on-media-fill` + `--effect-glass-blur` 32 | 写死的 16、24 | 合并（11-05） |
+| 缩略图上的标签和删除（序号角标、时长、Lora 权重、删除小圆）：写死 `container-dark` + 模糊 16 / 24 | `--color-on-media-fill` + `--effect-glass-blur` 80 | 写死的 16、24 | 合并（11-05） |
 | 生成中遮罩、占位图遮罩：写死模糊 12 / 24 | 效果样式「遮罩/背景模糊」· `--effect-mask-blur` = 16 | 写死的 12、24 | 新增（11-05） |
-| 画布底部工具栏模糊 12、连线删除按钮模糊 6 | 工具栏底不透明，去掉模糊；连线删除用 `--effect-glass-blur` 32 | 写死的 12、6 | 合并（11-05） |
+| 画布底部工具栏模糊 12、连线删除按钮模糊 6 | 工具栏底不透明，去掉模糊；连线删除用 `--effect-glass-blur` 80 | 写死的 12、6 | 合并（11-05） |
 | 静态色块借 `container-light-1-pressed`（叠层、小地图节点）、借 `-hover`（骨架屏扫光） | 新增填充色阶 `--color-fill-1~4`（白 6 / 10 / 14 / 18），叠层 `fill-4`、小地图节点 `fill-2`、扫光 `fill-3`；Container 六个变量改成引用色阶，名字和值不变 | 写死的白 18% / 14% | 新增（11-05） |
 | 开关轨道、文字头像、试听播放中用 `container-light-1-pressed`（白 18%） | `container-light-1`（白 10%），放进浅底跟 `--kv-nested-fill` 换组 | | 改值（11-05，暗一档） |
 | `color/bg/fill/glass` · `--color-bg-fill-glass` = #181818 50% | 同名，#181818 65% | 颜色不变，只加不透明度 | 改值（11-05，深一档） |
@@ -168,7 +168,7 @@ V2 新加、线上 variable.less 没有的变量，前端整段加进去。值�
 | `motion/ease/in` · `--motion-ease-in` | cubic-bezier(0.4, 0, 1, 1) | |
 | `motion/ease/expand` · `--motion-ease-expand` | cubic-bezier(0, 0.7, 0.22, 1) | |
 | `motion/ease/spring` · `--motion-ease-spring` | linear(…) 采样，冲过头约 4% | 值太长，见 tokens.css |
-| 效果样式「玻璃/背景模糊」· `--effect-glass-blur` | 32px | 不是 Figma 变量 |
+| 效果样式「玻璃/背景模糊」· `--effect-glass-blur` | 80px | 不是 Figma 变量 |
 | 效果样式「阴影/展开」· `--effect-shadow-spread` | 0 10px 30px rgb(0 0 0 / 0.5) | 不是 Figma 变量 |
 | tailwind `fontWeight` 的 `medium` | `var(--font-weight-medium)` | 原来只有 `regular`、`semibold` |
 
@@ -347,7 +347,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 
 | 代码 | 新 | 类型 | 说明 |
 |---|---|---|---|
-| CustomMenu 容器 | 菜单模板 | 改值 | 还是玻璃：rgba(24,24,24,.7) 换成 `--color-bg-fill-glass`，模糊 32，描边白 8%，去掉阴影；圆角改成 12（条目 8 + 内边距 4），条目间距 4 |
+| CustomMenu 容器 | 菜单模板 | 改值 | 还是玻璃：rgba(24,24,24,.7) 换成 `--color-bg-fill-glass`，模糊 80，描边白 8%，去掉阴影；圆角改成 12（条目 8 + 内边距 4），条目间距 4 |
 | CustomMenu 菜单项 | MenuItem | 改值 | 高 36，圆角 12 → 8，14 → 13 号字；悬停用 `container-light-1-hover` |
 | CustomMenu 子菜单 | 菜单模板 | 改样式 | 底色 popup-light-1（#36393d）→ 玻璃，和父菜单一样 |
 | AnchoredDropdown、CommonDropdown 等 | 菜单模板 + MenuItem | 合并 | 样式统一到菜单模板；这几个组件的细节还没逐个核对 |
@@ -617,6 +617,16 @@ Select 原来把触发器和选项列表绑在一起，点开只能是一份单�
 | 日期筛选 DateRangeFilter 的触发器：Button 文字 + 下箭头（箭头展开时转 180°） | Select 无底（箭头换成朝上） | 和别的下拉入口一样 |
 | 参数选择 ParamPicker：手写的无底下拉触发器；摘要里塞音量图标 | Select 无底；图标用 `summaryIcon` | `kv-param-picker__summary` 删了 |
 | SelectPreview（不导出） | 从组件库导出 | 音色列表自己拼时用 |
+
+## 页面改名（11-09）
+
+页面模板里主站、AI 工具、资产管理三页合成一页「UI 页面预览」，在里面点侧栏能互相切；组件和样子没变。旧地址打开会自动跳到新页。
+
+| 旧 | 新 |
+|---|---|
+| 页面模板 · 主站（`/templates/main-site`） | 页面模板 · UI 页面预览（`/templates/ui-preview`），创作页 |
+| 页面模板 · AI 工具（`/templates/ai-tools`） | UI 页面预览，点侧栏「AI 工具」 |
+| 页面模板 · 资产管理（`/templates/assets`） | UI 页面预览，点侧栏「我的资产」 |
 
 ## 页面改名（11-06）
 

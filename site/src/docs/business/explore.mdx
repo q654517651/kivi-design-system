@@ -1,0 +1,61 @@
+import { PageHeader } from '@shell';
+import { ExploreCardPlayground, WorkCardPlayground } from './explore.demos';
+
+<PageHeader eyebrow="业务组件" title="探索" code="kivi/explore" />
+
+## WorkCard
+
+作品卡：发现页瀑布流里的一张作品。
+
+<WorkCardPlayground />
+
+## ExploreCard
+
+探索卡：探索页「创作精选」「技能」「工作流」里的一项。
+
+<ExploreCardPlayground />
+
+## 参数
+
+### WorkCard
+
+圆角 4，描边 `--color-border-subtle`，底 surface，高度跟着 `ratio`，宽跟着外面（放进 Masonry）。整张卡点了打开详情。悬停（或键盘进到卡里）出两样，出现 150ms ease-out、消失 150ms ease-in：右上下载、收藏合成一条按钮条（ButtonGroup 浮层，离边 8）；底部高 48 的渐变（透明 → `--color-on-media-fill`），左边作者（Avatar 16 + 用户名 12，间距 6，左 12），右边点赞（IconButton 28 · 浮层无底 + 数字 12）。收藏了的不悬停右上留一颗实心星（品牌绿），和 ResultTile 一样。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `type` | `"image"` `"video"` | `"image"` | 视频静音循环，悬停开始播，移开停下回到开头（照线上） |
+| `src` | `string` | — | 图片地址或视频文件。图片用 Image（加载中骨架、淡入、失败图） |
+| `poster` | `string` | — | 视频封面 |
+| `ratio` | `string` `number` | `1` | 宽高比，`'3:4'` 或宽 / 高 |
+| `title` | `string` | — | 读屏用，比如提示词：「查看作品：…」 |
+| `author` | `{ name: string; avatar?: string }` | — | 作者，没有头像显示首字 |
+| `likes` | `number` | `0` | 点赞数。不受控时点了自己 +1 / -1 |
+| `liked` / `defaultLiked` / `onLikedChange` | `boolean` / `boolean` / `(liked) => void` | — / `false` / — | 点赞：`ThumbsUp` 换实心 `ThumbsUpFill` |
+| `collected` / `defaultCollected` / `onCollectedChange` | `boolean` / `boolean` / `(collected) => void` | — / `false` / — | 收藏：`Collect` 换 `CollectSolid` |
+| `onDownload` | `() => void` | — | 右上「下载」 |
+| `onOpen` | `() => void` | — | 点卡片：打开详情 |
+
+### ExploreCard
+
+创作精选、技能、工作流三处一张卡，区别只在传不传说明、剩余时间。一个容器：圆角 12，不加描边，底 Container Light 2（白 6%，很暗），悬停 Light 2 悬停（150ms ease-out）；上面封面 16:9（ExploreCover，悬停整张卡时封面视频开始播），下面文字区内边距 12 / 16：标题 14 / 22 中粗一行省略，说明 12 / 20 secondary 两行（不够两行也占两行高），作者头像 16 + 名字 12 secondary（间距 6，离上面 8）。整张卡点了打开。放进网格时最多 4 列，行间距 24、列间距 16。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `name` | `string` | — | 标题 |
+| `description` | `string` | — | 说明，技能用；不传就没有这一行（创作精选、工作流） |
+| `cover` | `string` | — | 必填。封面图：单独配置的横屏封面，不是发布内容本身。有视频时是没播时那一帧。技能公开时必须有封面，没有封面的不让公开；不能用对话里技能卡的占位封面 `SKILL_DEFAULT_COVER`（小图、自带圆角） |
+| `video` | `string` | — | 封面视频：悬停播（静音循环），移开停下回到封面，不出进度条、不能拖 |
+| `showTime` | `boolean` | `false` | 视频左下离边 8 显示剩余时间（Tag · 媒体上，m:ss，没播时是总时长，播起来倒数）。创作精选、工作流要，技能不要 |
+| `author` | `{ name: string; avatar?: string }` | — | 作者，不传就没有这一行。官方的传 KIVI，卡上不挂「官方」 |
+| `onOpen` | `() => void` | — | 点卡片：技能打开详情，创作精选、工作流打开画布预览 |
+
+### ExploreCover
+
+三种卡共用的封面：一张图（Image，加载中骨架、淡入、失败图），或「封面图 + 封面视频」。大小铺满外面，比例由卡片定。其余原生 `<div>` 属性都能传。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `src` | `string` | — | 封面图；有视频时是 poster |
+| `video` | `string` | — | 封面视频。悬停播（静音循环），停下时重新加载，回到开头并露出封面图 |
+| `showTime` | `boolean` | `false` | 左下离边 8 显示剩余时间（m:ss），案例示例、工作流用 |
+| `playing` | `boolean` | — | 播不播（受控）。卡片上盖着点击层时由卡片按自己的悬停传（WorkCard、ExploreCard）；不传看封面自己的悬停 |

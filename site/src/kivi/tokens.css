@@ -11,15 +11,21 @@
   --color-bg-fill-surface: #191A1B;
   --color-bg-fill-popup: #2C2D2E;
   --color-bg-fill-mask: #00000099;
+  /* 反白：深色界面上的白色实心小块（11-10 新加，创作首页「新建画布」的加号块）。上面的字和图标用 --color-text-fill-invert */
+  --color-bg-fill-invert: #FFFFFF;
   /* 玻璃：悬浮在页面上的东西（菜单、下拉、右键、节点工具栏、参数面板、主站输入框），下面是什么都行。
      和 --effect-glass-blur、描边 --color-border-subtle 一起用。贴在图片、视频上的控件用 on-media。
      11-03 从 #181818 70% 改成黑 50%；11-04 改成 #181818 50%（黑 50% 太暗，上面的 Container 看不清；压亮图和黑 50% 差不多）；
-     11-05 改成 #181818 65%（用户嫌浅，颜色不动、只加不透明度） */
-  --color-bg-fill-glass: #181818A6;
+     11-05 改成 #181818 65%（用户嫌浅，颜色不动、只加不透明度）；11-09 加到 80%（即梦输入框是 72%，72% 用户觉得变化不明显） */
+  --color-bg-fill-glass: #181818CC;
+  /* 渐变玻璃：只给主站输入框 PromptBox，别的浮层都用上面的面板玻璃（11-09 用户定）。
+     同一个 #181818 往下变亮到 #282828，都是 80%，结构照即梦输入框（终点 106.67%，底边还没到最亮）。
+     是 background-image，写 background: var(--color-bg-fill-glass-gradient) */
+  --color-bg-fill-glass-gradient: linear-gradient(180deg, #181818CC 0, #282828CC 106.67%);
 
   /* 效果：背景模糊只有两档，不写别的数（11-05 用户定）。
-     32：玻璃和 on-media（Figma 效果样式「玻璃/背景模糊」）；16：盖在图片、视频上的遮罩（生成中、占位图） */
-  --effect-glass-blur: 32px;
+     80：玻璃（面板、渐变）和 on-media（Figma 效果样式「玻璃/背景模糊」，11-09 从 32 改，照即梦输入框）；16：盖在图片、视频上的遮罩（生成中、占位图） */
+  --effect-glass-blur: 80px;
   --effect-mask-blur: 16px;
 
   /* 填充色阶（11-05）：一条四档，越往上越亮，相邻两档对比度 1.12–1.15。
@@ -48,6 +54,8 @@
   --color-text-fill-tertiary: #FFFFFF66;
   --color-text-fill-placeholder: #FFFFFF4D;
   --color-text-fill-disabled: #FFFFFF33;
+  /* 反白底（--color-bg-fill-invert）上的字和图标（11-10 新加），= base 的颜色 */
+  --color-text-fill-invert: #0F1012;
   --color-text-fill-on-brand: #000000;
 
   /* 描边 */
