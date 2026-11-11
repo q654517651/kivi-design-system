@@ -183,7 +183,7 @@
 }
 
 /* 面板类（variant="panel"）：给能操作的悬停浮层，比如 Lora 设置。没有箭头，和 Menu 一样是玻璃底
-   （glass + 背景模糊 32 + 描边 border-subtle 画在里面），圆角 16，内边距 12，内容原样放进去，宽度由内容定，不套说明文字的样式 */
+   （glass + 背景模糊 80 + 描边 border-subtle 画在里面），圆角 16，内边距 12，内容原样放进去，宽度由内容定，不套说明文字的样式 */
 .kv-popover--panel {
   max-width: none;
   gap: 0;

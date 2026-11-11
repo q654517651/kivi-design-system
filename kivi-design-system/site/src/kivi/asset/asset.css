@@ -233,6 +233,111 @@
   font-size: var(--font-size-12);
 }
 
+/* 样式：封面（创作首页「最近项目」，11-10 用户定，照即梦）。
+   整张卡 16:9，圆角 16，描边 border-subtle，封面铺满；底部一条渐变（透明 → 黑 60%，on-media 最深那档）上压名字 14 / 22 中粗（左右 12、离底 8）。
+   悬停（300ms ease-in-out）：封面放大到 1.035；渐变往上长一截；名字上移 20，下面淡入修改时间 12 / 20；右下出「⋯」（IconButton 浮层无底 28，离边 8） */
+.kv-project-card--cover {
+  display: block;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border-radius: var(--border-radius-16);
+  outline-color: var(--color-border-subtle);
+  background: var(--color-bg-fill-container-light-1);
+  --kv-nested-fill: var(--color-bg-fill-container-light-1); /* 封面铺满整张卡，没图时的空底就是卡的底 */
+}
+
+.kv-project-card--cover:where(:hover, :has(:focus-visible), .is-hover) {
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.kv-project-card--cover > .kv-project-card__cover {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+.kv-project-card--cover:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) > .kv-project-card__cover {
+  transform: scale(1.035);
+}
+
+/* 名字条：贴底，高 64 的渐变，平时往下藏一截只露底下 36，悬停整条升上来 */
+.kv-project-card--cover > .kv-project-card__meta {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: block;
+  height: 64px;
+  padding: 0;
+  pointer-events: none;
+}
+
+.kv-project-card--cover > .kv-project-card__meta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, var(--color-on-media-fill-hover)); /* 压在亮图上也要看得清名字，渐变底到 on-media 最深的那档（黑 60%） */
+  transform: translateY(28px);
+  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+.kv-project-card--cover:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) > .kv-project-card__meta::before {
+  transform: none;
+}
+
+.kv-project-card--cover .kv-project-card__text {
+  position: absolute;
+  right: 48px; /* 给右下「⋯」让位：28 + 离边 8 + 间距 12 */
+  bottom: var(--spacing-8);
+  left: var(--spacing-12);
+  display: block;
+}
+
+.kv-project-card--cover .kv-project-card__name {
+  display: block;
+  color: var(--color-on-media-text);
+  font-weight: var(--font-weight-medium);
+  transition: transform var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+.kv-project-card--cover .kv-project-card__time {
+  position: absolute;
+  right: 0;
+  bottom: -20px; /* 藏在名字下面一行，悬停和名字一起上移 20，落在名字原来的位置（离底 8） */
+  left: 0;
+  line-height: var(--font-line-height-20);
+  opacity: 0;
+  transition:
+    opacity var(--motion-duration-300) var(--motion-ease-in-out),
+    transform var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+.kv-project-card--cover[data-has-meta]:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) .kv-project-card__name {
+  transform: translateY(-20px);
+}
+
+.kv-project-card--cover[data-has-meta]:where(:hover, :has(:focus-visible), .is-hover, :has([aria-expanded="true"])) .kv-project-card__time {
+  opacity: 1;
+  transform: translateY(-20px);
+}
+
+.kv-project-card--cover .kv-project-card__more {
+  position: absolute;
+  right: var(--spacing-8);
+  bottom: var(--spacing-8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-project-card--cover > .kv-project-card__cover,
+  .kv-project-card--cover > .kv-project-card__meta::before,
+  .kv-project-card--cover .kv-project-card__name,
+  .kv-project-card--cover .kv-project-card__time {
+    transition: none;
+  }
+}
+
 /* ---------- CreateCard ---------- */
 
 /* 和 ProjectCard 同一个外观：浅底 + 描边，圆角 12，悬停变亮。中间加号 24 + 文字 14，间距 2。大小填满所在格子 */
@@ -272,4 +377,105 @@
 .kv-create-card > .kv-icon {
   width: 24px;
   height: 24px;
+}
+
+/* 样式：画布（创作首页「新建画布」，11-10 用户定，照即梦）。
+   圆角 16，描边 border-subtle（盖在内容上的一圈），底是渐变玻璃的颜色（上暗下亮，和主站输入框同一个渐变，不加模糊）；
+   底下铺一层点阵（点 1.25、间距 22，border-subtle）。悬停：上面一层亮点阵（border-strong）透过一圈很宽的柔光带露出来，
+   像扫光一样从正中往外推，中间亮、两边渐渐透明，开头淡入结尾淡出，悬停期间一圈接一圈（2 秒一圈，ease-in-out，循环）。图标不变（11-10 用户定）。
+   正中：白色方块 32（圆角 8，反白底 + 描边），里面加号 16；下面隔 8 是文字 12 中粗 */
+.kv-create-card--canvas {
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size; /* 水波的大小按卡片宽算（cqw） */
+  gap: var(--spacing-8);
+  overflow: hidden;
+  border-radius: var(--border-radius-16);
+  outline-color: var(--color-border-subtle);
+  background: var(--color-bg-fill-glass-gradient);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+}
+
+.kv-create-card--canvas:where(:hover, :focus-visible, .is-hover),
+.kv-create-card--canvas:active {
+  background: var(--color-bg-fill-glass-gradient);
+}
+
+.kv-create-card--canvas::before,
+.kv-create-card--canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(circle, var(--kv-dot) 0 1.25px, transparent 1.25px);
+  background-position: 50% 50%;
+  background-size: 22px 22px;
+  pointer-events: none;
+}
+
+.kv-create-card--canvas::before {
+  --kv-dot: var(--color-border-subtle);
+}
+
+/* 亮点阵：遮罩是一圈很宽的柔光带（中间最亮、往里往外慢慢透明，像扫光），悬停时从正中往外推到比卡片还宽；
+   开头淡入、结尾淡出，一圈和下一圈之间不跳 */
+.kv-create-card--canvas::after {
+  --kv-dot: var(--color-border-strong);
+  -webkit-mask: radial-gradient(circle closest-side, transparent 15%, #00000040 35%, #000 55%, #00000040 75%, transparent 95%) 50% 50% / 0 0 no-repeat; /* 遮罩只看透明度，Figma 没变量 */
+  mask: radial-gradient(circle closest-side, transparent 15%, #00000040 35%, #000 55%, #00000040 75%, transparent 95%) 50% 50% / 0 0 no-repeat; /* 遮罩只看透明度，Figma 没变量 */
+  opacity: 0;
+}
+
+.kv-create-card--canvas:where(:hover, :focus-visible, .is-hover)::after {
+  animation: kv-create-ripple calc(var(--motion-duration-400) * 5) var(--motion-ease-in-out) infinite;
+}
+
+@keyframes kv-create-ripple {
+  0% {
+    -webkit-mask-size: 20cqw 20cqw;
+    mask-size: 20cqw 20cqw;
+    opacity: 0;
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  65% {
+    opacity: 1;
+  }
+
+  100% {
+    -webkit-mask-size: 180cqw 180cqw;
+    mask-size: 180cqw 180cqw;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-create-card--canvas:where(:hover, :focus-visible, .is-hover)::after {
+    animation: none;
+  }
+}
+
+.kv-create-card__mark {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-invert);
+  color: var(--color-text-fill-invert);
+}
+
+.kv-create-card__mark > .kv-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.kv-create-card__label {
+  line-height: var(--font-line-height-20);
 }

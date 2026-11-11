@@ -49,7 +49,8 @@ export const TOKEN_GROUPS = {
       { token: '--color-bg-fill-base', desc: '页面和画布的底', figma: 'color/bg/fill/base', use: '全局底色：外框、画布、各页面的底。不要用于面板卡片（用叠加）、弹窗（surface）、浮层（popup）' },
       { token: '--color-bg-fill-surface', desc: '盖在画布上的不透明面板', figma: 'color/bg/fill/surface', use: '必须不透明的地方：盖在画布上的节点卡片、浮动面板、模态弹窗。不要用于页面里普通的面板和卡片（用 Container）' },
       { token: '--color-bg-fill-popup', desc: 'Tooltip、Toast', figma: 'color/bg/fill/popup', use: '实色的提示浮层：Tooltip、Toast。菜单、下拉用 glass；模态弹窗用 surface + mask' },
-      { token: '--color-bg-fill-glass', desc: '菜单、下拉等玻璃浮层', figma: 'color/bg/fill/glass', use: '悬浮在页面上的浮层（菜单、下拉、右键、节点工具栏、参数面板、主站输入框），配 effect-glass-blur 和描边 border-subtle。下面是什么都行' },
+      { token: '--color-bg-fill-glass', desc: '菜单、下拉等玻璃浮层', figma: 'color/bg/fill/glass', use: '面板玻璃：悬浮在页面上的浮层（菜单、下拉、右键、节点工具栏、参数面板、画布输入框），配 effect-glass-blur 和描边 border-subtle。下面是什么都行' },
+      { token: '--color-bg-fill-glass-gradient', desc: '主站输入框的渐变玻璃', figma: '填充样式 玻璃/渐变', use: '只给主站输入框 PromptBox：#181818 80% → #282828 80% 上下渐变，是 background-image，写 `background:`。模糊、描边和 glass 一样' },
     ],
   },
   fillScale: {
@@ -85,6 +86,7 @@ export const TOKEN_GROUPS = {
       { token: '--color-text-fill-tertiary', desc: '时间、数量、辅助提示', figma: 'color/text/fill/tertiary', use: '时间、数量、辅助提示、菜单分组标题、单位' },
       { token: '--color-text-fill-placeholder', desc: '输入框占位文字', figma: 'color/text/fill/placeholder', use: '只给输入框里的占位文字，对比度不够，不能放要读的信息' },
       { token: '--color-text-fill-disabled', desc: '禁用', figma: 'color/text/fill/disabled', use: '禁用的文字和图标' },
+      { token: '--color-text-fill-invert', desc: '反白底上的字', figma: 'color/text/fill/invert', use: '反白底（bg-fill-invert）上的字和图标，= base 的颜色' },
       { token: '--color-text-fill-on-brand', desc: '品牌色上的文字', figma: 'color/text/fill/on-brand', use: '品牌色、品牌渐变上的文字和图标' },
     ],
   },
@@ -114,6 +116,7 @@ export const TOKEN_GROUPS = {
     kind: 'color',
     rows: [
       { token: '--color-bg-fill-mask', desc: '弹窗遮罩', figma: 'color/bg/fill/mask', use: '模态弹窗下面的遮罩，每一级弹窗一层，不模糊' },
+      { token: '--color-bg-fill-invert', desc: '反白底', figma: 'color/bg/fill/invert', use: '深色界面上的白色实心小块：创作首页「新建画布」的加号块。上面的字和图标用 text-fill-invert。不要大面积铺' },
       { token: '--color-on-media-fill', desc: '图片上的按钮底', figma: 'color/on-media/fill', use: '只给贴在图片、视频上的控件：按钮、按钮条、标签、勾选框、播放器控件，不加描边。悬浮在页面上的浮层用 glass' },
       { token: '--color-on-media-fill-hover', desc: '悬停', figma: 'color/on-media/fill-hover', use: 'on-media/fill 的悬停态' },
       { token: '--color-on-media-text', desc: '图片上的文字', figma: 'color/on-media/text', use: '叠在图片、视频上的文字和图标' },

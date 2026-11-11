@@ -74,7 +74,7 @@ description: KIVI 产品界面（AI 无限画布 Web 端）的设计规范和 Re
 
 | 页 | 规范 | 组件 | 什么时候读 |
 |---|---|---|---|
-| 页面模板 | `docs/templates/main-site.mdx`、`canvas.mdx`、`canvas-tools.mdx`、`skills.mdx`、`assets.mdx` | `docs/templates/*.demos.tsx` | 一整页怎么拼：主站生成页（侧栏、生成记录、主站 Agent、输入框）、画布 + Agent 侧栏、画布工具（节点工具栏、工具面板、裁剪扩图、视频封装、画布底部工具栏）、技能面板、资产管理 |
+| 页面模板 | `docs/templates/ui-preview.mdx`、`canvas.mdx`、`canvas-tools.mdx`、`skills.mdx` | `docs/templates/app.tsx`、`*.demos.tsx` | 一整页怎么拼：UI 页面预览（主站整套：创作页的侧栏、生成记录、主站 Agent、输入框，AI 工具，我的资产，画布，能互相切，单独开在 `#/app/<页>`）、画布 + Agent 侧栏、画布工具（节点工具栏、工具面板、裁剪扩图、视频封装、画布底部工具栏）、技能面板 |
 | 设计规则 | `docs/foundations/rules.mdx` | — | 每个任务都先读：所有硬规则（变量、底色、浮层、按钮、提示、状态、动效、图标、组件命名） |
 | 变量 | `docs/foundations/tokens.mdx` | `kivi/tokens.css` | 要变量名、取值，或核对某个值该用哪个变量 |
 | 动效 | `docs/foundations/motion.mdx`、`motion-generating.mdx` | `kivi/generating/` | 做任何过渡和动画；生成中的点阵动效 |

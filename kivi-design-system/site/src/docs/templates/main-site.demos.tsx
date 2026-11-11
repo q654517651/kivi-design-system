@@ -28,7 +28,6 @@ import {
   ReferenceStack,
   ResultTile,
   Tag,
-  Toaster,
   UserMessage,
   placeholderImageSrc,
   referenceName,
@@ -43,9 +42,8 @@ import {
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../business/skill-data';
 import { demoCost } from '../business/gen-demo-cost';
 import { useControllable } from '../../kivi/hooks';
-import { TemplateFrame } from './frame';
 
-// 页面模板 · 主站：一整个生成页。侧栏 + 记录流（用户自己生成的、主站 Agent 的混在一起）+ 底部输入框。
+// UI 页面预览 · 创作页：侧栏 + 记录流（用户自己生成的、主站 Agent 的混在一起）+ 底部输入框。
 // 只能看：点生成没反应，生成中的一直停在生成中。图片都是占位图
 
 const img = (name: PlaceholderImageName, ratio: PlaceholderImageRatio) => placeholderImageSrc(name, ratio);
@@ -226,6 +224,17 @@ const CANVASES: HistoryItem[] = [
   { id: 'canvas-3', text: '品牌 IP 设定' },
 ];
 
+/** UI 页面预览里能切的页：侧栏四个导航 + 画布 */
+export type AppPage = 'create' | 'explore' | 'tools' | 'assets' | 'canvas';
+export type HistoryKind = 'chat' | 'canvas';
+
+const NAV_ITEMS: { page: AppPage; icon: 'Create' | 'Explore' | 'AITools' | 'Pack'; label: string }[] = [
+  { page: 'create', icon: 'Create', label: '创作' },
+  { page: 'explore', icon: 'Explore', label: '探索' },
+  { page: 'tools', icon: 'AITools', label: 'AI 工具' },
+  { page: 'assets', icon: 'Pack', label: '我的资产' },
+];
+
 /** 侧栏的一段（对话 / 画布）：MenuLabel 带 items，标题点了展开收起，列表往下推开、淡入，收起倒着走（Collapse，300ms ease-in-out） */
 function HistoryGroup({
   title,
@@ -320,30 +329,43 @@ export function Sidebar({
   defaultCollapsed = false,
   onCollapsedChange,
   page,
+  onNavigate,
+  selected: selectedProp,
   defaultSelected = 'chat-1',
+  onOpen,
 }: {
   collapsed?: boolean;
   defaultCollapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
-  /** 当前在哪个导航页（资产管理模板传 assets，AI 工具模板传 tools），那一项用选中底色 */
-  page?: 'assets' | 'tools';
-  /** 一开始选中哪条对话 / 画布，不选传空 */
+  /** 当前在哪个导航页，那一项用选中底色；创作页只在没选中对话时选中「创作」 */
+  page?: AppPage;
+  /** 点导航（创作、探索、AI 工具、我的资产） */
+  onNavigate?: (page: AppPage) => void;
+  /** 选中哪条对话 / 画布（受控），不选传空 */
+  selected?: string;
+  /** 一开始选中哪条对话 / 画布（非受控），不选传空 */
   defaultSelected?: string;
+  /** 点开（或新建）一条对话 / 画布：对话回创作页，画布进画布页 */
+  onOpen?: (kind: HistoryKind, id: string) => void;
 }) {
   const [collapsed, setCollapsed] = useControllable(collapsedProp, defaultCollapsed, onCollapsedChange);
   // 点收起后，鼠标离开过 Logo 这行才认悬停：点的时候鼠标还在这行，鼠标不动浏览器不重新算悬停，不然「展开侧栏」会冒出来
   const [settling, setSettling] = useState(false);
   const [chats, setChats] = useState(CHATS);
   const [canvases, setCanvases] = useState(CANVASES);
-  const [selected, setSelected] = useState(defaultSelected);
+  const [selected, setSelected] = useControllable(selectedProp, defaultSelected);
+  const open = (kind: HistoryKind, id: string) => {
+    setSelected(id);
+    onOpen?.(kind, id);
+  };
   // 新建的排在置顶的后面
-  const add = (set: typeof setChats, text: string) => {
+  const add = (kind: HistoryKind, set: typeof setChats, text: string) => {
     const id = `new-${Date.now()}`;
     set((list) => {
       const at = list.filter((c) => c.pinned).length;
       return [...list.slice(0, at), { id, text }, ...list.slice(at)];
     });
-    setSelected(id);
+    open(kind, id);
   };
   // 置顶挪到最前面；取消置顶放回置顶的后面
   const pin = (set: typeof setChats, id: string) =>
@@ -360,7 +382,10 @@ export function Sidebar({
     <div className="tpl-ms__side-wrap" data-collapsed={collapsed ? '' : undefined} data-settling={settling ? '' : undefined}>
       <aside className="tpl-ms__side">
         <div className="tpl-ms__brand" onPointerLeave={() => setSettling(false)}>
-          <Icon name="Logo" />
+          {/* Logo 是按钮：点了回创作首页（照 LibTV），收起时藏起来、换小 Logo */}
+          <button type="button" className="tpl-ms__home" aria-label="回到创作首页" onClick={() => onNavigate?.('create')}>
+            <Icon name="Logo" />
+          </button>
           {/* 收起时的小 Logo：绿色渐变底 + 描边，Logo 缩小放正中（照原型） */}
           <span className="tpl-ms__mini-logo" aria-hidden>
             <Icon name="Logo" />
@@ -371,10 +396,17 @@ export function Sidebar({
           </span>
         </div>
         <Menu variant="plain" aria-label="主站导航">
-          <MenuItem icon="Create" collapsed={collapsed}>创作</MenuItem>
-          <MenuItem icon="Explore" collapsed={collapsed}>探索</MenuItem>
-          <MenuItem icon="AITools" collapsed={collapsed} selected={page === 'tools' || undefined}>AI 工具</MenuItem>
-          <MenuItem icon="Pack" collapsed={collapsed} selected={page === 'assets' || undefined}>我的资产</MenuItem>
+          {NAV_ITEMS.map((n) => (
+            <MenuItem
+              key={n.page}
+              icon={n.icon}
+              collapsed={collapsed}
+              selected={(page === n.page && (n.page !== 'create' || !selected)) || undefined}
+              onClick={() => onNavigate?.(n.page)}
+            >
+              {n.label}
+            </MenuItem>
+          ))}
           <div className="tpl-ms__gap" />
           <HistoryGroup
             title="对话"
@@ -382,8 +414,8 @@ export function Sidebar({
             items={chats}
             selected={selected}
             collapsed={collapsed}
-            onSelect={setSelected}
-            onNew={() => add(setChats, '新对话')}
+            onSelect={(id) => open('chat', id)}
+            onNew={() => add('chat', setChats, '新对话')}
             onRemove={(id) => setChats((list) => list.filter((c) => c.id !== id))}
             onRename={(id, name) => setChats((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
             onPin={(id) => pin(setChats, id)}
@@ -395,8 +427,8 @@ export function Sidebar({
             items={canvases}
             selected={selected}
             collapsed={collapsed}
-            onSelect={setSelected}
-            onNew={() => add(setCanvases, '未命名画布')}
+            onSelect={(id) => open('canvas', id)}
+            onNew={() => add('canvas', setCanvases, '未命名画布')}
             onRemove={(id) => setCanvases((list) => list.filter((c) => c.id !== id))}
             onRename={(id, name) => setCanvases((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
             onPin={(id) => pin(setCanvases, id)}
@@ -420,14 +452,19 @@ const PLACEHOLDER: Record<string, string> = {
 const UP = 'top-start' as const;
 
 /** 任务类型后面那一组：Agent 是模型、技能、模式；图片、视频、音频是各自的模型和参数（kivi/generation 那一份） */
-const TOOLBAR: Record<string, (model: string, setModel: (m: string) => void) => JSX.Element> = {
-  agent: () => <AgentControls placement={UP} skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />,
-  image: (model, setModel) => <ImageModelControls placement={UP} model={model} onModelChange={setModel} />,
-  video: (model, setModel) => <VideoModelControls placement={UP} model={model} onModelChange={setModel} />,
-  audio: (model, setModel) => <AudioModelControls placement={UP} model={model} onModelChange={setModel} />,
+type Placement = 'top-start' | 'bottom-start';
+const TOOLBAR: Record<string, (model: string, setModel: (m: string) => void, placement: Placement) => JSX.Element> = {
+  agent: (_m, _s, placement) => <AgentControls placement={placement} skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />,
+  image: (model, setModel, placement) => <ImageModelControls placement={placement} model={model} onModelChange={setModel} />,
+  video: (model, setModel, placement) => <VideoModelControls placement={placement} model={model} onModelChange={setModel} />,
+  audio: (model, setModel, placement) => <AudioModelControls placement={placement} model={model} onModelChange={setModel} />,
 };
 
-function Composer() {
+/**
+ * 主站输入框（PromptBox）。对话页贴在底部（下拉往上弹）；创作首页在上面（下拉往下弹）。
+ * 创作首页「生成」「画布」两种模式用同一个输入框、一样大（11-10 用户定，新版需求画布的输入框不变矮），只是提交去的地方不同
+ */
+export function Composer({ placement = UP, onSubmit }: { placement?: Placement; onSubmit?: () => void }) {
   const [task, setTask] = useState('agent');
   const [text, setText] = useState('');
   // 每种任务各记一个模型，生成按钮的消耗跟着它走
@@ -452,6 +489,11 @@ function Composer() {
       });
       return next;
     });
+  const submit = () => {
+    if (!onSubmit) return;
+    setText('');
+    onSubmit();
+  };
   return (
     <PromptBox
       value={text}
@@ -461,15 +503,15 @@ function Composer() {
       references={<ReferenceStack items={items} onAdd={add} onRemove={(id) => setItems((list) => list.filter((i) => i.id !== id))} />}
       toolbar={
         <>
-          <TaskSelect placement={UP} value={task} onChange={setTask} />
-          {TOOLBAR[task](models[task], setModel)}
+          <TaskSelect placement={placement} value={task} onChange={setTask} />
+          {TOOLBAR[task](models[task], setModel, placement)}
         </>
       }
       actions={
         // 主站一律用猕猴桃生成按钮（圆形发送按钮只给画布 Agent）。音频没有张数，换成字数 / 上限。只能看，点了不生成
         <>
-          {task === 'audio' ? <AudioCharCount count={text.length} model={audioModel} /> : <CountSelect placement={UP} />}
-          <GenerateButton cost={demoCost(task, models[task])} />
+          {task === 'audio' ? <AudioCharCount count={text.length} model={audioModel} /> : <CountSelect placement={placement} />}
+          <GenerateButton cost={demoCost(task, models[task])} onClick={submit} />
         </>
       }
     />
@@ -478,8 +520,21 @@ function Composer() {
 
 // ---------- 整页 ----------
 
-/** 主站生成页：只能看。点完成的图全屏看大图 */
-export function MainSiteTemplate() {
+/** 创作页主区（生成记录 + 底部输入框，侧栏在 UI 页面预览的外壳里）：只能看。点完成的图全屏看大图 */
+/** 右上角：余额（猕猴桃）和头像，创作首页、对话页都有 */
+export function Wallet() {
+  return (
+    <div className="tpl-ms__wallet">
+      <span className="tpl-ms__balance" aria-label="余额 200">
+        <Icon name="Kiwi" />
+        200
+      </span>
+      <Avatar name="KIVI" size={32} src={img('ip-peek', '1:1')} />
+    </div>
+  );
+}
+
+export function CreatePage() {
   const [preview, setPreview] = useState<string | null>(null);
   const feed = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLDivElement>(null);
@@ -530,54 +585,44 @@ export function MainSiteTemplate() {
   };
 
   return (
-    <TemplateFrame>
-      <Toaster />
-      <div className="tpl-ms">
-        <Sidebar />
-        <main className="tpl-ms__main" style={{ '--tpl-composer-h': `${composerH}px` } as CSSProperties}>
-          <div className="tpl-ms__wallet">
-            <span className="tpl-ms__balance" aria-label="余额 200">
-              <Icon name="Kiwi" />
-              200
-            </span>
-            <Avatar name="KIVI" size={32} src={img('ip-peek', '1:1')} />
-          </div>
-          <div ref={feed} className="tpl-ms__feed">
-            <div className="tpl-ms__column">
-              {RECORDS.map((r) =>
-                r.kind === 'agent' ? (
-                  <div key={r.id} className="tpl-turn">
-                    <UserMessage assets={<ReferenceItem src={img('kiwi-light', '1:1')} />}>参考这张图，做 4 张科幻风格的猕猴桃竖版海报</UserMessage>
-                    <div className="tpl-text">好的，我先看看参考图的风格。</div>
-                    <ProcessGroup steps={AGENT_STEPS} />
-                    <div className="tpl-text">参考图是冷色宇宙背景加漂浮的猕猴桃切片，下面按这个风格生成 4 张竖版海报。</div>
-                    <div className="tpl-grid">{AGENT_RESULTS.map((src, i) => tile({ src }, i, '9:16', 1))}</div>
-                    <MessageFeedback text="参考图是冷色宇宙背景加漂浮的猕猴桃切片，下面按这个风格生成 4 张竖版海报。" traceId="trace-4c9d07" />
+    <>
+      <main className="tpl-ms__main" style={{ '--tpl-composer-h': `${composerH}px` } as CSSProperties}>
+        <Wallet />
+        <div ref={feed} className="tpl-ms__feed">
+          <div className="tpl-ms__column">
+            {RECORDS.map((r) =>
+              r.kind === 'agent' ? (
+                <div key={r.id} className="tpl-turn">
+                  <UserMessage assets={<ReferenceItem src={img('kiwi-light', '1:1')} />}>参考这张图，做 4 张科幻风格的猕猴桃竖版海报</UserMessage>
+                  <div className="tpl-text">好的，我先看看参考图的风格。</div>
+                  <ProcessGroup steps={AGENT_STEPS} />
+                  <div className="tpl-text">参考图是冷色宇宙背景加漂浮的猕猴桃切片，下面按这个风格生成 4 张竖版海报。</div>
+                  <div className="tpl-grid">{AGENT_RESULTS.map((src, i) => tile({ src }, i, '9:16', 1))}</div>
+                  <MessageFeedback text="参考图是冷色宇宙背景加漂浮的猕猴桃切片，下面按这个风格生成 4 张竖版海报。" traceId="trace-4c9d07" />
+                </div>
+              ) : (
+                <div key={r.id} className="tpl-record">
+                  <GenPrompt prompt={r.prompt}>{r.tags}</GenPrompt>
+                  <div className="tpl-grid" data-cols={gridOf(r.ratio, r.tiles.length).cols === 3 ? '3' : undefined}>
+                    {r.tiles.map((t, i) => tile(t, i, r.ratio, gridOf(r.ratio, r.tiles.length).span))}
                   </div>
-                ) : (
-                  <div key={r.id} className="tpl-record">
-                    <GenPrompt prompt={r.prompt}>{r.tags}</GenPrompt>
-                    <div className="tpl-grid" data-cols={gridOf(r.ratio, r.tiles.length).cols === 3 ? '3' : undefined}>
-                      {r.tiles.map((t, i) => tile(t, i, r.ratio, gridOf(r.ratio, r.tiles.length).span))}
-                    </div>
-                    <div className="tpl-row">
-                      <Button variant="light">重新编辑</Button>
-                      <Button variant="light">再次生成</Button>
-                      <Button variant="light">删除整组</Button>
-                    </div>
+                  <div className="tpl-row">
+                    <Button variant="light">重新编辑</Button>
+                    <Button variant="light">再次生成</Button>
+                    <Button variant="light">删除整组</Button>
                   </div>
-                ),
-              )}
-            </div>
+                </div>
+              ),
+            )}
           </div>
-          <div ref={composer} className="tpl-ms__composer">
-            <Composer />
-          </div>
-        </main>
-      </div>
+        </div>
+        <div ref={composer} className="tpl-ms__composer">
+          <Composer />
+        </div>
+      </main>
       <Dialog size="full" title="预览" open={preview !== null} onOpenChange={(v) => !v && setPreview(null)}>
         {preview && <img src={preview} alt="预览" style={{ display: 'block', maxWidth: '100%', maxHeight: '75vh', margin: '0 auto', objectFit: 'contain' }} />}
       </Dialog>
-    </TemplateFrame>
+    </>
   );
 }

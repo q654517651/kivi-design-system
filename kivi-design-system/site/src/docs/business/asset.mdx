@@ -23,7 +23,7 @@ import { CoverGridPlayground, CreateCardPlayground, FolderCardPlayground, Projec
 
 ## CreateCard
 
-新建卡：新建项目、创建文件夹，放在格子第一位。
+新建卡：新建项目、创建文件夹、新建画布，放在格子第一位。
 
 <CreateCardPlayground />
 
@@ -60,6 +60,7 @@ import { CoverGridPlayground, CreateCardPlayground, FolderCardPlayground, Projec
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
+| `variant` | `"default"` `"cover"` | `"default"` | 样式。默认：上面封面、下面名字和时间（画布管理、资产页）。封面（创作首页「最近项目」，照即梦）：整张卡 16:9、圆角 16、描边 border-subtle，封面铺满，名字 14 / 22 中粗压在底部渐变（透明 → 黑 60%）上，左右 12、离底 8；悬停 300ms ease-in-out：封面放大 1.035、渐变升高、名字上移 20 露出修改时间 12 / 20、右下出「⋯」（IconButton 浮层无底 28，离边 8） |
 | `name` | `string` | — | 画布名，最多 20 字。14 / 22，primary，一行省略 |
 | `covers` | `string[]` | `[]` | 封面，用 CoverGrid。没有就是空底 |
 | `updatedAt` | `Date` `number` | — | 最后修改时间，写成「刚刚修改」「n分钟前修改」「n小时前修改」「2026年11月4日修改」（`formatUpdatedAt`）。12 / 20，secondary，一行省略 |
@@ -73,8 +74,9 @@ import { CoverGridPlayground, CreateCardPlayground, FolderCardPlayground, Projec
 
 ### CreateCard
 
-和 ProjectCard 一个外观：圆角 12，描边，底 container-light-1，悬停 hover、按下 pressed；正中加号 `AddSmall` 24 + 文字 14 / 22，间距 2。大小填满所在格子：画布页和 ProjectCard 一样高，文件夹区和 FolderCard 一格一样高（封面 + 名字）。其余原生 `<button>` 属性都能传。
+默认：和 ProjectCard 一个外观：圆角 12，描边，底 container-light-1，悬停 hover、按下 pressed；正中加号 `AddSmall` 24 + 文字 14 / 22，间距 2。画布（`variant="canvas"`，创作首页「新建画布」）：圆角 16，描边 border-subtle，底 `--color-bg-fill-glass-gradient`（上暗下亮，不加模糊），铺一层点阵（点 1.25、间距 22，border-subtle）；悬停时亮点阵（border-strong）透过一圈很宽的柔光带露出来，像扫光一样从正中往外推，中间亮、两边渐渐透明，开头淡入结尾淡出，2 秒一圈、ease-in-out，悬停期间循环（减少动态效果时不动）；图标不变。正中白色方块 32（圆角 8，`--color-bg-fill-invert` + 描边 border-subtle，图标 `--color-text-fill-invert`），加号 `AddSmall` 16，下面隔 8 是文字 12 / 20 中粗。大小填满所在格子：画布页和 ProjectCard 一样高，文件夹区和 FolderCard 一格一样高（封面 + 名字）。其余原生 `<button>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `label` | `string` | — | 文字：「新建项目」「创建文件夹」 |
+| `label` | `string` | — | 文字：「新建项目」「创建文件夹」「新建画布」 |
+| `variant` | `"default"` `"canvas"` | `"default"` | 样式：默认 / 画布。画布只给创作首页「最近项目」：一排里新建格占掉最近项目没占的格子，一个画布都没有时铺满整排 |

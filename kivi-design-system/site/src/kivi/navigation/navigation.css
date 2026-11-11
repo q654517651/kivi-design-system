@@ -66,6 +66,11 @@
   height: var(--kv-tab-icon-size);
 }
 
+/* 收藏开着：实心星，图标品牌绿（和 IconButton 的 data-collected 一样，设计规则里收藏的唯一例外）。字不变色 */
+.kv-tab-item[data-collected] > .kv-icon {
+  color: var(--color-brand-solid);
+}
+
 /* 放不下时（分段被压窄）：文字末尾省略号，内边距不让（设计规则 · 状态）；悬停的全文 Tooltip 在 TabItem.tsx */
 .kv-tab-item > .kv-tab-item__label {
   min-width: 0;

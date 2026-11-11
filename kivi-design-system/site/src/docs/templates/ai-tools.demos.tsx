@@ -24,7 +24,6 @@ import {
   Slider,
   TabItem,
   Tabs,
-  Toaster,
   DropOverlay,
   VideoPlayer,
   placeholderImageSrc,
@@ -36,8 +35,6 @@ import {
   type SelectOption,
 } from '@kivi';
 import { rejectMessage, useFileDrop } from '../../kivi/hooks';
-import { Sidebar } from './main-site.demos';
-import { TemplateFrame } from './frame';
 
 /*
   页面模板 · AI 工具：左边切工具（图片、视频不分开），中间是舞台（当前这一版，编辑直接在上面做），右边是历史（每生成一次多一版）。
@@ -242,7 +239,7 @@ function MaskLayer({ rect, strokes, onStroke, erase, size }: {
 
 // ---------- 整页 ----------
 
-function ToolsPage() {
+export function ToolsPage() {
   const [tool, setTool] = useState<ToolId>('expand');
   const media = toolOf(tool).media;
   const [versions, setVersions] = useState<Version[]>([]);
@@ -683,18 +680,5 @@ function ToolsPage() {
         ))}
       </aside>
     </div>
-  );
-}
-
-/** 主站侧栏（收起，AI 工具选中）+ 工具页 */
-export function AiToolsTemplate() {
-  return (
-    <TemplateFrame>
-      <Toaster />
-      <div className="tpl-ms">
-        <Sidebar page="tools" defaultSelected="" defaultCollapsed />
-        <ToolsPage />
-      </div>
-    </TemplateFrame>
   );
 }

@@ -49,6 +49,16 @@
   aspect-ratio: auto;
 }
 
+/* ---------- UI 页面预览单独开的 Tab（#/app/…）：铺满窗口，没有网站外壳 ---------- */
+
+.tpl-app {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-bg-fill-base);
+  color: var(--color-text-fill-primary);
+}
+
 /* ---------- 主站生成页：左侧栏 240，右边记录流 + 底部输入框 ---------- */
 
 /* 左边侧栏的宽度由侧栏自己定（240 / 收起 60），记录流占剩下的，侧栏收起时跟着变宽 */
@@ -101,20 +111,34 @@
   flex: none;
 }
 
-/* Logo 行：Logo 左 8，收起按钮（IconButton 28）在右边；行高 28（11-03 照 Figma，原来 32） */
+/* Logo 行：Logo 左 8，收起按钮（IconButton 28）在右边；行高 28（11-03 照 Figma，原来 32）。
+   上下照 LibTV（11-10 用户定）：Logo 行的中线离顶 32，和右上角余额、头像那一排的中线对齐（两边都按 --tpl-head-center 算），下面离导航 16（第一个导航离顶 62） */
 .tpl-ms__brand {
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 28px;
-  padding: 0 0 var(--spacing-12) var(--spacing-8);
+  min-height: calc(28px + var(--spacing-16)); /* 内容行 28 + 下边距 16（border-box，不加上下边距会把行压矮，Logo 就不在中线上） */
+  margin-top: calc(var(--tpl-head-center, 32px) - var(--spacing-12) - 28px / 2); /* 减去侧栏上边距 12 和半行 14 */
+  padding: 0 0 var(--spacing-16) var(--spacing-8);
+}
+
+/* Logo 是按钮：点了回创作首页，悬停小手（照 LibTV）。不加底色、不变色 */
+.tpl-ms__home {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  transition: opacity var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
 /* 收起、展开时 Logo 行什么都不挪、不变大小，只换透明度（11-05 用户定）：
    大 Logo 淡出、小 Logo 在 36 的格子正中淡入，行高不变，下面的导航也不上下动；
    收起按钮钉在展开时的位置（不跟着侧栏右边往左滑），淡出后才挪到小 Logo 上，收起后悬停小 Logo 才出现；
    点收起后鼠标离开过这行才认悬停（data-settling），鼠标还停在这行也不冒出来；键盘 Tab 到按钮照常显示 */
-.tpl-ms__brand > .kv-icon {
+.tpl-ms__brand > .tpl-ms__home > .kv-icon {
   width: 54px;
   height: 24px;
   transition: opacity var(--motion-duration-300) var(--motion-ease-in-out);
@@ -123,7 +147,7 @@
 /* 收起时的小 Logo：24 的方块，圆角 6，绿色渐变底 + 描边，Logo 缩到 20 放正中（照原型） */
 .tpl-ms__mini-logo {
   position: absolute;
-  top: 0;
+  top: calc((28px - 24px) / 2); /* 在 28 的 Logo 行里上下居中，中线和右上角那一排对齐 */
   left: calc((36px - 24px) / 2);
   display: grid;
   place-items: center;
@@ -151,8 +175,9 @@
   transition: opacity var(--motion-duration-300) var(--motion-ease-in-out);
 }
 
-.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand > .kv-icon {
+.tpl-ms__side-wrap[data-collapsed] .tpl-ms__brand > .tpl-ms__home {
   opacity: 0;
+  pointer-events: none;
 }
 
 .tpl-ms__side-wrap[data-collapsed] .tpl-ms__mini-logo {
@@ -234,11 +259,12 @@
   padding-bottom: calc(var(--tpl-composer-h, 220px) + var(--spacing-32));
 }
 
-/* 右上角：猕猴桃余额 + 头像。离边 16、内边距 4 / 12、间距 8、头像 24；玻璃（和菜单一样：glass + 模糊 32 + 描边 border-subtle），11-03 用户定 */
+/* 右上角：猕猴桃余额 + 头像。离边 16、内边距 4 / 12、间距 8、头像 24；玻璃（和菜单一样：glass + 模糊 80 + 描边 border-subtle），11-03 用户定 */
+/* 右上角：离右边 24（11-10 用户定，原来 16）；上下和侧栏 Logo 行中线对齐（中线离顶 32，所以离顶 16，照 LibTV） */
 .tpl-ms__wallet {
   position: absolute;
-  top: var(--spacing-16);
-  right: var(--spacing-16);
+  top: calc(var(--tpl-head-center, 32px) - 32px / 2); /* 这一排高 32，中线和侧栏 Logo 对齐 */
+  right: var(--spacing-24);
   z-index: 2;
   display: flex;
   align-items: center;
@@ -342,6 +368,15 @@
   top: var(--spacing-16);
   left: var(--spacing-16);
   z-index: 1;
+}
+
+/* 画布工具栏：底部正中，离底 16（和左下角视图工具栏同一条底线） */
+.tpl-cv__toolbar {
+  position: absolute;
+  bottom: var(--spacing-16);
+  left: 50%;
+  z-index: 1;
+  transform: translateX(-50%);
 }
 
 .tpl-cv__agent {
@@ -730,6 +765,13 @@
   margin-bottom: var(--spacing-32);
 }
 
+/* 内容最宽 1600（不算左右 32），屏幕再宽就居中，和探索页一样（11-10 用户定）。吸顶筛选条除外：底色和下描边铺满，里面的控件对齐 1600 */
+.tpl-as__section > :not(.tpl-as__filters) {
+  max-width: 1600px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
 .tpl-as__section:first-child {
   padding-top: var(--spacing-32);
 }
@@ -767,7 +809,7 @@
   overflow: hidden;
 }
 
-/* 生成历史筛选条：来源、类型、收藏，搜索靠右；滚动时贴在主区顶上，底色 base + 下描边 */
+/* 生成历史筛选条：来源、类型、收藏，搜索紧跟在后面（左对齐）；滚动时贴在主区顶上，底色 base，不加下描边（11-10 用户定，探索页同一个类） */
 .tpl-as__filters {
   position: sticky;
   top: 0;
@@ -776,8 +818,8 @@
   align-items: center;
   gap: var(--spacing-8);
   margin: 0 calc(var(--spacing-32) * -1) var(--spacing-24);
-  padding: var(--spacing-12) var(--spacing-32);
-  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
+  /* 左右：至少 32；内容区宽过 1600 时再加上两边空出来的一半，控件和下面的内容左对齐 */
+  padding: var(--spacing-12) max(var(--spacing-32), calc(var(--spacing-32) + (100% - 1600px) / 2));
   background: var(--color-bg-fill-base);
 }
 
@@ -798,7 +840,7 @@
 .tpl-as__search {
   flex: 0 1 240px;
   min-width: 0;
-  margin-left: auto;
+  margin-left: var(--spacing-16); /* 紧跟在筛选后面，和前面隔 16（同「类型」这类标签）；11-09 从靠右改，宽屏离得太远 */
 }
 
 /* 按天分组：「今天」，下面正方形格子，最小 200（11-05 从 136 调大，1920 屏约 8 列和线上一样）、间距 4，一排能放几个放几个，窄了先缩、放不下少一列 */
@@ -1050,3 +1092,485 @@
 .tpl-at__version[aria-pressed="true"] > .tpl-at__thumb::after {
   opacity: 1;
 }
+
+/* ---------- 创作首页：标题、生成 / 画布、输入框、最近更新或最近项目、广场 ----------
+   内容最宽 1600（不算左右 32），屏幕再宽就居中，和探索页、资产页一样；输入框自己最宽 1040、居中 */
+
+.tpl-home {
+  position: relative; /* 右上角余额和头像（Wallet）贴着它 */
+  min-width: 0;
+  min-height: 0; /* 在侧栏旁边的网格里，不让内容把自己撑高，滚动交给 ScrollArea */
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-bg-fill-base);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.tpl-home__scroll {
+  height: 100%;
+}
+
+.tpl-home__inner {
+  box-sizing: content-box;
+  max-width: 1600px;
+  margin: 0 auto;
+  /* 离顶 80（照交互原型；间距变量只到 32，用 32 × 2.5 拼） */
+  padding: calc(var(--spacing-32) * 2.5) var(--spacing-32) var(--spacing-32);
+}
+
+/* 标题 24 / 32 中粗居中，下面隔 48 是「生成 / 画布」，再隔 48 是输入框（照交互原型；48 = 32 × 1.5） */
+.tpl-home__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing-32) * 1.5);
+  margin-bottom: calc(var(--spacing-32) * 1.5);
+}
+
+.tpl-home__intro h1 {
+  margin: 0;
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-32);
+  text-align: center;
+}
+
+.tpl-home__mode {
+  width: 240px;
+}
+
+.tpl-home__composer {
+  display: flex;
+  justify-content: center;
+}
+
+/* 输入框外壳：只有一个、切换时不动。最宽 1040、圆角 24、描边 border-subtle（画在里面，不占位置）、渐变玻璃底 + 模糊（和主站输入框一样）。
+   里面两套内容叠在同一格（生成：主站提示词框；画布：画布 Agent 输入框），格子高度取高的那个，所以两个一样高 */
+.tpl-home__shell {
+  position: relative;
+  display: grid;
+  width: 100%;
+  max-width: 1040px;
+  border-radius: var(--border-radius-24);
+  box-shadow: inset 0 0 0 var(--border-width-1) var(--color-border-subtle);
+  background: var(--color-bg-fill-glass-gradient);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+}
+
+/* 两套内容：当前那套显示，另一套透明、点不到。切换时交叉淡化 200ms ease-in-out，同时进行 */
+.tpl-home__box {
+  display: flex;
+  grid-area: 1 / 1;
+  min-width: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-duration-200) var(--motion-ease-in-out),
+    visibility 0s linear var(--motion-duration-200);
+}
+
+.tpl-home__box[data-active] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--motion-duration-200) var(--motion-ease-in-out),
+    visibility 0s;
+}
+
+/* 底、描边、模糊交给外壳：里面两个框自己的去掉（描边留透明的一圈，内容位置和平时一样） */
+.tpl-home__box > .kv-prompt-box,
+.tpl-home__box > .tpl-home__agent.tpl-cv__composer {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border: var(--border-width-1) solid transparent;
+  border-radius: var(--border-radius-24);
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* 画布那套：工具条贴底，和生成那套的工具条在同一高度 */
+.tpl-home__agent > .tpl-cv__tools {
+  margin-top: auto;
+}
+
+/* 切模式：最近更新 / 最近项目和广场换掉，淡入 150ms ease-out */
+.tpl-home__swap {
+  animation: tpl-home-in var(--motion-duration-150) var(--motion-ease-out);
+}
+
+@keyframes tpl-home-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 每块离上面 32；标题行 16 / 24 中粗，右边「查看全部」或翻页，离内容 12 */
+.tpl-home__section {
+  margin-top: var(--spacing-32);
+}
+
+.tpl-home__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+  min-height: 32px;
+  margin-bottom: var(--spacing-12);
+}
+
+.tpl-home__head h2 {
+  margin: 0;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-24);
+}
+
+.tpl-home__pager {
+  display: flex;
+  gap: var(--spacing-4);
+}
+
+/* 最近更新：一排 4 张 16:9（窄了 3 张、2 张），横着滚、一张一张对齐，不出滚动条，左右翻一屏 */
+.tpl-home__rail {
+  display: grid;
+  grid-auto-columns: calc((100% - 3 * var(--spacing-16)) / 4);
+  grid-auto-flow: column;
+  gap: var(--spacing-16);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.tpl-home__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.tpl-home__banner {
+  display: block;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-1);
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+
+.tpl-home__banner > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tpl-home__banner-preview {
+  display: block;
+  width: 100%;
+  border-radius: var(--border-radius-8);
+}
+
+/* 最近项目：新建画布 + 最近 4 个（ProjectCard 封面样式，16:9），一排 5 格（窄了 3 格），间距 16；新建格跟着格子高，
+   没有画布时新建格铺满整排，高度保底 160（照即梦 156，没有变量） */
+.tpl-home__project-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--spacing-16);
+}
+
+/* 画布卡是 16:9，一排的高度跟着它；一个画布都没有时新建格铺满整排、高度保底 160 */
+.tpl-home__project-grid[data-create-span="5"] {
+  grid-auto-rows: minmax(160px, auto);
+}
+
+.tpl-home__project-grid[data-create-span="2"] > .kv-create-card {
+  grid-column: span 2;
+}
+
+.tpl-home__project-grid[data-create-span="3"] > .kv-create-card {
+  grid-column: span 3;
+}
+
+.tpl-home__project-grid[data-create-span="4"] > .kv-create-card {
+  grid-column: span 4;
+}
+
+.tpl-home__project-grid[data-create-span="5"] > .kv-create-card {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+  .tpl-home__rail {
+    grid-auto-columns: calc((100% - 2 * var(--spacing-16)) / 3);
+  }
+
+  .tpl-home__project-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* 窄了一排 3 格：有画布时新建格只占一格，没有画布时还是铺满 */
+  .tpl-home__project-grid:not([data-create-span="5"]) > .kv-create-card {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .tpl-home__rail {
+    grid-auto-columns: calc((100% - var(--spacing-16)) / 2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tpl-home__swap {
+    animation: none;
+  }
+}
+
+/* ---------- 探索页：发现、模板、技能、工作流 ----------
+   主区自己滚（ScrollArea，滚到底加载下一页），左右内边距 32；筛选条和资产页同一套（tpl-as__filters，吸顶） */
+
+.tpl-ex {
+  min-width: 0;
+  min-height: 0; /* 在侧栏旁边的网格里，不让内容把自己撑高，滚动交给 ScrollArea */
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-bg-fill-base);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.tpl-ex__scroll {
+  height: 100%;
+}
+
+/* 内容最宽 1600（不算左右内边距），屏幕再宽就居中，两边留底色（11-10 用户定，免得大屏铺得太散） */
+.tpl-ex__inner {
+  box-sizing: content-box;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-32) var(--spacing-32);
+}
+
+/* 顶部四个选项卡：Tabs 36，离顶 24，和筛选条之间不留（筛选条自己有上下 12） */
+.tpl-ex__head {
+  padding-top: var(--spacing-24);
+}
+
+/* 模板、工作流、技能的格子：最小 240、间距 16，一排能放几个放几个（和资产页的卡片排一样） */
+/* 最小 240、最多 4 列（11-10 用户定，和发现页一样最多 4 列）；行间距 24、列间距 16（11-10 用户嫌行挨得近） */
+.tpl-ex__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(max(240px, calc((100% - 3 * var(--spacing-16)) / 4)), 1fr));
+  gap: var(--spacing-24) var(--spacing-16);
+}
+
+/* 瀑布流到底：「没有更多内容了」12 tertiary，居中，上下 24 */
+.tpl-ex__end {
+  margin: 0;
+  padding: var(--spacing-24) 0;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  text-align: center;
+}
+
+/* 作品详情：照线上铺满窗口（Dialog full，内边距 24）。左作品完整显示，竖线，右信息栏 440，间距 32 */
+.tpl-ex__viewer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 440px;
+  gap: var(--spacing-32);
+  height: 100%;
+  min-height: 0;
+}
+
+.tpl-ex__viewer-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 图片：完整显示，圆角 8，描边 border */
+.tpl-ex__viewer-media > img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--border-radius-8);
+  outline: var(--border-width-1) solid var(--color-border);
+  outline-offset: calc(var(--border-width-1) * -1);
+}
+
+.tpl-ex__viewer-media > .kv-video-player {
+  width: 100%;
+  height: 100%;
+}
+
+/* 信息栏：作者行、横线、内容（自己滚）、点赞，间距 16 */
+.tpl-ex__viewer-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  min-height: 0;
+}
+
+.tpl-ex__viewer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+}
+
+/* 作者：头像 32 + 名字 12 中粗 primary / 日期 12 tertiary，间距 8 */
+.tpl-ex__viewer-author {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
+
+.tpl-ex__viewer-author > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tpl-ex__viewer-name {
+  overflow: hidden;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tpl-ex__viewer-date {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.tpl-ex__viewer-actions {
+  display: flex;
+  flex: none;
+  gap: var(--spacing-8);
+}
+
+.tpl-ex__viewer-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 一节：小标题 13 tertiary，和内容间距 8 */
+.tpl-ex__viewer-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.tpl-ex__viewer-section > h4 {
+  margin: 0;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+}
+
+/* 参考图：多张放在一个容器里（底 Light 1，圆角 8，内边距 8），里面是只读的附件条（56，间距 4，放不下横着滚） */
+.tpl-ex__viewer-refs {
+  padding: var(--spacing-8);
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 点赞：撑满信息栏宽（线上旁边是一键同款，这次不要） */
+.tpl-ex__viewer-like {
+  width: 100%;
+}
+
+.tpl-ex__skill {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  min-width: 0;
+}
+
+.tpl-ex__detail-author {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+}
+
+/* 创作精选、工作流的画布预览：Dialog 1200 里放只读小画布，高 560，圆角 8，描边 border */
+.tpl-ex__canvas-preview {
+  height: 560px;
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  outline: var(--border-width-1) solid var(--color-border);
+  outline-offset: calc(var(--border-width-1) * -1);
+}
+
+/* 卡片骨架（加载下一屏时）：16:9 封面 + 两行字，间距 8 */
+/* 卡片骨架：和 ExploreCard 一样的容器（圆角 12、底 Light 2），文字区内边距 12 / 16 */
+.tpl-ex__card-skeleton {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.tpl-ex__card-skeleton-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-16);
+}
+
+/* 技能详情：封面 16:9 圆角 8；描述 14 / 22 secondary；技能内容标题行右边切文件 */
+.tpl-ex__skill-cover {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.tpl-ex__skill-desc {
+  margin: 0;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.tpl-ex__skill-files {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+}
+
+.tpl-ex__skill-files > h4 {
+  margin: 0;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+}
+
+/* 文件内容放在浅底框里：底 Light 1，圆角 8，内边距 12 */
+.tpl-ex__skill-content {
+  padding: var(--spacing-12);
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1);
+}
+

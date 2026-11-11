@@ -31,15 +31,31 @@ export const Notifier = forwardRef<HTMLDivElement, NotifierProps>(function Notif
   // 每张卡片自己的高度（文字多少决定，量出来才能排）
   const [heights, setHeights] = useState<Record<number, number>>({});
   const observers = useRef(new Map<number, ResizeObserver>());
-  const measure = useCallback((id: number) => (el: HTMLDivElement | null) => {
-    observers.current.get(id)?.disconnect();
-    observers.current.delete(id);
-    if (!el) return;
-    const read = () => setHeights((h) => (h[id] === el.offsetHeight ? h : { ...h, [id]: el.offsetHeight }));
-    read();
-    const ro = new ResizeObserver(read);
-    ro.observe(el);
-    observers.current.set(id, ro);
+  // 每张卡片的 ref 回调只建一次：每次渲染都换新回调的话，React 每次都会先摘再挂、挂上就同步量一次再 setState，
+  // 鼠标在一叠通知上进出几次就会套成死循环（React #185）
+  const refs = useRef(new Map<number, (el: HTMLDivElement | null) => void>());
+  const measure = useCallback((id: number) => {
+    let fn = refs.current.get(id);
+    if (!fn) {
+      fn = (el: HTMLDivElement | null) => {
+        observers.current.get(id)?.disconnect();
+        observers.current.delete(id);
+        if (!el) {
+          refs.current.delete(id);
+          return;
+        }
+        const read = () => {
+          const v = el.offsetHeight;
+          setHeights((h) => (h[id] === v ? h : { ...h, [id]: v }));
+        };
+        read(); // 挂上时量一次，第一帧就排对
+        const ro = new ResizeObserver(read);
+        ro.observe(el);
+        observers.current.set(id, ro);
+      };
+      refs.current.set(id, fn);
+    }
+    return fn;
   }, []);
   useEffect(() => {
     const map = observers.current;

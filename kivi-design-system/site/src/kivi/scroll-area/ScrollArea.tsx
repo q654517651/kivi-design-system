@@ -97,7 +97,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
   const drag = useRef<{ axis: Axis; start: number; scroll: number } | null>(null);
   const armed = useRef(true);
-  // 上一次触发时内容有多高：内容不满一屏或追加后仍在底部时，内容变长了要再触发一次
+  // 上一次触发时内容有多长：内容不满一屏或追加后仍在底部时，内容长度变了（加载了、换了一批）要再触发一次
   const firedSize = useRef(0);
   const reachEnd = useRef(onReachEnd);
   reachEnd.current = onReachEnd;
@@ -128,10 +128,13 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(function S
     const main = wantY ? 'y' : 'x';
     const m = measure(vp, main, null);
     const remaining = m.size - m.pos - m.client;
+    // 内容自己的长度：不满一屏时 scrollHeight 一直等于视口高，看不出内容变了，所以量内容那一层
+    const content = contentRef.current;
+    const size = content ? (main === 'y' ? content.offsetHeight : content.offsetWidth) : m.size;
     if (remaining > reachEndOffset) armed.current = true;
-    else if (reachEnd.current && (armed.current || m.size > firedSize.current)) {
+    else if (reachEnd.current && (armed.current || size !== firedSize.current)) {
       armed.current = false;
-      firedSize.current = m.size;
+      firedSize.current = size;
       reachEnd.current();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

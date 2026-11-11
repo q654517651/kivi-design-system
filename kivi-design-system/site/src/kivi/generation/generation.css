@@ -168,7 +168,7 @@
 
 /* ---------- PromptBox ---------- */
 
-/* 玻璃（11-02 用户定：浮在生成记录上，下面的内容透出来，不在边缘裁切）：底 glass + 背景模糊 32，描边 border-subtle，圆角 24，内边距 16，内容区和工具条间距 12。
+/* 渐变玻璃（11-02 用户定：浮在生成记录上，下面的内容透出来，不在边缘裁切；11-09 改成渐变玻璃，只有这里用）：底 glass-gradient + 背景模糊 80，描边 border-subtle，圆角 24，内边距 16，内容区和工具条间距 12。
    宽度（11-04 用户定，照即梦）：外面给多宽就多宽，最宽 1040；最窄不是固定值，是工具条所有控件按原宽排成一行（不折行）时的宽度，再窄就不缩了，由外面的页面横向滚动 */
 
 .kv-prompt-box {
@@ -183,7 +183,7 @@
   padding: var(--spacing-16);
   border: var(--border-width-1) solid var(--color-border-subtle);
   border-radius: var(--border-radius-24);
-  background: var(--color-bg-fill-glass);
+  background: var(--color-bg-fill-glass-gradient); /* 只有主站输入框用渐变玻璃（11-09 用户定） */
   -webkit-backdrop-filter: blur(var(--effect-glass-blur));
   backdrop-filter: blur(var(--effect-glass-blur));
   color: var(--color-text-fill-primary);
