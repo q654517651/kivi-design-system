@@ -13,14 +13,11 @@ import {
   MenuItem,
   TabItem,
   Tabs,
-  Toaster,
   placeholderImageSrc,
   type PlaceholderImageName,
   type SelectOption,
 } from '@kivi';
 import { VIDEO } from '../components/media.demos';
-import { TemplateFrame } from './frame';
-import { Sidebar } from './main-site.demos';
 
 /*
   资产管理（我的资产）：照 11-04 交互原型（kivi-prototype 的 assets-home）。
@@ -114,7 +111,8 @@ function HistoryCard({ item, collected, onCollect }: { item: History; collected:
   );
 }
 
-function AssetsPage() {
+/** 资产页主区（侧栏在 UI 页面预览的外壳里） */
+export function AssetsPage() {
   const [folders, setFolders] = useState(FOLDERS);
   const [source, setSource] = useState<string | null>('all');
   const [type, setType] = useState('all');
@@ -211,6 +209,7 @@ function AssetsPage() {
             role="checkbox"
             aria-selected={undefined}
             aria-checked={onlyCollected}
+            data-collected={onlyCollected || undefined}
             onClick={() => setOnlyCollected(!onlyCollected)}
           >
             收藏
@@ -263,18 +262,5 @@ function AssetsPage() {
         )}
       </section>
     </main>
-  );
-}
-
-/** 侧栏（选中「我的资产」）+ 资产页 */
-export function AssetsTemplate() {
-  return (
-    <TemplateFrame>
-      <Toaster />
-      <div className="tpl-ms">
-        <Sidebar page="assets" defaultSelected="" />
-        <AssetsPage />
-      </div>
-    </TemplateFrame>
   );
 }

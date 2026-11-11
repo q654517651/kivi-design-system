@@ -52,7 +52,7 @@ import { PageHeader } from '@shell';
 - **看不清时怎么提**：先确认背景归类对不对（深底、浅底）；归类没错还看不清，说明这一层不该是填充，换背景变量或换组件。不在填充上再叠透明度、不另写颜色、不跳档。只有上面名单里的静态色块按名单写的档数往上提。
 - 凹下去的用 container-dark；盖在画布上、必须不透明的用 surface。叠加最多两层。
 - 品牌色省着用，不大面积铺底。常见的用处：主操作、勾选、开关打开、进度、拖入提示的图标和字。主要按钮（品牌渐变）一屏只放一个。
-- IconButton 没有绿色状态：选中是常驻底色，深底上用 Light 1 默认，图标白。只有收藏例外：收藏了是实心星，图标品牌绿（`data-collected`），底照选中。
+- IconButton 没有绿色状态：选中是常驻底色，深底上用 Light 1 默认，图标白。只有收藏例外：收藏了是实心星，图标品牌绿（`data-collected`），底照选中。TabItem（「收藏」「我收藏的」筛选开着）、MenuItem（右键菜单「取消收藏」）也一样，图标绿、字不变色。
 - 入口别灰：工具条、侧栏里没选值的入口和有值的一样亮，不用灰字当占位。
 
 ## 文字
@@ -67,10 +67,11 @@ import { PageHeader } from '@shell';
 
 ## 浮层
 
-- 悬浮在页面上的（菜单、下拉、右键、节点工具栏、参数面板、主站输入框）用玻璃：`--color-bg-fill-glass` + `--effect-glass-blur` + 1px `--color-border-subtle`。下面是什么都行。
+- 悬浮在页面上的（菜单、下拉、右键、节点工具栏、参数面板、画布输入框）用面板玻璃：`--color-bg-fill-glass` + `--effect-glass-blur` + 1px `--color-border-subtle`。下面是什么都行。
+- 渐变玻璃 `--color-bg-fill-glass-gradient`（同一个颜色上暗下亮）只给主站输入框 PromptBox，模糊、描边和面板玻璃一样。别的浮层不用渐变。创作首页「新建画布」卡（CreateCard 画布样式）也用这个渐变当底（不加模糊，11-10 用户定，照即梦）；创作首页「画布」模式的 Agent 输入框和主站输入框一样大、一样用渐变玻璃（11-10 用户定）。
 - 贴在图片、视频上的控件（卡片上的按钮和按钮条、标签、播放器控件）用 on-media：`--color-on-media-fill` + `--effect-glass-blur`，不加描边，只限图片、视频。
 - 勾选框 Checkbox 是媒体上的控件，没选时用 on-media 底 + `border-strong` 描边（描边是方框本身，不算外框）；放在别的底上也照用，不另做一套。
-- 背景模糊只有两档：32（`--effect-glass-blur`）给玻璃和 on-media；16（`--effect-mask-blur`）给盖在图片、视频上的遮罩（生成中、占位图）。不写别的数；底是不透明的就不加模糊。
+- 背景模糊只有两档：80（`--effect-glass-blur`）给玻璃和 on-media；16（`--effect-mask-blur`）给盖在图片、视频上的遮罩（生成中、占位图）。不写别的数；底是不透明的就不加模糊。
 - 模态弹窗用 surface，下面一层遮罩。宽度只用 Dialog 的几档。
 - Tooltip、Toast 用 popup 实色。
 - 浮层都不加投影。

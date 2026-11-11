@@ -99,7 +99,7 @@ import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground, SendButt
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `variant` | `"on-media"` `"glass"` `"surface"` | `"on-media"` | 底：浮层（盖在图片、视频上，`--color-on-media-fill`，不加描边）/ 玻璃（浮在画布这种深色底上，底 `--color-bg-fill-glass` + 背景模糊 32 + 1px `--color-border-subtle` 画在里面，比如缩放条、节点工具栏）/ 实色（画布底部工具栏，底 `--color-bg-fill-surface`（不透明，不加模糊）+ 1px `--color-border-subtle`）。三种共用同一套尺寸 |
+| `variant` | `"on-media"` `"glass"` `"surface"` | `"on-media"` | 底：浮层（盖在图片、视频上，`--color-on-media-fill`，不加描边）/ 玻璃（浮在画布这种深色底上，底 `--color-bg-fill-glass` + 背景模糊 80 + 1px `--color-border-subtle` 画在里面，比如缩放条、节点工具栏）/ 实色（画布底部工具栏，底 `--color-bg-fill-surface`（不透明，不加模糊）+ 1px `--color-border-subtle`）。三种共用同一套尺寸 |
 | `size` | `32` `44` `56` | `32` | 条高。32：盖在媒体上的按钮条，内边距 `--spacing-2`，间距 4，圆角 8；44：节点工具栏，内边距 6，间距 8，圆角 12；56：画布底部工具栏，内边距 12 / 16，间距 16，圆角 `--border-radius-round`（它是条，不是按钮）。按钮都不写尺寸：32 的条里 IconButton 28 · 文字、Button 小 · 文字；44、56 的条里 IconButton 32 · 文字、Button 中 · 文字（56 的条里图标 24）。竖向 `Divider` 的高度跟着条：32 是 16，44、56 是 20 |
 | `children` | `ReactNode` | — | IconButton、Button、竖向 `Divider`（只放在不同类的按钮之间，比如图标按钮和文字按钮之间）。里面的按钮不写 `size`、`variant` 时用上面各档的默认 |
 | `aria-label` | `string` | — | 读屏用，说明这一排是什么，比如「节点操作」 |

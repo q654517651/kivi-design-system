@@ -103,25 +103,34 @@ export function CreateCardPlayground() {
           key: 'label',
           label: '用在',
           type: 'segment',
-          value: 'project',
+          value: 'canvas',
           options: [
+            ['canvas', '新建画布'],
+            ['wide', '新建画布 · 没有画布'],
             ['project', '新建项目'],
             ['folder', '创建文件夹'],
           ],
         },
         { key: 'hover', label: '悬停', type: 'toggle', value: false },
       ]}
-      render={(s) =>
-        s.label === 'project' ? (
+      render={(s) => {
+        const hover = s.hover ? 'is-hover' : undefined;
+        if (s.label === 'canvas' || s.label === 'wide')
+          return (
+            <div style={s.label === 'wide' ? { width: 640, height: 160 } : { width: 257, aspectRatio: '257 / 210' }}>
+              <CreateCard variant="canvas" label="新建画布" className={hover} />
+            </div>
+          );
+        return s.label === 'project' ? (
           <div style={{ width: 257, aspectRatio: '257 / 210' }}>
-            <CreateCard label="新建项目" className={s.hover ? 'is-hover' : undefined} />
+            <CreateCard label="新建项目" className={hover} />
           </div>
         ) : (
           <div style={{ width: 223, aspectRatio: '223 / 181' }}>
-            <CreateCard label="创建文件夹" className={s.hover ? 'is-hover' : undefined} />
+            <CreateCard label="创建文件夹" className={hover} />
           </div>
-        )
-      }
+        );
+      }}
     />
   );
 }

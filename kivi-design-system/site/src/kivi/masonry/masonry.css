@@ -1,0 +1,18 @@
+/*
+  瀑布流 Masonry：等宽的几列，每列竖着排。间距由 gap 属性写进 --kv-masonry-gap，列间和上下一样。
+*/
+
+.kv-masonry {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--kv-masonry-gap);
+  min-width: 0;
+}
+
+.kv-masonry__column {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--kv-masonry-gap);
+  min-width: 0;
+}

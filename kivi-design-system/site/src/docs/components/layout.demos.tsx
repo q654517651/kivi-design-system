@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button, Collapse, Divider, List, ListItem, Menu, MenuItem, ScrollArea, type CollapseGap, type ScrollAreaOrientation } from '@kivi';
+import { Button, Collapse, Divider, List, ListItem, Masonry, Menu, MenuItem, ScrollArea, placeholderImageSrc, type CollapseGap, type PlaceholderImageName, type PlaceholderImageRatio, type ScrollAreaOrientation } from '@kivi';
 import { Playground } from '@shell';
 
 // 布局页的属性面板。参数表在 layout.mdx
@@ -183,6 +183,64 @@ export function ScrollAreaPlayground() {
             …内容…
           </Rows>
         </ScrollArea>
+      )}
+    />
+  );
+}
+
+// ---------- Masonry ----------
+
+const MASONRY_PICS: [PlaceholderImageName, PlaceholderImageRatio][] = [
+  ['kivi-future', '3:4'],
+  ['ip-gouache', '1:1'],
+  ['kiwi-light', '9:16'],
+  ['bunny-gouache', '16:9'],
+  ['monstera-dots', '3:4'],
+  ['ip-peek', '1:1'],
+  ['ip-kiwi-pile', '16:9'],
+  ['ip-future', '9:16'],
+  ['kivi-future', '1:1'],
+  ['kiwi-light', '3:4'],
+  ['bunny-gouache', '1:1'],
+  ['ip-gouache', '16:9'],
+];
+const RATIO_NUM: Record<PlaceholderImageRatio, number> = { '1:1': 1, '3:4': 3 / 4, '16:9': 16 / 9, '9:16': 9 / 16 };
+
+type MasonryState = { columns: string; balance: boolean };
+
+export function MasonryPlayground() {
+  return (
+    <Playground<MasonryState>
+      controls={[
+        {
+          key: 'columns',
+          label: '列数',
+          type: 'segment',
+          value: 'auto',
+          options: [
+            ['2', '2'],
+            ['3', '3'],
+            ['4', '4'],
+            ['auto', '按宽度'],
+          ],
+        },
+        { key: 'balance', label: '按宽高比放', type: 'toggle', value: true },
+      ]}
+      render={(s) => (
+        <Masonry
+          columns={s.columns === 'auto' ? { default: 6, 1440: 4, 1100: 3, 700: 2, 500: 1 } : Number(s.columns)}
+          ratios={s.balance ? MASONRY_PICS.map(([, r]) => RATIO_NUM[r]) : undefined}
+          style={{ width: '100%' }}
+        >
+          {MASONRY_PICS.map(([name, ratio], i) => (
+            <img
+              key={i}
+              src={placeholderImageSrc(name, ratio)}
+              alt=""
+              style={{ display: 'block', width: '100%', aspectRatio: ratio.replace(':', ' / '), objectFit: 'cover', borderRadius: 'var(--border-radius-6)' }}
+            />
+          ))}
+        </Masonry>
       )}
     />
   );

@@ -126,7 +126,7 @@ import {
 | `type` | `"image"` `"video"` `"audio"` `"file"` | `"image"` | 类型。视频用封面当缩略图；音频和文件一个样子：图标占位底（AssetThumb 图标类型）加图标，左下写时长或扩展名。文件按 `ext` 换图标（`fileIcon(ext)`）：PDF `FilePdf`、DOC/DOCX `FileDoc`、PPT/PPTX/KEY `FilePpt`、TXT/MD/RTF `FileTxt`、XLS/XLSX/NUMBERS `FileXls`、CSV/TSV `FileCsv`、ZIP/RAR/7Z/TAR/GZ `FileZip`、JSON `FileJson`，认不出的是通用 `File` |
 | `src` | `string` | — | 缩略图地址，图片、视频封面用 |
 | `ext` | `string` | — | 文件扩展名，比如 `"PDF"`，文件类型写在左下角（和时长同一个位置） |
-| `badge` | `ReactNode` | — | 右上角标 20 × 20，只有左下圆角 4，on-media 底（`--color-on-media-fill` + 模糊 32）：序号，或「首帧」「尾帧」 |
+| `badge` | `ReactNode` | — | 右上角标 20 × 20，只有左下圆角 4，on-media 底（`--color-on-media-fill` + 模糊 80）：序号，或「首帧」「尾帧」 |
 | `duration` | `ReactNode` | — | 左下的时长，视频、音频用，高 16，比如 `"12s"` |
 | `weight` | `ReactNode` | — | 底部通栏：Lora 权重。名字不写在卡片上（序号在右上角，名字只给 @ 引用和读屏用） |
 

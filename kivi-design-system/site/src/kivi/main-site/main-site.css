@@ -127,7 +127,7 @@
   mask-image: linear-gradient(90deg, black, transparent);
 }
 
-/* 悬停参考区，下面弹出浮层显示全部：玻璃浮层（底 glass、背景模糊 32、描边 border-subtle），圆角 8，内边距 6，间距 6，一行最多 5 个 ReferenceItem 72。
+/* 悬停参考区，下面弹出浮层显示全部：玻璃浮层（底 glass、背景模糊 80、描边 border-subtle），圆角 8，内边距 6，间距 6，一行最多 5 个 ReferenceItem 72。
    出现、消失照动效里菜单的档；鼠标离开后等 150ms 再收。离参考区 8（悬停出来的浮层一档，11-05）。
    不用 Popover panel：它的内边距 12、圆角 16，会改掉这块的样子 */
 .kv-gen-prompt-refs__popover {

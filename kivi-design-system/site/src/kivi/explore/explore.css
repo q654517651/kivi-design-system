@@ -1,0 +1,235 @@
+/*
+  探索页的卡片：WorkCard（发现 · 作品）、ExploreCard（创作精选、技能、工作流）。
+  依赖 tokens.css、base.css、button.css、asset.css（CoverGrid）、media.css（Image）、tags-avatar.css。
+  悬停出的操作：出现 150ms ease-out，消失 150ms ease-in（和 ResultTile、ProjectCard 一样）。
+*/
+
+/* ---------- ExploreCover：卡片封面（图，或封面图 + 封面视频） ----------
+   放在最前面：各卡片给封面定位、定比例的写法写在后面，同样的优先级后写的赢 */
+
+.kv-explore-cover {
+  position: relative;
+  overflow: hidden;
+}
+
+.kv-explore-cover__media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+/* 视频剩余时间：左下离边 8，Tag 浮层 */
+.kv-explore-cover__time {
+  position: absolute;
+  bottom: var(--spacing-8);
+  left: var(--spacing-8);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---------- WorkCard：作品卡 ---------- */
+
+/* 圆角 4（11-10 从 6 缩一档，瀑布流里格子挨得紧）、描边 border-subtle、底 surface；高度跟着 ratio */
+.kv-work-card {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-4);
+  background: var(--color-bg-fill-surface);
+  color: var(--color-on-media-text);
+  font-family: var(--font-family);
+}
+
+.kv-work-card__cover {
+  position: absolute;
+  inset: 0;
+}
+
+.kv-work-card__open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* 右上：下载、收藏，合成一条按钮条（ButtonGroup 浮层），离边 8，悬停才出 */
+.kv-work-card__actions,
+.kv-work-card__pin {
+  position: absolute;
+  top: var(--spacing-8);
+  right: var(--spacing-8);
+  z-index: 2;
+}
+
+.kv-work-card__pin {
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+/* 底部：高 48 的渐变（透明 → on-media 底，和生成结果组的名字条一样），左边作者，右边点赞。悬停才出 */
+.kv-work-card__footer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 var(--spacing-4) var(--spacing-4) var(--spacing-12);
+  background: linear-gradient(180deg, transparent, var(--color-on-media-fill));
+  pointer-events: none;
+}
+
+.kv-work-card__actions,
+.kv-work-card__footer {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-in),
+    visibility 0s linear var(--motion-duration-150);
+}
+
+.kv-work-card:where(:hover, :has(:focus-visible), .is-hover) > :is(.kv-work-card__actions, .kv-work-card__footer) {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-out),
+    visibility 0s;
+}
+
+.kv-work-card:where(:hover, :has(:focus-visible), .is-hover) > .kv-work-card__pin {
+  opacity: 0;
+  transition-timing-function: var(--motion-ease-in);
+}
+
+/* 作者：头像 16 + 用户名 12，间距 6，和点赞按钮垂直居中 */
+.kv-work-card__author {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  min-width: 0;
+  height: 28px;
+}
+
+.kv-work-card__name {
+  overflow: hidden;
+  font-size: var(--font-size-12);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 点赞：IconButton 28 · 浮层无底 + 数字 12，数字紧跟图标 */
+.kv-work-card__like {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding-right: var(--spacing-8);
+  pointer-events: auto;
+}
+
+.kv-work-card__count {
+  font-size: var(--font-size-12);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- ExploreCard：探索卡（创作精选、技能、工作流共用） ---------- */
+
+/* 一个容器（11-10 用户定）：圆角 12，不加描边；上面封面 16:9，下面文字区。
+   底用 Container Light 2（白 6%，很暗：在 base 上和 surface 差不多，对比度 1.135 过 1.12），悬停 Light 2 悬停（150ms ease-out）。
+   surface 是盖在画布上的不透明面板用的、没有悬停档，所以不用它 */
+.kv-explore-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-2);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  transition: background-color var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.kv-explore-card:where(:hover, :has(:focus-visible), .is-hover) {
+  background: var(--color-bg-fill-container-light-2-hover);
+}
+
+/* 整张卡的点击层：盖在封面和文字上 */
+.kv-explore-card__open {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.kv-explore-card__cover {
+  aspect-ratio: 16 / 9;
+  background: var(--color-bg-fill-container-light-1);
+}
+
+/* 文字区：内边距 12 / 16；标题、说明间距 4，作者离上面 8 */
+.kv-explore-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-12) var(--spacing-16);
+}
+
+/* 标题 14 / 22 中粗 primary，一行省略 */
+.kv-explore-card__name {
+  overflow: hidden;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-22);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 说明两行，12 / 20 secondary，不够两行也占两行高，卡片一样高 */
+.kv-explore-card__desc {
+  display: -webkit-box;
+  height: 40px;
+  overflow: hidden;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-20);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* 作者：头像 16 + 名字 12 secondary，间距 6 */
+.kv-explore-card__author {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+  min-width: 0;
+  margin-top: var(--spacing-4);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-12);
+}
+
+.kv-explore-card__author-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

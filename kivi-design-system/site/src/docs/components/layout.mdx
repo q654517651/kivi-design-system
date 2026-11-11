@@ -1,11 +1,11 @@
 import { Demo, PageHeader } from '@shell';
-import { CollapsePlayground, DividerPlayground, ListPlayground, ScrollAreaPlayground } from './layout.demos';
+import { CollapsePlayground, DividerPlayground, ListPlayground, MasonryPlayground, ScrollAreaPlayground } from './layout.demos';
 
 <PageHeader
   eyebrow="展示"
   title="布局"
   figma={['布局', '1083:7751']}
-  code="kivi/divider、kivi/list、kivi/collapse、kivi/scroll-area"
+  code="kivi/divider、kivi/list、kivi/masonry、kivi/collapse、kivi/scroll-area"
 />
 
 ## Divider
@@ -19,6 +19,12 @@ import { CollapsePlayground, DividerPlayground, ListPlayground, ScrollAreaPlaygr
 列表：一条一条的记录，比如记忆管理。
 
 <ListPlayground />
+
+## Masonry
+
+瀑布流：高度不一样的格子排成几列，比如发现页的作品。
+
+<MasonryPlayground />
 
 ## Collapse
 
@@ -96,6 +102,16 @@ import { CollapsePlayground, DividerPlayground, ListPlayground, ScrollAreaPlaygr
 | `onSave` | `(text: string) => void` | — | 保存，传去掉首尾空格的内容。回车或点「保存」保存，Shift + 回车换行；空的不能保存；Esc 或「取消」退出不保存，不连外层弹窗一起关 |
 
 上下内边距 12，小标题、正文、说明之间 4，「⋯」离正文 8、上下居中。没有悬停底色。`<li>`，其余原生属性都能传。
+
+### Masonry
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `columns` | `number` `{ default: number; [宽度]: number }` | `4` | 列数。传数字是固定列数；传分段按瀑布流自己的宽度换（宽度 ≤ 键时用那个值，比所有键都宽用 `default`），量的是自己不是窗口。发现页最多 4 列：`{ default: 4, 1100: 3, 700: 2, 500: 1 }` |
+| `gap` | `number` | `4` | 列和列、上下两格之间的间距，px。发现页用 2 |
+| `ratios` | `number[]` | — | 每一格的宽高比（宽 / 高），和子元素一一对应。传了就往当前最矮的那列放，几列底部差不多齐；不传按顺序一列一个轮着放（线上 react-masonry-css 的做法） |
+
+一个子元素一格，格子自己定高度（比如 `aspect-ratio`）。加载更多时往后追加，已经排好的格子不挪列。其余原生 `<div>` 属性都能传。
 
 ### Collapse
 

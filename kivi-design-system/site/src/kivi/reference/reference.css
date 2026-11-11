@@ -14,7 +14,7 @@
 .kv-reference-stack__remove,
 .kv-attachment-strip__remove,
 .kv-lora-field__remove {
-  /* 删除是右上角的小圆：离边 4，18 的圆，黑 40% + 模糊 32，图标 14（11-04 用户定改回原来的圆，不用角标），同时那张的序号隐藏 */
+  /* 删除是右上角的小圆：离边 4，18 的圆，黑 40% + 模糊 80，图标 14（11-04 用户定改回原来的圆，不用角标），同时那张的序号隐藏 */
   position: absolute;
   top: var(--spacing-4);
   right: var(--spacing-4);
