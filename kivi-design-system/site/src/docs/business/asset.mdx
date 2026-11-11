@@ -17,7 +17,7 @@ import { CoverGridPlayground, CreateCardPlayground, FolderCardPlayground, Projec
 
 ## ProjectCard
 
-画布项目卡：画布管理页里的一个画布。
+画布项目卡：我的画布、最近项目里的一个画布。
 
 <ProjectCardPlayground />
 
@@ -39,42 +39,41 @@ import { CoverGridPlayground, CreateCardPlayground, FolderCardPlayground, Projec
 
 ### FolderCard
 
-封面 223:155，圆角 8，描边 `--color-border`，底 container-light-1；下面「名字 (数量)」一行，和封面间距 8。整块封面点了进文件夹。其余原生 `<div>` 属性都能传。
+和 ProjectCard 一个样子（11-11 统一）：整张卡 16:9，圆角 16，描边 border-subtle，底 container-light-1，封面铺满。底部一条高 64：先是渐进模糊（on-media 模糊 `--effect-glass-blur`，遮罩从上到下由透明到实，越往下越糊），再叠渐变（透明 → 黑 60%），上面压「名字 (数量)」14 / 22 中粗、on-media 白，左右 12、离底 8。整张卡点了进文件夹。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `name` | `string` | — | 文件夹名，最多 20 字。14 / 22，primary，一行省略 |
+| `name` | `string` | — | 文件夹名，最多 20 字，一行省略 |
 | `count` | `number` | — | 素材数量，跟在名字后面「(12)」，不省略 |
-| `covers` | `string[]` | `[]` | 封面，用 CoverGrid。没有就是空文件夹：浅底正中 `Folder` 图标 40，tertiary |
-| `pinned` | `boolean` | `false` | 置顶：封面右上 6 挂 Tag · 媒体上「置顶」；菜单那一项变「取消置顶」 |
-| `onOpen` | `() => void` | — | 点封面：进文件夹 |
+| `covers` | `string[]` | `[]` | 封面，用 CoverGrid。没有就是空文件夹：正中 `Folder` 图标 40，tertiary（往上让开底部名字） |
+| `pinned` | `boolean` | `false` | 置顶：右上 8 挂 Tag · 媒体上「置顶」；菜单那一项变「取消置顶」 |
+| `onOpen` | `() => void` | — | 点卡片：进文件夹 |
 | `onRename` | `() => void` | — | 菜单「重命名」（图标 `Rename`），打开 Dialog 400 改名 |
 | `onPinnedChange` | `(pinned: boolean) => void` | — | 菜单「置顶 / 取消置顶」（`StickyOnTop`） |
 | `onDelete` | `() => void` | — | 菜单「删除」（危险，`Delete`，上面隔一条 Divider） |
 
-悬停（或键盘进到卡里）封面的底变 container-light-1-hover（150ms ease-out，和画布卡、新建卡一样），封面右下 6 出「⋯」：IconButton 28 · 媒体上，150ms 淡入，点了出菜单。
+悬停（或键盘进到卡里，300ms ease-in-out）：封面放大到 1.035，底部那一条往上长一截；右下 8 出「⋯」：IconButton 浮层无底 28，150ms 淡入，点了出菜单。
 
 ### ProjectCard
 
-圆角 12，描边 `--color-border`，底 container-light-1，悬停 container-light-1-hover。封面 257:157，下面名字和时间：左 8、右 4、下 8，和封面间距 8。整张卡点了打开画布。其余原生 `<div>` 属性都能传。
+样子同 FolderCard（16:9 封面卡，底部渐进模糊 + 渐变上压名字）。11-11 起只有这一种，`variant` 删了。整张卡点了打开画布。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `variant` | `"default"` `"cover"` | `"default"` | 样式。默认：上面封面、下面名字和时间（画布管理、资产页）。封面（创作首页「最近项目」，照即梦）：整张卡 16:9、圆角 16、描边 border-subtle，封面铺满，名字 14 / 22 中粗压在底部渐变（透明 → 黑 60%）上，左右 12、离底 8；悬停 300ms ease-in-out：封面放大 1.035、渐变升高、名字上移 20 露出修改时间 12 / 20、右下出「⋯」（IconButton 浮层无底 28，离边 8） |
-| `name` | `string` | — | 画布名，最多 20 字。14 / 22，primary，一行省略 |
+| `name` | `string` | — | 画布名，最多 20 字。14 / 22 中粗，on-media 白，一行省略 |
 | `covers` | `string[]` | `[]` | 封面，用 CoverGrid。没有就是空底 |
-| `updatedAt` | `Date` `number` | — | 最后修改时间，写成「刚刚修改」「n分钟前修改」「n小时前修改」「2026年11月4日修改」（`formatUpdatedAt`）。12 / 20，secondary，一行省略 |
+| `updatedAt` | `Date` `number` | — | 最后修改时间，写成「刚刚修改」「n分钟前修改」「n小时前修改」「2026年11月4日修改」（`formatUpdatedAt`）。12 / 20，secondary，平时藏在名字下面，悬停时名字上移 20、它淡入 |
 | `meta` | `ReactNode` | — | 名字下面那行，传了就不用 `updatedAt` 算 |
 | `onOpen` | `() => void` | — | 点卡片：打开画布（新标签页） |
 | `onShare` | `() => void` | — | 菜单「分享」（`Share`）：复制分享链接 |
 | `onRename` | `() => void` | — | 菜单「重命名」（`Rename`） |
 | `onDelete` | `() => void` | — | 菜单「删除」（危险，`Delete`） |
 
-悬停卡片右下出「⋯」：IconButton 32 · 文字，150ms 淡入。
+悬停同 FolderCard，另外名字上移露出修改时间。
 
 ### CreateCard
 
-默认：和 ProjectCard 一个外观：圆角 12，描边，底 container-light-1，悬停 hover、按下 pressed；正中加号 `AddSmall` 24 + 文字 14 / 22，间距 2。画布（`variant="canvas"`，创作首页「新建画布」）：圆角 16，描边 border-subtle，底 `--color-bg-fill-glass-gradient`（上暗下亮，不加模糊），铺一层点阵（点 1.25、间距 22，border-subtle）；悬停时亮点阵（border-strong）透过一圈很宽的柔光带露出来，像扫光一样从正中往外推，中间亮、两边渐渐透明，开头淡入结尾淡出，2 秒一圈、ease-in-out，悬停期间循环（减少动态效果时不动）；图标不变。正中白色方块 32（圆角 8，`--color-bg-fill-invert` + 描边 border-subtle，图标 `--color-text-fill-invert`），加号 `AddSmall` 16，下面隔 8 是文字 12 / 20 中粗。大小填满所在格子：画布页和 ProjectCard 一样高，文件夹区和 FolderCard 一格一样高（封面 + 名字）。其余原生 `<button>` 属性都能传。
+默认：圆角 12，描边，底 container-light-1，悬停 hover、按下 pressed；正中加号 `AddSmall` 24 + 文字 14 / 22，间距 2。画布（`variant="canvas"`，创作首页「新建画布」）：圆角 16，描边 border-subtle，底 `--color-bg-fill-glass-gradient`（上暗下亮，不加模糊），铺一层点阵（点 1.25、间距 22，border-subtle）；悬停时亮点阵（border-strong）透过一圈很宽的柔光带露出来，像扫光一样从正中往外推，中间亮、两边渐渐透明，开头淡入结尾淡出，2 秒一圈、ease-in-out，悬停期间循环（减少动态效果时不动）；图标不变。正中白色方块 32（圆角 8，`--color-bg-fill-invert` + 描边 border-subtle，图标 `--color-text-fill-invert`），加号 `AddSmall` 16，下面隔 8 是文字 12 / 20 中粗。大小填满所在格子。其余原生 `<button>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|

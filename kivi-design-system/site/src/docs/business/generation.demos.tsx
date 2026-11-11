@@ -9,6 +9,7 @@ import {
   BackgroundSelect,
   CountSelect,
   ImageModelControls,
+  ImageParams,
   ModelSelect,
   ParamField,
   ParamPicker,
@@ -488,6 +489,19 @@ export function VideoParamsPlayground() {
       render={(s, update) => (
         <div style={tall(480)} key={String(s.audio)}>
           <VideoParams audio={s.audio || undefined} placement={UP} open={s.open} onOpenChange={(open) => update({ open })} />
+        </div>
+      )}
+    />
+  );
+}
+
+export function ImageParamsPlayground() {
+  return (
+    <Playground<{ open: boolean }>
+      controls={[OPEN]}
+      render={(s, update) => (
+        <div style={tall(400)}>
+          <ImageParams placement={UP} open={s.open} onOpenChange={(open) => update({ open })} />
         </div>
       )}
     />

@@ -46,7 +46,7 @@ export function FolderCardPlayground() {
           pinned={s.pinned}
           onPinnedChange={(v) => update({ pinned: v })}
           className={s.hover ? 'is-hover' : undefined}
-          style={{ width: 223 }}
+          style={{ width: 320 }}
         />
       )}
     />
@@ -84,7 +84,7 @@ export function ProjectCardPlayground() {
           covers={covers(Number(s.count))}
           updatedAt={Date.now() - AGO[s.time]}
           className={s.hover ? 'is-hover' : undefined}
-          style={{ width: 257 }}
+          style={{ width: 320 }}
         />
       )}
     />

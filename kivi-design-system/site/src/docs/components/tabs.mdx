@@ -53,7 +53,7 @@ import { TabItemPlayground } from './tabs.demos';
 | `selected` | `boolean` | — | 选中。放在 `Tabs` 里由 `Tabs` 管，单独摆放才传 |
 | `disabled` | `boolean` | `false` | 禁用 |
 
-选项卡：默认文字 secondary，悬停文字变 primary，选中底白 10%。分段：项叠在分段的底（白 10%）上，是浅底，用 Light 2：悬停底白 10%（hover），选中底白 6%（常驻底色用默认）。禁用文字白 20%。颜色变化 100ms ease-in-out。没有按下状态。
+选项卡：默认文字 secondary，悬停文字变 primary，选中底白 10%。分段：项叠在分段的底（白 10%）上，是浅底，用 Light 2：选中底白 6%（常驻底色用默认）；没选中的项悬停底也是白 6%、字 secondary，不用 hover 的 10%，免得比选中亮（设计规则里的例外）。禁用文字白 20%。颜色变化 100ms ease-in-out。没有按下状态。
 
 其余原生 `<button>` 属性都能传，比如 `id`、`aria-controls`。
 
@@ -65,6 +65,7 @@ import { TabItemPlayground } from './tabs.demos';
 |---|---|---|---|
 | `variant` | `"tab"` `"segment"` | `"tab"` | 里面的 `TabItem` 都跟着它。选项卡是 `role="tablist"`，没有底槽，选项间距 4。分段是 `radiogroup`，带底槽：内边距 4（`--spacing-4`），圆角 12（`--border-radius-12`），底白 10%，选项等宽平分 |
 | `layout` | `"horizontal"` `"vertical"` | `"horizontal"` | 同 `TabItem`。不影响方向键：竖排只是每项上图标下文字，整组仍横排 |
+| `columns` | `number` | — | 只有分段：一排最多几个，多了折到下一排，格子一样宽（图片参数的比例 11 个，一排 6 个）。不传就一排放下全部 |
 | `size` | `32` `36` | `32` | 同 `TabItem`。分段底槽比选项高 8：32 的 40，36 的 44，竖排 64 |
 | `value` | `string` | — | 选中的值（受控），和 `onChange` 一起用 |
 | `defaultValue` | `string` | — | 默认选中的值（非受控）。没有选中项、或选中的那项禁用了 / 不在了，第一个可用项能 Tab 进来 |

@@ -1,4 +1,4 @@
-import { forwardRef, useLayoutEffect, useMemo, useRef, useState, type HTMLAttributes, type KeyboardEvent } from 'react';
+import { forwardRef, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type HTMLAttributes, type KeyboardEvent } from 'react';
 import { cx } from '../utils';
 import { TabsContext, type TabLayout, type TabSize, type TabVariant } from './context';
 import { composeHandlers, useControllable, useMergedRef } from '../hooks';
@@ -11,6 +11,8 @@ export interface TabsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChang
   layout?: TabLayout;
   /** 尺寸（选项高度）：32 / 36，默认 32 */
   size?: TabSize;
+  /** 分段一排最多几个，多了折到下一排、格子一样宽（图片比例 11 个，一排 6 个）。不传就一排放下全部 */
+  columns?: number;
   /** 选中的值（受控） */
   value?: string;
   /** 默认选中的值（非受控）。没有选中项、或选中的那项禁用了 / 不在了，第一个可用项能 Tab 进来 */
@@ -31,12 +33,14 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
     variant = 'tab',
     layout = 'horizontal',
     size = 32,
+    columns,
     value,
     defaultValue,
     onChange,
     className,
     children,
     onKeyDown,
+    style,
     ...rest
   },
   ref,
@@ -81,6 +85,8 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
         ref={mergedRef}
         className={cx('kv-tab-group', variant === 'segment' && 'kv-tab-group--segment', className)}
         role={variant === 'segment' ? 'radiogroup' : 'tablist'}
+        data-columns={columns ? '' : undefined}
+        style={columns ? ({ '--kv-tab-columns': columns, ...style } as CSSProperties) : style}
         onKeyDown={composeHandlers(onKeyDown, keys)}
         {...rest}
       >

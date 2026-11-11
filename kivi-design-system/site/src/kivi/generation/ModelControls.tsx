@@ -1,7 +1,7 @@
 import { forwardRef, type ReactNode } from 'react';
 import { useControllable } from '../hooks';
-import { AudioParams, VideoParams } from './GenParams';
-import { BackgroundSelect, ModelSelect, RatioSelect, RefModeSelect, SizeSelect, VoiceSelect, type GenSelectProps } from './GenSelects';
+import { AudioParams, ImageParams, VideoParams } from './GenParams';
+import { BackgroundSelect, ModelSelect, RefModeSelect, VoiceSelect, type GenSelectProps } from './GenSelects';
 import { DEFAULT_MODEL, VIDEO_FIRST_LAST_ONLY, VIDEO_WITH_AUDIO } from './options';
 
 /*
@@ -54,7 +54,7 @@ export interface ImageModelControlsProps extends ModelSelectRest {
   onModelChange?: (model: string) => void;
 }
 
-/** 图片：模型 + 分辨率 + 比例；GPT Image 多一个背景（Figma 主站「图片生成 · GPT」示例） */
+/** 图片：模型 + 参数（比例、分辨率一个面板，照视频参数，11-11 用户定）；GPT Image 多一个背景（Figma 主站「图片生成 · GPT」示例） */
 export const ImageModelControls = forwardRef<HTMLSpanElement, ImageModelControlsProps>(function ImageModelControls(
   { model: modelProp, defaultModel = DEFAULT_MODEL.image, onModelChange, placement, ...rest },
   ref,
@@ -63,8 +63,7 @@ export const ImageModelControls = forwardRef<HTMLSpanElement, ImageModelControls
   return (
     <>
       <ModelSelect ref={ref} type="image" value={model} onChange={setModel} placement={placement} {...rest} />
-      <SizeSelect placement={placement} />
-      <RatioSelect placement={placement} />
+      <ImageParams placement={placement} />
       {model.startsWith('gpt-image') && <BackgroundSelect placement={placement} />}
     </>
   );

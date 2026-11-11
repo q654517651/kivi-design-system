@@ -86,9 +86,10 @@
   --kv-tab-content-hover: var(--color-text-fill-primary);
 }
 
-/* 样式：分段。项叠在分段的底（白 10%）上，是浅底，用 Light 2：悬停 hover（白 10%），字不变；选中是常驻底色，用默认（白 6%） */
+/* 样式：分段。项叠在分段的底（白 10%）上，是浅底，用 Light 2：选中是常驻底色，用默认（白 6%）。
+   没选中的项悬停也用默认（白 6%），字变 secondary（11-11 用户定，设计规则里的例外）：用 hover（10%）会比选中还亮，点下去反而变暗 */
 .kv-tab-item--segment {
-  --kv-tab-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-tab-fill-hover: var(--color-bg-fill-container-light-2);
   --kv-tab-fill-selected: var(--color-bg-fill-container-light-2);
   --kv-tab-content-hover: var(--color-text-fill-secondary);
 }
@@ -158,6 +159,12 @@
   padding: var(--spacing-4);
   border-radius: var(--border-radius-12);
   background: var(--color-bg-fill-container-light-1);
+}
+
+/* 一排最多几个（columns）：放不下的折到下一排，格子一样宽，排间距 0（和项之间一样，选中底色挨着） */
+.kv-tab-group--segment[data-columns] {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(var(--kv-tab-columns), minmax(0, 1fr));
 }
 
 /* 竖排的项自己是 56 宽，放进分段里跟着格子铺满 */

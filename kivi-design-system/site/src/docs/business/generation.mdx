@@ -8,6 +8,7 @@ import {
   GenModelPickerPlayground,
   GenSelectPlayground,
   ImageModelControlsPlayground,
+  ImageParamsPlayground,
   LoraCardPlayground,
   LoraFieldPlayground,
   LoraPickerPlayground,
@@ -84,6 +85,12 @@ Lora 卡：选 Lora 时的一张卡。
 
 <VideoParamsPlayground />
 
+## ImageParams
+
+图片参数：调图片的比例和分辨率。
+
+<ImageParamsPlayground />
+
 ## AudioParams
 
 音频参数：调语速、音高等高级设置，内容跟着模型变。
@@ -98,7 +105,7 @@ Lora 卡：选 Lora 时的一张卡。
 
 ## ImageModelControls
 
-图片控件：选图片模型，后面跟着分辨率、比例。
+图片控件：选图片模型，后面跟着它的参数。
 
 <ImageModelControlsPlayground />
 
@@ -246,6 +253,14 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 | `audio` | `boolean` | `false` | 有「生成音频」：Seedance、Kling V3 Omni 有。开着时摘要后面跟一个音量图标 |
 | 其余 | `ParamPickerProps` | — | 去掉 `summary`、`children`；`placement`、`open` 一套等都能传 |
 
+### ImageParams
+
+图片参数：一个 `ParamPicker`，摘要「分辨率 · 比例」，面板里是比例（竖排分段带比例图标，11 个一排 6 个，`RATIOS`）、分辨率（1K / 2K / 4K，`SIZES`）。交互照 `VideoParams`；面板里选的值组件自己管。
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| 其余 | `ParamPickerProps` | — | 去掉 `summary`、`children`；`placement`、`open` 一套等都能传 |
+
 ### AudioParams
 
 音频高级设置：一个 `ParamPicker`，触发器写「高级设置」，面板里是语速（0.5–2x）、音高（−12–12），其余跟着模型变。
@@ -268,7 +283,7 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 
 ### ImageModelControls
 
-图片：模型 + 分辨率 + 比例；GPT Image 多一个背景。返回一串并排的控件，`ref` 和其余属性给模型下拉。
+图片：模型 + 参数（`ImageParams`，比例和分辨率一个面板）；GPT Image 多一个背景。返回一串并排的控件，`ref` 和其余属性给模型下拉。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
