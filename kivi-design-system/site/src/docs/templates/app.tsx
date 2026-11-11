@@ -8,7 +8,7 @@ import { CanvasPage } from './canvas.demos';
 import { CreateHome } from './create-home';
 import { ExplorePage, type ExploreTab } from './explore.demos';
 import { TemplateFrame } from './frame';
-import { CreatePage, Sidebar, type AppPage, type HistoryKind } from './main-site.demos';
+import { CreatePage, Sidebar, Wallet, type AppPage, type HistoryKind } from './main-site.demos';
 import './templates.css';
 
 /*
@@ -57,7 +57,12 @@ export function KiviApp({ page, onNavigate }: { page: AppPage; onNavigate: (page
       <Toaster />
       <PreviewHost />
       {/* 画布页没有主站侧栏；侧栏藏起来不卸载，回来时收起状态、历史都还在 */}
-      <div className="tpl-ms" style={page === 'canvas' ? { display: 'none' } : undefined}>
+      <div
+        className="tpl-ms"
+        // 右上角余额、头像按这一页内容的最大宽度对齐：对话页跟记录流，其他跟各页
+        data-page={page === 'create' && selected.kind === 'chat' && selected.id ? 'chat' : page}
+        style={page === 'canvas' ? { display: 'none' } : undefined}
+      >
         <Sidebar
           page={page}
           onNavigate={navigate}
@@ -99,6 +104,8 @@ export function KiviApp({ page, onNavigate }: { page: AppPage; onNavigate: (page
         )}
         {page === 'tools' && <ToolsPage />}
         {page === 'assets' && <AssetsPage />}
+        {/* 公共的头：右上角余额和头像，每一页一样的位置（中线离顶 32，和侧栏 Logo 对齐），换页不动 */}
+        <Wallet />
       </div>
       {page === 'canvas' && <CanvasPage key={skill ?? 'canvas'} skill={skill} onHome={() => navigate('create')} />}
     </>

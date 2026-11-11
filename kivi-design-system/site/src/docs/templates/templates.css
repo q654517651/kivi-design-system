@@ -65,7 +65,14 @@
 .tpl-ms {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   height: 100%;
+}
+
+/* 右边的页面和右上角余额、头像（Wallet）叠在同一格：Wallet 的宽就是页面的宽，好按页面内容的最大宽度对齐 */
+.tpl-ms > :not(.tpl-ms__side-wrap) {
+  grid-row: 1;
+  grid-column: 2;
 }
 
 /* 侧栏收起：宽 240 → 60（12 + 条目 36 + 12），屏幕内移动，300ms ease-in-out。
@@ -260,15 +267,32 @@
 }
 
 /* 右上角：猕猴桃余额 + 头像。离边 16、内边距 4 / 12、间距 8、头像 24；玻璃（和菜单一样：glass + 模糊 80 + 描边 border-subtle），11-03 用户定 */
-/* 右上角：离右边 24（11-10 用户定，原来 16）；上下和侧栏 Logo 行中线对齐（中线离顶 32，所以离顶 16，照 LibTV） */
+/* 右上角：和页面内容的右边对齐（11-11 用户定）：内容最宽 1600 的页（创作首页、探索、我的资产）离右边至少 32、屏幕再宽跟着内容往里收；
+   对话页跟记录流（最宽 1040、左右 24）；AI 工具没有最大宽度，离右边 24。
+   上下和侧栏 Logo 行中线对齐（中线离顶 32，所以离顶 16，照 LibTV）。叠在页面那一格上，只有余额和头像能点 */
 .tpl-ms__wallet {
-  position: absolute;
-  top: calc(var(--tpl-head-center, 32px) - 32px / 2); /* 这一排高 32，中线和侧栏 Logo 对齐 */
-  right: var(--spacing-24);
+  --tpl-wallet-right: max(var(--spacing-32), calc((100% - 1600px) / 2));
   z-index: 2;
   display: flex;
+  align-self: start;
+  justify-content: flex-end;
   align-items: center;
   gap: var(--spacing-8);
+  margin-top: calc(var(--tpl-head-center, 32px) - 32px / 2); /* 这一排高 32，中线和侧栏 Logo 对齐 */
+  padding-right: var(--tpl-wallet-right);
+  pointer-events: none;
+}
+
+.tpl-ms__wallet > * {
+  pointer-events: auto;
+}
+
+.tpl-ms[data-page="chat"] > .tpl-ms__wallet {
+  --tpl-wallet-right: calc(max(0px, (100% - 1040px) / 2) + var(--spacing-24));
+}
+
+.tpl-ms[data-page="tools"] > .tpl-ms__wallet {
+  --tpl-wallet-right: var(--spacing-24);
 }
 
 /* 余额胶囊 + 旁边单独一个头像 32（11-05 用户定，内部平台只有余额和头像，没有升级）。
@@ -773,7 +797,7 @@
 }
 
 .tpl-as__section:first-child {
-  padding-top: var(--spacing-32);
+  padding-top: calc(var(--spacing-32) * 2); /* 让开右上角余额、头像那一排（离顶 16–48），标题行从 64 开始 */
 }
 
 /* 标题行：16 / 24 中粗，右边文字按钮 */
@@ -1036,7 +1060,7 @@
   align-items: center;
   gap: var(--spacing-12);
   min-height: 0;
-  padding: var(--spacing-12) 0;
+  padding: calc(var(--spacing-32) * 2) 0 var(--spacing-12); /* 上面让开公共的头（右上角余额、头像，离顶 16–48），从 64 开始 */
   overflow: hidden auto;
   border-left: var(--border-width-1) solid var(--color-border-subtle);
 }
@@ -1360,8 +1384,9 @@
 }
 
 /* 顶部四个选项卡：Tabs 36，离顶 24，和筛选条之间不留（筛选条自己有上下 12） */
+/* 选项卡这一行：和右上角余额、头像在同一条中线上（离顶 32）：选项卡 36，上面空 14 */
 .tpl-ex__head {
-  padding-top: var(--spacing-24);
+  padding-top: calc(var(--tpl-head-center, 32px) - 36px / 2);
 }
 
 /* 模板、工作流、技能的格子：最小 240、间距 16，一排能放几个放几个（和资产页的卡片排一样） */

@@ -116,6 +116,7 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 | `checked` | `boolean` | — | 勾选：右边 `CheckSmall`，16，`--color-brand-solid`，只给多选。自动是 `role="menuitemcheckbox"`；没勾的传 `false` |
 | `disabled` | `boolean` | `false` | 禁用，文字、图标、快捷键 disabled，不响应悬停和点击；带 `more` 时「⋯」也禁用 |
 | `more` | `ReactNode` | — | 右边悬停、选中、菜单开着时才出现的「⋯」（IconButton 28 轻，`More` 图标）：写了就出，点开弹出这里的菜单，一般是一个 Menu，由 Dropdown 管开关。写了之后外层改用 `<div>`（里面有按钮）。「⋯」离右边 6，里面的图标离边 12 |
+| `actions` | `ReactNode` | — | 「⋯」左边的按钮（IconButton 28 轻），比如侧栏画布的「在新标签页打开」（`NewWindow`）：和「⋯」一起悬停、选中时才出现，间距 4；收起、重命名时不显示，点它不触发条目的点击。写了之后外层也改用 `<div>` |
 | `moreLabel` | `string` | `"更多"` | 「⋯」的说明，读屏用 |
 | `collapsed` | `boolean` | — | 收起：侧栏收成图标栏（宽 60）时用。只留图标 / 缩略图，文字淡出（100ms ease-in，展开时晚 150ms 淡入 150ms ease-out），「⋯」不显示；悬停在右边出 Tooltip 写文字。宽度跟着侧栏，图标栏里 36，正好是左边那个格子，图标、缩略图居中。不带图标的条目（「更多」）收起后文字换成向下的箭头 `DownArrow`（和导航图标一样大），悬停出 Tooltip「更多」（照即梦）。不传就不包 Tooltip，要在收起、展开之间切换的写 `true` / `false`，结构不变 |
 | `editing` | `boolean` | — | 重命名中（受控）。文字换成 Input（高 32，右边「字数/上限」），自动聚焦、全选；「⋯」不显示，条目不出悬停、选中底色。回车提交，点外面取消，Esc 也取消。`children` 要是字符串 |
@@ -144,6 +145,7 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 点标题展开或收起 |
 | `items` | `ReactNode` | — | 跟着标题展开收起的条目，一般是一组 MenuItem。写了，标题和条目就包成一组：条目放在 `Collapse` 里，展开时高度从 0 推到内容高、把下面的内容往下推，同时淡入，收起倒着走，300ms ease-in-out；组里的间距和 Menu 一样。不写，条目自己写在 Menu 里，由使用方跟着显示或隐藏 |
 | `action` | `ReactElement` | — | 右边的按钮，比如新建：传一个 IconButton 28 轻（`<IconButton icon="NewChat" label="新建对话" size={28} variant="light" />`）。侧栏里（`variant="plain"`）平时不显示，悬停这一行（或键盘 Tab 进来）才出现；弹出的菜单里一直显示。出现 150ms ease-out、消失 100ms ease-in；图标 50% 白，悬停变白、出底色（IconButton 轻自己的样子，外面不再加透明度）。收起时一直显示 |
+| `extra` | `ReactNode` | — | `action` 左边再放的入口，比如侧栏画布的「全部」（Button 28 无底），间距 4：和 `action` 一起悬停才出现，收起成图标栏时不显示 |
 | `collapsed` | `boolean` | `false` | 收起：侧栏收成图标栏（宽 60）时用。标题和箭头淡出，只留 `action`（图标栏里宽 36，左右内边距 4，按钮居中），悬停在右边出 Tooltip，文字取 `action` 的 `label`（建议写「新建对话」这类全称） |
 
 其余原生 `<div>` 属性都能传。

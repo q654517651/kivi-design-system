@@ -217,12 +217,30 @@ const CHATS: HistoryItem[] = [
   { id: 'chat-2', text: '吉祥物探头短视频' },
   { id: 'chat-3', text: '赛博朋克城市概念图' },
   { id: 'chat-4', text: '水粉兔绘本插画', thumb: img('bunny-gouache', '1:1') },
+  // 演示「更多」翻页：一共 30 条，默认 6 条，每点一次多 10 条
+  ...[
+    '新品开箱口播脚本', '中秋礼盒包装', '小红书封面三连', '咖啡店菜单排版', '游戏角色立绘', '国潮风格插画',
+    '产品白底图精修', '短剧分镜第一集', '节日红包封面', '露营装备种草图', '宠物写真', '电商详情页长图',
+    '品牌 Slogan 想法', '复古胶片人像', '城市夜景延时', '赛车海报', '儿童绘本第二章', '健身课程封面',
+    '口红试色图', '书店活动海报', '手机壁纸一组', '早餐广告短片', '毕业季合照修图', '旅行 Vlog 片头',
+    '音乐节主视觉', '护肤品氛围图',
+  ].map((text, i) => ({ id: `chat-${i + 5}`, text, thumb: i % 5 === 2 ? img('monstera-dots', '1:1') : undefined })),
 ];
 const CANVASES: HistoryItem[] = [
   { id: 'canvas-1', text: '新品发布会物料', thumb: img('kivi-future', '1:1') },
   { id: 'canvas-2', text: '618 活动主视觉' },
   { id: 'canvas-3', text: '品牌 IP 设定' },
+  ...[
+    '短剧制作流程图', '新春海报', '深林', '笑脸', '双十一会场', '吉祥物三视图', '产品 TVC 分镜',
+    '门店物料', '直播间背景', '包装延展', '周年庆 KV', '社媒九宫格', '角色表情包', '展会展位',
+    '秋冬新品', '小程序 Banner', '品牌手册', '主题乐园导视', '音乐专辑封面', '画册内页',
+    '活动邀请函', '桌游卡牌', '城市海报', '未命名画布',
+  ].map((text, i) => ({ id: `canvas-${i + 4}`, text, thumb: i % 6 === 1 ? img('ip-gouache', '1:1') : undefined })),
 ];
+
+/** 侧栏历史默认显示几条、点「更多」每次多几条（照线上） */
+const HISTORY_FIRST = 6;
+const HISTORY_STEP = 10;
 
 /** UI 页面预览里能切的页：侧栏四个导航 + 画布 */
 export type AppPage = 'create' | 'explore' | 'tools' | 'assets' | 'canvas';
@@ -235,7 +253,11 @@ const NAV_ITEMS: { page: AppPage; icon: 'Create' | 'Explore' | 'AITools' | 'Pack
   { page: 'assets', icon: 'Pack', label: '我的资产' },
 ];
 
-/** 侧栏的一段（对话 / 画布）：MenuLabel 带 items，标题点了展开收起，列表往下推开、淡入，收起倒着走（Collapse，300ms ease-in-out） */
+/**
+ * 侧栏的一段（对话 / 画布）：MenuLabel 带 items，标题点了展开收起，列表往下推开、淡入，收起倒着走（Collapse，300ms ease-in-out）。
+ * 默认显示 6 条，点「更多」每次多 10 条，全显示了「更多」就没了（照线上）。
+ * 对话：标题右边新建（NewChat）；画布：标题右边「全部」+ 新建（Add），条目悬停「⋯」左边多一个「在新标签页打开」（11-11 用户定）
+ */
 function HistoryGroup({
   title,
   items,
@@ -247,6 +269,8 @@ function HistoryGroup({
   onRemove,
   onRename,
   onPin,
+  onAll,
+  onOpenNewTab,
 }: {
   title: string;
   items: HistoryItem[];
@@ -258,18 +282,30 @@ function HistoryGroup({
   onRemove: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onPin: (id: string) => void;
+  /** 画布：标题右边「全部」，去我的资产看全部画布。不传就没有，新建图标是 NewChat */
+  onAll?: () => void;
+  /** 画布：条目悬停「⋯」左边的「在新标签页打开」。不传就没有 */
+  onOpenNewTab?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
+  const [shown, setShown] = useState(HISTORY_FIRST);
   return (
     <MenuLabel
       collapsible
       collapsed={collapsed}
       expanded={open}
       onExpandedChange={setOpen}
+      extra={
+        onAll && (
+          <Button size={28} variant="text" onClick={onAll}>
+            全部
+          </Button>
+        )
+      }
       action={
         <IconButton
-          icon="NewChat"
+          icon={onAll ? 'Add' : 'NewChat'}
           label={`新建${title}`}
           size={28}
           variant="light"
@@ -281,7 +317,7 @@ function HistoryGroup({
       }
       items={
         <>
-          {items.map((c) => (
+          {items.slice(0, shown).map((c) => (
             <MenuItem
               key={c.id}
               thumb={c.thumb ? <AssetThumb size={24} type="image" src={c.thumb} /> : <AssetThumb size={24} type="icon" icon={icon} />}
@@ -291,6 +327,7 @@ function HistoryGroup({
               editing={editing === c.id}
               onEditingChange={(v) => setEditing(v ? c.id : null)}
               onRename={(name) => onRename(c.id, name)}
+              actions={onOpenNewTab && <IconButton icon="NewWindow" label="在新标签页打开" size={28} variant="light" onClick={() => onOpenNewTab(c.id)} />}
               more={
                 // 重命名（在原地改名）、置顶（新版要加，置顶后变「取消置顶」，照线上资产文件夹）、删除
                 <Menu>
@@ -310,7 +347,11 @@ function HistoryGroup({
               {c.text}
             </MenuItem>
           ))}
-          <MenuItem collapsed={collapsed}>更多</MenuItem>
+          {shown < items.length && (
+            <MenuItem collapsed={collapsed} onClick={() => setShown((n) => n + HISTORY_STEP)}>
+              更多
+            </MenuItem>
+          )}
         </>
       }
     >
@@ -432,6 +473,9 @@ export function Sidebar({
             onRemove={(id) => setCanvases((list) => list.filter((c) => c.id !== id))}
             onRename={(id, name) => setCanvases((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
             onPin={(id) => pin(setCanvases, id)}
+            onAll={() => onNavigate?.('assets')}
+            // 演示：新标签页打开画布模板（不套网站外壳）
+            onOpenNewTab={() => window.open(`${location.pathname}#/app/canvas`, '_blank', 'noopener')}
           />
         </Menu>
       </aside>
@@ -521,7 +565,7 @@ export function Composer({ placement = UP, onSubmit }: { placement?: Placement; 
 // ---------- 整页 ----------
 
 /** 创作页主区（生成记录 + 底部输入框，侧栏在 UI 页面预览的外壳里）：只能看。点完成的图全屏看大图 */
-/** 右上角：余额（猕猴桃）和头像，创作首页、对话页都有 */
+/** 右上角：余额（猕猴桃）和头像。主站每一页都有（画布页没有），挂在外壳 KiviApp 上，不跟着页面换 */
 export function Wallet() {
   return (
     <div className="tpl-ms__wallet">
@@ -587,7 +631,6 @@ export function CreatePage() {
   return (
     <>
       <main className="tpl-ms__main" style={{ '--tpl-composer-h': `${composerH}px` } as CSSProperties}>
-        <Wallet />
         <div ref={feed} className="tpl-ms__feed">
           <div className="tpl-ms__column">
             {RECORDS.map((r) =>

@@ -16,7 +16,7 @@ import {
 } from '@kivi';
 import { RATIO, SKILLS, WORKS, flowsOf, type ExploreTab } from './explore.demos';
 import { AgentComposer } from './composer';
-import { Composer, Wallet } from './main-site.demos';
+import { Composer } from './main-site.demos';
 
 type HomeMode = 'generate' | 'canvas';
 
@@ -147,7 +147,6 @@ export function CreateHome({
 
   return (
     <main className="tpl-home">
-      <Wallet />
       <ScrollArea className="tpl-home__scroll">
         <div className="tpl-home__inner">
           <div className="tpl-home__intro">
