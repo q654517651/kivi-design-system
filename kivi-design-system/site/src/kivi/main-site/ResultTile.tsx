@@ -1,4 +1,4 @@
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, type HTMLAttributes, type MouseEvent, type ReactNode } from 'react';
 import { ButtonGroup, IconButton } from '../button';
 import { EmptyState, GENERATION_FAILED_TITLE } from '../feedback';
 import { GeneratingDots } from '../generating';
@@ -17,7 +17,8 @@ export interface ResultTileAction {
   icon: IconName;
   /** 说明，读屏和 Tooltip 用 */
   label: string;
-  onClick?: () => void;
+  /** 点了。带上事件，要从按钮弹菜单（比如「更多」）时拿它的位置 */
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
 }
 
 export interface ResultTileProps extends HTMLAttributes<HTMLDivElement> {
@@ -43,7 +44,7 @@ export interface ResultTileProps extends HTMLAttributes<HTMLDivElement> {
   defaultCollected?: boolean;
   /** 完成：点了收藏 */
   onCollectedChange?: (collected: boolean) => void;
-  /** 左下快捷操作，合成一条按钮条，最后一个是「更多」。悬停才出；视频会抬到控制条上面 */
+  /** 右下快捷操作，合成一条按钮条，最后一个是「更多」。悬停才出；视频会抬到控制条上面 */
   quickActions?: ResultTileAction[];
   /** 视频右下「预览」：打开预览，参数是播到第几秒。不传就没有这个按钮 */
   onPreview?: (currentTime: number) => void;

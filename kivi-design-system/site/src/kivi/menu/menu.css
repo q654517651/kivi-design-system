@@ -160,6 +160,16 @@
   display: inline-flex;
 }
 
+/* 子菜单的触发器（MenuSub）是菜单里的一项，撑满一行 */
+.kv-dropdown--sub {
+  display: flex;
+}
+
+.kv-dropdown--sub > .kv-menu-item {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ---------- MenuItem ---------- */
 .kv-menu-item {
   /* 行悬停、选中时有底，里面的「⋯」按钮叠在上面是浅底：悬停、按下用 Light 2 */
@@ -236,7 +246,7 @@
 }
 
 /* 状态：悬停。键盘焦点暂用同一个底色 */
-.kv-menu-item:where(:hover, :focus-visible, .is-hover):not(:disabled, [aria-disabled="true"]) {
+.kv-menu-item:where(:hover, :focus-visible, .is-hover, [aria-haspopup][aria-expanded="true"]):not(:disabled, [aria-disabled="true"]) {
   background: var(--color-bg-fill-container-light-1-hover); /* 菜单在玻璃、侧栏在 base 上，都是深底：悬停用 Light 1 hover 12% */
 }
 

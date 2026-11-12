@@ -85,6 +85,8 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   Music: { means: '音乐、音频' },
   AIEnhancement: { means: 'AI 增强', note: '自绘' },
   ImageToImage: { means: '图生图', note: '自绘' },
+  Filter: { means: '筛选', note: 'Hugeicons filter' },
+  ImagePlus: { means: '加入参考：把这张图放进输入框的参考区', note: 'Hugeicons image-plus' },
   ImageToText: { means: '图生文', note: '自绘' },
   OneClickSameModel: { means: '一键同款', note: '自绘：两张叠放的卡，前面一张带四角星' },
   SmartEditing: { means: '智能编辑', note: '自绘' },

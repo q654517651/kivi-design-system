@@ -109,7 +109,7 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 | `topActions` | `ResultTileAction[]` | — | 右上操作：删除、下载，合成一条 ButtonGroup（IconButton 28 · 文字），每个都有提示（IconButton 自带，文字用 `label`），离边 8。失败时也显示 |
 | `collect` | `boolean` | `false` | 完成：右上按钮条最后放收藏（`Collect`，收藏了换 `CollectSolid`，IconButton 选中 + `data-collected`，图标品牌绿）。没收藏时悬停才出现；收藏了，鼠标移开后右上还留一个实心星（只是标记，点不到），悬停换回整条（150ms） |
 | `collected` / `defaultCollected` / `onCollectedChange` | `boolean` | `false` | 完成：收藏了没有。传了 `collected` 就是受控；`onCollectedChange(collected)` 点收藏时触发 |
-| `quickActions` | `ResultTileAction[]` | — | 左下快捷操作，合成一条 ButtonGroup，离边 8，最后一个是「更多」。视频要抬到控制条上面，离底 46 |
+| `quickActions` | `ResultTileAction[]` | — | 右下快捷操作，合成一条 ButtonGroup，离边 8，最后一个是「更多」。视频要抬到控制条上面，离底 46 |
 | `onPreview` | `(currentTime) => void` | — | 视频右下「预览」，打开预览接着放；不传就没有这个按钮 |
 | `failedTitle` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败：标题。失败态就是 EmptyState 生成失败 · 96，和节点、生成结果组一样 |
 | `failedDescription` | `ReactNode` | — | 失败：副标题 |
