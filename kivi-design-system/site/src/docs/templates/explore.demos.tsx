@@ -23,7 +23,6 @@ import {
   TabItem,
   Tabs,
   Tag,
-  VideoPlayer,
   WorkCard,
   placeholderImageSrc,
   toast,
@@ -35,6 +34,7 @@ import {
 } from '@kivi';
 import { MiniCanvas } from '../business/canvas.demos';
 import { VIDEO } from '../components/media.demos';
+import { MediaViewer, ViewerAuthor, ViewerSection, useLastShown } from './media-viewer';
 
 /*
   UI 页面预览 · 探索页，照飞书需求「主帧-探索」和下面四篇子需求（发现页、创作精选、公共技能、公共工作流，3.14）。
@@ -114,16 +114,6 @@ function usePaged(total: number, size: number, resetKey: string, moreRef: Mutabl
     };
   });
   return { count, loading, done: count >= total };
-}
-
-/**
- * 弹窗里显示的那一条：关的时候数据先清空了，弹窗还要淡出 200ms，这段时间接着显示上一条，
- * 不然淡出的是一块空的深色面板，看着就是「黑一下」
- */
-function useLastShown<T>(value: T | null) {
-  const last = useRef(value);
-  if (value !== null) last.current = value;
-  return value ?? last.current;
 }
 
 /** 分类：「全部」+ 后台配置的分类，一组选项卡 */
@@ -362,7 +352,7 @@ function Discover({ moreRef }: { moreRef: MutableRefObject<(() => void) | undefi
             </MenuItem>
           )}
           <Divider />
-          <MenuItem icon="OmniReference" onClick={() => toast.success('已添加到参考图')}>
+          <MenuItem icon="ImagePlus" onClick={() => toast.success('已添加到参考图')}>
             添加到参考图
           </MenuItem>
           <MenuItem icon="AddFolder" onClick={() => toast.success('已添加到文件夹')}>
@@ -371,74 +361,59 @@ function Discover({ moreRef }: { moreRef: MutableRefObject<(() => void) | undefi
         </Menu>
       </Dropdown>
 
-      {/* 详情：照线上 CardDetailModal 铺满窗口。左边作品（完整显示），竖线，右边 440 的信息栏：
-          作者（头像 32 + 名字 + 日期）和下载、收藏、关闭，横线，提示词和参数、参考图，最下面点赞。没有一键同款（11-09 用户定） */}
-      <Dialog size="full" aria-label="作品详情" open={detail !== null} onOpenChange={(v) => !v && setDetail(null)}>
-        {shownDetail && (
-          <div className="tpl-ex__viewer">
-            <div className="tpl-ex__viewer-media">
-              {shownDetail.video ? (
-                <VideoPlayer variant="preview" src={shownDetail.src} poster={shownDetail.poster} autoPlay loop />
-              ) : (
-                <img src={shownDetail.src} alt={shownDetail.prompt} />
-              )}
-            </div>
-            <Divider orientation="vertical" />
-            <aside className="tpl-ex__viewer-info">
-              <header className="tpl-ex__viewer-head">
-                <span className="tpl-ex__viewer-author">
-                  <Avatar name={shownDetail.author.name} src={shownDetail.author.avatar} size={32} />
-                  <span>
-                    <span className="tpl-ex__viewer-name">{shownDetail.author.name}</span>
-                    <span className="tpl-ex__viewer-date">{shownDetail.date}</span>
-                  </span>
-                </span>
-                <span className="tpl-ex__viewer-actions">
-                  <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => toast.info('已开始下载')} />
-                  <IconButton
-                    icon={collected.includes(shownDetail.id) ? 'CollectSolid' : 'Collect'}
-                    label={collected.includes(shownDetail.id) ? '取消收藏' : '收藏'}
-                    variant="secondary"
-                    size={36}
-                    data-collected={collected.includes(shownDetail.id) || undefined}
-                    onClick={() => toggle(setCollected, shownDetail.id, !collected.includes(shownDetail.id))}
-                  />
-                  <IconButton icon="Close" label="关闭" variant="secondary" size={36} onClick={() => setDetail(null)} />
-                </span>
-              </header>
-              <Divider />
-              <div className="tpl-ex__viewer-body">
-                <section className="tpl-ex__viewer-section">
-                  <h4>提示词</h4>
-                  <GenPrompt prompt={shownDetail.prompt}>
-                    <Tag>{shownDetail.video ? '视频生成' : '图片生成'}</Tag>
-                    <Tag>{shownDetail.model}</Tag>
-                    <Tag>{shownDetail.ratio}</Tag>
-                  </GenPrompt>
-                </section>
-                {/* 参考图：只放参考图（线上还有图生图、控制图、Lora 等，这里不做），多张放在一个容器里，悬停看大图 */}
-                {shownDetail.refs.length > 0 && (
-                  <section className="tpl-ex__viewer-section">
-                    <h4>参考图</h4>
-                    <div className="tpl-ex__viewer-refs">
-                      <AttachmentStrip items={shownDetail.refs} />
-                    </div>
-                  </section>
-                )}
-              </div>
-              <Button
-                size={36}
+      {/* 详情：全站共用的查看大图（media-viewer.tsx）。头是作者和下载、收藏，内容是提示词和参数、参考图，最下面点赞。没有一键同款（11-09 用户定） */}
+      <MediaViewer
+        media={detail && { type: detail.video ? 'video' : 'image', src: detail.src, poster: detail.poster, alt: detail.prompt }}
+        onClose={() => setDetail(null)}
+        head={shownDetail && <ViewerAuthor name={shownDetail.author.name} avatar={shownDetail.author.avatar} date={shownDetail.date} />}
+        actions={
+          shownDetail && (
+            <>
+              <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => toast.info('已开始下载')} />
+              <IconButton
+                icon={collected.includes(shownDetail.id) ? 'CollectSolid' : 'Collect'}
+                label={collected.includes(shownDetail.id) ? '取消收藏' : '收藏'}
                 variant="secondary"
-                leftIcon={liked.includes(shownDetail.id) ? 'ThumbsUpFill' : 'ThumbsUp'}
-                className="tpl-ex__viewer-like"
-                onClick={() => toggle(setLiked, shownDetail.id, !liked.includes(shownDetail.id))}
-              >
-                {likesOf(shownDetail)}
-              </Button>
-            </aside>
-          </div>
+                size={36}
+                data-collected={collected.includes(shownDetail.id) || undefined}
+                onClick={() => toggle(setCollected, shownDetail.id, !collected.includes(shownDetail.id))}
+              />
+            </>
+          )
+        }
+        footer={
+          shownDetail && (
+            <Button
+              size={36}
+              variant="secondary"
+              leftIcon={liked.includes(shownDetail.id) ? 'ThumbsUpFill' : 'ThumbsUp'}
+              onClick={() => toggle(setLiked, shownDetail.id, !liked.includes(shownDetail.id))}
+            >
+              {likesOf(shownDetail)}
+            </Button>
+          )
+        }
+      >
+        {shownDetail && (
+          <>
+            <ViewerSection title="提示词">
+              <GenPrompt prompt={shownDetail.prompt}>
+                <Tag>{shownDetail.video ? '视频生成' : '图片生成'}</Tag>
+                <Tag>{shownDetail.model}</Tag>
+                <Tag>{shownDetail.ratio}</Tag>
+              </GenPrompt>
+            </ViewerSection>
+            {/* 参考图：只放参考图（线上还有图生图、控制图、Lora 等，这里不做），多张放在一个容器里，悬停看大图 */}
+            {shownDetail.refs.length > 0 && (
+              <ViewerSection title="参考图">
+                <div className="tpl-viewer__refs">
+                  <AttachmentStrip items={shownDetail.refs} />
+                </div>
+              </ViewerSection>
+            )}
+          </>
         )}
-      </Dialog>
+      </MediaViewer>
     </>
   );
 }

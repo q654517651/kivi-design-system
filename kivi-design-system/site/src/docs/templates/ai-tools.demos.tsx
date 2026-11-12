@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import {
   AddTile,
   AttachmentStrip,
@@ -6,22 +6,24 @@ import {
   ButtonGroup,
   CropHandles,
   Divider,
-  EmptyState,
+  GenPrompt,
+  GenPromptRefs,
   GenerateButton,
   Icon,
   IconButton,
   Menu,
+  MenuLabel,
   MenuItem,
   NodePanel,
   NodePanelBar,
   NumberInput,
   ParamField,
   PromptInput,
-  ReferenceItem,
   ResultTile,
   Select,
   Dropdown,
   Slider,
+  Tag,
   TabItem,
   Tabs,
   DropOverlay,
@@ -35,24 +37,28 @@ import {
   type SelectOption,
 } from '@kivi';
 import { rejectMessage, useFileDrop } from '../../kivi/hooks';
+import { cx } from '../../kivi/utils';
+import { MediaViewer, ViewerAuthor, ViewerSection, useLastShown } from './media-viewer';
 
 /*
-  页面模板 · AI 工具：左边切工具（图片、视频不分开），中间是舞台（当前这一版，编辑直接在上面做），右边是历史（每生成一次多一版）。
+  页面模板 · AI 工具：左边切工具（图片、视频不分开），中间是舞台，右边是历史。
+  每个工具各管各的：自己的原图、舞台（扩图框、涂抹）、提示词，切走再切回来还在；生成的结果不回舞台，只进右边的历史。
+  历史放所有工具生成的结果（上传的原图不进），点了全屏看；右键可以「加入当前工具」，把它当成当前工具的原图接着改。
   参数面板和画布节点下面的工具面板是同一套。生成是假的：3 秒后出一张占位图。讨论和待定记在 page-notes/ai-tools.md。
 */
 
-type Media = 'image' | 'video';
-type ToolId = 'cutout' | 'expand' | 'hd' | 'edit' | 'video-hd' | 'loop' | 'stitch';
+export type Media = 'image' | 'video';
+export type ToolId = 'cutout' | 'expand' | 'hd' | 'edit' | 'video-hd' | 'loop' | 'stitch' | 'video-cutout';
 
-interface ToolDef {
+export interface ToolDef {
   id: ToolId;
   name: string;
   icon: IconName;
   media: Media;
 }
 
-/** 工具顺序照线上：图片四个在前，视频三个在后，不分组（多模态编辑 11-06 用户定不要了） */
-const TOOLS: ToolDef[] = [
+/** 工具顺序照线上：图片四个在前，视频在后，分「图片工具」「视频工具」两组（多模态编辑 11-06 用户定不要了）。视频抠图线上 ToolsBox 没有、画布有，11-11 用户定加上，顺序照画布 */
+export const TOOLS: ToolDef[] = [
   { id: 'cutout', name: '抠图', icon: 'Rmbg', media: 'image' },
   { id: 'expand', name: '扩图', icon: 'Expand', media: 'image' },
   { id: 'hd', name: '高清修复', icon: 'HD', media: 'image' },
@@ -60,34 +66,59 @@ const TOOLS: ToolDef[] = [
   { id: 'loop', name: '视频循环', icon: 'VideoLoop', media: 'video' },
   { id: 'video-hd', name: '视频高清', icon: 'HD', media: 'video' },
   { id: 'stitch', name: '视频拼接', icon: 'Connecting', media: 'video' },
+  { id: 'video-cutout', name: '视频抠图', icon: 'Rmbg', media: 'video' },
 ];
-const toolOf = (id: ToolId) => TOOLS.find((t) => t.id === id)!;
+export const toolOf = (id: ToolId) => TOOLS.find((t) => t.id === id)!;
 
-/** 历史里的一版：上传的原图 / 原视频，或者某个工具生成的结果 */
-interface Version {
+/** 没放素材时舞台上的介绍：示意图 + 一句话说这个工具做什么。示意图先用占位图、演示视频，以后换真素材 */
+const INTRO: Record<ToolId, { desc: string; demo: string }> = {
+  cutout: { desc: '上传图片，自动识别主体，去掉周围的背景。', demo: 'ip-gouache' },
+  expand: { desc: '上传图片，拉框选出要扩的范围，AI 补全画面外面的内容。', demo: 'monstera-dots' },
+  hd: { desc: '上传图片，放大 2 倍或 4 倍，补回细节。', demo: 'kiwi-light' },
+  edit: { desc: '上传图片，描述想怎么改，或者涂抹要改、要去掉的地方。', demo: 'bunny-gouache' },
+  loop: { desc: '上传视频，首尾自然衔接，循环播放看不出断点。', demo: 'video' },
+  'video-hd': { desc: '上传视频，提升分辨率和帧率。', demo: 'video' },
+  stitch: { desc: '上传两段视频，按顺序拼成一段。', demo: 'video' },
+  'video-cutout': { desc: '上传视频，自动识别主体，去掉每一帧的背景。', demo: 'video' },
+};
+
+/** 一个工具的原图 / 原视频：每个工具各放各的 */
+export interface Source {
   id: string;
   media: Media;
   src: string;
   /** 宽 / 高 */
   ratio: number;
-  /** 历史里写的名字：原图、扩图、局部重绘… */
+}
+
+/** 历史里的一条：某个工具生成的结果 */
+interface Result {
+  id: string;
+  tool: ToolId;
+  media: Media;
+  src: string;
+  /** 视频的封面 */
+  poster?: string;
+  ratio: number;
+  /** 卡片下面写的名字：扩图、局部重绘… */
   label: string;
   status: 'done' | 'generating';
+  /** 用的原图 / 原视频，看大图的信息栏里显示 */
+  origin: string;
 }
 
 const VIDEO = './placeholders/video/kivi-demo-16x9.mp4';
-const VIDEO_9x16 = './placeholders/video/kivi-demo-9x16.mp4';
 const POOL: PlaceholderImageName[] = ['kivi-future', 'ip-gouache', 'bunny-gouache', 'monstera-dots', 'kiwi-light', 'ip-future'];
 const RATIOS: PlaceholderImageRatio[] = ['1:1', '3:4', '16:9', '9:16'];
-const ratioNum = (r: string) => {
+export const ratioNum = (r: string) => {
   const [w, h] = r.split(':').map(Number);
   return w / h;
 };
 /** 占位图只有四种比例，取最接近的那张 */
-const nearestRatio = (r: number) => RATIOS.reduce((a, b) => (Math.abs(Math.log(ratioNum(b) / r)) < Math.abs(Math.log(ratioNum(a) / r)) ? b : a));
+export const nearestRatio = (r: number) => RATIOS.reduce((a, b) => (Math.abs(Math.log(ratioNum(b) / r)) < Math.abs(Math.log(ratioNum(a) / r)) ? b : a));
 
 let seq = 0;
-const newId = () => `v${Date.now()}-${seq++}`;
+export const newId = () => `v${Date.now()}-${seq++}`;
 
 /** 把宽高比为 ratio 的东西放进 w × h 里，居中 */
 function fitRect(ratio: number, w: number, h: number, scale = 1): CropRect {
@@ -134,9 +165,14 @@ const INITIAL_STATE: ToolState = {
   stitchExtra: false,
 };
 
-/** 提示词：PromptInput 是不受控的，这里只记有没有字，决定生成按钮能不能点 */
-function Prompt({ placeholder, onText }: { placeholder: string; onText: (t: string) => void }) {
-  return <PromptInput placeholder={placeholder} onInput={(e) => onText(e.currentTarget.textContent ?? '')} />;
+/** 提示词：PromptInput 是不受控的，这里记下打的字（切工具再切回来接着显示），也决定生成按钮能不能点 */
+function Prompt({ placeholder, initial, onText }: { placeholder: string; initial: string; onText: (t: string) => void }) {
+  const [init] = useState(initial); // 只在挂上时放进去，之后由用户编辑
+  return (
+    <PromptInput placeholder={placeholder} onInput={(e) => onText(e.currentTarget.textContent ?? '')}>
+      {init || undefined}
+    </PromptInput>
+  );
 }
 
 function Hint({ children }: { children: ReactNode }) {
@@ -239,19 +275,59 @@ function MaskLayer({ rect, strokes, onStroke, erase, size }: {
 
 // ---------- 整页 ----------
 
-export function ToolsPage() {
-  const [tool, setTool] = useState<ToolId>('expand');
+/** 视频结果的封面：演示视频配对应比例的占位图 */
+export const videoPoster = (ratio: number) => placeholderImageSrc(ratio < 1 ? 'ip-gouache' : 'kivi-future', ratio < 1 ? '9:16' : '16:9');
+
+
+/** 生成一次要交出去的东西：工具页放进历史，创作页弹窗放进对话 */
+export interface ToolJob {
+  tool: ToolId;
+  /** 名字：工具名，智能编辑写编辑方式 */
+  label: string;
+  media: Media;
+  /** 原图 / 原视频 */
+  src: string;
+  ratio: number;
+  /** 出来的结果大概是什么比例（扩图按扩图框） */
+  targetRatio: number;
+}
+
+let picks = 0;
+/** 假生成：扩图、智能编辑换一张占位图（比例照扩图框），别的工具原样返回 */
+export function finishJob(job: ToolJob): { src: string; ratio: number } {
+  if (job.media === 'video' || (job.tool !== 'expand' && job.tool !== 'edit')) return { src: job.src, ratio: job.ratio };
+  const r = nearestRatio(job.targetRatio);
+  return { src: placeholderImageSrc(POOL[picks++ % POOL.length], r), ratio: ratioNum(r) };
+}
+
+export interface ToolWorkbenchProps {
+  tool: ToolId;
+  /** 原图 / 原视频，没有就是介绍和上传 */
+  source: Source | null;
+  /** 上传：传了才有「上传」按钮和舞台右上的下载 / 换一张（工具页用，创作页弹窗里不传） */
+  onUpload?: () => void;
+  /** 点生成 */
+  onGenerate: (job: ToolJob) => void;
+  /** 工具页里每个工具一块，不是当前的藏起来（参数、扩图框、涂抹、提示词都还在） */
+  hidden?: boolean;
+  className?: string;
+}
+
+/**
+ * 一个工具的工作区：舞台（原图、扩图框、涂抹）+ 底部参数面板。工具页、创作页的工具弹窗都用它，
+ * 参数面板和画布节点下面的工具面板是同一套。只在模板里拼，不进组件库（11-11 用户定先看效果）
+ */
+export function ToolWorkbench({ tool, source, onUpload, onGenerate, hidden, className }: ToolWorkbenchProps) {
   const media = toolOf(tool).media;
-  const [versions, setVersions] = useState<Version[]>([]);
-  // 图片、视频各记一个「当前这一版」：切到另一类工具再切回来，舞台还是原来那张
-  const [current, setCurrent] = useState<Record<Media, string | null>>({ image: null, video: null });
+  const cur = source;
   const [st, setSt] = useState(INITIAL_STATE);
   const set = <K extends keyof ToolState>(k: K, v: ToolState[K]) => setSt((s) => ({ ...s, [k]: v }));
-  const [prompt, setPrompt] = useState('');
 
-  const list = versions.filter((v) => v.media === media);
-  const cur = versions.find((v) => v.id === current[media]) ?? null;
-  const busy = cur?.status === 'generating';
+  // 提示词：智能编辑按编辑方式分开记
+  const promptKey = tool === 'edit' ? `edit-${st.editMode}` : tool;
+  const [prompts, setPrompts] = useState<Record<string, string>>({});
+  const prompt = prompts[promptKey] ?? '';
+  const setPrompt = (t: string) => setPrompts((p) => ({ ...p, [promptKey]: t }));
 
   // 舞台大小：图片、视频按比例放进去；扩图时缩小留出往外拉的地方
   const areaRef = useRef<HTMLDivElement>(null);
@@ -264,19 +340,24 @@ export function ToolsPage() {
     return () => ro.disconnect();
   }, []);
 
-  const expanding = tool === 'expand' && cur?.status === 'done';
-  const painting = tool === 'edit' && st.editMode !== 'redraw' && cur?.status === 'done';
+  const expanding = tool === 'expand' && !!cur;
+  const painting = tool === 'edit' && st.editMode !== 'redraw' && !!cur;
   const rect = cur ? fitRect(cur.ratio, area.w, area.h, expanding ? 0.6 : 1) : null;
   const bounds: CropRect = { x: 0, y: 0, w: area.w, h: area.h };
 
-  // 扩图框：换了图、换了舞台大小、重新进扩图，都回到贴着原图
-  const [frame, setFrame] = useState<CropRect | null>(null);
-  const frameKey = `${cur?.id}-${expanding}-${Math.round(area.w)}-${Math.round(area.h)}`;
+  // 扩图框：按原图的比例记（舞台变大变小、切走再切回来都对得上），换了原图才回到贴着原图
+  const [frameRel, setFrameRel] = useState<CropRect>({ x: 0, y: 0, w: 1, h: 1 });
+  const frame: CropRect | null =
+    expanding && rect ? { x: rect.x + frameRel.x * rect.w, y: rect.y + frameRel.y * rect.h, w: frameRel.w * rect.w, h: frameRel.h * rect.h } : null;
+  const setFrame = (f: CropRect) => {
+    if (!rect) return;
+    setFrameRel({ x: (f.x - rect.x) / rect.w, y: (f.y - rect.y) / rect.h, w: f.w / rect.w, h: f.h / rect.h });
+  };
   useEffect(() => {
-    setFrame(expanding && rect ? rect : null);
+    setFrameRel({ x: 0, y: 0, w: 1, h: 1 });
     set('expandRatio', 'free');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frameKey]);
+  }, [cur?.id]);
   const pickExpandRatio = (v: string | null) => {
     set('expandRatio', v ?? 'free');
     if (!rect || !v || v === 'free') return;
@@ -289,7 +370,7 @@ export function ToolsPage() {
     setFrame({ x: rect.x + rect.w / 2 - fw / 2, y: rect.y + rect.h / 2 - fh / 2, w: fw, h: fh });
   };
 
-  // 涂抹：每一版各自一套，换版本就清掉
+  // 涂抹：换了原图才清掉
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [redo, setRedo] = useState<Stroke[]>([]);
   const [erase, setErase] = useState(false);
@@ -300,78 +381,18 @@ export function ToolsPage() {
     setErase(false);
   }, [cur?.id]);
 
-  // 上传：点按钮、拖进来都走这里。图片、视频都收，类型和当前工具不一样就切到那一类的第一个工具
-  const fileRef = useRef<HTMLInputElement>(null);
-  const addSource = (m: Media, src: string, ratio: number) => {
-    const v: Version = { id: newId(), media: m, src, ratio, label: m === 'image' ? '原图' : '原视频', status: 'done' };
-    setVersions((l) => [v, ...l]);
-    setCurrent((c) => ({ ...c, [m]: v.id }));
-    if (m !== media) setTool(TOOLS.find((t) => t.media === m)!.id);
-  };
-  const addFile = (f: File) => {
-    const url = URL.createObjectURL(f);
-    if (f.type.startsWith('video')) {
-      const el = document.createElement('video');
-      el.onloadedmetadata = () => addSource('video', url, el.videoWidth / el.videoHeight || 16 / 9);
-      el.src = url;
-    } else {
-      const el = new Image();
-      el.onload = () => addSource('image', url, el.naturalWidth / el.naturalHeight || 1);
-      el.src = url;
-    }
-  };
-  const fromAssets = () => {
-    const n = versions.filter((v) => v.media === media).length;
-    if (media === 'video') addSource('video', n % 2 ? VIDEO_9x16 : VIDEO, n % 2 ? 9 / 16 : 16 / 9);
-    else {
-      const r = RATIOS[n % 3];
-      addSource('image', placeholderImageSrc(POOL[n % POOL.length], r), ratioNum(r));
-    }
-  };
-  const { dragging, rejected, bind } = useFileDrop({
-    accept: 'image/*,video/*',
-    multiple: false,
-    onFiles: ([f]) => addFile(f),
-    onReject: (_, reason) => toast.error(rejectMessage(reason)),
-  });
-
-  // 生成：以当前这一版为底，新的一版排在历史最上面、舞台直接换成它；3 秒后出结果
-  const timers = useRef<number[]>([]);
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
   const generate = () => {
     if (!cur) return;
     const label =
       tool === 'edit' ? EDIT_MODES.find((m) => m.value === st.editMode)!.label as string : toolOf(tool).name;
-    let ratio = cur.ratio;
-    if (tool === 'expand' && frame) ratio = frame.w / frame.h;
-    const v: Version = { id: newId(), media: cur.media, src: cur.src, ratio: cur.ratio, label, status: 'generating' };
-    setVersions((l) => [v, ...l]);
-    setCurrent((c) => ({ ...c, [cur.media]: v.id }));
-    const changes = tool === 'expand' || tool === 'edit';
-    timers.current.push(
-      window.setTimeout(() => {
-        setVersions((l) =>
-          l.map((x) => {
-            if (x.id !== v.id) return x;
-            if (x.media === 'video' || !changes) return { ...x, status: 'done' };
-            const r = nearestRatio(ratio);
-            return { ...x, status: 'done', ratio: ratioNum(r), src: placeholderImageSrc(POOL[(seq + 1) % POOL.length], r) };
-          }),
-        );
-      }, 3000),
-    );
+    onGenerate({ tool, label, media: cur.media, src: cur.src, ratio: cur.ratio, targetRatio: tool === 'expand' && frame ? frame.w / frame.h : cur.ratio });
   };
 
-  // 生成按钮能不能点：生成中、没素材、该写提示词没写、该涂没涂、拼接不够两段，都置灰（不弹原因）
+  // 生成按钮能不能点：没素材、该写提示词没写、该涂没涂、拼接不够两段，都置灰（不弹原因）
   const needsPrompt = tool === 'edit' && st.editMode !== 'remove';
-  const disabled =
-    !cur || busy || (needsPrompt && !prompt.trim()) || (painting && !strokes.length) || (tool === 'stitch' && !st.stitchExtra);
+  const disabled = !cur || (needsPrompt && !prompt.trim()) || (painting && !strokes.length) || (tool === 'stitch' && !st.stitchExtra);
 
-  // 换工具、换编辑方式时，提示词清空（PromptInput 跟着重挂）
-  const promptKey = `${tool}-${st.editMode}`;
-  useEffect(() => setPrompt(''), [promptKey]);
-
-  const COST: Record<ToolId, number> = { cutout: 2, expand: 8, hd: st.hdScale === '4' ? 8 : 4, edit: 8, 'video-hd': st.fps > 30 ? 40 : 20, loop: 10, stitch: 5 };
+  const COST: Record<ToolId, number> = { cutout: 2, expand: 8, hd: st.hdScale === '4' ? 8 : 4, edit: 8, 'video-hd': st.fps > 30 ? 40 : 20, loop: 10, stitch: 5, 'video-cutout': 20 };
   const gen = <GenerateButton cost={COST[tool]} disabled={disabled} onClick={generate} />;
 
   let panel: ReactNode;
@@ -380,6 +401,13 @@ export function ToolsPage() {
       panel = (
         <NodePanel className="tpl-tool__panel">
           <NodePanelBar left={<Hint>自动识别主体，去掉背景</Hint>} right={gen} />
+        </NodePanel>
+      );
+      break;
+    case 'video-cutout':
+      panel = (
+        <NodePanel className="tpl-tool__panel">
+          <NodePanelBar left={<Hint>自动识别主体，去掉每一帧的背景</Hint>} right={gen} />
         </NodePanel>
       );
       break;
@@ -399,7 +427,7 @@ export function ToolsPage() {
     case 'expand':
       panel = (
         <NodePanel className="tpl-at__panel">
-          <Prompt key={promptKey} placeholder="描述扩出去的地方画什么，不填由 AI 自己补全" onText={setPrompt} />
+          <Prompt key={promptKey} initial={prompt} placeholder="描述扩出去的地方画什么，不填由 AI 自己补全" onText={setPrompt} />
           <NodePanelBar
             left={
               <Dropdown
@@ -430,6 +458,7 @@ export function ToolsPage() {
           {st.editMode !== 'remove' && (
             <Prompt
               key={promptKey}
+              initial={prompt}
               placeholder={st.editMode === 'redraw' ? '描述你想怎么改这张图' : '描述涂抹的地方要改成什么'}
               onText={setPrompt}
             />
@@ -531,33 +560,33 @@ export function ToolsPage() {
   // 舞台上的东西
   let stage: ReactNode = null;
   if (!cur) {
+    const intro = INTRO[tool];
     stage = (
-      <EmptyState
-        className="tpl-at__empty"
-        type="empty"
-        size={160}
-        title={media === 'image' ? '拖入、粘贴或上传一张图片' : '拖入或上传一段视频'}
-        description={media === 'image' ? 'JPEG、PNG、WEBP，不超过 10M' : 'MP4，不超过 20M'}
-        action={
-          <div className="tpl-at__empty-actions">
-            <Button variant="primary" leftIcon="Upload" onClick={() => fileRef.current?.click()}>
-              {media === 'image' ? '上传图片' : '上传视频'}
-            </Button>
-            <Button variant="light" leftIcon="Pack" onClick={fromAssets}>
-              从资产选择
-            </Button>
-          </div>
-        }
-      />
+      <div className="tpl-at__intro">
+        <div className="tpl-at__intro-demo">
+          {intro.demo === 'video' ? (
+            <video src={VIDEO} muted autoPlay loop playsInline />
+          ) : (
+            <img src={placeholderImageSrc(intro.demo as PlaceholderImageName, '16:9')} alt="" />
+          )}
+        </div>
+        <div className="tpl-at__intro-text">
+          <div className="tpl-at__intro-title">{toolOf(tool).name}</div>
+          <div className="tpl-at__intro-desc">{intro.desc}</div>
+        </div>
+        {onUpload && (
+          <Button variant="light" leftIcon="Upload" onClick={onUpload}>
+            {media === 'image' ? '上传图片' : '上传视频'}
+          </Button>
+        )}
+      </div>
     );
   } else if (rect && area.w > 0) {
     const box = { left: rect.x, top: rect.y, width: rect.w, height: rect.h };
     stage = (
       <>
         {expanding && frame && <div className="tpl-at__expand-fill" style={{ left: frame.x, top: frame.y, width: frame.w, height: frame.h }} />}
-        {busy ? (
-          <ResultTile className="tpl-at__media" style={box} type={cur.media} status="generating" src={cur.src} fit />
-        ) : cur.media === 'image' ? (
+        {cur.media === 'image' ? (
           <img key={cur.id} className="tpl-at__media tpl-at__media--in" style={box} src={cur.src} alt="" />
         ) : (
           <div key={cur.id} className="tpl-at__media tpl-at__media--in" style={box}>
@@ -574,7 +603,7 @@ export function ToolsPage() {
             contain={rect}
             min={0}
             onConfirm={() => !disabled && generate()}
-            onCancel={() => (setFrame(rect), set('expandRatio', 'free'))}
+            onCancel={() => (setFrameRel({ x: 0, y: 0, w: 1, h: 1 }), set('expandRatio', 'free'))}
           />
         )}
         {painting && (
@@ -591,55 +620,142 @@ export function ToolsPage() {
   }
 
   return (
+    <section className={cx('tpl-at__stage', className)} hidden={hidden}>
+      {/* 涂抹工具条：只在局部重绘、元素消除时出，浮在舞台上方正中 */}
+      {painting && (
+        <ButtonGroup variant="glass" size={44} className="tpl-at__top">
+          <IconButton icon="Brush" label="画笔" selected={!erase} onClick={() => setErase(false)} />
+          <IconButton icon="Eraser" label="橡皮" selected={erase} onClick={() => setErase(true)} />
+          <Divider orientation="vertical" />
+          <span className="tpl-at__size">
+            <Icon name="BrushSize" />
+            <Slider aria-label="笔刷大小" min={8} max={120} value={brush} onChange={setBrush} />
+          </span>
+          <Divider orientation="vertical" />
+          <IconButton
+            icon="Previous"
+            label="撤销"
+            disabled={!strokes.length}
+            onClick={() => (setRedo((r) => [strokes[strokes.length - 1], ...r]), setStrokes((l) => l.slice(0, -1)))}
+          />
+          <IconButton
+            icon="NextStep"
+            label="重做"
+            disabled={!redo.length}
+            onClick={() => (setStrokes((l) => [...l, redo[0]]), setRedo((r) => r.slice(1)))}
+          />
+          <IconButton icon="Delete" label="清空" disabled={!strokes.length} onClick={() => (setRedo([]), setStrokes([]))} />
+        </ButtonGroup>
+      )}
+      {cur && onUpload && (
+        <ButtonGroup variant="glass" size={44} className="tpl-at__actions">
+          <IconButton icon="Download" label="下载" tooltip={{ placement: 'bottom' }} onClick={() => toast.success('已开始下载')} />
+          <IconButton icon="ReUpload" label="换一张" tooltip={{ placement: 'bottom' }} onClick={onUpload} />
+        </ButtonGroup>
+      )}
+
+      <div ref={areaRef} className="tpl-at__area" data-painting={painting ? '' : undefined}>
+        {!hidden && stage}
+      </div>
+      {cur && <div className="tpl-at__dock">{panel}</div>}
+    </section>
+  );
+}
+
+export function ToolsPage() {
+  const [tool, setTool] = useState<ToolId>('expand');
+  const media = toolOf(tool).media;
+  // 每个工具一张原图，切走再切回来还在
+  const [sources, setSources] = useState<Partial<Record<ToolId, Source>>>({});
+  // 所有工具生成的结果，新的在上面
+  const [results, setResults] = useState<Result[]>([]);
+
+  // 上传：点按钮、拖进来都走这里，放进当前工具。类型和当前工具不一样，就放进那一类的第一个工具并切过去
+  const fileRef = useRef<HTMLInputElement>(null);
+  const putSource = (m: Media, src: string, ratio: number) => {
+    const target = m === media ? tool : TOOLS.find((t) => t.media === m)!.id;
+    setSources((s) => ({ ...s, [target]: { id: newId(), media: m, src, ratio } }));
+    if (target !== tool) setTool(target);
+  };
+  const addFile = (f: File) => {
+    const url = URL.createObjectURL(f);
+    if (f.type.startsWith('video')) {
+      const el = document.createElement('video');
+      el.onloadedmetadata = () => putSource('video', url, el.videoWidth / el.videoHeight || 16 / 9);
+      el.src = url;
+    } else {
+      const el = new Image();
+      el.onload = () => putSource('image', url, el.naturalWidth / el.naturalHeight || 1);
+      el.src = url;
+    }
+  };
+  const { dragging, rejected, bind } = useFileDrop({
+    accept: 'image/*,video/*',
+    multiple: false,
+    onFiles: ([f]) => addFile(f),
+    onReject: (_, reason) => toast.error(rejectMessage(reason)),
+  });
+
+  // 生成：舞台不动（原图还在，可以改参数再来一次），结果排在历史最上面；3 秒后出结果
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const generate = (job: ToolJob) => {
+    const r: Result = {
+      id: newId(),
+      tool: job.tool,
+      media: job.media,
+      src: job.src,
+      poster: job.media === 'video' ? videoPoster(job.ratio) : undefined,
+      ratio: job.ratio,
+      label: job.label,
+      origin: job.src,
+      status: 'generating',
+    };
+    setResults((l) => [r, ...l]);
+    timers.current.push(
+      window.setTimeout(() => setResults((l) => l.map((x) => (x.id === r.id ? { ...x, ...finishJob(job), status: 'done' } : x))), 3000),
+    );
+  };
+
+  // 历史：点了全屏看；右键加入当前工具、下载、删除（生成中的不能删）
+  const [preview, setPreview] = useState<Result | null>(null);
+  const shownPreview = useLastShown(preview);
+  const [filter, setFilter] = useState<ToolId | 'all'>('all');
+  const shown = filter === 'all' ? results : results.filter((r) => r.tool === filter);
+  const [menu, setMenu] = useState<{ x: number; y: number; id: string } | null>(null);
+  const menuOf = menu ? results.find((r) => r.id === menu.id) ?? null : null;
+  const useInTool = (r: Result) => {
+    setSources((s) => ({ ...s, [tool]: { id: newId(), media: r.media, src: r.src, ratio: r.ratio } }));
+  };
+
+  return (
     <div className="tpl-at" {...bind}>
       <nav className="tpl-at__tools">
         <Menu variant="plain" aria-label="AI 工具">
-          {TOOLS.map((t) => (
-            <MenuItem key={t.id} icon={t.icon} selected={t.id === tool || undefined} onClick={() => setTool(t.id)}>
-              {t.name}
-            </MenuItem>
+          {(['image', 'video'] as const).map((m) => (
+            <Fragment key={m}>
+              <MenuLabel>{m === 'image' ? '图片工具' : '视频工具'}</MenuLabel>
+              {TOOLS.filter((t) => t.media === m).map((t) => (
+                <MenuItem key={t.id} icon={t.icon} selected={t.id === tool || undefined} onClick={() => setTool(t.id)}>
+                  {t.name}
+                </MenuItem>
+              ))}
+            </Fragment>
           ))}
         </Menu>
       </nav>
 
-      <section className="tpl-at__stage">
-        {/* 涂抹工具条：只在局部重绘、元素消除时出，浮在舞台上方正中 */}
-        {painting && (
-          <ButtonGroup variant="glass" size={44} className="tpl-at__top">
-            <IconButton icon="Brush" label="画笔" selected={!erase} onClick={() => setErase(false)} />
-            <IconButton icon="Eraser" label="橡皮" selected={erase} onClick={() => setErase(true)} />
-            <Divider orientation="vertical" />
-            <span className="tpl-at__size">
-              <Icon name="BrushSize" />
-              <Slider aria-label="笔刷大小" min={8} max={120} value={brush} onChange={setBrush} />
-            </span>
-            <Divider orientation="vertical" />
-            <IconButton
-              icon="Previous"
-              label="撤销"
-              disabled={!strokes.length}
-              onClick={() => (setRedo((r) => [strokes[strokes.length - 1], ...r]), setStrokes((l) => l.slice(0, -1)))}
-            />
-            <IconButton
-              icon="NextStep"
-              label="重做"
-              disabled={!redo.length}
-              onClick={() => (setStrokes((l) => [...l, redo[0]]), setRedo((r) => r.slice(1)))}
-            />
-            <IconButton icon="Delete" label="清空" disabled={!strokes.length} onClick={() => (setRedo([]), setStrokes([]))} />
-          </ButtonGroup>
-        )}
-        {cur && !busy && (
-          <ButtonGroup variant="glass" size={44} className="tpl-at__actions">
-            <IconButton icon="Download" label="下载" tooltip={{ placement: 'bottom' }} onClick={() => toast.success('已开始下载')} />
-            <IconButton icon="ReUpload" label="换一张" tooltip={{ placement: 'bottom' }} onClick={() => fileRef.current?.click()} />
-          </ButtonGroup>
-        )}
-
-        <div ref={areaRef} className="tpl-at__area" data-painting={painting ? '' : undefined}>
-          {stage}
-        </div>
-        {cur && <div className="tpl-at__dock">{panel}</div>}
+      <div className="tpl-at__main">
+        {TOOLS.map((t) => (
+          <ToolWorkbench
+            key={t.id}
+            tool={t.id}
+            hidden={t.id !== tool}
+            source={sources[t.id] ?? null}
+            onUpload={() => fileRef.current?.click()}
+            onGenerate={generate}
+          />
+        ))}
         <DropOverlay active={dragging} rejected={rejected} />
         <input
           ref={fileRef}
@@ -652,33 +768,101 @@ export function ToolsPage() {
             e.target.value = '';
           }}
         />
-      </section>
+      </div>
 
       <aside className="tpl-at__history" aria-label="历史">
-        <div className="tpl-at__history-title">历史</div>
-        {list.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            className="tpl-at__version"
-            aria-pressed={v.id === cur?.id}
-            onClick={() => setCurrent((c) => ({ ...c, [v.media]: v.id }))}
+        <div className="tpl-at__history-head">
+          <span className="tpl-at__history-title">历史</span>
+          <Dropdown
+            haspopup="listbox"
+            placement="bottom-end"
+            // 筛选只放图标（11-11 用户定），筛了某个工具时按钮留选中底色
+            trigger={<IconButton icon="Filter" label="按工具筛选" selected={filter !== 'all'} />}
           >
-            <span className="tpl-at__thumb">
-              {v.status === 'generating' ? (
-                <ResultTile type={v.media} status="generating" src={v.media === 'image' ? v.src : undefined} />
-              ) : (
-                <ReferenceItem
-                  size={72}
-                  type={v.media}
-                  src={v.media === 'image' ? v.src : placeholderImageSrc(v.ratio < 1 ? 'ip-gouache' : 'kivi-future', v.ratio < 1 ? '9:16' : '16:9')}
-                />
-              )}
-            </span>
-            <span className="tpl-at__version-name">{v.label}</span>
-          </button>
-        ))}
+            <Menu role="listbox" aria-label="按工具筛选">
+              <MenuItem selected={filter === 'all'} onClick={() => setFilter('all')}>
+                全部工具
+              </MenuItem>
+              {TOOLS.map((t) => (
+                <MenuItem key={t.id} icon={t.icon} selected={filter === t.id} onClick={() => setFilter(t.id)}>
+                  {t.name}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Dropdown>
+        </div>
+        {shown.length === 0 && (
+          <p className="tpl-at__history-empty">{filter === 'all' ? '各个工具生成的结果都放在这里' : `${toolOf(filter).name}还没有生成记录`}</p>
+        )}
+        {shown.map((r) => {
+          const done = r.status === 'done';
+          return (
+            <figure
+              key={r.id}
+              className="tpl-at__record"
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setMenu({ x: e.clientX, y: e.clientY, id: r.id });
+              }}
+            >
+              <ResultTile
+                type={r.media}
+                status={r.status}
+                src={r.src}
+                poster={r.poster}
+                topActions={done ? [{ icon: 'Download', label: '下载', onClick: () => toast.success('已开始下载') }] : undefined}
+                style={{ aspectRatio: '1 / 1', cursor: done && r.media === 'image' ? 'zoom-in' : undefined }}
+                onClick={done && r.media === 'image' ? (e) => !(e.target as HTMLElement).closest('button') && setPreview(r) : undefined}
+                onPreview={done ? () => setPreview(r) : undefined}
+              />
+            </figure>
+          );
+        })}
       </aside>
+
+      {/* 历史的右键菜单 */}
+      <Dropdown anchorPoint={menu ?? undefined} open={menu !== null} onOpenChange={(v) => !v && setMenu(null)}>
+        <Menu aria-label="历史操作">
+          <MenuItem
+            icon="Add"
+            disabled={!menuOf || menuOf.status !== 'done' || menuOf.media !== media}
+            onClick={() => menuOf && useInTool(menuOf)}
+          >
+            加入当前工具
+          </MenuItem>
+          <MenuItem icon="Download" disabled={menuOf?.status !== 'done'} onClick={() => toast.success('已开始下载')}>
+            下载
+          </MenuItem>
+          <MenuItem
+            variant="danger"
+            icon="Delete"
+            disabled={menuOf?.status !== 'done'}
+            onClick={() => menuOf && setResults((l) => l.filter((x) => x.id !== menuOf.id))}
+          >
+            删除
+          </MenuItem>
+        </Menu>
+      </Dropdown>
+
+      {/* 看大图：全站共用的查看大图（media-viewer.tsx），信息栏写用了哪个工具、原图 */}
+      <MediaViewer
+        media={preview && { type: preview.media, src: preview.src, poster: preview.poster, alt: preview.label }}
+        onClose={() => setPreview(null)}
+        head={<ViewerAuthor name="KIVI" avatar={placeholderImageSrc('ip-peek', '1:1')} date="今天 14:32" />}
+        actions={<IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => toast.success('已开始下载')} />}
+      >
+        {shownPreview && (
+          <ViewerSection title="参数">
+            <GenPrompt>
+              <Tag icon={toolOf(shownPreview.tool).icon}>{shownPreview.label}</Tag>
+              <GenPromptRefs
+                label={shownPreview.media === 'image' ? '原图' : '原视频'}
+                items={[{ type: shownPreview.media, src: shownPreview.media === 'image' ? shownPreview.origin : shownPreview.poster }]}
+              />
+            </GenPrompt>
+          </ViewerSection>
+        )}
+      </MediaViewer>
     </div>
   );
 }
