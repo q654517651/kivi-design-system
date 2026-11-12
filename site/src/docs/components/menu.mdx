@@ -85,6 +85,28 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 }
 `} />
 
+## MenuSub
+
+子菜单：菜单里切换类的项，比如语言、主题。
+
+<Demo code={`
+() => {
+  const [lang, setLang] = useState('zh');
+  return (
+    <Menu width={200}>
+      <MenuItem icon="Document">教程</MenuItem>
+      <MenuSub trigger={<MenuItem icon="Localization">语言</MenuItem>}>
+        <Menu role="listbox" aria-label="语言">
+          {[['zh', '中文'], ['en', 'English']].map(([k, v]) => (
+            <MenuItem key={k} selected={lang === k} onClick={() => setLang(k)}>{v}</MenuItem>
+          ))}
+        </Menu>
+      </MenuSub>
+    </Menu>
+  );
+}
+`} />
+
 ## 平铺（侧栏）
 
 <PlainMenuPlayground />
@@ -159,7 +181,7 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 | `open` | `boolean` | — | 展开（受控） |
 | `defaultOpen` | `boolean` | `false` | 默认是否展开 |
 | `onOpenChange` | `(open: boolean) => void` | — | 点外面、按 Esc、点菜单项关闭时都以 `false` 调用 |
-| `placement` | `"bottom-start"` `"bottom"` `"bottom-end"` `"top-start"` `"top"` `"top-end"` | `"bottom-start"` | 方向和对齐。放不下翻到另一边，左右不超出屏幕 |
+| `placement` | `"bottom-start"` `"bottom"` `"bottom-end"` `"top-start"` `"top"` `"top-end"` | `"bottom-start"` | 方向和对齐。放不下翻到另一边，左右不超出屏幕。往左右出的只给子菜单，用 MenuSub |
 | `offset` | `number` | `4` | 离触发器的距离 |
 | `matchTriggerWidth` | `boolean` | `false` | 菜单和触发器一样宽，下拉选择的列表用 |
 | `anchorPoint` | `{ x: number; y: number }` | — | 右键菜单：出现在这个屏幕坐标（`clientX`、`clientY`），自己控制 `open` |
@@ -167,3 +189,16 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 | `haspopup` | `"menu"` `"listbox"` `"dialog"` | `"menu"` | 触发器的 `aria-haspopup`，下拉选择用 `"listbox"`：打开时滚到选中项（键盘打开的焦点也落在它上面），不写 `matchTriggerWidth` 时列表不比触发器窄。带输入控件的面板（时间筛选、参数）用 `"dialog"`。菜单、列表里按 Tab 关闭并回到触发器；面板里 Tab 在控件之间正常走，走出面板才关闭 |
 
 其余原生 `<span>` 属性都能传。
+
+### MenuSub
+
+| 属性 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `trigger` | `ReactElement` | — | 一个 MenuItem（图标 + 名字），自动加右边的箭头。打开时保持悬停底色 |
+| `children` | `ReactNode` | — | 第二层，一般是一个 Menu；单选（语言、主题）用 `role="listbox"`，当前项传 `selected` |
+| `placement` | `"right-start"` `"left-start"` | `"right-start"` | 往哪边甩，放不下自动翻到另一边。第一项和触发器对齐，离外层菜单 4 |
+| `open` | `boolean` | — | 展开（受控） |
+| `defaultOpen` | `boolean` | `false` | 默认是否展开 |
+| `onOpenChange` | `(open: boolean) => void` | — | 展开状态变化 |
+
+悬停触发器打开，移出触发器和第二层 150ms 后关（斜着划过空隙不会关）；悬停打开不抢焦点。点了第二层的项，两层一起关。键盘：右方向键打开，左方向键收回到触发器。其余属性同 Dropdown。

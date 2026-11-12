@@ -320,6 +320,49 @@
   color: var(--color-brand-solid);
 }
 
+/* 头像是按钮：点了出账号菜单（11-12） */
+.tpl-ms__avatar {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-round);
+  background: none;
+  cursor: pointer;
+}
+
+/* 账号菜单顶上：头像 32（头像只有 16 / 24 / 32）+ 名字，左右和菜单项对齐 */
+.tpl-ms__user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  padding: var(--spacing-8);
+}
+
+.tpl-ms__user-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 「复制用户 Key」：头像下面一整行的次要按钮（照即梦「创建团队」） */
+.tpl-ms__user-key {
+  width: 100%;
+}
+
+.tpl-ms__feedback {
+  display: grid;
+  place-items: center;
+  height: 480px;
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-dark);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-14);
+}
+
 /* 一条记录：记录头 + 结果网格 + 底部按钮，间距 12 */
 .tpl-record {
   display: flex;
@@ -898,14 +941,16 @@
 }
 
 
-/* ---------- AI 工具：左工具 200 | 中舞台 | 右历史 104 ---------- */
+/* ---------- AI 工具：左工具 200 | 中舞台 | 右历史 200 ---------- */
 
 .tpl-at {
   position: relative;
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) 104px;
+  grid-template-columns: 200px minmax(0, 1fr) 200px;
+  box-sizing: border-box;
   height: 100%;
   min-height: 0;
+  padding-top: calc(var(--spacing-32) * 2); /* 上面整条让给公共的头（右上角余额、头像，离顶 16–48），三栏都从 64 开始（11-11 用户定） */
 }
 
 .tpl-at__tools {
@@ -924,6 +969,21 @@
   min-width: 0;
   min-height: 0;
   padding: 76px var(--spacing-24) var(--spacing-24);
+}
+
+.tpl-at__main {
+  position: relative; /* 拖文件的 DropOverlay 只盖舞台这一栏 */
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tpl-at__main > .tpl-at__stage {
+  flex: 1;
+}
+
+.tpl-at__stage[hidden] {
+  display: none;
 }
 
 .tpl-at__area {
@@ -1028,17 +1088,52 @@
   pointer-events: none;
 }
 
-.tpl-at__empty {
+/* 没放素材：示意图 + 工具名 + 一句话 + 上传（轻按钮），文字和间距照 EmptyState 160 */
+.tpl-at__intro {
   position: absolute;
   inset: 0;
-  margin: auto;
-  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-24);
+  text-align: center;
 }
 
-.tpl-at__empty-actions {
+.tpl-at__intro-demo {
+  width: min(400px, 100%);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.tpl-at__intro-demo > img,
+.tpl-at__intro-demo > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tpl-at__intro-text {
   display: flex;
-  justify-content: center;
-  gap: var(--spacing-8);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-top: calc(var(--spacing-8) * -1); /* 图和字之间 16，字和按钮之间 24 */
+}
+
+.tpl-at__intro-title {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+}
+
+.tpl-at__intro-desc {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-14);
 }
 
 .tpl-at__hint {
@@ -1053,16 +1148,22 @@
   gap: var(--spacing-4);
 }
 
-/* 历史：一列 72 的缩略图，新的在上面；当前这一版外面一圈 2px 白 40%（和选中节点一样） */
+/* 历史：所有工具的结果一列，卡片 176 方图（11-11 用户定统一方图，图裁切铺满），新的在上面淡入 */
 .tpl-at__history {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-12);
+  gap: var(--spacing-16);
   min-height: 0;
-  padding: calc(var(--spacing-32) * 2) 0 var(--spacing-12); /* 上面让开公共的头（右上角余额、头像，离顶 16–48），从 64 开始 */
+  padding: var(--spacing-12);
   overflow: hidden auto;
   border-left: var(--border-width-1) solid var(--color-border-subtle);
+}
+
+.tpl-at__history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
 }
 
 .tpl-at__history-title {
@@ -1070,51 +1171,68 @@
   font-size: var(--font-size-12);
 }
 
-.tpl-at__version {
+.tpl-at__history-empty {
+  margin: 0;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.tpl-at__record {
   display: flex;
   flex: none;
   flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-4);
+  gap: var(--spacing-8);
+  margin: 0;
+  animation: tpl-at-in var(--motion-duration-300) var(--motion-ease-out);
+}
+
+
+/* 创作页的工具弹窗：所有工具一个大小，宽 800（参数面板 620 放得下的最小一档）、高 640（窗口矮了就铺满），换工具不跳；
+   里面是 AI 工具页同一套舞台，涂抹工具条贴在内容区顶上。11-11 用户嫌 1024 铺满太大，照即梦改小 */
+.tpl-tool-dlg {
+  height: min(640px, 100%);
+}
+
+.tpl-tool-dlg .kv-dialog__body {
+  display: flex;
+  overflow: hidden;
+}
+
+.tpl-tool-dlg .tpl-at__stage {
+  flex: 1;
   padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-text-fill-secondary);
-  font: inherit;
-  font-size: var(--font-size-12);
-  cursor: pointer;
 }
 
-.tpl-at__version[aria-pressed="true"] {
-  color: var(--color-text-fill-primary);
+/* 上面只在有涂抹工具条时（局部重绘、元素消除）让出 44 + 16，别的工具不空这一段（11-11 用户定） */
+.tpl-tool-dlg .tpl-at__stage:has(> .tpl-at__top) {
+  padding-top: 60px;
 }
 
-.tpl-at__thumb {
-  position: relative;
-  display: block;
-  width: 72px;
-  height: 72px;
-  border-radius: var(--border-radius-8);
+.tpl-tool-dlg .tpl-at__top {
+  top: 0;
 }
 
-.tpl-at__thumb > .kv-result-tile {
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-}
-
-.tpl-at__thumb::after {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border: 2px solid #FFFFFF66; /* Figma 没变量，同选中节点 */
+/* 图放在一个凹下去的坑里（照即梦），和标题、参数分开：设计规则「凹下去的用 container-dark」。
+   坑就是放图的那块，图按比例贴着坑的上下或左右 */
+.tpl-tool-dlg .tpl-at__area {
   border-radius: var(--border-radius-12);
-  opacity: 0;
-  pointer-events: none;
+  background: var(--color-bg-fill-container-dark);
 }
 
-.tpl-at__version[aria-pressed="true"] > .tpl-at__thumb::after {
-  opacity: 1;
+/* 坑里的图、涂抹层、扩出去的浅底都不要圆角：坑本身就是框（11-11 用户定） */
+.tpl-tool-dlg .tpl-at__media,
+.tpl-tool-dlg .tpl-at__mask,
+.tpl-tool-dlg .tpl-at__expand-fill {
+  border-radius: 0;
+}
+
+/* 弹窗也是 surface，参数面板再用 surface 就和弹窗一个色：设计规则「大块容器在深底上用 Light 2」，铺 Light 2（不加描边，
+   和弹窗底对比度 1.17）；合成后是浅底，面板里的控件取 Light 2（11-11 用户定） */
+.tpl-tool-dlg .kv-node-panel {
+  --kv-nested-fill: var(--color-bg-fill-container-light-2);
+  --kv-nested-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-nested-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  background: var(--color-bg-fill-container-light-2);
 }
 
 /* ---------- 创作首页：标题、生成 / 画布、输入框、最近更新或最近项目、广场 ----------
@@ -1442,7 +1560,8 @@
 }
 
 /* 作品详情：照线上铺满窗口（Dialog full，内边距 24）。左作品完整显示，竖线，右信息栏 440，间距 32 */
-.tpl-ex__viewer {
+/* 全站查看大图（media-viewer.tsx，照探索页作品详情）：作品 | 竖线 | 信息栏 440 */
+.tpl-viewer {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto 440px;
   gap: var(--spacing-32);
@@ -1450,7 +1569,7 @@
   min-height: 0;
 }
 
-.tpl-ex__viewer-media {
+.tpl-viewer__media {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1459,7 +1578,7 @@
 }
 
 /* 图片：完整显示，圆角 8，描边 border */
-.tpl-ex__viewer-media > img {
+.tpl-viewer__media > img {
   display: block;
   max-width: 100%;
   max-height: 100%;
@@ -1469,20 +1588,20 @@
   outline-offset: calc(var(--border-width-1) * -1);
 }
 
-.tpl-ex__viewer-media > .kv-video-player {
+.tpl-viewer__media > .kv-video-player {
   width: 100%;
   height: 100%;
 }
 
 /* 信息栏：作者行、横线、内容（自己滚）、点赞，间距 16 */
-.tpl-ex__viewer-info {
+.tpl-viewer__info {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-16);
   min-height: 0;
 }
 
-.tpl-ex__viewer-head {
+.tpl-viewer__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1490,20 +1609,20 @@
 }
 
 /* 作者：头像 32 + 名字 12 中粗 primary / 日期 12 tertiary，间距 8 */
-.tpl-ex__viewer-author {
+.tpl-viewer__author {
   display: flex;
   align-items: center;
   gap: var(--spacing-8);
   min-width: 0;
 }
 
-.tpl-ex__viewer-author > span {
+.tpl-viewer__author > span {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.tpl-ex__viewer-name {
+.tpl-viewer__name {
   overflow: hidden;
   color: var(--color-text-fill-primary);
   font-size: var(--font-size-12);
@@ -1512,18 +1631,18 @@
   white-space: nowrap;
 }
 
-.tpl-ex__viewer-date {
+.tpl-viewer__date {
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-12);
 }
 
-.tpl-ex__viewer-actions {
+.tpl-viewer__actions {
   display: flex;
   flex: none;
   gap: var(--spacing-8);
 }
 
-.tpl-ex__viewer-body {
+.tpl-viewer__body {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -1533,13 +1652,13 @@
 }
 
 /* 一节：小标题 13 tertiary，和内容间距 8 */
-.tpl-ex__viewer-section {
+.tpl-viewer__section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-8);
 }
 
-.tpl-ex__viewer-section > h4 {
+.tpl-viewer__section > h4 {
   margin: 0;
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-13);
@@ -1547,14 +1666,14 @@
 }
 
 /* 参考图：多张放在一个容器里（底 Light 1，圆角 8，内边距 8），里面是只读的附件条（56，间距 4，放不下横着滚） */
-.tpl-ex__viewer-refs {
+.tpl-viewer__refs {
   padding: var(--spacing-8);
   border-radius: var(--border-radius-8);
   background: var(--color-bg-fill-container-light-1);
 }
 
-/* 点赞：撑满信息栏宽（线上旁边是一键同款，这次不要） */
-.tpl-ex__viewer-like {
+/* 最下面的按钮（探索页点赞）：撑满信息栏宽（线上旁边是一键同款，这次不要） */
+.tpl-viewer__footer > * {
   width: 100%;
 }
 

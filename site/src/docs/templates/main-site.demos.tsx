@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import {
   AssetThumb,
   Avatar,
@@ -12,8 +12,10 @@ import {
   Menu,
   MessageFeedback,
   Divider,
+  Dropdown,
   MenuItem,
   MenuLabel,
+  MenuSub,
   ProcessGroup,
   PromptBox,
   ReferenceItem,
@@ -30,6 +32,7 @@ import {
   Tag,
   UserMessage,
   placeholderImageSrc,
+  toast,
   referenceName,
   type PlaceholderImageName,
   type PlaceholderImageRatio,
@@ -41,7 +44,9 @@ import {
 } from '@kivi';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../business/skill-data';
 import { demoCost } from '../business/gen-demo-cost';
-import { useControllable } from '../../kivi/hooks';
+import { useControllable, useCopy } from '../../kivi/hooks';
+import { MediaViewer, ViewerAuthor, ViewerSection, useLastShown, type ViewerMedia } from './media-viewer';
+import { TOOLS, ToolWorkbench, finishJob, nearestRatio, newId, ratioNum, toolOf, videoPoster, type Source, type ToolId, type ToolJob } from './ai-tools.demos';
 
 // UI 页面预览 · 创作页：侧栏 + 记录流（用户自己生成的、主站 Agent 的混在一起）+ 底部输入框。
 // 只能看：点生成没反应，生成中的一直停在生成中。图片都是占位图
@@ -54,17 +59,9 @@ const TOP: ResultTileAction[] = [
   { icon: 'Delete', label: '删除' },
   { icon: 'Download', label: '下载' },
 ];
-const QUICK_IMAGE: ResultTileAction[] = [
-  { icon: 'ImageEditing', label: '图片编辑' },
-  { icon: 'VideoGeneration', label: '图生视频' },
-  { icon: 'ImageToImage', label: '一键垫图' },
-  { icon: 'More', label: '更多' },
-];
-const QUICK_VIDEO: ResultTileAction[] = [
-  { icon: 'VideoExtend', label: '视频延长' },
-  { icon: 'HD', label: '视频高清' },
-  { icon: 'More', label: '更多' },
-];
+// 右下快捷操作（11-11 用户定）：加入参考 + 两个常用工具 + 更多（其余工具）。点工具开那个工具的弹窗
+const QUICK_TOOLS: Record<'image' | 'video', ToolId[]> = { image: ['cutout', 'hd'], video: ['video-cutout', 'video-hd'] };
+const moreTools = (media: 'image' | 'video') => TOOLS.filter((t) => t.media === media && !QUICK_TOOLS[media].includes(t.id));
 
 // ---------- 记录 ----------
 
@@ -508,17 +505,36 @@ const TOOLBAR: Record<string, (model: string, setModel: (m: string) => void, pla
  * 主站输入框（PromptBox）。对话页贴在底部（下拉往上弹）；创作首页在上面（下拉往下弹）。
  * 创作首页「生成」「画布」两种模式用同一个输入框、一样大（11-10 用户定，新版需求画布的输入框不变矮），只是提交去的地方不同
  */
-export function Composer({ placement = UP, onSubmit }: { placement?: Placement; onSubmit?: () => void }) {
+const COMPOSER_REFS: ReferenceStackItem[] = [
+  { id: 'c1', type: 'image', name: '图片1', src: img('kiwi-glass', '1:1') },
+  { id: 'c2', type: 'image', name: '图片2', src: img('kiwi-light', '1:1') },
+];
+
+export function Composer({
+  placement = UP,
+  onSubmit,
+  references,
+  onReferencesChange,
+}: {
+  placement?: Placement;
+  onSubmit?: () => void;
+  /** 参考区的素材：传了就受控（创作页「加入参考」往里加），不传自己记 */
+  references?: ReferenceStackItem[];
+  onReferencesChange?: (items: ReferenceStackItem[]) => void;
+}) {
   const [task, setTask] = useState('agent');
   const [text, setText] = useState('');
   // 每种任务各记一个模型，生成按钮的消耗跟着它走
   const [models, setModels] = useState<Record<string, string>>({ image: DEFAULT_MODEL.image, video: DEFAULT_MODEL.video, audio: DEFAULT_MODEL.audio });
   const setModel = (m: string) => setModels((old) => ({ ...old, [task]: m }));
   const audioModel = models.audio;
-  const [items, setItems] = useState<ReferenceStackItem[]>([
-    { id: 'c1', type: 'image', name: '图片1', src: img('kiwi-glass', '1:1') },
-    { id: 'c2', type: 'image', name: '图片2', src: img('kiwi-light', '1:1') },
-  ]);
+  const [inner, setInner] = useState<ReferenceStackItem[]>(COMPOSER_REFS);
+  const items = references ?? inner;
+  const setItems = (fn: (list: ReferenceStackItem[]) => ReferenceStackItem[]) => {
+    const next = fn(items);
+    if (references === undefined) setInner(next);
+    onReferencesChange?.(next);
+  };
   const pool: PlaceholderImageName[] = ['ip-peek', 'bunny-gouache', 'monstera-dots', 'kivi-future', 'ip-gouache'];
   const add = () =>
     setItems((list) => [...list, { id: `c${Date.now()}`, type: 'image', name: referenceName(list, 'image'), src: img(pool[list.length % pool.length], '1:1') }]);
@@ -573,13 +589,145 @@ export function Wallet() {
         <Icon name="Kiwi" />
         200
       </span>
-      <Avatar name="KIVI" size={32} src={img('ip-peek', '1:1')} />
+      <UserMenu />
     </div>
   );
 }
 
+const USER = { name: 'KIVI', avatar: img('ip-peek', '1:1') };
+const LANGUAGES = [
+  { key: 'zh', label: '中文' },
+  { key: 'en', label: 'English' },
+];
+
+/**
+ * 点头像出的菜单（11-12 用户定）：顶栏原来的教程、反馈、语言、复制用户 Key 都收进来，余额胶囊还在外面。
+ * 顶上头像 32 + 名字，下面一整行「复制用户 Key」按钮；下面教程（新窗口开飞书文档）、意见反馈（弹窗）、语言（悬停往一边甩出子菜单）。
+ * 线上这里没有退出登录，没加
+ */
+function UserMenu() {
+  const [lang, setLang] = useState('zh');
+  const [feedback, setFeedback] = useState(false);
+  const { copied, copy } = useCopy();
+  return (
+    <>
+      <Dropdown
+        placement="bottom-end"
+        trigger={
+          <button type="button" className="tpl-ms__avatar" aria-label="账号">
+            <Avatar name={USER.name} size={32} src={USER.avatar} />
+          </button>
+        }
+      >
+        <Menu width={240}>
+          <div className="tpl-ms__user">
+            <Avatar name={USER.name} size={32} src={USER.avatar} />
+            <span className="tpl-ms__user-name">{USER.name}</span>
+          </div>
+          {/* 整行按钮放在头像下面（11-12 用户定，照即梦「创建团队」）。线上点了现取一个 90 天的 token 再写进剪贴板；这里写死一串演示 */}
+          <Button className="tpl-ms__user-key" rightIcon={copied ? 'CheckSmall' : 'Copy'} onClick={() => copy('kivi-demo-user-key')}>
+            复制用户 Key
+          </Button>
+          <Divider />
+          <MenuItem icon="Document" onClick={() => window.open('https://micoworld.feishu.cn/wiki/K6ARwr4JZimr4kkE8vXcwgEenoc', '_blank', 'noopener')}>
+            教程
+          </MenuItem>
+          <MenuItem icon="Feedback" onClick={() => setFeedback(true)}>
+            意见反馈
+          </MenuItem>
+          <MenuSub trigger={<MenuItem icon="Localization">语言</MenuItem>}>
+            <Menu role="listbox" aria-label="语言">
+              {LANGUAGES.map((l) => (
+                <MenuItem key={l.key} selected={lang === l.key} onClick={() => setLang(l.key)}>
+                  {l.label}
+                </MenuItem>
+              ))}
+            </Menu>
+          </MenuSub>
+        </Menu>
+      </Dropdown>
+      {/* 线上弹窗里嵌飞书的反馈表单（iframe），这里放个占位 */}
+      <Dialog size={560} title="意见和反馈" open={feedback} onOpenChange={setFeedback}>
+        <div className="tpl-ms__feedback">飞书反馈表单</div>
+      </Dialog>
+    </>
+  );
+}
+
+/** 一格结果：工具弹窗、加入参考、右键菜单都用它 */
+interface TileRef {
+  key: string;
+  media: 'image' | 'video';
+  /** 图片地址或视频地址 */
+  src: string;
+  /** 视频封面 */
+  poster?: string;
+  ratio: PlaceholderImageRatio;
+}
+
 export function CreatePage() {
-  const [preview, setPreview] = useState<string | null>(null);
+  // 看大图：全站共用的查看大图（media-viewer.tsx），信息栏放这条记录的提示词和参数
+  const [view, setView] = useState<{ media: ViewerMedia; prompt?: string; tags?: ReactNode } | null>(null);
+  const shownView = useLastShown(view);
+  const [viewCollected, setViewCollected] = useState<string[]>([]);
+  const [refs, setRefs] = useState<ReferenceStackItem[]>(COMPOSER_REFS);
+  // 工具弹窗生成的结果：排在记录流最后，3 秒后出结果
+  const [extra, setExtra] = useState<GenRecord[]>([]);
+  const [removed, setRemoved] = useState<string[]>([]);
+  const [tool, setTool] = useState<{ id: ToolId; source: Source } | null>(null);
+  // 「更多」和右键各一个菜单，锚在点的位置
+  const [more, setMore] = useState<{ x: number; y: number; tile: TileRef } | null>(null);
+  const [ctx, setCtx] = useState<{ x: number; y: number; tile: TileRef } | null>(null);
+
+  const addRef = (t: TileRef) =>
+    setRefs((list) => [
+      ...list,
+      { id: `c${Date.now()}`, type: t.media, name: referenceName(list, t.media), src: t.media === 'video' ? t.poster : t.src, duration: t.media === 'video' ? '5s' : undefined },
+    ]);
+  // 抠图、视频抠图没有参数，不开弹窗，点了直接生成（11-11 用户定）
+  const openTool = (id: ToolId, t: TileRef) => {
+    const ratio = ratioNum(t.ratio);
+    if (id === 'cutout' || id === 'video-cutout') runJob({ tool: id, label: toolOf(id).name, media: t.media, src: t.src, ratio, targetRatio: ratio });
+    else setTool({ id, source: { id: newId(), media: t.media, src: t.src, ratio } });
+  };
+
+  // 弹窗里点生成：关弹窗，记录流最后多一条工具任务（只有参数，没有提示词），滚到最下面
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const runJob = (job: ToolJob) => {
+    setTool(null);
+    const id = `t${Date.now()}`;
+    const poster = job.media === 'video' ? videoPoster(job.ratio) : undefined;
+    const rec: GenRecord = {
+      kind: 'gen',
+      id,
+      ratio: nearestRatio(job.targetRatio),
+      tags: (
+        <>
+          <Tag icon={toolOf(job.tool).icon}>{job.label}</Tag>
+          <GenPromptRefs label={job.media === 'image' ? '原图' : '原视频'} items={[{ type: job.media, src: poster ?? job.src }]} />
+        </>
+      ),
+      tiles: [{ status: 'generating', badge: '生成中', src: job.media === 'image' ? job.src : poster, video: job.media === 'video' ? job.src : undefined }],
+    };
+    setExtra((l) => [...l, rec]);
+    timers.current.push(
+      window.setTimeout(() => {
+        const out = finishJob(job);
+        setExtra((l) =>
+          l.map((r) =>
+            r.id === id
+              ? { ...r, tiles: [job.media === 'video' ? { video: out.src, src: poster } : { src: out.src }] }
+              : r,
+          ),
+        );
+      }, 3000),
+    );
+  };
+  useEffect(() => {
+    const el = feed.current;
+    if (el && extra.length) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  }, [extra.length]);
   const feed = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLDivElement>(null);
   const [composerH, setComposerH] = useState(220);
@@ -601,14 +749,35 @@ export function CreatePage() {
     if (el) el.scrollTop = el.scrollHeight;
   }, []);
 
-  // 点格子空白处看大图；点的是格子里的按钮就不打开
-  const open = (src?: string) => (e: MouseEvent) => {
-    if (!src || (e.target as HTMLElement).closest('button, video')) return;
-    setPreview(src);
+  // 点格子空白处看大图（视频点右下「预览」）；点的是格子里的按钮就不打开
+  const infoOf = (recId: string) => {
+    if (recId === 'agent') return { prompt: '参考这张图，做 4 张科幻风格的猕猴桃竖版海报', tags: <Tag icon="Agent">Agent</Tag> };
+    const r = [...RECORDS, ...extra].find((x) => x.id === recId);
+    return r && r.kind === 'gen' ? { prompt: r.prompt, tags: r.tags } : {};
+  };
+  const openView = (t: TileRef, recId: string) =>
+    setView({ media: { type: t.media, src: t.src, poster: t.poster }, ...infoOf(recId) });
+  const open = (t: TileRef, recId: string) => (e: MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button, video')) return;
+    openView(t, recId);
   };
 
-  const tile = (t: Tile, key: number, ratio: PlaceholderImageRatio, span: number) => {
+  const tile = (t: Tile, key: number, ratio: PlaceholderImageRatio, span: number, recId = 'agent') => {
     const done = !t.status || t.status === 'done';
+    const ref: TileRef = { key: `${recId}-${key}`, media: t.video ? 'video' : 'image', src: (t.video ?? t.src)!, poster: t.video ? t.src : undefined, ratio };
+    if (removed.includes(ref.key)) return null;
+    const quick: ResultTileAction[] = [
+      { icon: 'ImagePlus', label: '加入参考', onClick: () => addRef(ref) },
+      ...QUICK_TOOLS[ref.media].map((id) => ({ icon: toolOf(id).icon, label: toolOf(id).name, onClick: () => openTool(id, ref) })),
+      {
+        icon: 'More',
+        label: '更多',
+        onClick: (e) => {
+          const b = e.currentTarget.getBoundingClientRect();
+          setMore({ x: b.right, y: b.top - 4, tile: ref });
+        },
+      },
+    ];
     return (
       <ResultTile
         key={key}
@@ -620,10 +789,19 @@ export function CreatePage() {
         topActions={TOP}
         collect={done || undefined}
         defaultCollected={t.collected}
-        quickActions={done ? (t.video ? QUICK_VIDEO : QUICK_IMAGE) : undefined}
+        quickActions={done ? quick : undefined}
         data-span={span > 1 ? String(span) : undefined}
         style={{ aspectRatio: ratio.replace(':', ' / '), cursor: done && !t.video ? 'zoom-in' : undefined }}
-        onClick={done && !t.video ? open(t.src) : undefined}
+        onClick={done && !t.video ? open(ref, recId) : undefined}
+        onPreview={done && t.video ? () => openView(ref, recId) : undefined}
+        onContextMenu={
+          done
+            ? (e: MouseEvent) => {
+                e.preventDefault();
+                setCtx({ x: e.clientX, y: e.clientY, tile: ref });
+              }
+            : undefined
+        }
       />
     );
   };
@@ -633,7 +811,7 @@ export function CreatePage() {
       <main className="tpl-ms__main" style={{ '--tpl-composer-h': `${composerH}px` } as CSSProperties}>
         <div ref={feed} className="tpl-ms__feed">
           <div className="tpl-ms__column">
-            {RECORDS.map((r) =>
+            {[...RECORDS, ...extra].map((r) =>
               r.kind === 'agent' ? (
                 <div key={r.id} className="tpl-turn">
                   <UserMessage assets={<ReferenceItem src={img('kiwi-light', '1:1')} />}>参考这张图，做 4 张科幻风格的猕猴桃竖版海报</UserMessage>
@@ -647,7 +825,7 @@ export function CreatePage() {
                 <div key={r.id} className="tpl-record">
                   <GenPrompt prompt={r.prompt}>{r.tags}</GenPrompt>
                   <div className="tpl-grid" data-cols={gridOf(r.ratio, r.tiles.length).cols === 3 ? '3' : undefined}>
-                    {r.tiles.map((t, i) => tile(t, i, r.ratio, gridOf(r.ratio, r.tiles.length).span))}
+                    {r.tiles.map((t, i) => tile(t, i, r.ratio, gridOf(r.ratio, r.tiles.length).span, r.id))}
                   </div>
                   <div className="tpl-row">
                     <Button variant="light">重新编辑</Button>
@@ -660,12 +838,85 @@ export function CreatePage() {
           </div>
         </div>
         <div ref={composer} className="tpl-ms__composer">
-          <Composer />
+          <Composer references={refs} onReferencesChange={setRefs} />
         </div>
       </main>
-      <Dialog size="full" title="预览" open={preview !== null} onOpenChange={(v) => !v && setPreview(null)}>
-        {preview && <img src={preview} alt="预览" style={{ display: 'block', maxWidth: '100%', maxHeight: '75vh', margin: '0 auto', objectFit: 'contain' }} />}
+      {/* 「更多」：其余的工具，往上开、右边和按钮对齐（按钮条在右下） */}
+      <Dropdown anchorPoint={more ?? undefined} placement="top-end" open={more !== null} onOpenChange={(v) => !v && setMore(null)}>
+        <Menu aria-label="更多工具">
+          {more &&
+            moreTools(more.tile.media).map((t) => (
+              <MenuItem key={t.id} icon={t.icon} onClick={() => openTool(t.id, more.tile)}>
+                {t.name}
+              </MenuItem>
+            ))}
+        </Menu>
+      </Dropdown>
+
+      {/* 右键：加入参考图在第一个，别的照探索页的作品菜单 */}
+      <Dropdown anchorPoint={ctx ?? undefined} open={ctx !== null} onOpenChange={(v) => !v && setCtx(null)}>
+        <Menu aria-label="结果操作">
+          <MenuItem icon="ImagePlus" onClick={() => ctx && addRef(ctx.tile)}>
+            加入参考图
+          </MenuItem>
+          <MenuItem icon="AddFolder" onClick={() => toast.success('已添加到文件夹')}>
+            添加到文件夹
+          </MenuItem>
+          <Divider />
+          {ctx?.tile.media === 'image' && (
+            <MenuItem icon="Copy" onClick={() => toast.success('已复制')}>
+              复制
+            </MenuItem>
+          )}
+          <MenuItem icon="Download" onClick={() => toast.info('已开始下载')}>
+            下载
+          </MenuItem>
+          <Divider />
+          <MenuItem variant="danger" icon="Delete" onClick={() => ctx && setRemoved((l) => [...l, ctx.tile.key])}>
+            删除
+          </MenuItem>
+        </Menu>
+      </Dropdown>
+
+      {/* 工具弹窗：每个工具一个，所有工具一个大小（宽 800、高 640），里面和 AI 工具页同一套舞台和参数面板 */}
+      <Dialog
+        size={800}
+        className="tpl-tool-dlg"
+        title={tool ? toolOf(tool.id).name : undefined}
+        open={tool !== null}
+        onOpenChange={(v) => !v && setTool(null)}
+      >
+        {tool && <ToolWorkbench key={tool.source.id} tool={tool.id} source={tool.source} onGenerate={runJob} />}
       </Dialog>
+
+      <MediaViewer
+        media={view?.media ?? null}
+        onClose={() => setView(null)}
+        head={<ViewerAuthor name="KIVI" avatar={img('ip-peek', '1:1')} date="今天 14:32" />}
+        actions={
+          shownView && (
+            <>
+              <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => toast.info('已开始下载')} />
+              <IconButton
+                icon={viewCollected.includes(shownView.media.src) ? 'CollectSolid' : 'Collect'}
+                label={viewCollected.includes(shownView.media.src) ? '取消收藏' : '收藏'}
+                variant="secondary"
+                size={36}
+                data-collected={viewCollected.includes(shownView.media.src) || undefined}
+                onClick={() =>
+                  setViewCollected((l) => (l.includes(shownView.media.src) ? l.filter((x) => x !== shownView.media.src) : [...l, shownView.media.src]))
+                }
+              />
+            </>
+          )
+        }
+      >
+        {shownView && (
+          <ViewerSection title={shownView.prompt ? '提示词' : '参数'}>
+            <GenPrompt prompt={shownView.prompt}>{shownView.tags}</GenPrompt>
+          </ViewerSection>
+        )}
+      </MediaViewer>
     </>
   );
 }

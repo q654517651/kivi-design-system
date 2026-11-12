@@ -206,7 +206,7 @@
   object-fit: contain;
 }
 
-/* 悬停才出操作：右上删除 / 下载 / 收藏，左下快捷操作，各合成一条按钮条（ButtonGroup），离边 8。
+/* 悬停才出操作：右上删除 / 下载 / 收藏，右下快捷操作（11-11 从左下挪过来），各合成一条按钮条（ButtonGroup），离边 8。
    出现 150ms ease-out，消失 150ms ease-in */
 .kv-result-tile__actions {
   position: absolute;
@@ -224,8 +224,8 @@
 }
 
 .kv-result-tile__actions--quick {
+  right: var(--spacing-8);
   bottom: var(--spacing-8);
-  left: var(--spacing-8);
 }
 
 .kv-result-tile:where(:hover, :focus-visible, :has(:focus-visible), .is-hover) > .kv-result-tile__actions {
@@ -250,7 +250,7 @@
 }
 
 /* 视频：里面是 VideoPlayer 卡片（时长、控制条它自己管）。操作盖在播放器上面；
-   左下快捷操作抬到控制条上面：控制行 28 + 下边距 8 + 间距 10 */
+   右下快捷操作抬到控制条上面：控制行 28 + 下边距 8 + 间距 10 */
 .kv-result-tile > .kv-result-tile__actions {
   z-index: 3;
 }

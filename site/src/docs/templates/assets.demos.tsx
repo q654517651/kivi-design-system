@@ -4,6 +4,8 @@ import {
   Divider,
   EmptyState,
   FolderCard,
+  GenPrompt,
+  IconButton,
   Input,
   ProjectCard,
   ResultTile,
@@ -13,11 +15,14 @@ import {
   MenuItem,
   TabItem,
   Tabs,
+  Tag,
   placeholderImageSrc,
+  toast,
   type PlaceholderImageName,
   type SelectOption,
 } from '@kivi';
 import { VIDEO } from '../components/media.demos';
+import { MediaViewer, ViewerAuthor, ViewerSection, useLastShown } from './media-viewer';
 
 /*
   资产管理（我的资产）：照 11-04 交互原型（kivi-prototype 的 assets-home）。
@@ -97,9 +102,13 @@ function SectionHead({ title, children }: { title: string; children?: React.Reac
 }
 
 /** 生成历史的一格：结果格（悬停出收藏，收藏了留一颗星；视频悬停就播，左下是播放器自己的时长）。不挂类型、来源标签，下面不带名字和时间 */
-function HistoryCard({ item, collected, onCollect }: { item: History; collected: boolean; onCollect: (v: boolean) => void }) {
+function HistoryCard({ item, collected, onCollect, onOpen }: { item: History; collected: boolean; onCollect: (v: boolean) => void; onOpen: () => void }) {
   return (
     <ResultTile
+      // 点图看大图（视频点右下「预览」），点的是格子里的按钮就不打开
+      style={{ cursor: item.video ? undefined : 'zoom-in' }}
+      onClick={item.video ? undefined : (e) => !(e.target as HTMLElement).closest('button') && onOpen()}
+      onPreview={item.video ? onOpen : undefined}
       title={item.name}
       type={item.video ? 'video' : undefined}
       src={item.video ? VIDEO.wide : item.src}
@@ -119,6 +128,9 @@ export function AssetsPage() {
   const [onlyCollected, setOnlyCollected] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [collected, setCollected] = useState<string[]>(['h2', 'h7']);
+  // 看大图：全站共用的查看大图（media-viewer.tsx），信息栏写名字、来源和时间
+  const [view, setView] = useState<History | null>(null);
+  const shownView = useLastShown(view);
 
   const k = keyword.trim();
   const list = HISTORY.filter(
@@ -253,6 +265,7 @@ export function AssetsPage() {
                       item={h}
                       collected={collected.includes(h.id)}
                       onCollect={(v) => setCollected((all) => (v ? [...all, h.id] : all.filter((x) => x !== h.id)))}
+                      onOpen={() => setView(h)}
                     />
                   ))}
                 </div>
@@ -261,6 +274,36 @@ export function AssetsPage() {
           })
         )}
       </section>
+
+      <MediaViewer
+        media={view && { type: view.video ? 'video' : 'image', src: view.video ? VIDEO.wide : view.src, poster: view.video ? view.src : undefined, alt: view.name }}
+        onClose={() => setView(null)}
+        head={shownView && <ViewerAuthor name="KIVI" avatar={placeholderImageSrc('ip-peek', '1:1')} date={`${shownView.group} ${shownView.time}`} />}
+        actions={
+          shownView && (
+            <>
+              <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => toast.info('已开始下载')} />
+              <IconButton
+                icon={collected.includes(shownView.id) ? 'CollectSolid' : 'Collect'}
+                label={collected.includes(shownView.id) ? '取消收藏' : '收藏'}
+                variant="secondary"
+                size={36}
+                data-collected={collected.includes(shownView.id) || undefined}
+                onClick={() => setCollected((all) => (all.includes(shownView.id) ? all.filter((x) => x !== shownView.id) : [...all, shownView.id]))}
+              />
+            </>
+          )
+        }
+      >
+        {shownView && (
+          <ViewerSection title="来源">
+            <GenPrompt>
+              <Tag icon={shownView.video ? 'VideoGeneration' : 'ImageGeneration'}>{shownView.name}</Tag>
+              <Tag>{shownView.source}</Tag>
+            </GenPrompt>
+          </ViewerSection>
+        )}
+      </MediaViewer>
     </main>
   );
 }

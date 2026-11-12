@@ -20,7 +20,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../utils';
-import { composeHandlers, pointRect, rectOf, useControllable, useFloating, useMergedRef, usePresence, type Placement } from '../hooks';
+import { composeHandlers, pointRect, rectOf, useControllable, useFloating, useMergedRef, usePresence, type FloatingPlacement, type Placement } from '../hooks';
 import './menu.css';
 
 export type { Placement as DropdownPlacement };
@@ -36,8 +36,8 @@ export interface DropdownProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'ch
   defaultOpen?: boolean;
   /** 展开状态变化。点外面、按 Esc、点菜单项关闭时都会以 false 调用 */
   onOpenChange?: (open: boolean) => void;
-  /** 位置：相对触发器的方向和对齐，默认 bottom-start（下方、左对齐）。放不下会翻到另一边，左右不超出屏幕 */
-  placement?: Placement;
+  /** 位置：相对触发器的方向和对齐，默认 bottom-start（下方、左对齐）。放不下会翻到另一边，左右不超出屏幕。往左右出（right-start / left-start）只给子菜单用 */
+  placement?: FloatingPlacement;
   /** 离触发器的距离，默认 4（点开的浮层都是 4，见「设计规则 · 浮层」） */
   offset?: number;
   /** 菜单和触发器一样宽：下拉选择展开的列表用 */
@@ -52,7 +52,19 @@ export interface DropdownProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'ch
    * 弹出的是一块带输入的面板（时间筛选、参数）用 dialog：Tab 在面板里正常走，走出面板才关闭
    */
   haspopup?: 'menu' | 'listbox' | 'dialog';
+  /**
+   * 悬停打开：子菜单用，一般不直接写，用 MenuSub。鼠标移上触发器就打开，移出触发器和菜单 150ms 后关；
+   * 键盘右方向键打开、左方向键关掉回到触发器；点了里面的项，连外层菜单一起关
+   */
+  openOnHover?: boolean;
 }
+
+/** 外层菜单的关闭：子菜单里点了项，外层也跟着关 */
+const ParentCloseContext = createContext<(() => void) | null>(null);
+/** 悬停打开的：移出后等多久关，给鼠标斜着穿过空隙留时间 */
+const HOVER_CLOSE_MS = 150;
+/** 子菜单对齐外层菜单：触发器（菜单项）四周往外扩一个菜单内边距，子菜单的第一项和触发器对齐、离外层菜单边 4 */
+const SUB_INSET = 4;
 
 /**
  * 套着的弹出层：菜单项里「⋯」再弹出的菜单也挂在 body 上，不在外层弹出层的 DOM 里。
@@ -90,7 +102,10 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     anchorPoint,
     closeOnSelect = true,
     haspopup = 'menu',
+    openOnHover = false,
     className,
+    onPointerEnter,
+    onPointerLeave,
     ...rest
   },
   ref,
@@ -101,6 +116,10 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
   const setAnchor = useMergedRef(anchorRef, ref);
   const popupRef = useRef<HTMLDivElement>(null);
   const viaKeyboard = useRef(false);
+  const viaHover = useRef(false);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout>>();
+  const parentClose = useContext(ParentCloseContext);
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
   const id = useId();
   const register = useContext(NestContext);
   const nested = useRef(new Set<RefObject<HTMLDivElement>>());
@@ -132,7 +151,13 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
   useFloating(
     mounted,
     popupRef,
-    () => (anchorPoint ? pointRect(anchorPoint.x, anchorPoint.y) : anchorRef.current ? rectOf(anchorRef.current) : null),
+    () => {
+      if (anchorPoint) return pointRect(anchorPoint.x, anchorPoint.y);
+      if (!anchorRef.current) return null;
+      const a = rectOf(anchorRef.current);
+      if (!openOnHover) return a;
+      return { ...a, left: a.left - SUB_INSET, right: a.right + SUB_INSET, top: a.top - SUB_INSET, bottom: a.bottom + SUB_INSET, width: a.width + SUB_INSET * 2 };
+    },
     placement,
     anchorPoint ? 0 : offset,
     match,
@@ -154,8 +179,10 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     const current = haspopup === 'listbox' ? el.querySelector<HTMLElement>(`${ITEMS}[aria-selected="true"]`) : null;
     current?.scrollIntoView({ block: 'nearest' });
     const first = current ?? el.querySelector<HTMLElement>(ITEMS);
-    (viaKeyboard.current && first ? first : el).focus({ preventScroll: true });
+    // 悬停打开的子菜单不抢焦点，焦点留在外层菜单
+    if (!viaHover.current) (viaKeyboard.current && first ? first : el).focus({ preventScroll: true });
     viaKeyboard.current = false;
+    viaHover.current = false;
   }, [open, anchorPoint?.x, anchorPoint?.y]);
 
   // 点外面、按 Esc 关闭。Esc 在捕获阶段拦下，免得连外层的弹窗一起关
@@ -185,10 +212,34 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
   const onPopupClick = (e: MouseEvent<HTMLDivElement>) => {
     if (!closeOnSelect) return;
     const item = (e.target as HTMLElement).closest(SELECTABLE);
-    if (item && e.currentTarget.contains(item)) close(true);
+    if (!item || !e.currentTarget.contains(item)) return;
+    close(true);
+    if (openOnHover) parentClose?.();
+  };
+
+  // 悬停打开：移上来就开，移出去等一会儿再关（移到子菜单上会取消）
+  const hoverOpen = () => {
+    if (!openOnHover) return;
+    clearTimeout(hoverTimer.current);
+    if (!open) {
+      viaHover.current = true;
+      setOpen(true);
+    }
+  };
+  const hoverClose = () => {
+    if (!openOnHover) return;
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setOpen(false), HOVER_CLOSE_MS);
   };
 
   const onPopupKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    // 里层弹出层的按键会经 React 冒上来（门户），只管自己的
+    if (!(e.target instanceof Node) || !e.currentTarget.contains(e.target)) return;
+    if (openOnHover && e.key === 'ArrowLeft') {
+      e.preventDefault();
+      close(true);
+      return;
+    }
     if (e.key === 'Tab') {
       if (haspopup !== 'dialog') {
         // 菜单、单选列表：Tab 关闭并回到触发器
@@ -245,13 +296,17 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
         onKeyDown={onPopupKeyDown}
         onBlur={onPopupBlur}
         onClick={onPopupClick}
+        onPointerEnter={hoverOpen}
+        onPointerLeave={hoverClose}
         onContextMenu={(e) => {
           // 菜单上点右键：不出浏览器的菜单，也不传给外层的右键处理
           e.preventDefault();
           e.stopPropagation();
         }}
       >
-        <NestContext.Provider value={registerNested}>{children}</NestContext.Provider>
+        <NestContext.Provider value={registerNested}>
+          <ParentCloseContext.Provider value={() => close(true)}>{children}</ParentCloseContext.Provider>
+        </NestContext.Provider>
       </div>,
       document.body,
     );
@@ -265,10 +320,12 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     'aria-controls': open ? id : undefined,
     onClick: composeHandlers(t.props.onClick, (e: MouseEvent<HTMLElement>) => {
       viaKeyboard.current = e.detail === 0;
-      setOpen(!open);
+      // 悬停已经打开的子菜单，点触发器不关
+      setOpen(openOnHover ? true : !open);
     }),
     onKeyDown: composeHandlers(t.props.onKeyDown, (e: KeyboardEvent<HTMLElement>) => {
-      if (open || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+      const opens = openOnHover ? e.key === 'ArrowRight' : e.key === 'ArrowDown' || e.key === 'ArrowUp';
+      if (open || !opens) return;
       e.preventDefault();
       viaKeyboard.current = true;
       setOpen(true);
@@ -276,10 +333,43 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
   });
 
   return (
-    <span ref={setAnchor} className={cx('kv-dropdown', className)} {...rest}>
+    <span
+      ref={setAnchor}
+      className={cx('kv-dropdown', openOnHover && 'kv-dropdown--sub', className)}
+      onPointerEnter={composeHandlers(onPointerEnter, hoverOpen)}
+      onPointerLeave={composeHandlers(onPointerLeave, hoverClose)}
+      {...rest}
+    >
       {triggerEl}
       {popup}
     </span>
   );
 });
 Dropdown.displayName = 'Dropdown';
+
+export interface MenuSubProps extends Omit<DropdownProps, 'trigger' | 'openOnHover' | 'placement' | 'offset' | 'anchorPoint' | 'matchTriggerWidth'> {
+  /** 触发器：一个 MenuItem（图标 + 名字），会自动加上右边的箭头 */
+  trigger: ReactElement;
+  /** 往哪边甩：默认右边，右边放不下自动翻到左边 */
+  placement?: 'right-start' | 'left-start';
+}
+
+/**
+ * 子菜单：菜单里「切换」类的项（语言、主题）。触发器右边带箭头，悬停往一边甩出第二层菜单，第一项和触发器对齐、离外层菜单 4。
+ * 打开时触发器保持悬停底色；点了第二层的项，两层一起关。键盘：右方向键打开，左方向键收回。
+ * ref 给包住触发器的外壳 span。这是代码层面的组件，Figma 里没有。
+ */
+export const MenuSub = forwardRef<HTMLSpanElement, MenuSubProps>(function MenuSub({ trigger, placement = 'right-start', children, ...rest }, ref) {
+  return (
+    <Dropdown
+      ref={ref}
+      openOnHover
+      placement={placement}
+      trigger={cloneElement(trigger as ReactElement<any>, { submenu: true })}
+      {...rest}
+    >
+      {children}
+    </Dropdown>
+  );
+});
+MenuSub.displayName = 'MenuSub';
