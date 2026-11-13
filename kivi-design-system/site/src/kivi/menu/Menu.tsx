@@ -1,5 +1,6 @@
 import { forwardRef, type CSSProperties, type HTMLAttributes } from 'react';
 import { cx } from '../utils';
+import { ScrollArea } from '../scroll-area';
 import { MenuContext } from './context';
 import './menu.css';
 
@@ -32,7 +33,13 @@ export const Menu = forwardRef<HTMLDivElement, MenuProps>(function Menu(
         style={sized}
         {...rest}
       >
-        {children}
+        {plain ? (
+          children
+        ) : (
+          <ScrollArea className="kv-menu__scroll">
+            <div className="kv-menu__list">{children}</div>
+          </ScrollArea>
+        )}
       </div>
     </MenuContext.Provider>
   );

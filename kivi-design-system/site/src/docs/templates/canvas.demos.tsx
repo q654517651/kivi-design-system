@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
-import { AskRecord, Button, ButtonGroup, CanvasHeader, Dropdown, Menu, MenuItem, MenuLabel, Icon, IconButton, MediaGroup, MessageFeedback, ProcessGroup, Toaster, UserMessage, type AttachmentItem, type MediaGroupItem, type MediaGroupType, type ProcessStep } from '@kivi';
+import { AskRecord, Button, ButtonGroup, CanvasHeader, Dropdown, Menu, MenuItem, MenuLabel, Icon, IconButton, MediaGroup, MessageFeedback, ProcessGroup, ScrollArea, Toaster, UserMessage, type AttachmentItem, type MediaGroupItem, type MediaGroupType, type ProcessStep } from '@kivi';
 import { MiniCanvas, type CanvasNodeKey, type MiniCanvasHandle } from '../business/canvas.demos';
 import { AgentComposer } from './composer';
 import { TemplateFrame } from './frame';
@@ -65,12 +65,13 @@ function AgentPanel({ onLocate, skill }: { onLocate: (key: CanvasNodeKey) => voi
           <Icon name="DownArrowSmall" />
         </span>
         <span style={{ display: 'flex', gap: 4 }}>
-          <IconButton icon="Add" label="新对话" variant="text" />
-          <IconButton icon="Fold" label="收起" variant="text" />
+          <IconButton icon="Add" label="新对话" variant="ghost" />
+          <IconButton icon="Fold" label="收起" variant="ghost" />
         </span>
       </div>
 
-      <div ref={stream} className="tpl-cv__stream">
+      <ScrollArea className="tpl-cv__stream" viewportRef={stream}>
+      <div className="tpl-cv__stream-body">
         {!skill && (
           <>
         <UserMessage>帮我做一条猕猴桃饮料的短视频：先出一张主视觉，再做成 16:9 的视频</UserMessage>
@@ -83,13 +84,14 @@ function AgentPanel({ onLocate, skill }: { onLocate: (key: CanvasNodeKey) => voi
         ))}
         <div className="tpl-text">主视觉和视频都生成好了，点开结果里的图能在画布里定位到节点。需要再出几个版本吗？</div>
         <div className="tpl-row">
-          <Button variant="light">再出 3 版</Button>
-          <Button variant="light">换个风格</Button>
+          <Button variant="secondary-muted">再出 3 版</Button>
+          <Button variant="secondary-muted">换个风格</Button>
         </div>
         <MessageFeedback text="主视觉和视频都生成好了。" traceId="trace-8f3a21" />
           </>
         )}
       </div>
+      </ScrollArea>
 
       <AgentComposer attachments={skill ? undefined : ATTACHMENTS} skill={skill} />
     </aside>

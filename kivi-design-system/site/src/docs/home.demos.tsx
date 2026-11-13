@@ -177,7 +177,7 @@ function MiddleColumn() {
       <div className="home-buttons">
         <Button variant="primary">主要</Button>
         <Button variant="secondary">次要</Button>
-        <Button variant="light">轻</Button>
+        <Button variant="secondary-muted">轻</Button>
         <Button variant="danger">危险</Button>
         <GenerateButton cost={40} />
       </div>

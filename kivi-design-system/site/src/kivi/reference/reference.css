@@ -466,7 +466,7 @@
 }
 
 .kv-reference-stack__tray[data-settled] .kv-reference-stack__scroller {
-  overflow-x: auto;
+  overflow-x: auto; /* 原生滚动：滚动条藏起来；展开动画时要 overflow: visible 让卡片飞出，套不了 ScrollArea */
   overflow-y: hidden;
   scrollbar-width: none;
 }
@@ -712,24 +712,12 @@
 }
 
 /* ---------- AttachmentStrip：附件条 ----------
-   一排平铺的 56 缩略图，间距 4，超出横向滚动（细滚动条）。删除、上传中的样子和上面的参考卡片一样（上面的规则共用），
+   一排平铺的 56 缩略图，间距 4，超出横向滚动（ScrollArea 的细滑块）。删除、上传中的样子和上面的参考卡片一样（上面的规则共用），
    这里只管排列和显示：鼠标移上去或聚焦到某一格，右上角出删除；上传中不出删除 */
 
-.kv-attachment-strip {
+.kv-attachment-strip__items {
   display: flex;
   gap: var(--spacing-4);
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-text-fill-disabled) transparent;
-}
-
-.kv-attachment-strip::-webkit-scrollbar {
-  height: 4px;
-}
-
-.kv-attachment-strip::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background: var(--color-text-fill-disabled);
 }
 
 .kv-attachment-strip__item {

@@ -43,9 +43,9 @@ export interface MenuItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonEleme
   checked?: boolean;
   /** 收起：侧栏收成图标栏时用。只留图标 / 缩略图，文字淡出，悬停在右边出 Tooltip 写文字；「⋯」不显示。宽度跟着侧栏，图标栏里是 36。不带图标的条目（「更多」）收起时文字换成向下的箭头。不传就不包 Tooltip，要在收起、展开之间切换的写 true / false */
   collapsed?: boolean;
-  /** 右边悬停和选中时才出现的「⋯」：写了就出一个 IconButton 28 轻，点开弹出这里的菜单（一般是一个 Menu，由 Dropdown 管开关）。写了之后外层改用 div（里面有按钮） */
+  /** 右边悬停和选中时才出现的「⋯」：写了就出一个 IconButton 28 · 无底灰，点开弹出这里的菜单（一般是一个 Menu，由 Dropdown 管开关）。写了之后外层改用 div（里面有按钮） */
   more?: ReactNode;
-  /** 「⋯」左边的按钮（IconButton 28 轻，比如画布的「在新标签页打开」）：和「⋯」一起悬停、选中时才出现，收起、重命名时不显示；点它不触发条目的点击。写了之后外层也改用 div */
+  /** 「⋯」左边的按钮（IconButton 28 · 无底灰，比如画布的「在新标签页打开」）：和「⋯」一起悬停、选中时才出现，收起、重命名时不显示；点它不触发条目的点击。写了之后外层也改用 div */
   actions?: ReactNode;
   /** 「⋯」的说明，读屏用，默认「更多」 */
   moreLabel?: string;
@@ -213,7 +213,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       {more != null && !editing && (
         <Dropdown
           className="kv-menu-item__more"
-          trigger={<IconButton tooltip={false} icon="More" label={moreLabel} size={28} variant="light" disabled={disabled} />}
+          trigger={<IconButton tooltip={false} icon="More" label={moreLabel} size={28} variant="ghost-muted" disabled={disabled} />}
           onClick={(e) => e.stopPropagation()}
         >
           {more}

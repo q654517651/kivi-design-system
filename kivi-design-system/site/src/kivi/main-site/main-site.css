@@ -1,6 +1,6 @@
 /*
   KIVI · 主站
-  Figma「主站」页：GenPrompt（记录头）、ResultTile（结果格）。参考区是 GenPrompt 里的一块，代码里单独成 GenPromptRefs。
+  Figma「生成记录」页：GenPrompt（记录头）、ResultTile（结果格）。参考区是 GenPrompt 里的一块，代码里单独成 GenPromptRefs。
   依赖 tokens.css、base.css、button.css（按钮用 kv-icon-button、kv-button）。
   别的页的组件：
     tags-avatar       Tag（参数标签、角标）、AssetThumb（参考区缩略图）
@@ -21,7 +21,7 @@
     <div class="kv-gen-prompt">
       <div class="kv-gen-prompt__prompt">
         <span class="kv-gen-prompt__text">生成一张赛博朋克风格的猕猴桃海报</span>
-        <span class="kv-gen-prompt__copy"><button class="kv-icon-button kv-icon-button--28 kv-icon-button--light"/></span>
+        <span class="kv-gen-prompt__copy"><button class="kv-icon-button kv-icon-button--28 kv-icon-button--ghost-muted"/></span>
       </div>
       <div class="kv-gen-prompt__params">…</div>
     </div>

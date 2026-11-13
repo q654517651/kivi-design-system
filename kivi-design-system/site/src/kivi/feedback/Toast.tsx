@@ -17,7 +17,7 @@ export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * 轻提示的样子：状态图标 + 文字 + 操作文字（可选）。Figma「反馈」页 Toast。
+ * 轻提示的样子：状态图标 + 文字 + 操作文字（可选）。Figma「消息」页 Toast。
  * 这个组件只管样子；要在页面顶部弹出来，用 toast.show()，见 Toaster.tsx。
  */
 export const Toast = forwardRef<HTMLDivElement, ToastProps>(function Toast(

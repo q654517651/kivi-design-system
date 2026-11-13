@@ -4,7 +4,7 @@
 
   写法（React，见 Button.tsx、IconButton.tsx）
     <Button size={32} variant="secondary" leftIcon="Add">新建</Button>
-    <IconButton icon="More" label="更多" size={32} variant="text" />
+    <IconButton icon="More" label="更多" size={32} variant="ghost" />
   渲染出来的结构
     <button class="kv-button kv-button--32 kv-button--secondary">
       <span class="kv-icon" data-icon="Add"><svg/></span><span>新建</span>
@@ -54,7 +54,7 @@
     opacity var(--motion-duration-100) var(--motion-ease-in-out);
 }
 
-/* 文字和图标整体透明度，「轻」用 */
+/* 文字和图标整体透明度，「灰」的两种（次要灰、无底灰）用 */
 .kv-button > *,
 .kv-icon-button > * {
   opacity: var(--kv-content-opacity);
@@ -103,10 +103,10 @@
   --kv-fill-pressed: var(--color-bg-fill-container-light-1-pressed);
 }
 
-/* 平时没底色：悬停、按下用所在底那一档的 hover / pressed。深底 Light 1（14% / 18%）；
+/* 无底：平时没底色：悬停、按下用所在底那一档的 hover / pressed。深底 Light 1（14% / 18%）；
    放在带底色的行里（菜单项的「⋯」），行把 --kv-nested-fill-hover / -pressed 设成 Light 2 */
-.kv-button--text,
-.kv-icon-button--text {
+.kv-button--ghost,
+.kv-icon-button--ghost {
   --kv-fill: transparent;
   --kv-fill-hover: var(--kv-nested-fill-hover, var(--color-bg-fill-container-light-1-hover));
   --kv-fill-pressed: var(--kv-nested-fill-pressed, var(--color-bg-fill-container-light-1-pressed));
@@ -141,16 +141,18 @@
   --kv-content: var(--color-on-media-text);
 }
 
-/* 轻（原来叫「弱」，2026-10-29 Figma 改名改样式）：文字和图标 50%，悬停、按下回到 100%。
-   Button 的轻底色和次要一样（白 10%），不然认不出是按钮；IconButton 的轻没有底 */
-.kv-button--light {
+/* 「灰」= 文字和图标 50%，悬停、按下回到 100%（11-13 改名：原来 Button 的「轻」是次要灰、IconButton 的「轻」是无底灰，同名不同样子）。
+   次要灰：只有 Button，底和次要一样（白 10%） */
+.kv-button--secondary-muted {
   --kv-fill: var(--color-bg-fill-container-light-1);
   --kv-fill-hover: var(--color-bg-fill-container-light-1-hover);
   --kv-fill-pressed: var(--color-bg-fill-container-light-1-pressed);
   --kv-content-opacity: var(--opacity-50);
 }
 
-.kv-icon-button--light {
+/* 无底灰：Button、IconButton 都有，没有底，悬停出底 */
+.kv-button--ghost-muted,
+.kv-icon-button--ghost-muted {
   --kv-fill: transparent;
   --kv-fill-hover: var(--kv-nested-fill-hover, var(--color-bg-fill-container-light-1-hover));
   --kv-fill-pressed: var(--kv-nested-fill-pressed, var(--color-bg-fill-container-light-1-pressed));
@@ -170,7 +172,7 @@
   --kv-content-opacity: 1;
 }
 
-/* 状态：选中（只有 IconButton，主要没有；轻选中不换色，见下）。
+/* 状态：选中（只有 IconButton，主要没有；无底灰选中不换色，见下）。
    IconButton 没有绿色状态（11-04 用户定）：选中是常驻底色，用所在底那一档的默认（深底 Light 1 10%），悬停、按下照常升档，图标白 */
 
 .kv-icon-button[aria-pressed="true"] {
@@ -178,8 +180,8 @@
   --kv-content: var(--color-text-fill-primary);
 }
 
-/* 轻：选中不换色，靠换实心图标表示（点赞、点踩），aria-pressed 照写给读屏 */
-.kv-icon-button--light[aria-pressed="true"] {
+/* 无底灰：选中不换色，靠换实心图标表示（点赞、点踩），aria-pressed 照写给读屏 */
+.kv-icon-button--ghost-muted[aria-pressed="true"] {
   --kv-fill: transparent;
   --kv-content: var(--color-text-fill-primary);
 }
@@ -195,7 +197,7 @@
   --kv-content: var(--color-brand-solid);
 }
 
-/* 状态：禁用。底色白 10%，文字白 20%；文字、浮层、轻保持原来的底 */
+/* 状态：禁用。底色白 10%，文字白 20%；无底、浮层、次要灰、无底灰保持原来的底 */
 
 :is(.kv-button, .kv-icon-button):is(:disabled, [aria-disabled="true"]) {
   --kv-fill: var(--color-bg-fill-container-light-1);
@@ -203,7 +205,7 @@
   cursor: not-allowed;
 }
 
-:is(.kv-button--text, .kv-icon-button--text):is(:disabled, [aria-disabled="true"]) {
+:is(.kv-button--ghost, .kv-button--ghost-muted, .kv-icon-button--ghost, .kv-icon-button--ghost-muted):is(:disabled, [aria-disabled="true"]) {
   --kv-fill: transparent;
 }
 
@@ -215,14 +217,9 @@
   --kv-fill: transparent;
 }
 
-:is(.kv-button--light, .kv-icon-button--light):is(:disabled, [aria-disabled="true"]) {
+:is(.kv-button--secondary-muted, .kv-button--ghost-muted, .kv-icon-button--ghost-muted):is(:disabled, [aria-disabled="true"]) {
   --kv-content: var(--color-text-fill-primary);
   --kv-content-opacity: var(--opacity-20);
-}
-
-/* 轻禁用：Button 保留白 10% 底，IconButton 没有底 */
-.kv-icon-button--light:is(:disabled, [aria-disabled="true"]) {
-  --kv-fill: transparent;
 }
 
 /* 换图标：新图标 150ms ease-out 从 60% 放大并淡入，只在换的那一下（data-swapped）。系统开了「减少动态效果」时时长是 0 */

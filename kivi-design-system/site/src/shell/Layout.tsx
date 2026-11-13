@@ -1,6 +1,6 @@
 import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Button, Icon, IconButton } from '@kivi';
+import { Button, Icon, IconButton, ScrollArea } from '@kivi';
 import { NAV } from './nav';
 import { SearchButton, useSearchJump } from './search';
 // 版本号只写在 package.json 一处，顶栏从这里读（发布规则见仓库根目录 CHANGELOG.md）
@@ -132,13 +132,13 @@ export function Layout() {
           <SearchButton />
         </span>
         <a className="shell-pill" href={HUGEICONS} target="_blank" rel="noopener">
-          <Button size={28} variant="text" tabIndex={-1}>
+          <Button size={28} variant="ghost" tabIndex={-1}>
             <HugeiconsLogo />
             Hugeicons 图标库
           </Button>
         </a>
         <a className="shell-pill" href={FIGMA} target="_blank" rel="noopener">
-          <Button size={28} variant="text" tabIndex={-1}>
+          <Button size={28} variant="ghost" tabIndex={-1}>
             <FigmaLogo />
             Figma 组件库
           </Button>
@@ -148,7 +148,7 @@ export function Layout() {
       <div className={pathname === '/' ? 'shell-frame is-home' : 'shell-frame'}>
         <nav className="shell-nav">
           <Brand className="shell-brand--nav" />
-          <div className="shell-nav-list">
+          <ScrollArea className="shell-nav-list">
             {NAV.map((g) => (
               <div key={g.group}>
                 <div className="shell-nav-group">{g.group}</div>
@@ -177,7 +177,7 @@ export function Layout() {
                 )}
               </div>
             ))}
-          </div>
+          </ScrollArea>
         </nav>
 
         <main className="doc" ref={mainRef}>
@@ -189,24 +189,26 @@ export function Layout() {
         </main>
 
         <aside className="shell-toc">
-          {heads.length > 1 && (
-            <>
-              <div className="shell-toc-title">本页</div>
-              {heads.map((h) => (
-                <a
-                  key={h.id}
-                  href={`#${h.id}`}
-                  className={current === h.id ? 'is-current' : undefined}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  {h.text}
-                </a>
-              ))}
-            </>
-          )}
+          <ScrollArea className="shell-toc-scroll">
+            {heads.length > 1 && (
+              <>
+                <div className="shell-toc-title">本页</div>
+                {heads.map((h) => (
+                  <a
+                    key={h.id}
+                    href={`#${h.id}`}
+                    className={current === h.id ? 'is-current' : undefined}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    {h.text}
+                  </a>
+                ))}
+              </>
+            )}
+          </ScrollArea>
         </aside>
       </div>
     </div>

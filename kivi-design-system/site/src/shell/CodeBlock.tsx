@@ -1,6 +1,6 @@
 import { Highlight, type PrismTheme } from 'prism-react-renderer';
 import { useState, type CSSProperties } from 'react';
-import { Button } from '@kivi';
+import { Button, ScrollArea } from '@kivi';
 import { copyText, dedent } from './copy';
 
 // 代码高亮用 KIVI 自己的颜色
@@ -21,7 +21,7 @@ export function CopyButton({ text, label = '复制' }: { text: string | (() => s
   return (
     <Button
       size={28}
-      variant="light"
+      variant="secondary-muted"
       leftIcon={done ? 'CheckSmall' : 'Copy'}
       className="shell-copy"
       onClick={() => {
@@ -49,23 +49,25 @@ export function CodeBlock({ code, lang = 'tsx', bare, collapse }: { code: string
     >
       <Highlight theme={codeTheme} code={src} language={lang}>
         {({ tokens, getLineProps, getTokenProps }) => (
-          <pre>
-            <code>
-              {tokens.map((line, i) => (
-                <div key={i} {...getLineProps({ line })}>
-                  {line.map((token, j) => (
-                    <span key={j} {...getTokenProps({ token })} />
-                  ))}
-                </div>
-              ))}
-            </code>
-          </pre>
+          <ScrollArea orientation="horizontal">
+            <pre>
+              <code>
+                {tokens.map((line, i) => (
+                  <div key={i} {...getLineProps({ line })}>
+                    {line.map((token, j) => (
+                      <span key={j} {...getTokenProps({ token })} />
+                    ))}
+                  </div>
+                ))}
+              </code>
+            </pre>
+          </ScrollArea>
         )}
       </Highlight>
       <CopyButton text={src} />
       {long && (
         <div className="shell-code-more">
-          <Button size={28} variant="light" rightIcon={open ? 'UpArrowSmall' : 'DownArrowSmall'} onClick={() => setOpen(!open)}>
+          <Button size={28} variant="secondary-muted" rightIcon={open ? 'UpArrowSmall' : 'DownArrowSmall'} onClick={() => setOpen(!open)}>
             {open ? '收起代码' : '展开代码'}
           </Button>
         </div>

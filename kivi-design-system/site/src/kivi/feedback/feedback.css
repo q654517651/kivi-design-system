@@ -1,6 +1,6 @@
 /*
   KIVI · 反馈
-  Figma「反馈」页：Toast（轻提示）、Loading（加载）、Skeleton（骨架屏）、EmptyState（空状态）。
+  Figma「消息」页：Toast（轻提示）；「加载和空态」页：Loading（加载）、Skeleton（骨架屏）、EmptyState（空状态）。
   依赖 tokens.css、base.css；EmptyState 下面的引导按钮用 button.css。
 
   写法（React，见 Toast.tsx、Toaster.tsx、Loading.tsx、Skeleton.tsx、EmptyState.tsx）
@@ -114,7 +114,7 @@
   cursor: pointer;
 }
 
-/* 悬停、按下变 primary（和「轻」按钮一致）；键盘聚焦和悬停一样，不加描边 */
+/* 悬停、按下变 primary（和无底灰按钮一致）；键盘聚焦和悬停一样，不加描边 */
 .kv-toast__action:hover,
 .kv-toast__action:active,
 .kv-toast__action:focus-visible {
@@ -306,7 +306,7 @@
   max-height: 132px;
   line-height: var(--font-line-height-22);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: auto; /* 原生滚动：滚动条藏起来（下面 scrollbar-width: none） */
   overflow-wrap: anywhere;
   color: var(--color-text-fill-secondary);
   scrollbar-width: none;
@@ -330,7 +330,7 @@
   max-width: calc(100vw - var(--spacing-24) * 2);
   max-height: calc(100vh - var(--spacing-24) * 2);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: auto; /* 原生滚动：滚动条藏起来；fixed 且不接指针，套不了 ScrollArea */
   scrollbar-width: none;
   pointer-events: none;
 }

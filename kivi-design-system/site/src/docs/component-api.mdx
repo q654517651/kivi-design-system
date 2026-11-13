@@ -107,6 +107,7 @@ Foo.displayName = 'Foo';
 | `useControllable` | 受控、非受控二合一 |
 | `usePresence` | 关的时候先播消失动画再卸掉 |
 | `useFloating` | 浮层跟着锚点定位，放不下翻到另一边；滚动、窗口变化、锚点或浮层尺寸变了（ResizeObserver）都重新算。锚点用 `rectOf(元素)` 取，才会盯它的尺寸 |
+| `useLayerNesting` | Dropdown、Popover 共用嵌套浮层登记；里层挂在 body 上也能认出，Escape 先关里层，点里层不误关外层 |
 | `usePointerDrag` | 拖动条：按下跳到那里、拖着走，横竖都行 |
 | `useHoverIntent` | 离开后等一会儿才算离开，鼠标挪到浮层的路上不断 |
 | `useMergedRef` | 合并组件自己的 ref 和外面传的 ref |

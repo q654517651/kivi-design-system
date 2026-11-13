@@ -149,7 +149,7 @@ function renderPlain(s: PlainState, update: (patch: Partial<PlaygroundState>) =>
           collapsed={c}
           expanded={s.expanded === 'open'}
           onExpandedChange={(v) => update({ expanded: v ? 'open' : 'closed' })}
-          action={s.action || s.collapsed ? <IconButton icon="NewChat" label="新建对话" size={28} variant="light" /> : undefined}
+          action={s.action || s.collapsed ? <IconButton icon="NewChat" label="新建对话" size={28} variant="ghost-muted" /> : undefined}
           items={
             <>
               <MenuItem

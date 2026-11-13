@@ -44,7 +44,7 @@ export const SkillPicker = forwardRef<HTMLSpanElement, SkillPickerProps>(functio
       onOpenChange={setOpen}
       haspopup="dialog"
       closeOnSelect={false}
-      trigger={trigger ?? <IconButton icon="Skill" label="技能" variant="text" />}
+      trigger={trigger ?? <IconButton icon="Skill" label="技能" variant="ghost" />}
       {...rest}
     >
       {/* 换 key 重新挂载，每次打开回到「推荐」、清空搜索；key 只在打开时递增，关闭动画期间内容不变 */}

@@ -2,7 +2,6 @@ import {
   cloneElement,
   createContext,
   forwardRef,
-  useCallback,
   useContext,
   useEffect,
   useId,
@@ -16,11 +15,10 @@ import {
   type MouseEvent,
   type ReactElement,
   type ReactNode,
-  type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../utils';
-import { composeHandlers, pointRect, rectOf, useControllable, useFloating, useMergedRef, usePresence, type FloatingPlacement, type Placement } from '../hooks';
+import { composeHandlers, FloatingLayerContext, pointRect, rectOf, useControllable, useFloating, useLayerNesting, useMergedRef, usePresence, type FloatingPlacement, type Placement } from '../hooks';
 import './menu.css';
 
 export type { Placement as DropdownPlacement };
@@ -65,13 +63,6 @@ const ParentCloseContext = createContext<(() => void) | null>(null);
 const HOVER_CLOSE_MS = 150;
 /** 子菜单对齐外层菜单：触发器（菜单项）四周往外扩一个菜单内边距，子菜单的第一项和触发器对齐、离外层菜单边 4 */
 const SUB_INSET = 4;
-
-/**
- * 套着的弹出层：菜单项里「⋯」再弹出的菜单也挂在 body 上，不在外层弹出层的 DOM 里。
- * 里层打开时往外层登记，外层点外面、按 Esc 时认得它：点里层不关外层，Esc 先关里层
- */
-type Register = (popup: RefObject<HTMLDivElement>) => () => void;
-const NestContext = createContext<Register | null>(null);
 
 const ITEMS = '.kv-menu-item:not(:disabled):not([aria-disabled="true"])';
 const SELECTABLE = `${ITEMS}:not([aria-haspopup])`;
@@ -121,20 +112,7 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
   const parentClose = useContext(ParentCloseContext);
   useEffect(() => () => clearTimeout(hoverTimer.current), []);
   const id = useId();
-  const register = useContext(NestContext);
-  const nested = useRef(new Set<RefObject<HTMLDivElement>>());
-  // 里层登记到自己这里，也往上传给更外层
-  const registerNested = useCallback<Register>(
-    (popup) => {
-      nested.current.add(popup);
-      const off = register?.(popup);
-      return () => {
-        nested.current.delete(popup);
-        off?.();
-      };
-    },
-    [register],
-  );
+  const { nested, registerNested } = useLayerNesting(popupRef, mounted);
   const match = Boolean(matchTriggerWidth && !anchorPoint);
 
   // 单选列表不和触发器一样宽时（无底的 Select 很窄）：打开时量一下触发器，列表按内容撑宽，但不比它窄
@@ -164,12 +142,6 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
     anchorPoint && `${anchorPoint.x},${anchorPoint.y}`,
   );
 
-  // 自己是里层：弹出层挂着时登记到外层
-  useEffect(() => {
-    if (!mounted || !register) return;
-    return register(popupRef);
-  }, [mounted, register]);
-
   // 展开后把焦点放进菜单：键盘打开的落在第一项，鼠标打开的落在菜单上（再按方向键进入）
   useEffect(() => {
     if (!open) return;
@@ -195,7 +167,7 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
       setOpen(false);
     };
     const onKey = (e: globalThis.KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' || e.isComposing) return;
       // 里层还开着，让里层先关
       for (const r of nested.current) if (r.current) return;
       e.stopPropagation();
@@ -304,9 +276,9 @@ export const Dropdown = forwardRef<HTMLSpanElement, DropdownProps>(function Drop
           e.stopPropagation();
         }}
       >
-        <NestContext.Provider value={registerNested}>
+        <FloatingLayerContext.Provider value={registerNested}>
           <ParentCloseContext.Provider value={() => close(true)}>{children}</ParentCloseContext.Provider>
-        </NestContext.Provider>
+        </FloatingLayerContext.Provider>
       </div>,
       document.body,
     );

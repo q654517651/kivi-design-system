@@ -61,7 +61,7 @@ export const UserMessage = forwardRef<HTMLDivElement, UserMessageProps>(function
           <Button
             className="kv-user-message__toggle"
             size={28}
-            variant="text"
+            variant="ghost"
             rightIcon="DownArrowSmall"
             aria-expanded={expanded}
             onClick={() => setExpanded(!expanded)}

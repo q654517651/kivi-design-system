@@ -16,7 +16,7 @@
     平铺（侧栏）：
       <Menu variant="plain" aria-label="主导航">
         <MenuItem icon="Create">创作</MenuItem>
-        <MenuLabel collapsible action={<IconButton icon="NewChat" label="新建对话" size={28} variant="light" />}
+        <MenuLabel collapsible action={<IconButton icon="NewChat" label="新建对话" size={28} variant="ghost-muted" />}
           items={<>
             <MenuItem thumb={<AssetThumb size={24} type="icon" />} selected more={<Menu>…</Menu>}>对话标题</MenuItem>
             <MenuItem>更多</MenuItem>
@@ -83,8 +83,6 @@
   box-sizing: border-box;
   width: max-content;
   margin: 0;
-  gap: var(--kv-menu-gap, var(--spacing-4));
-  padding: var(--spacing-4);
   border-radius: var(--border-radius-12);
   outline: var(--border-width-1) solid var(--color-border-subtle);
   outline-offset: calc(var(--border-width-1) * -1);
@@ -94,15 +92,28 @@
   min-width: max(160px, var(--kv-menu-min, 0px));
   max-width: 240px;
   max-height: min(302px, var(--kv-popup-room, 302px));
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+/* 滚动：条目放在 ScrollArea 里，超过最高就在里面滚（细滑块）；内边距、条目间距在列表上，跟着一起滚 */
+.kv-menu__scroll {
+  flex: 1 1 auto;
+}
+
+.kv-menu__scroll > .kv-scroll-area__viewport {
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
+}
+
+.kv-menu__list {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  gap: var(--kv-menu-gap, var(--spacing-4));
+  padding: var(--spacing-4);
 }
 
 /* 条目在滚动的列表里不被压扁 */
-.kv-menu > * {
+.kv-menu__list > * {
   flex: none;
 }
 
@@ -113,7 +124,7 @@
   min-width: 0;
   max-width: none;
   max-height: none;
-  padding: 0;
+  gap: var(--kv-menu-gap);
   border-radius: 0;
   outline: none;
   background: none;
@@ -121,6 +132,10 @@
   backdrop-filter: none;
   overflow: visible;
   overscroll-behavior: auto;
+}
+
+.kv-menu--plain > * {
+  flex: none;
 }
 
 /* 弹出层：Dropdown 把菜单放在这里，挂在 body 上，位置由脚本算。出现 200ms ease-out，消失 150ms ease-in。
@@ -327,7 +342,7 @@
   min-width: 0;
 }
 
-/* 右边的「⋯」：IconButton 28 轻，悬停、键盘聚焦、选中、菜单开着时才显示 */
+/* 右边的「⋯」：IconButton 28 · 无底灰，悬停、键盘聚焦、选中、菜单开着时才显示 */
 /* 「⋯」左边的按钮（actions）跟着「⋯」一起出现、一起藏 */
 .kv-menu-item > :is(.kv-menu-item__more, .kv-menu-item__actions) {
   display: none;
@@ -551,7 +566,7 @@
   color: var(--color-text-fill-primary);
 }
 
-/* 右边的按钮（IconButton 28 轻，比如新建） */
+/* 右边的按钮（IconButton 28 · 无底灰，比如新建） */
 .kv-menu-label__action {
   display: inline-flex;
   flex: none;
@@ -616,7 +631,7 @@
 /* ---------- MenuDivider ---------- */
 /* 线 1px，上下各留 4，左右各缩进 8，一共高 9 */
 /* 菜单里的分割线就是横向 Divider：左右缩进 8、上下 4，颜色淡一档 */
-.kv-menu > .kv-divider--horizontal {
+.kv-menu__list > .kv-divider--horizontal {
   --kv-divider-color: var(--color-border-subtle);
   width: auto;
   margin: var(--spacing-4) var(--spacing-8);

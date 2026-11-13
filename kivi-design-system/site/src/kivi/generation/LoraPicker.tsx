@@ -2,6 +2,7 @@ import { forwardRef, useMemo, useState } from 'react';
 import { Dialog, type DialogProps } from '../dialog';
 import { EmptyState, toast } from '../feedback';
 import { Dropdown, Menu, MenuItem } from '../menu';
+import { ScrollArea } from '../scroll-area';
 import { Select } from '../selection';
 import { TabItem, Tabs } from '../navigation';
 import { useControllable } from '../hooks';
@@ -102,22 +103,24 @@ export const LoraPicker = forwardRef<HTMLDivElement, LoraPickerProps>(function L
           </Dropdown>
         </div>
         {shown.length ? (
-          <div className="kv-lora-picker__grid">
-            {shown.map((item) => (
-              <LoraCard
-                key={item.id}
-                name={item.name}
-                description={item.description}
-                cover={item.cover}
-                base={item.base}
-                isNew={item.isNew}
-                checked={selected.includes(item.id)}
-                collected={collected.includes(item.id)}
-                onCollectedChange={(c) => setCollected(c ? [...collected, item.id] : collected.filter((x) => x !== item.id))}
-                onClick={() => toggle(item.id)}
-              />
-            ))}
-          </div>
+          <ScrollArea className="kv-lora-picker__scroll">
+            <div className="kv-lora-picker__grid">
+              {shown.map((item) => (
+                <LoraCard
+                  key={item.id}
+                  name={item.name}
+                  description={item.description}
+                  cover={item.cover}
+                  base={item.base}
+                  isNew={item.isNew}
+                  checked={selected.includes(item.id)}
+                  collected={collected.includes(item.id)}
+                  onCollectedChange={(c) => setCollected(c ? [...collected, item.id] : collected.filter((x) => x !== item.id))}
+                  onClick={() => toggle(item.id)}
+                />
+              ))}
+            </div>
+          </ScrollArea>
         ) : (
           <div className="kv-lora-picker__empty">
             {tab === 'collected' && !filtered ? (

@@ -34,7 +34,7 @@ export interface ResultTileProps extends HTMLAttributes<HTMLDivElement> {
   fit?: boolean;
   /** 任务角标文字，左上，Tag 覆盖。生成中用，比如「59s 生成中」 */
   badge?: ReactNode;
-  /** 右上操作：删除、下载，合成一条按钮条（IconButton 28 · 文字），带 Tooltip。悬停才出；失败的格子也有（还能删除） */
+  /** 右上操作：删除、下载，合成一条按钮条（IconButton 28 · 无底），带 Tooltip。悬停才出；失败的格子也有（还能删除） */
   topActions?: ResultTileAction[];
   /** 完成：右上按钮条最后放收藏（Collect，收藏了换 CollectSolid，IconButton 选中：白底 + 白图标）。收藏了的，不悬停右上还留一个实心星 */
   collect?: boolean;
@@ -69,7 +69,7 @@ function Actions({ list, position, extra }: { list?: ResultTileAction[]; positio
   );
 }
 
-/** 主站生成结果的一格：一条记录里的一张图或一段视频，每格任务独立。Figma「主站」页 ResultTile */
+/** 主站生成结果的一格：一条记录里的一张图或一段视频，每格任务独立。Figma「生成记录」页 ResultTile */
 export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function ResultTile(
   {
     type = 'image',

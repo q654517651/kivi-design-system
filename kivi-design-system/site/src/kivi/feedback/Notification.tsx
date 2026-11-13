@@ -34,7 +34,7 @@ export const Notification = forwardRef<HTMLDivElement, NotificationProps>(functi
         {has(description) && <div className="kv-notification__description">{description}</div>}
       </div>
       {onClose && (
-        <IconButton tooltip={false} className="kv-notification__close" icon="CloseSmall" label="关闭" size={28} variant="text" onClick={onClose} />
+        <IconButton tooltip={false} className="kv-notification__close" icon="CloseSmall" label="关闭" size={28} variant="ghost" onClick={onClose} />
       )}
     </div>
   );

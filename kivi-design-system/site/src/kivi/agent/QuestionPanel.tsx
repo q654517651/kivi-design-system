@@ -139,9 +139,9 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
         <div className="kv-question-panel__title">{title}</div>
         {pager != null && (
           <div className="kv-question-panel__pager">
-            <IconButton tooltip={false} icon="LeftArrowSmall" label="上一题" size={28} variant="text" onClick={onPrev} disabled={disabled || prevDisabled} />
+            <IconButton tooltip={false} icon="LeftArrowSmall" label="上一题" size={28} variant="ghost" onClick={onPrev} disabled={disabled || prevDisabled} />
             <span>{pager}</span>
-            <IconButton tooltip={false} icon="RightArrowSmall" label="下一题" size={28} variant="text" onClick={onNext} disabled={disabled || nextDisabled} />
+            <IconButton tooltip={false} icon="RightArrowSmall" label="下一题" size={28} variant="ghost" onClick={onNext} disabled={disabled || nextDisabled} />
           </div>
         )}
       </div>
@@ -158,7 +158,7 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
       </QuestionContext.Provider>
       <div className="kv-question-panel__actions">
         {skip && (
-          <Button variant="text" onClick={onSkip} disabled={disabled}>
+          <Button variant="ghost" onClick={onSkip} disabled={disabled}>
             {skipText}
           </Button>
         )}

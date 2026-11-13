@@ -15,6 +15,14 @@
   outline: none;
 }
 
+/* 滚动条兜底（11-13）：能滚的区域一律用 ScrollArea（自画细滑块，滚动时才出现）。这里只管 ScrollArea 管不到的原生控件
+   （比如 Textarea）：Mac 插鼠标或设了「始终显示滚动条」时，不让系统画又粗又亮的灰条，换成细的、颜色和 ScrollArea 滑块一样。
+   :where 不占权重，ScrollArea 自己的 scrollbar-width: none 照旧生效 */
+:where(*) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-fill-disabled) transparent;
+}
+
 /* 图标：<Icon /> 渲染成 <span class="kv-icon">，颜色跟文字走。
    尺寸照 Figma Icon 组件：16 是默认，另有 20 / 24 / 40 / 64。放进组件里时由组件定尺寸。
    图形是蒙版（--kv-icon-mask，Icon.tsx 给），底色涂 currentColor：颜色带透明度时线段交叠处不会叠色 */

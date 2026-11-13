@@ -14,9 +14,9 @@ export type ButtonGroupSize = 32 | 44 | 56;
 
 // 条越高，里面的按钮越大：32 的条放 28 的按钮，44、56 的条放 32 的按钮（Button 32、IconButton 32）
 const GROUP_DEFAULTS: Record<ButtonGroupSize, ButtonGroupDefaults> = {
-  32: { button: { size: 28, variant: 'text' }, iconButton: { size: 28, variant: 'text' } },
-  44: { button: { size: 32, variant: 'text' }, iconButton: { size: 32, variant: 'text' } },
-  56: { button: { size: 32, variant: 'text' }, iconButton: { size: 32, variant: 'text' } },
+  32: { button: { size: 28, variant: 'ghost' }, iconButton: { size: 28, variant: 'ghost' } },
+  44: { button: { size: 32, variant: 'ghost' }, iconButton: { size: 32, variant: 'ghost' } },
+  56: { button: { size: 32, variant: 'ghost' }, iconButton: { size: 32, variant: 'ghost' } },
 };
 
 const ButtonGroupContext = createContext<ButtonGroupDefaults | null>(null);
@@ -33,7 +33,7 @@ export interface ButtonGroupProps extends HTMLAttributes<HTMLDivElement> {
   size?: ButtonGroupSize;
   /** 读屏用，说明这一排是什么，比如「节点操作」 */
   'aria-label'?: string;
-  /** 里面放 IconButton、Button，默认就是 IconButton 28 · 文字、Button 28 · 文字，不用自己写尺寸和类型。不同类的按钮之间放竖向的 `Divider` */
+  /** 里面放 IconButton、Button，默认就是 IconButton 28 · 无底、Button 28 · 无底，不用自己写尺寸和类型。不同类的按钮之间放竖向的 `Divider` */
   children?: ReactNode;
 }
 

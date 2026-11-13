@@ -35,7 +35,7 @@ export interface NodeCardProps extends HTMLAttributes<HTMLDivElement> {
   type?: NodeMediaType;
   /** 待生成：中间的 64 图标，默认按内容类型取。视频封装用 Pack，视频剪辑用 Cutting */
   icon?: IconName;
-  /** 待生成：图标下面的按钮，Button 小 · 轻（占位处的按钮都减弱一档），比如「打开视频封装」。不传就没有 */
+  /** 待生成：图标下面的按钮，Button 小 · 次要灰（占位处的按钮都减弱一档），比如「打开视频封装」。不传就没有 */
   button?: ReactNode;
   /** 生成中：原素材地址，重新生成时放旧图。传了：原素材 + 黑 40% 遮罩 + 背景模糊，上面叠点阵动效；不传（第一次生成）：没有遮罩，只有点阵动效 */
   cover?: string;
@@ -51,9 +51,9 @@ export interface NodeCardProps extends HTMLAttributes<HTMLDivElement> {
   defaultCollected?: boolean;
   /** 完成：点了收藏 */
   onCollectedChange?: (collected: boolean) => void;
-  /** 完成：右上按钮条里的图标按钮，依次是全屏、下载。按钮条里默认就是 IconButton 28 · 文字 */
+  /** 完成：右上按钮条里的图标按钮，依次是全屏、下载。按钮条里默认就是 IconButton 28 · 无底 */
   iconButton?: ReactNode;
-  /** 完成：右上按钮条最右边的文字按钮，和前面隔一条分割线，比如素材节点的「上传」、多图节点的「4 ⌄」。默认 Button 小 · 文字 */
+  /** 完成：右上按钮条最右边的文字按钮，和前面隔一条分割线，比如素材节点的「上传」、多图节点的「4 ⌄」。默认 Button 小 · 无底 */
   textButton?: ReactNode;
   /** 完成：右上的按钮条只在鼠标移上去时出现。画布上的真实节点都开；不开就一直显示，文档摆静态用 */
   hoverActions?: boolean;

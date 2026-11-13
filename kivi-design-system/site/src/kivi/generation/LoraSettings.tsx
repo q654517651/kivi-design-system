@@ -1,6 +1,7 @@
 import { forwardRef, useState, type HTMLAttributes } from 'react';
 import { IconButton } from '../button';
 import { NumberInput } from '../inputs';
+import { ScrollArea } from '../scroll-area';
 import { Slider } from '../selection';
 import { useControllable, useCopy } from '../hooks';
 import { cx } from '../utils';
@@ -31,10 +32,20 @@ function CopyBox({ title, text, scroll }: { title: string; text: string; scroll?
     <div className="kv-lora-settings__block">
       <div className="kv-lora-settings__label">{title}</div>
       <div className="kv-lora-settings__box" data-scroll={scroll ? '' : undefined}>
-        <div className="kv-lora-settings__text" title={scroll ? undefined : text}>
-          {text}
-        </div>
-        <IconButton icon={copied ? 'CheckSmall' : 'Copy'} label={copied ? '已复制' : `复制${title}`} size={28} className="kv-lora-settings__copy" onClick={() => copy(text)} />
+        {scroll ? (
+          <ScrollArea className="kv-lora-settings__text">{text}</ScrollArea>
+        ) : (
+          <div className="kv-lora-settings__text" title={text}>
+            {text}
+          </div>
+        )}
+        <IconButton
+          icon={copied ? 'CheckSmall' : 'Copy'}
+          label={copied ? '已复制' : `复制${title}`}
+          size={28}
+          className="kv-lora-settings__copy"
+          onClick={() => copy(text)}
+        />
       </div>
     </div>
   );
@@ -62,15 +73,7 @@ export const LoraSettings = forwardRef<HTMLDivElement, LoraSettingsProps>(functi
       {template && <CopyBox title="提示词模版" text={template} scroll />}
       <div className="kv-lora-settings__weight">
         <span className="kv-lora-settings__weight-label">权重</span>
-        <Slider
-          className="kv-lora-settings__slider"
-          aria-label="Lora 权重"
-          min={MIN}
-          max={MAX}
-          step={0.1}
-          value={current}
-          onChange={setWeight}
-        />
+        <Slider className="kv-lora-settings__slider" aria-label="Lora 权重" min={MIN} max={MAX} step={0.1} value={current} onChange={setWeight} />
         <NumberInput
           className="kv-lora-settings__weight-input"
           aria-label="Lora 权重数值"

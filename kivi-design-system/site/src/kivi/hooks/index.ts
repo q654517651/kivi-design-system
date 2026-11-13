@@ -5,6 +5,7 @@
 export * from './useControllable';
 export * from './usePresence';
 export * from './useFloating';
+export * from './useLayerNesting';
 export * from './usePointerDrag';
 export * from './useHoverIntent';
 export * from './useMergedRef';

@@ -16,12 +16,12 @@
   display: block;
   box-sizing: border-box;
   width: 100%;
-  /* 照线上：默认 4 行，随字长高，最多 6 行，再多就滚动。按行高乘行数，总是整行 */
-  min-height: calc(var(--font-line-height-22) * 4);
-  max-height: calc(var(--font-line-height-22) * 6);
+  /* 照线上：默认 4 行，随字长高，最多 6 行，再多就滚动（minRows / maxRows 可改）。按行高乘行数，总是整行 */
+  min-height: calc(var(--font-line-height-22) * var(--kv-prompt-min-rows, 4));
+  max-height: calc(var(--font-line-height-22) * var(--kv-prompt-max-rows, 6));
   margin: 0;
   padding: 0;
-  overflow-y: auto;
+  overflow-y: auto; /* 原生滚动：输入框（contenteditable）自己滚，滚动条由 base.css 兜底成细条 */
   border: 0;
   outline: 0;
   background: none;
@@ -524,15 +524,11 @@
   white-space: nowrap;
 }
 
-/* 提示词模版：能换行，12 / 20，最多 3 行（60），多了滚动 */
+/* 提示词模版：能换行，12 / 20，最多 3 行（60），多了滚动（ScrollArea）*/
 
 .kv-lora-settings__box[data-scroll] > .kv-lora-settings__text {
   max-height: calc(var(--font-line-height-20) * 3); /* 最多 3 行，多了滚动 */
   line-height: var(--font-line-height-20);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
   text-overflow: clip;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -761,7 +757,7 @@
 /* 网格：列宽至少 180，自动铺满，间距 12；高度跟着弹窗走，最高 560，多了在里面滚动。
    高度固定（不随卡片多少变），切「全部 / 收藏」弹窗不跳 */
 
-.kv-lora-picker__grid,
+.kv-lora-picker__scroll,
 .kv-lora-picker__empty {
   box-sizing: border-box;
   height: min(560px, calc(100vh - 240px));
@@ -772,10 +768,10 @@
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   align-content: start;
   gap: var(--spacing-12);
-  overflow-y: auto;
+}
+
+.kv-lora-picker__scroll > .kv-scroll-area__viewport {
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
 }
 
 .kv-lora-picker__empty {
@@ -887,7 +883,7 @@
 .kv-skill-panel__tabs > .kv-tab-group {
   flex: 1;
   min-width: 0;
-  overflow-x: auto;
+  overflow-x: auto; /* 原生滚动：滚动条藏起来，分类一行横滑 */
   scrollbar-width: none;
 }
 
@@ -1005,7 +1001,6 @@
 .kv-skill-panel__preview-desc {
   max-height: 96px;
   margin: 0;
-  overflow-y: auto;
   color: var(--color-text-fill-secondary);
   font-size: var(--font-size-12);
   line-height: var(--font-line-height-20);

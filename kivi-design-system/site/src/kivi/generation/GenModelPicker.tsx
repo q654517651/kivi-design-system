@@ -74,7 +74,7 @@ export const GenModelPicker = forwardRef<HTMLSpanElement, GenModelPickerProps>(f
         setOpen(o);
         if (o) setActive('image');
       }}
-      trigger={trigger ?? <IconButton icon="Mdoel" label="选择模型" variant="text" />}
+      trigger={trigger ?? <IconButton icon="Mdoel" label="选择模型" variant="ghost" />}
       {...rest}
     >
       <Menu className="kv-gen-model-picker" aria-label="选择模型">

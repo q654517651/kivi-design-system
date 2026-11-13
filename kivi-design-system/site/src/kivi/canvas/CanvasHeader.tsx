@@ -6,6 +6,7 @@ import { toast } from '../feedback';
 import { Icon } from '../Icon';
 import { Dropdown, Menu, MenuItem, MenuLabel } from '../menu';
 import { useControllable } from '../hooks';
+import { ScrollArea } from '../scroll-area';
 import { cx } from '../utils';
 import './canvas.css';
 
@@ -72,7 +73,7 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [removing, setRemoving] = useState<CanvasItem | null>(null);
-  const [switching, setSwitching] = useState<string | null>(null);
+  const [switching, setSwitching] = useState<{ type: 'select'; id: string } | { type: 'create' } | null>(null);
   const [scrollTo, setScrollTo] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const current = canvases.find((c) => c.id === value) ?? canvases[0];
@@ -101,6 +102,14 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
     setScrollTo(item.id);
   };
 
+  const requestCreate = () => {
+    if (!agentWorking) return create();
+    if (full()) return;
+    setOpen(false);
+    // 确认后才新建；取消时列表和当前画布都不变
+    setSwitching({ type: 'create' });
+  };
+
   const duplicate = (c: CanvasItem) => {
     if (full()) return;
     const item = { id: uid(), name: `${c.name} 副本` };
@@ -123,7 +132,7 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
     if (agentWorking) {
       // 弹窗前先收起下拉，免得 Esc 先关下拉
       setOpen(false);
-      setSwitching(id);
+      setSwitching({ type: 'select', id });
       return;
     }
     setValue(id);
@@ -154,45 +163,47 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
           }
         >
           <Menu width={240} role="group" aria-label="画布" className="kv-canvas-header__menu">
-            <MenuLabel action={<IconButton icon="Add" label="新建画布" size={28} variant="light" onClick={create} />}>画布</MenuLabel>
-            <div ref={listRef} className="kv-canvas-header__list" role="listbox" aria-label="画布列表">
-              {canvases.map((c) => (
-                <MenuItem
-                  key={c.id}
-                  data-canvas-id={c.id}
-                  selected={c.id === value}
-                  onClick={() => select(c.id)}
-                  onDoubleClick={() => setEditing(c.id)}
-                  editing={editing === c.id}
-                  onEditingChange={(v) => setEditing(v ? c.id : null)}
-                  onRename={(name) => rename(c.id, name)}
-                  more={
-                    <Menu>
-                      <MenuItem icon="Rename" onClick={() => setEditing(c.id)}>
-                        重命名画布
-                      </MenuItem>
-                      <MenuItem icon="Copy" onClick={() => duplicate(c)}>
-                        复制画布
-                      </MenuItem>
-                      <Divider />
-                      <MenuItem
-                        variant="danger"
-                        icon="Delete"
-                        disabled={canvases.length <= 1}
-                        onClick={() => {
-                          setOpen(false);
-                          setRemoving(c);
-                        }}
-                      >
-                        删除画布
-                      </MenuItem>
-                    </Menu>
-                  }
-                >
-                  {c.name}
-                </MenuItem>
-              ))}
-            </div>
+            <MenuLabel action={<IconButton icon="Add" label="新建画布" size={28} variant="ghost-muted" onClick={requestCreate} />}>画布</MenuLabel>
+            <ScrollArea ref={listRef} className="kv-canvas-header__list">
+              <div className="kv-canvas-header__items" role="listbox" aria-label="画布列表">
+                {canvases.map((c) => (
+                  <MenuItem
+                    key={c.id}
+                    data-canvas-id={c.id}
+                    selected={c.id === value}
+                    onClick={() => select(c.id)}
+                    onDoubleClick={() => setEditing(c.id)}
+                    editing={editing === c.id}
+                    onEditingChange={(v) => setEditing(v ? c.id : null)}
+                    onRename={(name) => rename(c.id, name)}
+                    more={
+                      <Menu>
+                        <MenuItem icon="Rename" onClick={() => setEditing(c.id)}>
+                          重命名画布
+                        </MenuItem>
+                        <MenuItem icon="Copy" onClick={() => duplicate(c)}>
+                          复制画布
+                        </MenuItem>
+                        <Divider />
+                        <MenuItem
+                          variant="danger"
+                          icon="Delete"
+                          disabled={canvases.length <= 1}
+                          onClick={() => {
+                            setOpen(false);
+                            setRemoving(c);
+                          }}
+                        >
+                          删除画布
+                        </MenuItem>
+                      </Menu>
+                    }
+                  >
+                    {c.name}
+                  </MenuItem>
+                ))}
+              </div>
+            </ScrollArea>
           </Menu>
         </Dropdown>
       </ButtonGroup>
@@ -235,7 +246,8 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
               size={36}
               variant="primary"
               onClick={() => {
-                if (switching) setValue(switching);
+                if (switching?.type === 'create') create();
+                else if (switching?.type === 'select') setValue(switching.id);
                 setSwitching(null);
               }}
             >

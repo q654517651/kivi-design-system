@@ -1,14 +1,15 @@
 import type { MDXComponents } from 'mdx/types';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
+import { ScrollArea } from '@kivi';
 import { CodeBlock } from './CodeBlock';
 
 // MDX 里普通 Markdown 的渲染方式：表格包一层能横向滚动，代码块带高亮和复制，站内链接走路由
 export const mdxComponents: MDXComponents = {
   table: (props) => (
-    <div className="table-wrap">
+    <ScrollArea orientation="horizontal" className="table-wrap">
       <table {...props} />
-    </div>
+    </ScrollArea>
   ),
   pre: ({ children }) => {
     const code = children as ReactElement<{ className?: string; children?: string }>;

@@ -750,7 +750,7 @@
   gap: var(--spacing-8);
 }
 
-/* 右上角的全屏按钮：IconButton 32 · 轻（白 50%，悬停 100%）。离边 12（11-03 用户定，Figma 跟改） */
+/* 右上角的全屏按钮：IconButton 32 · 无底灰（白 50%，悬停 100%）。离边 12（11-03 用户定，Figma 跟改） */
 .kv-node-panel__expand {
   position: absolute;
   top: var(--spacing-12);
@@ -904,17 +904,17 @@
 }
 
 .kv-canvas-header__list {
+  flex: none;
+  /* 7.5 条：条目 36 × 7.5 + 中间 7 个间距 */
+  max-height: calc(36px * 7.5 + var(--spacing-4) * 7);
+}
+
+.kv-canvas-header__items {
   display: flex;
   flex-direction: column;
   gap: var(--kv-menu-gap, var(--spacing-4));
-  /* 7.5 条：条目 36 × 7.5 + 中间 7 个间距 */
-  max-height: calc(36px * 7.5 + var(--spacing-4) * 7);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
 }
 
-.kv-canvas-header__list > * {
+.kv-canvas-header__items > * {
   flex: none;
 }

@@ -13,7 +13,7 @@ export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
   height?: number | string;
 }
 
-/** 内容还没出来时占位的灰块，带扫光。Figma「反馈」页 Skeleton。组件只管颜色和圆角，宽高自己写 */
+/** 内容还没出来时占位的灰块，带扫光。Figma「加载和空态」页 Skeleton。组件只管颜色和圆角，宽高自己写 */
 export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(function Skeleton(
   { variant = 'rect', width, height, className, style, ...rest },
   ref,

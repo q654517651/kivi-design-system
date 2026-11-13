@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from 'react';
-import { Avatar, Dialog, Divider, IconButton, VideoPlayer } from '@kivi';
+import { Avatar, Dialog, Divider, IconButton, ScrollArea, VideoPlayer } from '@kivi';
 
 /*
   全站查看大图（11-11 用户定：都和探索页的作品详情一样）。照线上 CardDetailModal 铺满窗口：
@@ -59,7 +59,9 @@ export function MediaViewer({ media, onClose, head, actions, children, footer }:
               </span>
             </header>
             <Divider />
-            <div className="tpl-viewer__body">{children}</div>
+            <ScrollArea className="tpl-viewer__body">
+              <div className="tpl-viewer__content">{children}</div>
+            </ScrollArea>
             {footer && <div className="tpl-viewer__footer">{footer}</div>}
           </aside>
         </div>
