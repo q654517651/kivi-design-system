@@ -34,7 +34,7 @@ export interface ListItemProps extends Omit<LiHTMLAttributes<HTMLLIElement>, 'ch
   label?: ReactNode;
   /** 说明：正文下面一行，12 tertiary，一行省略。比如日期 */
   description?: ReactNode;
-  /** 右边悬停才出现的「⋯」：写了就出一个 IconButton 28 轻，点开弹出这里的菜单（一般是一个 Menu）。触屏上一直显示 */
+  /** 右边悬停才出现的「⋯」：写了就出一个 IconButton 28 · 无底灰，点开弹出这里的菜单（一般是一个 Menu）。触屏上一直显示 */
   more?: ReactNode;
   /** 「⋯」的说明，读屏用，默认「更多」 */
   moreLabel?: string;
@@ -148,7 +148,7 @@ export const ListItem = forwardRef<HTMLLIElement, ListItemProps>(function ListIt
       {more != null && !editing && (
         <Dropdown
           className="kv-list-item__more"
-          trigger={<IconButton tooltip={false} icon="More" label={moreLabel} size={28} variant="light" />}
+          trigger={<IconButton tooltip={false} icon="More" label={moreLabel} size={28} variant="ghost-muted" />}
         >
           {more}
         </Dropdown>

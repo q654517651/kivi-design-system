@@ -82,7 +82,7 @@ export interface NodeStackToggleProps extends Omit<ButtonHTMLAttributes<HTMLButt
   expanded?: boolean;
 }
 
-/** 主图右上的「张数」按钮：放在节点的按钮条里（Button 小 · 文字），数字 + 下箭头，展开时箭头转到朝上 */
+/** 主图右上的「张数」按钮：放在节点的按钮条里（Button 小 · 无底），数字 + 下箭头，展开时箭头转到朝上 */
 export const NodeStackToggle = forwardRef<HTMLButtonElement, NodeStackToggleProps>(function NodeStackToggle(
   { count, expanded, className, ...rest },
   ref,

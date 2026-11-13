@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useId, useRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cx } from '../utils';
-import { useControllable, useScrollFade } from '../hooks';
+import { useControllable } from '../hooks';
+import { ScrollArea } from '../scroll-area';
 import { Collapse } from '../collapse';
 import { ProcessRow } from './ProcessRow';
 import './agent-process.css';
@@ -30,7 +31,7 @@ export const ThinkingBlock = forwardRef<HTMLDivElement, ThinkingBlockProps>(func
 ) {
   const [expanded, setExpanded] = useControllable(expandedProp, defaultExpanded, onExpandedChange);
   const bodyId = useId();
-  const body = useScrollFade<HTMLDivElement>();
+  const body = useRef<HTMLDivElement>(null);
   const open = thinking || expanded;
 
   // 思考完成：自动收起
@@ -42,9 +43,9 @@ export const ThinkingBlock = forwardRef<HTMLDivElement, ThinkingBlockProps>(func
 
   // 思考中：跟着文字滚到底
   useEffect(() => {
-    const el = body.ref.current;
+    const el = body.current;
     if (thinking && el) el.scrollTop = el.scrollHeight;
-  }, [thinking, children, body.ref]);
+  }, [thinking, children]);
 
   return (
     <div ref={ref} className={cx('kv-thinking-block', className)} {...rest}>
@@ -58,9 +59,9 @@ export const ThinkingBlock = forwardRef<HTMLDivElement, ThinkingBlockProps>(func
         aria-controls={bodyId}
       />
       <Collapse expanded={open} distance={200} gap={6}>
-        <div ref={body.ref} id={bodyId} className="kv-thinking-block__body" data-fade={body.fade} onScroll={body.onScroll}>
+        <ScrollArea id={bodyId} className="kv-thinking-block__body" maxHeight={160} fade viewportRef={body}>
           <div className="kv-thinking-block__text">{children}</div>
-        </div>
+        </ScrollArea>
       </Collapse>
     </div>
   );

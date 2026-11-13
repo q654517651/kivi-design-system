@@ -212,7 +212,7 @@ export function ProcessGroupSim({
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16, width: 420, maxWidth: '100%' }}>
       <ProcessGroup key={run} steps={steps} />
       {live && (
-        <Button size={28} variant="light" leftIcon="Reset" onClick={replay}>
+        <Button size={28} variant="secondary-muted" leftIcon="Reset" onClick={replay}>
           重放
         </Button>
       )}

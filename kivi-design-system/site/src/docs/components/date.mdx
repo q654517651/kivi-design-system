@@ -48,4 +48,4 @@ import { CalendarPlayground, DateRangeFilterPlayground } from './date.demos';
 | `max` | `Date` | — | 最晚能选的日子，再晚的变灰，也翻不过去 |
 | `disabledDate` | `(date: Date) => boolean` | — | 另外不能选的日子 |
 
-一周从周日开始，6 行 42 格。头：« 上一年、‹ 上个月、「2026年11月」14 / 24 semibold、› 下个月、» 下一年，按钮是 IconButton 28 · 文字（年用双箭头 `DoubleLeftArrowSmall` / `DoubleRightArrowSmall`），翻不过去时 disabled。星期 13 secondary。日子 24 圆格，横向间距 4、竖向 12，网格宽 192，13 号字；不是这个月的 tertiary（能点）；不能选的 disabled 色；悬停白 14%（Light 1 hover），选中白 10%（常驻底色，Light 1 默认；选中的日子悬停 14%、按下 18%）。今天不画标记。方向键按天 / 按周移，PageUp / PageDown 翻月，Home / End 到这周头尾，Enter / 空格选中。其余原生 `<div>` 属性都能传。
+一周从周日开始，6 行 42 格。头：« 上一年、‹ 上个月、「2026年11月」14 / 24 semibold、› 下个月、» 下一年，按钮是 IconButton 28 · 无底（年用双箭头 `DoubleLeftArrowSmall` / `DoubleRightArrowSmall`），翻不过去时 disabled。星期 13 secondary。日子 24 圆格，横向间距 4、竖向 12，网格宽 192，13 号字；不是这个月的 tertiary（能点）；不能选的 disabled 色；悬停白 14%（Light 1 hover），选中白 10%（常驻底色，Light 1 默认；选中的日子悬停 14%、按下 18%）。今天不画标记。方向键按天 / 按周移，PageUp / PageDown 翻月，Home / End 到这周头尾，Enter / 空格选中。其余原生 `<div>` 属性都能传。

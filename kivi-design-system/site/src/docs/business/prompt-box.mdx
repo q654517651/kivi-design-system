@@ -119,9 +119,11 @@ import { GenerateButtonPlayground, PromptBoxLab, PromptBoxPlayground, PromptInpu
 
 ### PromptInput
 
-提示词输入。无底、无内边距，14 / 22；默认 4 行高（88），随字长高，最多 6 行（132），再多滚动；占位文字 `--color-text-fill-placeholder`。表单里的多行输入用 Textarea。其余原生 `<div>` 属性都能传。
+提示词输入。无底、无内边距，14 / 22；默认 4 行高（88），随字长高，最多 6 行（132），再多滚动（`minRows` / `maxRows` 可改）；占位文字 `--color-text-fill-placeholder`。表单里的多行输入用 Textarea。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `placeholder` | `string` | — | 没输入时的占位文字 |
 | `children` | `ReactNode` | — | 开头的内容：文字，中间可以插 MentionChip。只在第一次渲染时用，之后由用户编辑 |
+| `minRows` | `number` | `4` | 最少几行高。工具弹窗里一横条的输入框用 `1` |
+| `maxRows` | `number` | `6` | 最多长到几行，再多滚动 |

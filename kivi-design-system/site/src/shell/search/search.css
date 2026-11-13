@@ -1,7 +1,7 @@
 /*
   网站外壳 · 全局搜索
   新加的样式：只用 tokens.css 的变量，类名都是 shell-search*，不改任何已有的类。
-  入口用 Button / IconButton，弹窗用 Dialog，输入用 Input，建议用 Button 轻；结果行照左侧目录（shell-nav-item）的样子自己写：
+  入口用 Button / IconButton，弹窗用 Dialog，输入用 Input，建议用 Button · 次要灰；结果行照左侧目录（shell-nav-item）的样子自己写：
   悬停和键盘选中同一个底色，圆角 8，一行标题加一行说明。
 */
 
@@ -68,11 +68,10 @@
   height: min(420px, 50vh);
   margin: 0 calc(var(--spacing-8) * -1);
   padding: 0 var(--spacing-8);
-  overflow-x: hidden;
-  overflow-y: auto;
+}
+
+.shell-search__list .kv-scroll-area__viewport {
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
 }
 
 .shell-search__group {

@@ -8,18 +8,22 @@ import { useButtonGroup } from './ButtonGroup';
 import './button.css';
 
 export type ButtonSize = 28 | 32 | 36;
-export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'danger' | 'on-media' | 'light';
+export type ButtonVariant = 'primary' | 'secondary' | 'secondary-muted' | 'ghost' | 'ghost-muted' | 'danger' | 'on-media';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** 尺寸（高度）：28 / 32 / 36，默认 32，放进 ButtonGroup 默认 28。「轻」没有 36 */
+  /** 尺寸（高度）：28 / 32 / 36，默认 32，放进 ButtonGroup 默认 28。次要灰、无底灰没有 36 */
   size?: ButtonSize;
-  /** 类型：主要 / 次要 / 文字 / 危险 / 浮层 / 轻，默认次要，放进 ButtonGroup 默认文字。轻：底和次要一样，文字和图标 50%，用在生成记录底部这类内容区里的次级操作 */
+  /**
+   * 类型（11-13 改名：一个类型一个语义，不另加开关去拼）：主要 / 次要 / 次要灰 / 无底 / 无底灰 / 危险 / 浮层，默认次要，放进 ButtonGroup 默认无底。
+   * 「灰」= 文字和图标 50%，悬停、按下回到 100%。次要灰：底和次要一样，用在占位处、生成记录底部这类内容区里的次级操作；
+   * 无底灰：没有底，悬停出底，比如侧栏分组标题右边的「全部」，和 IconButton 的无底灰一样
+   */
   variant?: ButtonVariant;
   /** 左图标 */
   leftIcon?: IconName;
   /** 右图标：只放下拉箭头 DownArrowSmall，减弱一档（tertiary），和 Select 的箭头一样 */
   rightIcon?: IconName;
-  /** 加载中：左图标换成转圈，不响应悬停；鼠标和键盘（Enter、Space）都不再触发 onClick，也不提交表单。外观不变灰。「轻」没有加载中 */
+  /** 加载中：左图标换成转圈，不响应悬停；鼠标和键盘（Enter、Space）都不再触发 onClick，也不提交表单。外观不变灰。次要灰、无底灰没有加载中 */
   loading?: boolean;
 }
 

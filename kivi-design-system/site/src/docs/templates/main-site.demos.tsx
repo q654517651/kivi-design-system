@@ -41,6 +41,7 @@ import {
   type ReferenceStackItem,
   type ResultTileAction,
   type ResultTileStatus,
+  ScrollArea,
 } from '@kivi';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../business/skill-data';
 import { demoCost } from '../business/gen-demo-cost';
@@ -295,7 +296,7 @@ function HistoryGroup({
       onExpandedChange={setOpen}
       extra={
         onAll && (
-          <Button size={28} variant="text" onClick={onAll}>
+          <Button size={28} variant="ghost-muted" onClick={onAll}>
             全部
           </Button>
         )
@@ -305,7 +306,7 @@ function HistoryGroup({
           icon={onAll ? 'Add' : 'NewChat'}
           label={`新建${title}`}
           size={28}
-          variant="light"
+          variant="ghost-muted"
           onClick={() => {
             setOpen(true);
             onNew();
@@ -324,7 +325,7 @@ function HistoryGroup({
               editing={editing === c.id}
               onEditingChange={(v) => setEditing(v ? c.id : null)}
               onRename={(name) => onRename(c.id, name)}
-              actions={onOpenNewTab && <IconButton icon="NewWindow" label="在新标签页打开" size={28} variant="light" onClick={() => onOpenNewTab(c.id)} />}
+              actions={onOpenNewTab && <IconButton icon="NewWindow" label="在新标签页打开" size={28} variant="ghost-muted" onClick={() => onOpenNewTab(c.id)} />}
               more={
                 // 重命名（在原地改名）、置顶（新版要加，置顶后变「取消置顶」，照线上资产文件夹）、删除
                 <Menu>
@@ -418,64 +419,66 @@ export function Sidebar({
   const toggle = collapsed ? '展开侧栏' : '收起侧栏';
   return (
     <div className="tpl-ms__side-wrap" data-collapsed={collapsed ? '' : undefined} data-settling={settling ? '' : undefined}>
-      <aside className="tpl-ms__side">
-        <div className="tpl-ms__brand" onPointerLeave={() => setSettling(false)}>
-          {/* Logo 是按钮：点了回创作首页（照 LibTV），收起时藏起来、换小 Logo */}
-          <button type="button" className="tpl-ms__home" aria-label="回到创作首页" onClick={() => onNavigate?.('create')}>
-            <Icon name="Logo" />
-          </button>
-          {/* 收起时的小 Logo：绿色渐变底 + 描边，Logo 缩小放正中（照原型） */}
-          <span className="tpl-ms__mini-logo" aria-hidden>
-            <Icon name="Logo" />
-          </span>
-          {/* 展开时在右边；收起时淡出，原地不动。收起后悬停小 Logo 才在它的位置出现。轻：平时 50%，悬停变亮 */}
-          <span className="tpl-ms__toggle">
-            <IconButton icon="Sidebar" label={toggle} variant="light" size={28} tooltip={{ placement: collapsed ? 'right' : 'bottom' }} onClick={() => { setSettling(!collapsed); setCollapsed(!collapsed); }} />
-          </span>
-        </div>
-        <Menu variant="plain" aria-label="主站导航">
-          {NAV_ITEMS.map((n) => (
-            <MenuItem
-              key={n.page}
-              icon={n.icon}
+      <ScrollArea className="tpl-ms__side-scroll">
+        <aside className="tpl-ms__side">
+          <div className="tpl-ms__brand" onPointerLeave={() => setSettling(false)}>
+            {/* Logo 是按钮：点了回创作首页（照 LibTV），收起时藏起来、换小 Logo */}
+            <button type="button" className="tpl-ms__home" aria-label="回到创作首页" onClick={() => onNavigate?.('create')}>
+              <Icon name="Logo" />
+            </button>
+            {/* 收起时的小 Logo：绿色渐变底 + 描边，Logo 缩小放正中（照原型） */}
+            <span className="tpl-ms__mini-logo" aria-hidden>
+              <Icon name="Logo" />
+            </span>
+            {/* 展开时在右边；收起时淡出，原地不动。收起后悬停小 Logo 才在它的位置出现。轻：平时 50%，悬停变亮 */}
+            <span className="tpl-ms__toggle">
+              <IconButton icon="Sidebar" label={toggle} variant="ghost-muted" size={28} tooltip={{ placement: collapsed ? 'right' : 'bottom' }} onClick={() => { setSettling(!collapsed); setCollapsed(!collapsed); }} />
+            </span>
+          </div>
+          <Menu variant="plain" aria-label="主站导航">
+            {NAV_ITEMS.map((n) => (
+              <MenuItem
+                key={n.page}
+                icon={n.icon}
+                collapsed={collapsed}
+                selected={(page === n.page && (n.page !== 'create' || !selected)) || undefined}
+                onClick={() => onNavigate?.(n.page)}
+              >
+                {n.label}
+              </MenuItem>
+            ))}
+            <div className="tpl-ms__gap" />
+            <HistoryGroup
+              title="对话"
+              icon="Message"
+              items={chats}
+              selected={selected}
               collapsed={collapsed}
-              selected={(page === n.page && (n.page !== 'create' || !selected)) || undefined}
-              onClick={() => onNavigate?.(n.page)}
-            >
-              {n.label}
-            </MenuItem>
-          ))}
-          <div className="tpl-ms__gap" />
-          <HistoryGroup
-            title="对话"
-            icon="Message"
-            items={chats}
-            selected={selected}
-            collapsed={collapsed}
-            onSelect={(id) => open('chat', id)}
-            onNew={() => add('chat', setChats, '新对话')}
-            onRemove={(id) => setChats((list) => list.filter((c) => c.id !== id))}
-            onRename={(id, name) => setChats((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
-            onPin={(id) => pin(setChats, id)}
-          />
-          <div className="tpl-ms__gap" />
-          <HistoryGroup
-            title="画布"
-            icon="Canvas"
-            items={canvases}
-            selected={selected}
-            collapsed={collapsed}
-            onSelect={(id) => open('canvas', id)}
-            onNew={() => add('canvas', setCanvases, '未命名画布')}
-            onRemove={(id) => setCanvases((list) => list.filter((c) => c.id !== id))}
-            onRename={(id, name) => setCanvases((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
-            onPin={(id) => pin(setCanvases, id)}
-            onAll={() => onNavigate?.('assets')}
-            // 演示：新标签页打开画布模板（不套网站外壳）
-            onOpenNewTab={() => window.open(`${location.pathname}#/app/canvas`, '_blank', 'noopener')}
-          />
-        </Menu>
-      </aside>
+              onSelect={(id) => open('chat', id)}
+              onNew={() => add('chat', setChats, '新对话')}
+              onRemove={(id) => setChats((list) => list.filter((c) => c.id !== id))}
+              onRename={(id, name) => setChats((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
+              onPin={(id) => pin(setChats, id)}
+            />
+            <div className="tpl-ms__gap" />
+            <HistoryGroup
+              title="画布"
+              icon="Canvas"
+              items={canvases}
+              selected={selected}
+              collapsed={collapsed}
+              onSelect={(id) => open('canvas', id)}
+              onNew={() => add('canvas', setCanvases, '未命名画布')}
+              onRemove={(id) => setCanvases((list) => list.filter((c) => c.id !== id))}
+              onRename={(id, name) => setCanvases((list) => list.map((c) => (c.id === id ? { ...c, text: name } : c)))}
+              onPin={(id) => pin(setCanvases, id)}
+              onAll={() => onNavigate?.('assets')}
+              // 演示：新标签页打开画布模板（不套网站外壳）
+              onOpenNewTab={() => window.open(`${location.pathname}#/app/canvas`, '_blank', 'noopener')}
+            />
+          </Menu>
+        </aside>
+      </ScrollArea>
     </div>
   );
 }
@@ -809,7 +812,7 @@ export function CreatePage() {
   return (
     <>
       <main className="tpl-ms__main" style={{ '--tpl-composer-h': `${composerH}px` } as CSSProperties}>
-        <div ref={feed} className="tpl-ms__feed">
+        <ScrollArea className="tpl-ms__feed" viewportRef={feed}>
           <div className="tpl-ms__column">
             {[...RECORDS, ...extra].map((r) =>
               r.kind === 'agent' ? (
@@ -828,15 +831,15 @@ export function CreatePage() {
                     {r.tiles.map((t, i) => tile(t, i, r.ratio, gridOf(r.ratio, r.tiles.length).span, r.id))}
                   </div>
                   <div className="tpl-row">
-                    <Button variant="light">重新编辑</Button>
-                    <Button variant="light">再次生成</Button>
-                    <Button variant="light">删除整组</Button>
+                    <Button variant="secondary-muted">重新编辑</Button>
+                    <Button variant="secondary-muted">再次生成</Button>
+                    <Button variant="secondary-muted">删除整组</Button>
                   </div>
                 </div>
               ),
             )}
           </div>
-        </div>
+        </ScrollArea>
         <div ref={composer} className="tpl-ms__composer">
           <Composer references={refs} onReferencesChange={setRefs} />
         </div>
@@ -886,7 +889,7 @@ export function CreatePage() {
         open={tool !== null}
         onOpenChange={(v) => !v && setTool(null)}
       >
-        {tool && <ToolWorkbench key={tool.source.id} tool={tool.id} source={tool.source} onGenerate={runJob} />}
+        {tool && <ToolWorkbench key={tool.source.id} tool={tool.id} source={tool.source} onGenerate={runJob} promptBar />}
       </Dialog>
 
       <MediaViewer

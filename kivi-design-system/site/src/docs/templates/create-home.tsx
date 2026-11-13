@@ -110,7 +110,7 @@ function HomeHead({ title, onMore, children }: { title?: string; onMore: () => v
   return (
     <header className="tpl-home__head">
       {title ? <h2>{title}</h2> : children}
-      <Button size={32} variant="text" rightIcon="RightArrowSmall" onClick={onMore}>
+      <Button size={32} variant="ghost" rightIcon="RightArrowSmall" onClick={onMore}>
         查看全部
       </Button>
     </header>
@@ -155,13 +155,15 @@ function RecentUpdates() {
           </span>
         )}
       </header>
-      <div ref={rail} className="tpl-home__rail">
-        {BANNERS.map((b) => (
-          <button key={b.title} type="button" className="tpl-home__banner" aria-label={`查看：${b.title}`} onClick={() => setOpen(b)}>
-            <img src={placeholderImageSrc(b.image, '16:9')} alt="" draggable={false} />
-          </button>
-        ))}
-      </div>
+      <ScrollArea orientation="horizontal" className="tpl-home__rail" viewportRef={rail} viewportProps={{ className: 'tpl-home__rail-viewport' }}>
+        <div className="tpl-home__rail-track">
+          {BANNERS.map((b) => (
+            <button key={b.title} type="button" className="tpl-home__banner" aria-label={`查看：${b.title}`} onClick={() => setOpen(b)}>
+              <img src={placeholderImageSrc(b.image, '16:9')} alt="" draggable={false} />
+            </button>
+          ))}
+        </div>
+      </ScrollArea>
       <Dialog size={800} title={open?.title} open={open !== null} onOpenChange={(v) => !v && setOpen(null)}>
         {open && <img className="tpl-home__banner-preview" src={placeholderImageSrc(open.image, '16:9')} alt={open.title} />}
       </Dialog>

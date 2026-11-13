@@ -1,7 +1,7 @@
 import { Fragment, useDeferredValue, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlignLeft, Hash, Palette, Table2, type LucideIcon } from 'lucide-react';
-import { Button, Dialog, Icon, IconButton, ICONS, Input, type IconName } from '@kivi';
+import { Button, Dialog, Icon, IconButton, ICONS, Input, ScrollArea, type IconName } from '@kivi';
 import { PAGES } from '../nav';
 import { complete, createEngine, didYouMean, excerpt, highlight, parseQuery, search, type Engine } from './engine';
 import { requestJump } from './jump';
@@ -249,7 +249,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
           <>
             <span>{hits.length ? '建议' : `没有找到「${searched.trim()}」，你是不是想搜`}</span>
             {suggestions.map((s) => (
-              <Button key={s.query} size={28} variant="light" onClick={() => apply(s.query)}>
+              <Button key={s.query} size={28} variant="secondary-muted" onClick={() => apply(s.query)}>
                 {s.text}
               </Button>
             ))}
@@ -257,7 +257,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <div ref={listRef} className="shell-search__list" role="listbox" id={`${uid}-list`} aria-label="搜索结果">
+      <ScrollArea viewportRef={listRef} className="shell-search__list" role="listbox" id={`${uid}-list`} aria-label="搜索结果">
         {failed && <p className="shell-search__empty">索引加载失败，刷新页面再试。</p>}
         {!failed && !engine && <p className="shell-search__empty">加载中…</p>}
         {engine && typing && hits.length === 0 && !suggestions.length && (
@@ -306,12 +306,12 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
         ))}
         {typing && hits.length > limit && (
           <div className="shell-search__more">
-            <Button size={28} variant="light" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
+            <Button size={28} variant="secondary-muted" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
               再显示 {Math.min(PAGE_SIZE, hits.length - limit)} 条
             </Button>
           </div>
         )}
-      </div>
+      </ScrollArea>
 
       <div className="shell-search__foot">
         <span className="shell-search__keys">↑↓ 选择　↵ 跳转　Tab 接受建议　Esc 关闭</span>
@@ -354,7 +354,7 @@ export function SearchButton() {
     <>
       <Button
         size={28}
-        variant="text"
+        variant="ghost"
         leftIcon="Search"
         className="shell-search-btn"
         aria-keyshortcuts={isMac ? 'Meta+K' : 'Control+K'}

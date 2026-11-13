@@ -295,7 +295,7 @@ function Discover({ moreRef }: { moreRef: MutableRefObject<(() => void) | undefi
             size={160}
             title="没有搜索到符合条件的内容"
             action={
-              <Button variant="light" onClick={clearFilters}>
+              <Button variant="secondary-muted" onClick={clearFilters}>
                 清空筛选
               </Button>
             }

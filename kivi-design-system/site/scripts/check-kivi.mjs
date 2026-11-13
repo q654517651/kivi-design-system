@@ -1,5 +1,5 @@
 // 查组件库 src/kivi/ 是否按「组件写法」页写的。npm run check 会跑。
-// 只查能机械判断的：forwardRef、displayName、...rest、is-* 类名、部件类名、手抄别的组件的类名、CSS 里写死的颜色和背景模糊。
+// 只查能机械判断的：forwardRef、displayName、...rest、is-* 类名、部件类名、手抄别的组件的类名、CSS 里写死的颜色和背景模糊、直接写的原生滚动。
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
@@ -131,6 +131,23 @@ const BORROW_MARK = '借用类名';
         seen.add(m[1]);
         if (own && !own.has(dir)) report(file, i + 1, `手抄了别的组件的类名 ${m[1]}（属于 ${[...own].join('、')}）：直接用那个组件；确实只能借就注释「${BORROW_MARK}」写原因`);
       }
+    });
+  }
+}
+
+// 能滚的区域一律用 ScrollArea（11-13，设计规则 · 布局）：组件库、文档、网站外壳都不许直接写 overflow: auto / scroll，
+// 不然 Mac 插鼠标时出系统灰条。原生控件自己滚、或者滚动条本来就藏起来的，在那一行注释「原生滚动：原因」
+const NATIVE_SCROLL_MARK = '原生滚动';
+{
+  const src = fileURLToPath(new URL('../src/', import.meta.url));
+  const all = walk(src).filter((f) => !f.includes('/scroll-area/'));
+  for (const file of all) {
+    const isCss = file.endsWith('.css');
+    if (!isCss && !file.endsWith('.tsx')) continue;
+    const pattern = isCss ? /overflow(-x|-y)?:[^;]*\b(auto|scroll)\b/ : /overflow[XY]?:\s*['"][^'"]*\b(auto|scroll)\b/;
+    readFileSync(file, 'utf8').split('\n').forEach((raw, i) => {
+      if (pattern.test(raw) && !raw.includes(NATIVE_SCROLL_MARK))
+        problems.push(`${relative(src, file)}:${i + 1}  直接写了原生滚动：${raw.trim()}（用 ScrollArea；原生控件或藏了滚动条的，在这一行注释「${NATIVE_SCROLL_MARK}：原因」）`);
     });
   }
 }

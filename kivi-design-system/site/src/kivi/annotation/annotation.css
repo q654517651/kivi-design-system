@@ -143,7 +143,7 @@
   max-height: 100px;
   margin: 0;
   padding: 0;
-  overflow-y: auto;
+  overflow-y: auto; /* 原生滚动：textarea 自己滚，滚动条由 base.css 兜底成细条 */
   border: 0;
   outline: none;
   background: transparent;

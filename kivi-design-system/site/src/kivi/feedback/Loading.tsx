@@ -12,7 +12,7 @@ export interface LoadingProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode;
 }
 
-/** 转圈 + 可选文字，告诉用户正在等。Figma「反馈」页 Loading。按钮里的加载用 Button 的 loading，不用它 */
+/** 转圈 + 可选文字，告诉用户正在等。Figma「加载和空态」页 Loading。按钮里的加载用 Button 的 loading，不用它 */
 export const Loading = forwardRef<HTMLDivElement, LoadingProps>(function Loading(
   { size = 16, className, children, ...rest },
   ref,

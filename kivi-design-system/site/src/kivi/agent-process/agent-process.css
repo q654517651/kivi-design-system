@@ -162,56 +162,23 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   --kv-row-action: var(--color-status-danger);
 }
 
-/* 展开后的列表（用法，不是 Figma 组件）：行距 6，最大高 160，右侧细滚动条。
-   超出时渐隐跟着滑的方向走：往下滑下面渐隐，往上滑上面渐隐（data-fade="bottom" / "top"，ProcessGroup 自己算）。
-   用 mask 做，渐隐 24，不盖底色，放在什么底上都一样 */
-.kv-process-list,
-.kv-thinking-block__body {
+/* 展开后的列表（用法，不是 Figma 组件）：行距 6，最大高 160，用 ScrollArea 滚（细滑块、渐隐跟着滑的方向，都是它自带的）。
+   渐隐用 mask 做，渐隐 24，不盖底色，放在什么底上都一样 */
+.kv-process-list__items {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--spacing-6);
-  max-height: 160px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-text-fill-disabled) transparent;
-}
-
-.kv-process-list::-webkit-scrollbar,
-.kv-thinking-block__body::-webkit-scrollbar {
-  width: 4px;
-}
-
-.kv-process-list::-webkit-scrollbar-thumb,
-.kv-thinking-block__body::-webkit-scrollbar-thumb {
-  border-radius: 2px;
-  background: var(--color-text-fill-disabled);
-}
-
-.kv-process-list[data-fade="bottom"],
-.kv-thinking-block__body[data-fade="bottom"] {
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); /* 遮罩只看透明度，Figma 没变量 */
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent); /* 遮罩只看透明度，Figma 没变量 */
-}
-
-.kv-process-list[data-fade="top"],
-.kv-thinking-block__body[data-fade="top"] {
-  -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 24px), transparent); /* 遮罩只看透明度，Figma 没变量 */
-  mask-image: linear-gradient(to top, #000 calc(100% - 24px), transparent); /* 遮罩只看透明度，Figma 没变量 */
 }
 
 /* ---------- ThinkingBlock：思考块 ----------
    一行「灯泡 + 思考中 / 思考完成」，下面是思考原文（Collapse 往下推着展开）。思考中自动展开、滚到底、标题扫光、不能点；
-   完成自动收起，点标题再看。原文 14 / 22 tertiary，保留换行，最高 160 内部滚动，滚动条和渐隐同 kv-process-list */
+   完成自动收起，点标题再看。原文 14 / 22 tertiary，保留换行，最高 160 用 ScrollArea 内部滚动 */
 .kv-thinking-block {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   max-width: 100%;
-}
-
-.kv-thinking-block__body {
-  display: block;
 }
 
 .kv-thinking-block__text {

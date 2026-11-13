@@ -26,7 +26,7 @@ export const Banner = forwardRef<HTMLDivElement, BannerProps>(function Banner(
     <div ref={ref} className={cx('kv-banner', `kv-banner--${type}`, className)} role={type === 'error' ? 'alert' : 'status'} {...rest}>
       <span className="kv-banner__icon" />
       <div className="kv-banner__text">{children}</div>
-      {onClose && <IconButton tooltip={false} className="kv-banner__close" icon="CloseSmall" label="关闭" size={28} variant="text" onClick={onClose} />}
+      {onClose && <IconButton tooltip={false} className="kv-banner__close" icon="CloseSmall" label="关闭" size={28} variant="ghost" onClick={onClose} />}
     </div>
   );
 });

@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import {
   AddTile,
+  ScrollArea,
   AttachmentStrip,
   Button,
   ButtonGroup,
@@ -10,6 +11,7 @@ import {
   GenPromptRefs,
   GenerateButton,
   Icon,
+  EmptyState,
   IconButton,
   Menu,
   MenuLabel,
@@ -166,12 +168,28 @@ const INITIAL_STATE: ToolState = {
 };
 
 /** 提示词：PromptInput 是不受控的，这里记下打的字（切工具再切回来接着显示），也决定生成按钮能不能点 */
-function Prompt({ placeholder, initial, onText }: { placeholder: string; initial: string; onText: (t: string) => void }) {
+function Prompt({ placeholder, initial, onText, oneLine }: { placeholder: string; initial: string; onText: (t: string) => void; oneLine?: boolean }) {
   const [init] = useState(initial); // 只在挂上时放进去，之后由用户编辑
   return (
-    <PromptInput placeholder={placeholder} onInput={(e) => onText(e.currentTarget.textContent ?? '')}>
+    <PromptInput
+      placeholder={placeholder}
+      minRows={oneLine ? 1 : undefined}
+      maxRows={oneLine ? 3 : undefined}
+      onInput={(e) => onText(e.currentTarget.textContent ?? '')}
+    >
       {init || undefined}
     </PromptInput>
+  );
+}
+
+/** 一横条的参数面板：左边下拉、中间一行输入（字多了往上长，最多 3 行）、右边生成。没有提示词（元素消除）时中间空着 */
+function PromptBar({ left, prompt, right }: { left: ReactNode; prompt: ReactNode; right: ReactNode }) {
+  return (
+    <NodePanel className="tpl-at__panel tpl-at__bar">
+      <div className="tpl-at__bar-left">{left}</div>
+      <div className="tpl-at__bar-input">{prompt}</div>
+      {right}
+    </NodePanel>
   );
 }
 
@@ -310,6 +328,8 @@ export interface ToolWorkbenchProps {
   onGenerate: (job: ToolJob) => void;
   /** 工具页里每个工具一块，不是当前的藏起来（参数、扩图框、涂抹、提示词都还在） */
   hidden?: boolean;
+  /** 扩图、智能编辑的提示词放成一横条（左边下拉、中间一行输入、右边生成），给图多留地方：创作页工具弹窗用（11-12 用户定） */
+  promptBar?: boolean;
   className?: string;
 }
 
@@ -317,7 +337,7 @@ export interface ToolWorkbenchProps {
  * 一个工具的工作区：舞台（原图、扩图框、涂抹）+ 底部参数面板。工具页、创作页的工具弹窗都用它，
  * 参数面板和画布节点下面的工具面板是同一套。只在模板里拼，不进组件库（11-11 用户定先看效果）
  */
-export function ToolWorkbench({ tool, source, onUpload, onGenerate, hidden, className }: ToolWorkbenchProps) {
+export function ToolWorkbench({ tool, source, onUpload, onGenerate, hidden, promptBar, className }: ToolWorkbenchProps) {
   const media = toolOf(tool).media;
   const cur = source;
   const [st, setSt] = useState(INITIAL_STATE);
@@ -424,12 +444,8 @@ export function ToolWorkbench({ tool, source, onUpload, onGenerate, hidden, clas
         </NodePanel>
       );
       break;
-    case 'expand':
-      panel = (
-        <NodePanel className="tpl-at__panel">
-          <Prompt key={promptKey} initial={prompt} placeholder="描述扩出去的地方画什么，不填由 AI 自己补全" onText={setPrompt} />
-          <NodePanelBar
-            left={
+    case 'expand': {
+      const ratioPicker = (
               <Dropdown
                 haspopup="listbox"
                 trigger={
@@ -446,25 +462,32 @@ export function ToolWorkbench({ tool, source, onUpload, onGenerate, hidden, clas
                   ))}
                 </Menu>
               </Dropdown>
-            }
-            right={gen}
-          />
+      );
+      const expandPrompt = (
+        <Prompt key={promptKey} initial={prompt} placeholder="描述扩出去的地方画什么，不填由 AI 自己补全" onText={setPrompt} oneLine={promptBar} />
+      );
+      panel = promptBar ? (
+        <PromptBar left={ratioPicker} prompt={expandPrompt} right={gen} />
+      ) : (
+        <NodePanel className="tpl-at__panel">
+          {expandPrompt}
+          <NodePanelBar left={ratioPicker} right={gen} />
         </NodePanel>
       );
       break;
-    case 'edit':
-      panel = (
-        <NodePanel className="tpl-at__panel">
-          {st.editMode !== 'remove' && (
-            <Prompt
-              key={promptKey}
-              initial={prompt}
-              placeholder={st.editMode === 'redraw' ? '描述你想怎么改这张图' : '描述涂抹的地方要改成什么'}
-              onText={setPrompt}
-            />
-          )}
-          <NodePanelBar
-            left={
+    }
+    case 'edit': {
+      const editPrompt =
+        st.editMode !== 'remove' ? (
+          <Prompt
+            key={promptKey}
+            initial={prompt}
+            placeholder={st.editMode === 'redraw' ? '描述你想怎么改这张图' : '描述涂抹的地方要改成什么'}
+            onText={setPrompt}
+            oneLine={promptBar}
+          />
+        ) : null;
+      const editLeft = (
               <>
                 <Dropdown
                   haspopup="listbox"
@@ -484,12 +507,17 @@ export function ToolWorkbench({ tool, source, onUpload, onGenerate, hidden, clas
                 </Dropdown>
                 {st.editMode === 'remove' && <Hint>涂抹要去掉的东西</Hint>}
               </>
-            }
-            right={gen}
-          />
+      );
+      panel = promptBar ? (
+        <PromptBar left={editLeft} prompt={editPrompt} right={gen} />
+      ) : (
+        <NodePanel className="tpl-at__panel">
+          {editPrompt}
+          <NodePanelBar left={editLeft} right={gen} />
         </NodePanel>
       );
       break;
+    }
     case 'video-hd':
       panel = (
         <NodePanel className="tpl-tool__panel">
@@ -575,7 +603,7 @@ export function ToolWorkbench({ tool, source, onUpload, onGenerate, hidden, clas
           <div className="tpl-at__intro-desc">{intro.desc}</div>
         </div>
         {onUpload && (
-          <Button variant="light" leftIcon="Upload" onClick={onUpload}>
+          <Button variant="secondary-muted" leftIcon="Upload" onClick={onUpload}>
             {media === 'image' ? '上传图片' : '上传视频'}
           </Button>
         )}
@@ -730,20 +758,22 @@ export function ToolsPage() {
 
   return (
     <div className="tpl-at" {...bind}>
-      <nav className="tpl-at__tools">
-        <Menu variant="plain" aria-label="AI 工具">
-          {(['image', 'video'] as const).map((m) => (
-            <Fragment key={m}>
-              <MenuLabel>{m === 'image' ? '图片工具' : '视频工具'}</MenuLabel>
-              {TOOLS.filter((t) => t.media === m).map((t) => (
-                <MenuItem key={t.id} icon={t.icon} selected={t.id === tool || undefined} onClick={() => setTool(t.id)}>
-                  {t.name}
-                </MenuItem>
-              ))}
-            </Fragment>
-          ))}
-        </Menu>
-      </nav>
+      <ScrollArea className="tpl-at__tools">
+        <nav className="tpl-at__tools-body">
+          <Menu variant="plain" aria-label="AI 工具">
+            {(['image', 'video'] as const).map((m) => (
+              <Fragment key={m}>
+                <MenuLabel>{m === 'image' ? '图片工具' : '视频工具'}</MenuLabel>
+                {TOOLS.filter((t) => t.media === m).map((t) => (
+                  <MenuItem key={t.id} icon={t.icon} selected={t.id === tool || undefined} onClick={() => setTool(t.id)}>
+                    {t.name}
+                  </MenuItem>
+                ))}
+              </Fragment>
+            ))}
+          </Menu>
+        </nav>
+      </ScrollArea>
 
       <div className="tpl-at__main">
         {TOOLS.map((t) => (
@@ -770,55 +800,58 @@ export function ToolsPage() {
         />
       </div>
 
-      <aside className="tpl-at__history" aria-label="历史">
-        <div className="tpl-at__history-head">
-          <span className="tpl-at__history-title">历史</span>
-          <Dropdown
-            haspopup="listbox"
-            placement="bottom-end"
-            // 筛选只放图标（11-11 用户定），筛了某个工具时按钮留选中底色
-            trigger={<IconButton icon="Filter" label="按工具筛选" selected={filter !== 'all'} />}
-          >
-            <Menu role="listbox" aria-label="按工具筛选">
-              <MenuItem selected={filter === 'all'} onClick={() => setFilter('all')}>
-                全部工具
-              </MenuItem>
-              {TOOLS.map((t) => (
-                <MenuItem key={t.id} icon={t.icon} selected={filter === t.id} onClick={() => setFilter(t.id)}>
-                  {t.name}
-                </MenuItem>
-              ))}
-            </Menu>
-          </Dropdown>
-        </div>
-        {shown.length === 0 && (
-          <p className="tpl-at__history-empty">{filter === 'all' ? '各个工具生成的结果都放在这里' : `${toolOf(filter).name}还没有生成记录`}</p>
-        )}
-        {shown.map((r) => {
-          const done = r.status === 'done';
-          return (
-            <figure
-              key={r.id}
-              className="tpl-at__record"
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setMenu({ x: e.clientX, y: e.clientY, id: r.id });
-              }}
+      <ScrollArea className="tpl-at__history">
+        <aside className="tpl-at__history-body" aria-label="历史记录">
+          <div className="tpl-at__history-head">
+            <span className="tpl-at__history-title">历史记录</span>
+            <Dropdown
+              haspopup="listbox"
+              placement="bottom-end"
+              // 筛选只放图标（11-11 用户定），筛了某个工具时按钮留选中底色
+              trigger={<IconButton icon="Filter" label="按工具筛选" size={28} selected={filter !== 'all'} />}
             >
-              <ResultTile
-                type={r.media}
-                status={r.status}
-                src={r.src}
-                poster={r.poster}
-                topActions={done ? [{ icon: 'Download', label: '下载', onClick: () => toast.success('已开始下载') }] : undefined}
-                style={{ aspectRatio: '1 / 1', cursor: done && r.media === 'image' ? 'zoom-in' : undefined }}
-                onClick={done && r.media === 'image' ? (e) => !(e.target as HTMLElement).closest('button') && setPreview(r) : undefined}
-                onPreview={done ? () => setPreview(r) : undefined}
-              />
-            </figure>
-          );
-        })}
-      </aside>
+              <Menu role="listbox" aria-label="按工具筛选">
+                <MenuItem selected={filter === 'all'} onClick={() => setFilter('all')}>
+                  全部工具
+                </MenuItem>
+                {TOOLS.map((t) => (
+                  <MenuItem key={t.id} icon={t.icon} selected={filter === t.id} onClick={() => setFilter(t.id)}>
+                    {t.name}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Dropdown>
+          </div>
+          {shown.length === 0 && (
+            // 空的时候右栏正中放插图，不写说明（11-12 用户定）
+            <EmptyState className="tpl-at__history-empty" size={96} title={filter === 'all' ? '暂无历史记录' : `暂无${toolOf(filter).name}记录`} />
+          )}
+          {shown.map((r) => {
+            const done = r.status === 'done';
+            return (
+              <figure
+                key={r.id}
+                className="tpl-at__record"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setMenu({ x: e.clientX, y: e.clientY, id: r.id });
+                }}
+              >
+                <ResultTile
+                  type={r.media}
+                  status={r.status}
+                  src={r.src}
+                  poster={r.poster}
+                  topActions={done ? [{ icon: 'Download', label: '下载', onClick: () => toast.success('已开始下载') }] : undefined}
+                  style={{ aspectRatio: '1 / 1', cursor: done && r.media === 'image' ? 'zoom-in' : undefined }}
+                  onClick={done && r.media === 'image' ? (e) => !(e.target as HTMLElement).closest('button') && setPreview(r) : undefined}
+                  onPreview={done ? () => setPreview(r) : undefined}
+                />
+              </figure>
+            );
+          })}
+        </aside>
+      </ScrollArea>
 
       {/* 历史的右键菜单 */}
       <Dropdown anchorPoint={menu ?? undefined} open={menu !== null} onOpenChange={(v) => !v && setMenu(null)}>

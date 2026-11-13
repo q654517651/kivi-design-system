@@ -54,11 +54,11 @@ import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground, SendButt
   </div>
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
     <div style={{ display: 'flex', gap: 4 }}>
-      <IconButton icon="Add" label="添加" variant="text" />
-      <IconButton icon="Mdoel" label="模型偏好" variant="text" />
-      <IconButton icon="Skill" label="技能" variant="text" />
-      <IconButton icon="Hand" label="手" variant="text" />
-      <IconButton icon="Openai" label="切换对话模型（内部测试）" variant="text" />
+      <IconButton icon="Add" label="添加" variant="ghost" />
+      <IconButton icon="Mdoel" label="模型偏好" variant="ghost" />
+      <IconButton icon="Skill" label="技能" variant="ghost" />
+      <IconButton icon="Hand" label="手" variant="ghost" />
+      <IconButton icon="Openai" label="切换对话模型（内部测试）" variant="ghost" />
     </div>
     <SendButton disabled />
   </div>
@@ -72,7 +72,7 @@ import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground, SendButt
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `size` | `28` `32` `36` | `32` | 高 28 / 32 / 36，圆角 6 / 8 / 8，文字 12 / 13 / 13。28：贴在图片、视频上的按钮条（ButtonGroup 32 里默认 28），浮层、卡片这类小容器里（技能面板、标注评论、点踩原因、Textarea 框内按钮）。32：默认，页面里的工具条、标题行（比如「查看全部」），ButtonGroup 44 / 56 里。36：弹窗底部的取消、确定 |
-| `variant` | `"primary"` `"secondary"` `"text"` `"danger"` `"on-media"` `"light"` | `"secondary"` | 主要 / 次要 / 文字 / 危险 / 浮层 / 轻。轻：底白 10%（同次要），文字和图标 50%，悬停、按下回到 100%，禁用 20%；没有大号和加载中 |
+| `variant` | `"primary"` `"secondary"` `"secondary-muted"` `"ghost"` `"ghost-muted"` `"danger"` `"on-media"` | `"secondary"` | 主要 / 次要 / 次要灰 / 无底 / 无底灰 / 危险 / 浮层，一个类型一个语义。「灰」= 文字和图标 50%，悬停、按下回到 100%，禁用 20%。次要灰：底白 10%（同次要），占位处、内容区里的次级操作。无底：平时没有底，悬停出白 14% 底。无底灰：没有底的灰字，比如侧栏分组标题右边的「全部」，和 IconButton 的无底灰一样。次要灰、无底灰没有大号和加载中 |
 | `leftIcon` | `IconName` | — | 左图标，28 的 16，32、36 的 20 |
 | `rightIcon` | `IconName` | — | 右图标，只放下拉箭头 `DownArrowSmall`，减弱一档（`--color-text-fill-tertiary`），和 Select 的箭头一样 |
 | `loading` | `boolean` | `false` | 加载中：左图标换成转圈，鼠标和键盘都不再触发 `onClick`，外观不变灰。GenerateButton 一样 |
@@ -87,10 +87,10 @@ import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground, SendButt
 | `label` | `string` | — | 说明，必填，读屏和自带提示用 |
 | `round` | `boolean` | `false` | 圆形。只在特殊情况下用：只给「设计规则 · 按钮」名单里的专用按钮（SendButton 等），别的按钮一律方的 |
 | `tooltip` | `boolean` `{ content?, shortcut?, placement? }` | `true` | 自带的提示，内容是 `label`，悬停 500ms 出现、离 8。通用符号（关闭、更多、播放器、翻页箭头、搜索、清除）写 `false`；要换内容、带快捷键、换方向（收起的侧栏用 `right`）传对象。名单见「设计规则 · 提示」 |
-| `size` | `28` `32` `36` | `32` | 图标 16 / 20 / 20。轻没有 36。28：贴在图片、视频上的按钮条（ButtonGroup 32 里默认 28），列表行里的「⋯」、新建，小浮层、卡片里的关闭、复制、翻页。32：默认，工具条、标题行，ButtonGroup 44 / 56 里。36：发送按钮 SendButton |
-| `variant` | `"primary"` `"secondary"` `"text"` `"on-media"` `"on-media-ghost"` `"light"` | `"text"` | 主要 / 次要 / 文字 / 浮层 / 浮层无底 / 轻。浮层无底：平时没有底、不模糊，悬停黑 40%、按下黑 60%，盖在图上的控制条（播放器）用。轻：没有底，图标 50%，悬停出白 14% 底（深底 Light 1 hover；放在带底的行里是 Light 2 hover 10%）、图标回到 100% |
-| `selected` | `boolean` | `false` | 选中：有开关的工具用，比如加粗。选中是常驻底色：深底上白 10%（`--color-bg-fill-container-light-1`），悬停 14%、按下 18% 照常，图标白，不变绿。主要没有。轻选中不换色，靠换实心图标表示（点赞、点踩），`aria-pressed` 照写。收藏按钮另加 `data-collected`，收藏了图标品牌绿 |
-| `loading` | `boolean` | `false` | 加载中：图标换成转圈（`Loading`），不响应悬停；鼠标和键盘（Enter、Space）都不再触发 `onClick`，也不提交表单。外观不变灰。比如下载、收藏点了之后等结果。轻没有 |
+| `size` | `28` `32` `36` | `32` | 图标 16 / 20 / 20。无底灰没有 36。28：贴在图片、视频上的按钮条（ButtonGroup 32 里默认 28），列表行里的「⋯」、新建，小浮层、卡片里的关闭、复制、翻页。32：默认，工具条、标题行，ButtonGroup 44 / 56 里。36：发送按钮 SendButton |
+| `variant` | `"primary"` `"secondary"` `"ghost"` `"ghost-muted"` `"on-media"` `"on-media-ghost"` | `"ghost"` | 主要 / 次要 / 无底 / 无底灰 / 浮层 / 浮层无底，和 Button 同一套名字。无底：平时没有底，悬停出白 14% 底（深底 Light 1 hover；放在带底的行里是 Light 2 hover 10%）。无底灰：没有底，图标 50%，悬停出底、图标回到 100%。浮层无底：平时没有底、不模糊，悬停黑 40%、按下黑 60%，盖在图上的控制条（播放器）用 |
+| `selected` | `boolean` | `false` | 选中：有开关的工具用，比如加粗。选中是常驻底色：深底上白 10%（`--color-bg-fill-container-light-1`），悬停 14%、按下 18% 照常，图标白，不变绿。主要没有。无底灰选中不换色，靠换实心图标表示（点赞、点踩），`aria-pressed` 照写。收藏按钮另加 `data-collected`，收藏了图标品牌绿 |
+| `loading` | `boolean` | `false` | 加载中：图标换成转圈（`Loading`），不响应悬停；鼠标和键盘（Enter、Space）都不再触发 `onClick`，也不提交表单。外观不变灰。比如下载、收藏点了之后等结果。无底灰没有 |
 | `disabled` | `boolean` | `false` | 禁用 |
 
 其余原生 `<button>` 属性都能传。
@@ -100,7 +100,7 @@ import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground, SendButt
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `variant` | `"on-media"` `"glass"` `"surface"` | `"on-media"` | 底：浮层（盖在图片、视频上，`--color-on-media-fill`，不加描边）/ 玻璃（浮在画布这种深色底上，底 `--color-bg-fill-glass` + 背景模糊 80 + 1px `--color-border-subtle` 画在里面，比如缩放条、节点工具栏）/ 实色（画布底部工具栏，底 `--color-bg-fill-surface`（不透明，不加模糊）+ 1px `--color-border-subtle`）。三种共用同一套尺寸 |
-| `size` | `32` `44` `56` | `32` | 条高。32：盖在媒体上的按钮条，内边距 `--spacing-2`，间距 4，圆角 8；44：节点工具栏，内边距 6，间距 8，圆角 12；56：画布底部工具栏，内边距 12 / 16，间距 16，圆角 `--border-radius-round`（它是条，不是按钮）。按钮都不写尺寸：32 的条里 IconButton 28 · 文字、Button 小 · 文字；44、56 的条里 IconButton 32 · 文字、Button 中 · 文字（56 的条里图标 24）。竖向 `Divider` 的高度跟着条：32 是 16，44、56 是 20 |
+| `size` | `32` `44` `56` | `32` | 条高。32：盖在媒体上的按钮条，内边距 `--spacing-2`，间距 4，圆角 8；44：节点工具栏，内边距 6，间距 8，圆角 12；56：画布底部工具栏，内边距 12 / 16，间距 16，圆角 `--border-radius-round`（它是条，不是按钮）。按钮都不写尺寸：32 的条里 IconButton 28 · 无底、Button 小 · 无底；44、56 的条里 IconButton 32 · 无底、Button 中 · 无底（56 的条里图标 24）。竖向 `Divider` 的高度跟着条：32 是 16，44、56 是 20 |
 | `children` | `ReactNode` | — | IconButton、Button、竖向 `Divider`（只放在不同类的按钮之间，比如图标按钮和文字按钮之间）。里面的按钮不写 `size`、`variant` 时用上面各档的默认 |
 | `aria-label` | `string` | — | 读屏用，说明这一排是什么，比如「节点操作」 |
 
@@ -108,7 +108,7 @@ import { ButtonGroupPlayground, ButtonPlayground, IconButtonPlayground, SendButt
 
 ### SendButton
 
-就是 IconButton 主要 · 36 · 圆形（`round`，圆形只给专用按钮），悬停、按下、禁用都跟按钮体系走：默认品牌渐变底（gradient-1 → gradient-2，从左到右），`Send` 图标 20，on-brand；悬停叠一层白 14% 变亮；按下透明度 0.8。放在输入框工具条最右，是工具条里唯一实心的；左边的按钮用 IconButton 32 · 文字（平时无底，悬停才出底），间距 4 `--spacing-4`。其余原生 `<button>` 属性都能传。
+就是 IconButton 主要 · 36 · 圆形（`round`，圆形只给专用按钮），悬停、按下、禁用都跟按钮体系走：默认品牌渐变底（gradient-1 → gradient-2，从左到右），`Send` 图标 20，on-brand；悬停叠一层白 14% 变亮；按下透明度 0.8。放在输入框工具条最右，是工具条里唯一实心的；左边的按钮用 IconButton 32 · 无底（平时无底，悬停才出底），间距 4 `--spacing-4`。其余原生 `<button>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|

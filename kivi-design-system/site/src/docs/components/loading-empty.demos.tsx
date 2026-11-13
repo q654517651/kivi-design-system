@@ -76,7 +76,7 @@ export function EmptyStatePlayground() {
           size={Number(s.size) as EmptyStateSize}
           title={s.title}
           description={s.showDesc ? s.desc : undefined}
-          action={s.action ? <Button variant="light">去画布</Button> : undefined}
+          action={s.action ? <Button variant="secondary-muted">去画布</Button> : undefined}
         />
       )}
     />

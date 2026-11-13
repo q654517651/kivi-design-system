@@ -116,7 +116,7 @@ export function AttachmentStripPlayground() {
           <div style={{ width: 360 }}>
             <AttachmentStrip items={items} onRemove={s.remove ? (id) => setRemoved((r) => [...r, id]) : undefined} />
             {removed.length > 0 && (
-              <Button size={28} variant="text" onClick={() => setRemoved([])} style={{ marginTop: 12 }}>
+              <Button size={28} variant="ghost" onClick={() => setRemoved([])} style={{ marginTop: 12 }}>
                 恢复删掉的
               </Button>
             )}

@@ -3,6 +3,7 @@ import { Icon } from '../Icon';
 import { UploadRing } from '../upload/UploadRing';
 import { PreviewPopover } from './PreviewCard';
 import { ReferenceItem } from './ReferenceItem';
+import { ScrollArea } from '../scroll-area';
 import { cx } from '../utils';
 import './reference.css';
 
@@ -48,62 +49,72 @@ export const AttachmentStrip = forwardRef<HTMLDivElement, AttachmentStripProps>(
   ref,
 ) {
   return (
-    <div
+    <ScrollArea
       ref={ref}
+      orientation="horizontal"
       className={cx('kv-attachment-strip', className)}
       style={style}
       role="group"
       aria-label="附件"
       {...rest}
     >
-      {items.map((item) => {
-        const uploading = item.progress != null && item.progress < 100;
-        const previewable = !uploading && (item.type === 'audio' || item.type === 'file' || Boolean(item.src));
-        return (
-          <PreviewPopover
-            key={item.id}
-            disabled={!previewable}
-            preview={{ type: item.type, src: item.src, video: item.video, name: item.name, duration: item.duration, ext: item.ext }}
-          >
-            <div
-              className="kv-attachment-strip__item"
-              data-uploading={uploading ? '' : undefined}
-              data-clickable={onItemClick ? '' : undefined}
-              data-removable={onRemove ? '' : undefined}
-              role="group"
-              aria-label={item.name}
-              tabIndex={onItemClick ? 0 : undefined}
-              onClick={() => onItemClick?.(item)}
-              onKeyDown={(e) => {
-                if (!onItemClick || e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
-                e.preventDefault();
-                onItemClick(item);
+      <div className="kv-attachment-strip__items">
+        {items.map((item) => {
+          const uploading = item.progress != null && item.progress < 100;
+          const previewable = !uploading && (item.type === 'audio' || item.type === 'file' || Boolean(item.src));
+          return (
+            <PreviewPopover
+              key={item.id}
+              disabled={!previewable}
+              preview={{
+                type: item.type,
+                src: item.src,
+                video: item.video,
+                name: item.name,
+                duration: item.duration,
+                ext: item.ext,
               }}
             >
-              <ReferenceItem size={56} type={item.type} src={item.src} duration={item.duration} ext={item.ext} badge={item.badge} />
-              {uploading && (
-                <div className="kv-attachment-strip__upload">
-                  <UploadRing progress={item.progress} aria-label={`${item.name}上传中`} />
-                </div>
-              )}
-              {onRemove && (
-                <button
-                  type="button"
-                  className="kv-attachment-strip__remove"
-                  aria-label={`删除${item.name}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(item.id);
-                  }}
-                >
-                  <Icon name="CloseSmall" />
-                </button>
-              )}
-            </div>
-          </PreviewPopover>
-        );
-      })}
-    </div>
+              <div
+                className="kv-attachment-strip__item"
+                data-uploading={uploading ? '' : undefined}
+                data-clickable={onItemClick ? '' : undefined}
+                data-removable={onRemove ? '' : undefined}
+                role="group"
+                aria-label={item.name}
+                tabIndex={onItemClick ? 0 : undefined}
+                onClick={() => onItemClick?.(item)}
+                onKeyDown={(e) => {
+                  if (!onItemClick || e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+                  e.preventDefault();
+                  onItemClick(item);
+                }}
+              >
+                <ReferenceItem size={56} type={item.type} src={item.src} duration={item.duration} ext={item.ext} badge={item.badge} />
+                {uploading && (
+                  <div className="kv-attachment-strip__upload">
+                    <UploadRing progress={item.progress} aria-label={`${item.name}上传中`} />
+                  </div>
+                )}
+                {onRemove && (
+                  <button
+                    type="button"
+                    className="kv-attachment-strip__remove"
+                    aria-label={`删除${item.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove(item.id);
+                    }}
+                  >
+                    <Icon name="CloseSmall" />
+                  </button>
+                )}
+              </div>
+            </PreviewPopover>
+          );
+        })}
+      </div>
+    </ScrollArea>
   );
 });
 AttachmentStrip.displayName = 'AttachmentStrip';

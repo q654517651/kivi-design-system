@@ -17,14 +17,15 @@
   渲染出来的结构（Dialog 用 createPortal 挂到 body）
     <div class="kv-dialog__mask">
       <div class="kv-dialog kv-dialog--400" role="dialog" aria-modal="true" aria-labelledby="…">
-        <div class="kv-dialog__top">
-          <div class="kv-dialog__header">
-            <div class="kv-dialog__title">弹窗标题</div>
-            <button class="kv-icon-button kv-icon-button--32 kv-icon-button--text" aria-label="关闭">…</button>
-          </div>
-          <div class="kv-dialog__desc">一句话说明…</div>
+        <div class="kv-dialog__media">…顶图… + 关闭（有顶图时）</div>
+        <div class="kv-dialog__header">
+          <div class="kv-dialog__title">弹窗标题</div>
+          <button class="kv-icon-button kv-icon-button--32 kv-icon-button--ghost" aria-label="关闭">…</button>
         </div>
-        <div class="kv-dialog__body">…内容…</div>
+        <div class="kv-dialog__scroll" data-desc data-fade="bottom">
+          <div class="kv-dialog__desc">一句话说明…</div>
+          <div class="kv-dialog__body">…内容…</div>
+        </div>
         <div class="kv-dialog__footer">…按钮…</div>
       </div>
     </div>
@@ -40,7 +41,7 @@
     Esc、点遮罩、关闭按钮、焦点进出、Tab 不跑出弹窗，Dialog 都做了。点遮罩不关用 closeOnMaskClick={false}。
 
   Figma 没定的，这里这样做
-    最大高度、内容多时怎么滚：先限制在屏幕里（离窗口边 32），内容区滚动。
+    最大高度、内容多时怎么滚：限制在屏幕里（离窗口边 32），描述和内容区一起滚，顶图、标题栏、底栏不动（11-12 用户定）。
     z-index：Figma 没有层级的概念，先写 1000。
 */
 
@@ -96,15 +97,37 @@
   outline: none;
 }
 
-/* 标题栏 + 描述：中间间距 8 */
-.kv-dialog__top {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-8);
+/* 顶图：新功能公告这类（照即梦）。离弹窗上、左、右边 8（抵掉内边距 24 再留 8），16:9，
+   自己的圆角 8 = 弹窗圆角 16 - 空隙 8（同心）；和下面隔 24（区块间距 16 + 8），和左右内边距一样。不跟着滚 */
+.kv-dialog__media {
+  position: relative;
+  /* 窗口矮时允许顶图收缩，给正文和底栏让出空间；正常高度仍按 16:9 */
+  flex: 0 1 auto;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  margin: calc(var(--spacing-8) - var(--spacing-24)) calc(var(--spacing-8) - var(--spacing-24)) var(--spacing-8);
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-1); /* 图没出来前的底 */
+}
+
+.kv-dialog__media > :is(img, video) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 有顶图时关闭按钮在图的右上角，离边 12 */
+.kv-dialog__media > .kv-icon-button {
+  position: absolute;
+  top: var(--spacing-12);
+  right: var(--spacing-12);
 }
 
 .kv-dialog__header {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--spacing-16);
 }
@@ -129,16 +152,38 @@
   line-height: var(--font-line-height-22);
 }
 
-/* 内容区：放表单、列表等。内容多了在这里滚动 */
-.kv-dialog__body {
+/* 描述 + 内容区：一起滚（ScrollArea，细滑块）。弹窗高度到顶（离窗口边 32）后，顶图、标题栏、底栏不动，只有这块滚；
+   边缘渐隐跟着滑的方向走（ScrollArea 的 fade）。紧跟标题栏的描述离标题 8。
+   内容外壳 .kv-scroll-area__content 当作竖排的 flex：高度跟视口一样，内容区才能撑满剩下的高度、或缩进弹窗里 */
+.kv-dialog__scroll {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
+}
+
+.kv-dialog__scroll > .kv-scroll-area__viewport {
+  overscroll-behavior: contain;
+}
+
+.kv-dialog__scroll .kv-scroll-area__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  height: 100%;
+}
+
+.kv-dialog__header + .kv-dialog__scroll[data-desc] {
+  margin-top: calc(var(--spacing-8) - var(--spacing-16));
+}
+
+/* 内容区：放表单、列表等。平时撑满剩下的高度；要自己分栏滚的（固定高度的弹窗）给它 overflow: hidden，就会缩进弹窗里 */
+.kv-dialog__body {
+  flex: 1 1 auto;
 }
 
 /* 底栏：按钮靠右，间距 8，上方再留 8 */
 .kv-dialog__footer {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: flex-end;
   gap: var(--spacing-8);

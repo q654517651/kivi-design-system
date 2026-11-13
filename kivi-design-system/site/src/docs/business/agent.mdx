@@ -105,7 +105,7 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 |---|---|---|---|
 | `assets` | `ReactNode` | — | 素材行：一排 ReferenceItem 56（缩略图 AssetThumb 56），间距 8，图片、带时长的视频、音频都放这里。不传没有素材行 |
 | `children` | `ReactNode` | — | 气泡里的字：14 / 22 常规，primary，最宽 340，超出换行，文字里的换行保留。里面可以夹 `MentionChip`（技能、图片、视频、音频、节点引用），和输入框里是同一个。气泡底 container-light-1（白 10%），圆角 12 `--border-radius-12`，内边距 12 / 16 `--spacing-12`、`--spacing-16`，和素材间距 8 `--spacing-8` |
-| `maxLines` | `number` | `12` | 最多显示几行，超过的折叠，气泡底部出「显示更多」（Button 文字 sm + `DownArrowSmall`），点了往下推展开，300ms ease-in-out，按钮变「收起」、箭头转 180°。没超过不出按钮 |
+| `maxLines` | `number` | `12` | 最多显示几行，超过的折叠，气泡底部出「显示更多」（Button · 无底 sm + `DownArrowSmall`），点了往下推展开，300ms ease-in-out，按钮变「收起」、箭头转 180°。没超过不出按钮 |
 | `expanded` | `boolean` | — | 展开：受控 |
 | `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
@@ -132,7 +132,7 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `title` | `ReactNode` | — | 题目，必填。14 / 22 粗，primary |
-| `pager` | `ReactNode` | — | 分页文字，比如「1/5」，13 / 20 secondary。不传不显示分页；两边是 IconButton 28 · 文字（`LeftArrowSmall` `RightArrowSmall`），间距 4 |
+| `pager` | `ReactNode` | — | 分页文字，比如「1/5」，13 / 20 secondary。不传不显示分页；两边是 IconButton 28 · 无底（`LeftArrowSmall` `RightArrowSmall`），间距 4 |
 | `onPrev` | `() => void` | — | 点分页左边的「上一题」 |
 | `onNext` | `() => void` | — | 点分页右边的「下一题」 |
 | `prevDisabled` | `boolean` | `false` | 「上一题」不能点，第一题时用 |
@@ -141,7 +141,7 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | `value` | `string[]` | — | 选中的值：受控。值是 QuestionOption 的 `value`，单选最多一项 |
 | `defaultValue` | `string[]` | `[]` | 选中的值：非受控的初始值 |
 | `onChange` | `(value: string[]) => void` | — | 选中变化时触发 |
-| `skip` | `boolean` | `true` | 显示「忽略」（Button 中 · 文字，跳过这道题） |
+| `skip` | `boolean` | `true` | 显示「忽略」（Button 中 · 无底，跳过这道题） |
 | `skipText` | `ReactNode` | `"忽略"` | 「忽略」的文字 |
 | `onSkip` | `() => void` | — | 点「忽略」 |
 | `submitText` | `ReactNode` | `"确认提交"` | 「确认提交」的文字 |
@@ -194,7 +194,7 @@ Agent 帮用户新建或更新了一个技能后出的卡，照旧版 KIVI 3.14�
 
 ### FileCard
 
-<Tag kind="danger">废弃</Tag> 平台没有，不要用。外框、字号和技能卡一样：宽度拉满消息，内边距 16，圆角 16 `--border-radius-16`，surface 底，描边 border-subtle，间距 12；图标块 40，圆角 8 `--border-radius-8`，图标 20。悬停右边出操作（IconButton 28 · 轻，音频的播放常显）。其余原生 `<div>` 属性都能传。
+<Tag kind="danger">废弃</Tag> 平台没有，不要用。外框、字号和技能卡一样：宽度拉满消息，内边距 16，圆角 16 `--border-radius-16`，surface 底，描边 border-subtle，间距 12；图标块 40，圆角 8 `--border-radius-8`，图标 20。悬停右边出操作（IconButton 28 · 无底灰，音频的播放常显）。其余原生 `<div>` 属性都能传。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|

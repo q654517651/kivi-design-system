@@ -1,18 +1,9 @@
-import {
-  forwardRef,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type HTMLAttributes,
-  type ReactNode,
-} from 'react';
+import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { IconButton } from '../button';
 import { cx } from '../utils';
 import { useControllable, useMergedRef, usePresence, useScrollLock } from '../hooks';
+import { ScrollArea } from '../scroll-area';
 import './dialog.css';
 
 /** 宽度档位（11-03 照线上弹窗内容定）：400 确认 / 560 表单 / 800 阅读 / 1024 列表 / 1200 编辑器 / full 铺满窗口 */
@@ -38,7 +29,13 @@ export interface DialogPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   description?: ReactNode;
   /** 底栏：按钮靠右，间距 8。放 36 的 Button：取消用次要，确认用主要；删除确认把主要换成危险 */
   footer?: ReactNode;
-  /** 标题栏里的关闭按钮，默认显示。只有传了 title 才有标题栏 */
+  /**
+   * 顶图：新功能公告这类弹窗最上面的图片或视频（放 `<img>` / `<video>`，铺满裁切）。
+   * 离弹窗上、左、右边 8，16:9，圆角 8；和下面的标题隔 24。窗口矮时顶图收缩裁切，给正文和底栏留空间。
+   * 有顶图时关闭按钮挪到图的右上角（IconButton 32 · 浮层），标题栏里不再放
+   */
+  media?: ReactNode;
+  /** 关闭按钮，默认显示。在标题栏里（只有传了 title 才有）；有顶图时在图的右上角 */
   showClose?: boolean;
   /** 点关闭按钮 */
   onClose?: () => void;
@@ -53,43 +50,43 @@ export interface DialogPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, '
  * 文档里摆静态示意用；项目里用 Dialog。children 是内容区。
  */
 export const DialogPanel = forwardRef<HTMLDivElement, DialogPanelProps>(function DialogPanel(
-  {
-    size = 400,
-    title,
-    description,
-    footer,
-    showClose = true,
-    onClose,
-    titleId,
-    descriptionId,
-    className,
-    children,
-    ...rest
-  },
+  { size = 400, title, description, footer, media, showClose = true, onClose, titleId, descriptionId, className, children, ...rest },
   ref,
 ) {
   const hasTitle = has(title);
   const hasDesc = has(description);
+  const hasMedia = has(media);
+  const hasBody = has(children);
+  const close = (variant: 'ghost' | 'on-media') => (
+    <IconButton tooltip={false} icon="Close" label="关闭" size={32} variant={variant} onClick={onClose} />
+  );
   return (
     <div ref={ref} className={cx('kv-dialog', `kv-dialog--${size}`, className)} {...rest}>
-      {(hasTitle || hasDesc) && (
-        <div className="kv-dialog__top">
-          {hasTitle && (
-            <div className="kv-dialog__header">
-              <div className="kv-dialog__title" id={titleId}>
-                {title}
-              </div>
-              {showClose && <IconButton tooltip={false} icon="Close" label="关闭" size={32} variant="text" onClick={onClose} />}
-            </div>
-          )}
+      {hasMedia && (
+        <div className="kv-dialog__media">
+          {media}
+          {showClose && close('on-media')}
+        </div>
+      )}
+      {hasTitle && (
+        <div className="kv-dialog__header">
+          <div className="kv-dialog__title" id={titleId}>
+            {title}
+          </div>
+          {showClose && !hasMedia && close('ghost')}
+        </div>
+      )}
+      {/* 描述和内容区一起滚：弹窗高度到顶（离窗口边 32）后，顶图、标题栏、底栏不动，中间这块滚，边缘跟着滑的方向渐隐 */}
+      {(hasDesc || hasBody) && (
+        <ScrollArea className="kv-dialog__scroll" data-desc={hasDesc && hasTitle ? '' : undefined} fade>
           {hasDesc && (
             <div className="kv-dialog__desc" id={descriptionId}>
               {description}
             </div>
           )}
-        </div>
+          {hasBody && <div className="kv-dialog__body">{children}</div>}
+        </ScrollArea>
       )}
-      {has(children) && <div className="kv-dialog__body">{children}</div>}
       {has(footer) && <div className="kv-dialog__footer">{footer}</div>}
     </div>
   );

@@ -44,7 +44,7 @@ export function Demo({ code, stage, layout, noCode, scope }: DemoProps) {
         {!noCode && (
           <>
             <div className="shell-demo-bar">
-              <Button size={28} variant="light" onClick={() => setOpen(!open)}>
+              <Button size={28} variant="secondary-muted" onClick={() => setOpen(!open)}>
                 {open ? '收起代码' : '显示代码'}
               </Button>
               <CopyButton text={() => current} label="复制代码" />

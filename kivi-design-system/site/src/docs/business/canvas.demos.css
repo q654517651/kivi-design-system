@@ -133,28 +133,43 @@
 
 /* ---------- 拆解的属性面板 ---------- */
 
-/* 节点：两行两列，留出节点名的位置；窄了左右滚 */
-.cv-pg-nodes.shell-pg-stage {
+/* 台子：窄了左右滚（ScrollArea），原来台子上的间距、布局挪到里面一层 */
+.cv-pg-nodes.shell-pg-stage,
+.cv-pg-wrapper.shell-pg-stage,
+.cv-pg-wide.shell-pg-stage {
+  padding: 0;
+}
+
+.cv-pg-wide.shell-pg-stage {
+  padding-block: var(--spacing-32);
+}
+
+.cv-pg-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 节点：两行两列，留出节点名的位置 */
+.cv-pg-nodes__inner {
   display: grid;
   grid-template-columns: repeat(2, max-content);
   align-content: center;
   justify-content: safe center;
   gap: 52px var(--spacing-32);
-  overflow-x: auto;
   padding: 60px var(--spacing-24) var(--spacing-32);
 }
 
-/* 节点外框：节点名在上、连接点在左右各伸出 8，周围留白；窄了左右滚，不裁 */
-.cv-pg-wrapper.shell-pg-stage {
+/* 节点外框：节点名在上、连接点在左右各伸出 8，周围留白，不裁 */
+.cv-pg-wrapper__inner {
+  display: flex;
   justify-content: safe center;
-  overflow-x: auto;
   padding: 60px var(--spacing-32) var(--spacing-32);
 }
 
-/* 工具栏、面板比较宽：窄了左右滚，不裁 */
-.cv-pg-wide.shell-pg-stage {
+/* 工具栏、面板比较宽：不裁 */
+.cv-pg-wide__inner {
+  display: flex;
   justify-content: safe center;
-  overflow-x: auto;
   padding-inline: var(--spacing-24);
 }
 

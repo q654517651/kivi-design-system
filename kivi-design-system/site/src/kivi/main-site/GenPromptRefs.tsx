@@ -20,7 +20,7 @@ export interface GenPromptRefsProps extends HTMLAttributes<HTMLDivElement> {
   label: ReactNode;
 }
 
-/** GenPrompt 参数里的参考区：缩略图 + 参考方式文字，悬停弹出浮层显示全部素材。Figma「主站」页 GenPrompt 里的一块 */
+/** GenPrompt 参数里的参考区：缩略图 + 参考方式文字，悬停弹出浮层显示全部素材。Figma「生成记录」页 GenPrompt 里的一块 */
 export const GenPromptRefs = forwardRef<HTMLDivElement, GenPromptRefsProps>(function GenPromptRefs(
   { items, label, className, ...rest },
   ref,

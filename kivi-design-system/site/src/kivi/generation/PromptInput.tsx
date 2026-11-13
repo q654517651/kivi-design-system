@@ -1,4 +1,4 @@
-import { forwardRef, useRef, type ClipboardEvent, type DragEvent, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useRef, type ClipboardEvent, type CSSProperties, type DragEvent, type HTMLAttributes, type ReactNode } from 'react';
 import { composeHandlers } from '../hooks/composeHandlers';
 import { cx } from '../utils';
 import './generation.css';
@@ -8,11 +8,15 @@ export interface PromptInputProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   placeholder?: string;
   /** 开头的内容：文字，中间可以插 MentionChip。只在第一次渲染时用，之后由用户编辑 */
   children?: ReactNode;
+  /** 最少几行高，默认 4（照线上）。工具弹窗里一横条的输入框用 1 */
+  minRows?: number;
+  /** 最多长到几行，再多滚动，默认 6 */
+  maxRows?: number;
 }
 
 /** 提示词输入：无底、无内边距，14 号字，可以插 @素材（MentionChip）。表单里的多行输入用 Textarea，不用它。Figma「画布」页 PromptInput */
 export const PromptInput = forwardRef<HTMLDivElement, PromptInputProps>(function PromptInput(
-  { placeholder, className, children, onPaste, onDragStart, onDragEnd, onDrop, ...rest },
+  { placeholder, minRows = 4, maxRows = 6, className, style, children, onPaste, onDragStart, onDragEnd, onDrop, ...rest },
   ref,
 ) {
   // 框里自己拖动文字（挪位置）照浏览器默认，带的就是框里的样子
@@ -45,6 +49,7 @@ export const PromptInput = forwardRef<HTMLDivElement, PromptInputProps>(function
     <div
       ref={ref}
       className={cx('kv-prompt-input', className)}
+      style={{ '--kv-prompt-min-rows': minRows, '--kv-prompt-max-rows': maxRows, ...style } as CSSProperties}
       contentEditable
       suppressContentEditableWarning
       role="textbox"
