@@ -23,11 +23,11 @@ export function TemplateFrame({ children, href }: { children: ReactNode; href?: 
       <div className="tpl-bar">
         <span>只能看：不生成、不调接口</span>
         {href ? (
-          <Button size={28} variant="light" leftIcon="NewWindow" onClick={() => window.open(`${location.href.split('#')[0]}#${href}`, '_blank', 'noopener')}>
+          <Button size={28} variant="secondary-muted" leftIcon="NewWindow" onClick={() => window.open(`${location.href.split('#')[0]}#${href}`, '_blank', 'noopener')}>
             新 Tab 打开
           </Button>
         ) : (
-          <Button size={28} variant="light" leftIcon={full ? 'Fold' : 'FullScreen'} onClick={() => setFull(!full)}>
+          <Button size={28} variant="secondary-muted" leftIcon={full ? 'Fold' : 'FullScreen'} onClick={() => setFull(!full)}>
             {full ? '退出全屏' : '全屏看'}
           </Button>
         )}

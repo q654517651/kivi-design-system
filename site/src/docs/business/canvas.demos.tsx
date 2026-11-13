@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactElement } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactElement, type ReactNode } from 'react';
 import {
   AttachmentStrip,
   AudioWave,
@@ -37,6 +37,7 @@ import {
   type NodeCardStatus,
   type NodeMediaType,
   type NodeWrapperRatio,
+  ScrollArea,
 } from '@kivi';
 import { CodeBlock, Playground, toJsx } from '@shell';
 import { openPreview, VIDEO } from '../components/media.demos';
@@ -242,9 +243,9 @@ function toolbarOf(type: NodeMediaType | 'group') {
     case 'group':
       return (
         <ButtonGroup variant="glass" size={44} aria-label="节点工具栏">
-          <Button variant="text" leftIcon="PlayLine">整组执行</Button>
-          <Button variant="text" leftIcon="Template">创建工作流</Button>
-          <Button variant="text" leftIcon="UnGroup">解组</Button>
+          <Button variant="ghost" leftIcon="PlayLine">整组执行</Button>
+          <Button variant="ghost" leftIcon="Template">创建工作流</Button>
+          <Button variant="ghost" leftIcon="UnGroup">解组</Button>
         </ButtonGroup>
       );
     case 'text':
@@ -268,14 +269,14 @@ function toolbarOf(type: NodeMediaType | 'group') {
     case 'image':
       return (
         <ButtonGroup variant="glass" size={44} aria-label="节点工具栏">
-          <Button variant="text" leftIcon="Rmbg">抠图</Button>
-          <Button variant="text" leftIcon="Crop">裁剪</Button>
-          <Button variant="text" leftIcon="Expand">扩图</Button>
-          <Button variant="text" leftIcon="HD">高清</Button>
-          <Button variant="text" leftIcon="SmartEditing">重绘</Button>
-          <Button variant="text" leftIcon="RemoveEle">元素去除</Button>
-          <Button variant="text" leftIcon="DragSelect">框选</Button>
-          <Button variant="text" leftIcon="TextEditing">编辑文字</Button>
+          <Button variant="ghost" leftIcon="Rmbg">抠图</Button>
+          <Button variant="ghost" leftIcon="Crop">裁剪</Button>
+          <Button variant="ghost" leftIcon="Expand">扩图</Button>
+          <Button variant="ghost" leftIcon="HD">高清</Button>
+          <Button variant="ghost" leftIcon="SmartEditing">重绘</Button>
+          <Button variant="ghost" leftIcon="RemoveEle">元素去除</Button>
+          <Button variant="ghost" leftIcon="DragSelect">框选</Button>
+          <Button variant="ghost" leftIcon="TextEditing">编辑文字</Button>
           <Divider orientation="vertical" />
           <TipButton icon="ImageToText" label="图推词" />
           <TipButton icon="Download" label="下载" />
@@ -285,12 +286,12 @@ function toolbarOf(type: NodeMediaType | 'group') {
     case 'video':
       return (
         <ButtonGroup variant="glass" size={44} aria-label="节点工具栏">
-          <Button variant="text" leftIcon="VideoLoop">循环</Button>
-          <Button variant="text" leftIcon="HD">高清</Button>
-          <Button variant="text" leftIcon="Connecting">拼接</Button>
-          <Button variant="text" leftIcon="Rmbg">抠图</Button>
-          <Button variant="text" leftIcon="Pack">封装</Button>
-          <Button variant="text" leftIcon="Cutting">剪辑</Button>
+          <Button variant="ghost" leftIcon="VideoLoop">循环</Button>
+          <Button variant="ghost" leftIcon="HD">高清</Button>
+          <Button variant="ghost" leftIcon="Connecting">拼接</Button>
+          <Button variant="ghost" leftIcon="Rmbg">抠图</Button>
+          <Button variant="ghost" leftIcon="Pack">封装</Button>
+          <Button variant="ghost" leftIcon="Cutting">剪辑</Button>
           <Divider orientation="vertical" />
           <TipButton icon="ImageToText" label="视频推词" />
           <TipButton icon="Download" label="下载" />
@@ -784,6 +785,15 @@ const UPLOAD_NODES: NodeDef[] = [
   { key: 'upload', name: '素材 · 音频', type: 'audio', ratio: '4:3', x: 0, y: 0, upload: true },
 ];
 
+/** 属性面板台子：窄了左右滚（ScrollArea），inner 是原来台子上的布局 */
+function PgScroll({ inner, children }: { inner: string; children: ReactNode }) {
+  return (
+    <ScrollArea orientation="horizontal" className="cv-pg-scroll">
+      <div className={inner}>{children}</div>
+    </ScrollArea>
+  );
+}
+
 type NodePg = { kind: string; state: string; upState: string; cover: boolean; countdown: boolean; message: string };
 
 export function NodePlayground() {
@@ -812,13 +822,13 @@ export function NodePlayground() {
         const upload = s.kind === 'upload';
         const run: Run = { ...RUN, phase: (upload ? s.upState : s.state) as Phase, cover: s.cover, countdown: s.countdown, message: s.message };
         return (
-          <>
+          <PgScroll inner="cv-pg-nodes__inner">
             {(upload ? UPLOAD_NODES : GEN_NODES).map((def) => (
               <NodeWrapper key={def.name} ratio={def.ratio} name={def.name}>
                 {cardOf(def, run)}
               </NodeWrapper>
             ))}
-          </>
+          </PgScroll>
         );
       }}
     />
@@ -861,6 +871,7 @@ export function NodeWrapperPlayground() {
         { key: 'right', label: '右连接点', type: 'segment', value: 'connected', options: DOT_OPTIONS },
       ]}
       render={(s, update) => (
+        <PgScroll inner="cv-pg-wrapper__inner">
         <NodeWrapper
           ratio={s.ratio as NodeWrapperRatio}
           name={s.name ? '图片节点' : undefined}
@@ -871,6 +882,7 @@ export function NodeWrapperPlayground() {
         >
           {cardOf(nodeOf('image'), RUN)}
         </NodeWrapper>
+        </PgScroll>
       )}
     />
   );
@@ -983,7 +995,7 @@ export function ToolbarPlayground() {
           ],
         },
       ]}
-      render={(s) => toolbarOf(s.type as NodeMediaType | 'group')!}
+      render={(s) => <PgScroll inner="cv-pg-wide__inner">{toolbarOf(s.type as NodeMediaType | 'group')!}</PgScroll>}
     />
   );
 }
@@ -1020,7 +1032,7 @@ export function PanelPlayground() {
       ]}
       render={(s) => {
         const type = s.type as NodeMediaType;
-        return panelOf(nodeOf(type), PANEL_INPUTS[type].map(nodeOf), () => {}, false);
+        return <PgScroll inner="cv-pg-wide__inner">{panelOf(nodeOf(type), PANEL_INPUTS[type].map(nodeOf), () => {}, false)}</PgScroll>;
       }}
     />
   );

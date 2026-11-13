@@ -39,6 +39,36 @@ import { DialogPlayground } from './dialog.demos';
 }
 `} />
 
+### 新功能公告
+
+<Demo code={`
+() => {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>看新功能</Button>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        size={560}
+        media={<img src={placeholderImageSrc('kivi-future', '16:9')} alt="" />}
+        title="图片 4.0 模型上线"
+        description="同一个模型就能文生图、多图参考、组图生成。"
+        footer={<Button size={36} variant="primary" onClick={() => setOpen(false)}>立即体验</Button>}
+      >
+        <Prose>
+          <ul>
+            <li><strong>文生图</strong>：更强的指令遵循，更快的生成速度</li>
+            <li><strong>多图参考</strong>：单张或多张图片加一句话，就能随意修改</li>
+            <li><strong>组图生成</strong>：一次生成多张互相关联的图</li>
+          </ul>
+        </Prose>
+      </Dialog>
+    </>
+  );
+}
+`} />
+
 ### 二级弹窗
 
 <Demo code={`
@@ -90,11 +120,12 @@ import { DialogPlayground } from './dialog.demos';
 | `open` | `boolean` | — | 打开。传了就是受控，在 `onOpenChange` 里改；不想自己管用 `defaultOpen` |
 | `defaultOpen` | `boolean` | `false` | 非受控时一开始是否打开 |
 | `onOpenChange` | `(open: boolean) => void` | — | 按 Esc、点遮罩、点关闭按钮时传 `false`；底栏按钮自己调 `setOpen(false)` |
-| `size` | `400` `560` `800` `1024` `1200` `"full"` | `400` | 宽度。400 确认、重命名；560 单列表单、分步问答；800 阅读详情、带插图的说明；1024 卡片列表、裁剪；1200 编辑器、多栏；`"full"` 铺满窗口、没有圆角。结构、间距都一样。高度跟着内容走，离窗口边 32，超出时内容区滚动；分步弹窗固定高度 |
-| `title` | `ReactNode` | — | 标题，16 / 24 粗。不传就没有标题栏，关闭按钮也跟着没有 |
-| `showClose` | `boolean` | `true` | 标题栏里的关闭按钮，IconButton 32 · 文字类型 |
+| `size` | `400` `560` `800` `1024` `1200` `"full"` | `400` | 宽度。400 确认、重命名；560 单列表单、分步问答；800 阅读详情、带插图的说明；1024 卡片列表、裁剪；1200 编辑器、多栏；`"full"` 铺满窗口、没有圆角。结构、间距都一样。高度跟着内容走，最高到离窗口边 32；超出时描述和内容区一起滚（边缘渐隐 24，跟着滑的方向），顶图、标题栏、底栏不动；分步弹窗固定高度 |
+| `title` | `ReactNode` | — | 标题，16 / 24 粗。不传就没有标题栏，关闭按钮也跟着没有（有顶图时关闭在图上，照样有） |
+| `media` | `ReactNode` | — | 顶图，放 `<img>` 或 `<video>`，铺满裁切。离弹窗上、左、右边 8，正常高度为 16:9；窗口矮时收缩裁切，给正文和底栏留空间。圆角 8（弹窗圆角 16 减空隙 8），和下面隔 24。有顶图时关闭按钮挪到图的右上角（离边 12），标题栏里不再放 |
+| `showClose` | `boolean` | `true` | 关闭按钮，IconButton 32：在标题栏里是文字类型；有顶图时在图上，是浮层类型 |
 | `description` | `ReactNode` | — | 描述，14 / 22 secondary，和标题栏间距 8 |
-| `children` | `ReactNode` | — | 内容区，放什么都行 |
+| `children` | `ReactNode` | — | 内容区，放什么都行。和描述一起滚；要自己分栏滚的（固定高度的弹窗），给 `.kv-dialog__body` 写 `overflow: hidden` |
 | `footer` | `ReactNode` | — | 底栏，靠右，间距 8。放 36 的 Button：取消次要、确认主要，删除确认用 `danger`；只有一个按钮时去掉取消 |
 | `closeOnMaskClick` | `boolean` | `true` | 点遮罩关闭。有表单或没保存内容的写 `false` |
 | `closeOnEsc` | `boolean` | `true` | 按 Esc 关闭。二级弹窗开着时先关最上面的 |

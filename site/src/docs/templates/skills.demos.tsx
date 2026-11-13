@@ -1,4 +1,4 @@
-import { SkillPanel } from '@kivi';
+import { ScrollArea, SkillPanel } from '@kivi';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../business/skill-data';
 import { AgentComposer } from './composer';
 import { TemplateFrame } from './frame';
@@ -7,11 +7,13 @@ import { TemplateFrame } from './frame';
 export function SkillsTemplate() {
   return (
     <TemplateFrame>
-      <div className="tpl-sk">
+      <ScrollArea className="tpl-sk">
+       <div className="tpl-sk__stage">
         <div className="tpl-sk__dock">
           <AgentComposer className="tpl-sk__composer" skillOpen />
         </div>
-      </div>
+       </div>
+      </ScrollArea>
     </TemplateFrame>
   );
 }

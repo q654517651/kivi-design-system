@@ -1,7 +1,8 @@
 import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import type { IconName } from '../icons';
 import { cx } from '../utils';
-import { useControllable, useScrollFade } from '../hooks';
+import { useControllable } from '../hooks';
+import { ScrollArea } from '../scroll-area';
 import { Collapse } from '../collapse';
 import { ProcessRow, type ProcessRowStatus } from './ProcessRow';
 import './agent-process.css';
@@ -66,7 +67,6 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
   const lastSwitch = useRef(0);
   const [expanded, setExpanded] = useControllable(expandedProp, defaultExpanded, onExpandedChange);
   const listId = useId();
-  const list = useScrollFade<HTMLDivElement>();
 
   useEffect(() => {
     lastSwitch.current = performance.now();
@@ -127,13 +127,19 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
     );
   };
 
-  const keyOf = (k: number) => (k === SUMMARY ? 'summary' : steps[k]?.id ?? String(k));
+  const keyOf = (k: number) => (k === SUMMARY ? 'summary' : (steps[k]?.id ?? String(k)));
 
   return (
     <div ref={ref} className={cx('kv-process-group', className)} {...rest}>
       <div className="kv-process-group__line" data-rolling={leaving !== null ? '' : undefined}>
         {leaving !== null && (
-          <div key={`out-${keyOf(leaving)}`} className="kv-process-group__slot" data-leave="" aria-hidden="true" onAnimationEnd={() => setLeaving(null)}>
+          <div
+            key={`out-${keyOf(leaving)}`}
+            className="kv-process-group__slot"
+            data-leave=""
+            aria-hidden="true"
+            onAnimationEnd={() => setLeaving(null)}
+          >
             {line(leaving)}
           </div>
         )}
@@ -143,11 +149,13 @@ export const ProcessGroup = forwardRef<HTMLDivElement, ProcessGroupProps>(functi
       </div>
       {canExpand && (
         <Collapse expanded={expanded} distance={listHeight} gap={6}>
-          <div ref={list.ref} id={listId} className="kv-process-list" data-fade={list.fade} onScroll={list.onScroll}>
-            {steps.map((s, i) => (
-              <ProcessRow key={s.id ?? i} level="sub" icon={s.icon} action={s.action} object={s.object} status={s.status} />
-            ))}
-          </div>
+          <ScrollArea id={listId} className="kv-process-list" maxHeight={LIST_MAX} fade>
+            <div className="kv-process-list__items">
+              {steps.map((s, i) => (
+                <ProcessRow key={s.id ?? i} level="sub" icon={s.icon} action={s.action} object={s.object} status={s.status} />
+              ))}
+            </div>
+          </ScrollArea>
         </Collapse>
       )}
     </div>

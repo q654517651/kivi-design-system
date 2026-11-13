@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { copyText, CopyButton } from '@shell';
-import { placeholderImageSrc } from '@kivi';
+import { placeholderImageSrc, ScrollArea } from '@kivi';
 
 // 变量页的数据和表格。规范文字在 tokens.mdx。
 // 每一行：token 是 CSS 变量名（和 kivi/tokens.css 一一对应），figma 是 Figma 里的名字，use 是用在哪。
@@ -208,9 +208,9 @@ export const TOKEN_GROUPS = {
     title: '透明度',
     kind: 'opacity',
     rows: [
-      { token: '--opacity-50', figma: 'opacity/50', use: '「轻」按钮的文字和图标' },
+      { token: '--opacity-50', figma: 'opacity/50', use: '次要灰、无底灰按钮的文字和图标' },
       { token: '--opacity-30', figma: 'opacity/30', use: '开关、滑块、勾选框的禁用态' },
-      { token: '--opacity-20', figma: 'opacity/20', use: '「轻」按钮禁用时的文字和图标' },
+      { token: '--opacity-20', figma: 'opacity/20', use: '次要灰、无底灰按钮禁用时的文字和图标' },
     ],
   },
   effect: {
@@ -328,7 +328,7 @@ export function TokenTable({ group }: { group: TokenGroupId }) {
   const values = useMemo(() => g.rows.map((r) => readToken(r.token)), [g]);
   const hasPreview = g.kind !== 'motion';
   return (
-    <div className="table-wrap">
+    <ScrollArea orientation="horizontal" className="table-wrap">
       <table>
         <thead>
           <tr>
@@ -359,7 +359,7 @@ export function TokenTable({ group }: { group: TokenGroupId }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollArea>
   );
 }
 

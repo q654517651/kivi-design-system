@@ -365,7 +365,7 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 | `SidebarItem more + moreMenu + moreLabel` | `MenuItem more={<Menu>…</Menu>} moreLabel` | 「⋯」都带菜单；`onMoreClick` 取消 |
 | `SidebarItem collapsed / editing / defaultEditing / onEditingChange / onRename / maxNameLength` | `MenuItem` 同名 | — |
 | `SidebarLabel expanded / defaultExpanded / onExpandedChange` | `MenuLabel collapsible` + 同名三个，条目放 `items` | 展开收起用 Collapse |
-| `SidebarLabel showNew / newLabel / onNew` | `MenuLabel action={<IconButton … size={28} variant="light" />}` | — |
+| `SidebarLabel showNew / newLabel / onNew` | `MenuLabel action={<IconButton … size={28} variant="ghost-muted" />}` | — |
 | `SidebarLabel collapsed` | `MenuLabel collapsed` | — |
 | `SidebarMore` | 不带图标的 `MenuItem` | 平铺里自动是 12 号 tertiary |
 | 类名 `kv-sidebar-item`、`kv-sidebar-label`、`kv-sidebar-more` | `kv-menu-item`、`kv-menu-label`；平铺 `kv-menu--plain`，分组 `kv-menu__group` | — |
@@ -601,6 +601,18 @@ pattern: /(px|py|text|bg|font|rounded|gap)-(0|2|4|6|8|10|12|13|14|16|20|24|32|ro
 |---|---|---|
 | QuestionPanel | 「全部由 AI 决策」按钮：`aiDecide`、`aiDecideText`、`onAiDecide` | 删掉这三个属性，以后也不会有；底部只剩「忽略」和「确认提交」 |
 | AskRecord | `skippedText="交给 AI 决策"` 这种用法 | 不再传，跳过时用默认「已跳过」 |
+
+## 按钮类型改名（11-13）
+
+一个类型一个语义：先说底（次要 / 无底 / 浮层），要灰就在后面加「灰」（文字和图标 50%，悬停回到 100%）。Button、IconButton 同一套名字。样子都没变，只改名。
+
+| 组件 | 旧 | 新 | 说明 |
+|---|---|---|---|
+| Button、IconButton | 文字 `variant="text"` | 无底 `variant="ghost"` | IconButton 没有文字，「文字」说的其实是没有底；IconButton 的默认值、ButtonGroup 里的默认也跟着改 |
+| Button | 轻 `variant="light"` | 次要灰 `variant="secondary-muted"` | 有底（白 10%）的灰字 |
+| IconButton | 轻 `variant="light"` | 无底灰 `variant="ghost-muted"` | 没有底的灰图标。原来和 Button 的「轻」同名不同样子 |
+| Button | 文字轻 `variant="text-light"`（11-13 加的，当天就改名） | 无底灰 `variant="ghost-muted"` | 没有底的灰字 |
+| 类名 | `kv-button--text` `kv-icon-button--text` `kv-button--light` `kv-icon-button--light` | `kv-button--ghost` `kv-icon-button--ghost` `kv-button--secondary-muted` `kv-icon-button--ghost-muted` | |
 
 ## 资产卡统一成封面卡（11-11）
 

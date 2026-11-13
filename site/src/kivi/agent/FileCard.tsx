@@ -50,11 +50,11 @@ export const FileCard = forwardRef<HTMLDivElement, FileCardProps>(function FileC
       ) : (
         <span className="kv-file-card__actions">
           {type === 'audio' ? (
-            <IconButton icon="Play" label="播放" size={28} variant="light" onClick={onPlay} />
+            <IconButton icon="Play" label="播放" size={28} variant="ghost-muted" onClick={onPlay} />
           ) : (
-            <IconButton icon="Preview" label="预览" size={28} variant="light" className={reveal} onClick={onPreview} />
+            <IconButton icon="Preview" label="预览" size={28} variant="ghost-muted" className={reveal} onClick={onPreview} />
           )}
-          <IconButton icon="Download" label="下载" size={28} variant="light" className={reveal} onClick={onDownload} />
+          <IconButton icon="Download" label="下载" size={28} variant="ghost-muted" className={reveal} onClick={onDownload} />
         </span>
       )}
     </div>

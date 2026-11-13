@@ -43,7 +43,7 @@ import { ToolbarPlayground } from '../business/canvas.demos';
 
 ### 节点工具栏
 
-不是单独的组件：`ButtonGroup variant="glass" size={44}`，选中节点后出现在节点上方；里面放 Button 中 · 文字、IconButton 32 · 文字（条里默认就是，不用写尺寸和类型），分组用竖向 `Divider`（高 20，`--color-border`）。属性见「按钮」页 ButtonGroup。
+不是单独的组件：`ButtonGroup variant="glass" size={44}`，选中节点后出现在节点上方；里面放 Button 中 · 无底、IconButton 32 · 无底（条里默认就是，不用写尺寸和类型），分组用竖向 `Divider`（高 20，`--color-border`）。属性见「按钮」页 ButtonGroup。
 
 - 只选中一个、且有结果的节点才出（生成中、上传中不出；文字节点双击编辑才出；音频节点没有）。
 - 水平居中，底边离节点 40；画布缩放到 50% 以上时不跟着缩放。
@@ -51,4 +51,4 @@ import { ToolbarPlayground } from '../business/canvas.demos';
 
 ### 画布工具栏
 
-不是单独的组件：`ButtonGroup variant="surface" size={56}`，画布底部的胶囊，里面放 IconButton 32 · 文字：左边添加，右边工作流（`Template`）、上传、历史（11-09）。画布模板底部正中摆着。点添加往上弹菜单（Dropdown `top-start` + Menu 200）：小标题「添加节点」，文本生成、图片生成、视频生成、音频生成、视频剪辑（图标 Text、ImageGeneration、VideoGeneration、Audio、Cutting），照线上的添加节点面板；上传在工具栏上单独有，菜单里不放。高 56，内边距 12 / 16，间距 16，圆角 `--border-radius-round`，实色 surface 底、描边 border-subtle（不透明，不加模糊）；图标 24。第一个「添加」是 IconButton 主要（`variant="primary"`，品牌绿），图标 20。
+不是单独的组件：`ButtonGroup variant="surface" size={56}`，画布底部的胶囊，里面放 IconButton 32 · 无底：左边添加，右边工作流（`Template`）、上传、历史（11-09）。画布模板底部正中摆着。点添加往上弹菜单（Dropdown `top-start` + Menu 200）：小标题「添加节点」，文本生成、图片生成、视频生成、音频生成、视频剪辑（图标 Text、ImageGeneration、VideoGeneration、Audio、Cutting），照线上的添加节点面板；上传在工具栏上单独有，菜单里不放。高 56，内边距 12 / 16，间距 16，圆角 `--border-radius-round`，实色 surface 底、描边 border-subtle（不透明，不加模糊）；图标 24。第一个「添加」是 IconButton 主要（`variant="primary"`，品牌绿），图标 20。

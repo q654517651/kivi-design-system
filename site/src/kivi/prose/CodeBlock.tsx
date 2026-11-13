@@ -29,7 +29,7 @@ export const CodeBlock = forwardRef<HTMLDivElement, CodeBlockProps>(function Cod
       <pre>
         <code>{children}</code>
       </pre>
-      <IconButton className="kv-code-block__copy" icon={copied ? 'CheckSmall' : 'Copy'} label={copied ? '已复制' : '复制'} size={28} variant="text" onClick={onCopy} />
+      <IconButton className="kv-code-block__copy" icon={copied ? 'CheckSmall' : 'Copy'} label={copied ? '已复制' : '复制'} size={28} variant="ghost" onClick={onCopy} />
     </div>
   );
 });

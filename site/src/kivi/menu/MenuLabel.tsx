@@ -18,9 +18,9 @@ export interface MenuLabelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
   onExpandedChange?: (expanded: boolean) => void;
   /** 跟着标题展开收起的条目，一般是一组 MenuItem。写了就用 Collapse（高度从 0 推到内容高 + 淡入，300ms ease-in-out）把它们和标题包成一组；不写，条目自己写在 Menu 里，由使用方跟着显示或隐藏 */
   items?: ReactNode;
-  /** 右边的按钮，比如新建（侧栏 plain 里悬停这一行才出现，弹出的菜单里一直显示）：传一个 IconButton 28 轻（`<IconButton icon="NewChat" label="新建对话" size={28} variant="light" />`），出现 150ms ease-out、消失 100ms ease-in。收起时一直显示 */
+  /** 右边的按钮，比如新建（侧栏 plain 里悬停这一行才出现，弹出的菜单里一直显示）：传一个 IconButton 28 · 无底灰（`<IconButton icon="NewChat" label="新建对话" size={28} variant="ghost-muted" />`），出现 150ms ease-out、消失 100ms ease-in。收起时一直显示 */
   action?: ReactElement;
-  /** action 左边再放的入口，比如画布的「全部」（Button 28 无底）：和 action 一起悬停才出现，收起成图标栏时不显示 */
+  /** action 左边再放的入口，比如画布的「全部」（Button 28 · 无底灰）：和 action 一起悬停才出现，收起成图标栏时不显示 */
   extra?: ReactNode;
   /** 收起：侧栏收成图标栏时用。标题、箭头淡出，只留 action（图标栏里宽 36，按钮居中），悬停在右边出 Tooltip 写 action 的 label */
   collapsed?: boolean;

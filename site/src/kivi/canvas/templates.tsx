@@ -11,7 +11,7 @@ import './canvas.css';
 */
 
 export interface NodePanelProps extends HTMLAttributes<HTMLDivElement> {
-  /** 右上角的全屏按钮：IconButton 32 · 轻，图标 FullScreen */
+  /** 右上角的全屏按钮：IconButton 32 · 无底灰，图标 FullScreen */
   expand?: boolean;
   /** 点了全屏按钮 */
   onExpand?: () => void;
@@ -25,7 +25,7 @@ export const NodePanel = forwardRef<HTMLDivElement, NodePanelProps>(function Nod
   return (
     <div ref={ref} className={cx('kv-node-panel', className)} {...rest}>
       {children}
-      {expand && <IconButton icon="FullScreen" label="全屏" variant="light" className="kv-node-panel__expand" onClick={onExpand} />}
+      {expand && <IconButton icon="FullScreen" label="全屏" variant="ghost-muted" className="kv-node-panel__expand" onClick={onExpand} />}
     </div>
   );
 });

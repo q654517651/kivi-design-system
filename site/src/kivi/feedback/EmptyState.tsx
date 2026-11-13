@@ -36,7 +36,7 @@ export interface EmptyStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 't
 
 const has = (node: ReactNode) => node !== undefined && node !== null && node !== false && node !== '';
 
-/** 页面、面板、下拉里没有东西可看时，用 IP 插图告诉用户为什么是空的、下一步做什么。Figma「反馈」页 EmptyState */
+/** 页面、面板、下拉里没有东西可看时，用 IP 插图告诉用户为什么是空的、下一步做什么。Figma「加载和空态」页 EmptyState */
 export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(function EmptyState(
   { type = 'empty', size = 160, title, description, action, image, className, ...rest },
   ref,

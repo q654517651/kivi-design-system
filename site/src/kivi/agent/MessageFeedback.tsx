@@ -28,7 +28,7 @@ export interface MessageFeedbackProps extends Omit<HTMLAttributes<HTMLDivElement
 }
 
 /**
- * 助手消息底部的反馈条：复制、复制 TraceID、赞、踩，四个都是 IconButton「轻」。
+ * 助手消息底部的反馈条：复制、复制 TraceID、赞、踩，四个都是 IconButton · 无底灰。
  * 复制成功图标换对勾 1.5 秒；赞、踩选中换实心图标，互斥。点踩后下面往下推出原因输入：Textarea，提交按钮在框里右下角，回车提交、Esc 收起；
  * 点赞、再点踩、提交、Esc 都会收起。生成中不显示这一条（调用方控制）。交互照线上。
  */
@@ -68,7 +68,7 @@ export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(
           <IconButton
               icon={textCopy.copied ? 'CheckSmall' : 'Copy'}
               label={textCopy.copied ? '已复制' : '复制'}
-              variant="light"
+              variant="ghost-muted"
               onClick={async () => {
                 if (await textCopy.copy(text)) onCopied?.(text);
               }}
@@ -78,14 +78,14 @@ export const MessageFeedback = forwardRef<HTMLDivElement, MessageFeedbackProps>(
           <IconButton
               icon={idCopy.copied ? 'CheckSmall' : 'CopyTraceID'}
               label={idCopy.copied ? '已复制' : '复制 TraceID'}
-              variant="light"
+              variant="ghost-muted"
               onClick={async () => {
                 if (await idCopy.copy(traceId)) onCopied?.(traceId);
               }}
             />
         )}
-        <IconButton icon={value === 'like' ? 'ThumbsUpFill' : 'ThumbsUp'} label="赞" variant="light" selected={value === 'like'} onClick={() => choose('like')} />
-        <IconButton icon={value === 'dislike' ? 'ThumbsDownFill' : 'ThumbsDown'} label="踩" variant="light" selected={value === 'dislike'} onClick={() => choose('dislike')} />
+        <IconButton icon={value === 'like' ? 'ThumbsUpFill' : 'ThumbsUp'} label="赞" variant="ghost-muted" selected={value === 'like'} onClick={() => choose('like')} />
+        <IconButton icon={value === 'dislike' ? 'ThumbsDownFill' : 'ThumbsDown'} label="踩" variant="ghost-muted" selected={value === 'dislike'} onClick={() => choose('dislike')} />
       </div>
       {reason && (
         <Collapse className="kv-message-feedback__reason" expanded={asking} distance={104} gap={6}>

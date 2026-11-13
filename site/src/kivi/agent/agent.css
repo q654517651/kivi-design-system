@@ -84,7 +84,7 @@
 }
 
 /* 折叠：超过 maxLines 行，用 Collapse 的「露一截」（collapsedSize）只露 maxLines 行，展开时高度走 300ms ease-in-out；
-   「显示更多 / 收起」是 Button 文字 sm，紧贴字下面，箭头展开时转 180° */
+   「显示更多 / 收起」是 Button · 无底 sm，紧贴字下面，箭头展开时转 180° */
 
 /* 保留文字里的换行（行为，不改样子） */
 .kv-user-message__text {
@@ -105,7 +105,7 @@
 }
 
 /* ---------- MessageFeedback：消息反馈条 ----------
-   一排 IconButton「轻」；点踩后下面用 Collapse 往下推出原因输入：Textarea 撑满，提交在框里右下角 */
+   一排 IconButton · 无底灰；点踩后下面用 Collapse 往下推出原因输入：Textarea 撑满，提交在框里右下角 */
 .kv-message-feedback {
   display: flex;
   flex-direction: column;
@@ -479,7 +479,7 @@
   white-space: nowrap;
 }
 
-/* 右边操作：IconButton 28 轻。默认不显示，悬停才出；音频的播放常显（不加 --reveal） */
+/* 右边操作：IconButton 28 · 无底灰。默认不显示，悬停才出；音频的播放常显（不加 --reveal） */
 .kv-file-card__actions {
   display: flex;
   flex: none;

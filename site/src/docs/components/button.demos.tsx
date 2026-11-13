@@ -28,13 +28,13 @@ export function ButtonPlayground() {
     <Playground<ButtonState>
       controls={[
         { key: 'size', label: '尺寸', type: 'segment', value: '32', options: [['28', '小'], ['32', '中'], ['36', '大']] },
-        { key: 'variant', label: '类型', type: 'segment', value: 'primary', options: [['primary', '主要'], ['secondary', '次要'], ['text', '文字'], ['danger', '危险'], ['on-media', '浮层'], ['light', '轻']] },
+        { key: 'variant', label: '类型', type: 'segment', value: 'primary', options: [['primary', '主要'], ['secondary', '次要'], ['secondary-muted', '次要灰'], ['ghost', '无底'], ['ghost-muted', '无底灰'], ['danger', '危险'], ['on-media', '浮层']] },
         { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['active', '按下'], ['disabled', '禁用'], ['loading', '加载中']] },
         { key: 'left', label: '左图标', type: 'toggle', value: true },
         { key: 'right', label: '右图标', type: 'toggle', value: false },
         { key: 'text', label: '文字', type: 'text', value: '生成' },
       ]}
-      rules={(s) => (s.variant === 'light' ? { size: ['36'], state: ['loading'] } : {})}
+      rules={(s) => (s.variant === 'secondary-muted' || s.variant === 'ghost-muted' ? { size: ['36'], state: ['loading'] } : {})}
       media={(s) => s.variant === 'on-media'}
       render={renderButton}
     />
@@ -65,12 +65,12 @@ export function IconButtonPlayground() {
     <Playground<IconButtonState>
       controls={[
         { key: 'size', label: '尺寸', type: 'segment', value: '32', options: [['28', '28'], ['32', '32'], ['36', '36']] },
-        { key: 'variant', label: '类型', type: 'segment', value: 'text', options: [['primary', '主要'], ['secondary', '次要'], ['text', '文字'], ['on-media', '浮层'], ['on-media-ghost', '浮层无底'], ['light', '轻']] },
+        { key: 'variant', label: '类型', type: 'segment', value: 'ghost', options: [['primary', '主要'], ['secondary', '次要'], ['ghost', '无底'], ['ghost-muted', '无底灰'], ['on-media', '浮层'], ['on-media-ghost', '浮层无底']] },
         { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['active', '按下'], ['disabled', '禁用'], ['loading', '加载中'], ['selected', '选中']] },
         { key: 'icon', label: '图标', type: 'segment', value: 'More', options: [['More', 'More'], ['Add', 'Add'], ['Download', 'Download'], ['TextBold', 'TextBold']] },
       ]}
       rules={(s) => {
-        if (s.variant === 'light') return { size: ['36'], state: ['loading'] };
+        if (s.variant === 'ghost-muted') return { size: ['36'], state: ['loading'] };
         if (s.variant === 'primary') return { state: ['selected'] };
         return {};
       }}

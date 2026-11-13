@@ -20,6 +20,7 @@ import {
   toast,
   type PlaceholderImageName,
   type SelectOption,
+  ScrollArea,
 } from '@kivi';
 import { VIDEO } from '../components/media.demos';
 import { MediaViewer, ViewerAuthor, ViewerSection, useLastShown } from './media-viewer';
@@ -93,7 +94,7 @@ function SectionHead({ title, children }: { title: string; children?: React.Reac
       <h2>{title}</h2>
       <div className="tpl-as__head-actions">
         {children}
-        <Button size={32} variant="text" rightIcon="RightArrowSmall">
+        <Button size={32} variant="ghost" rightIcon="RightArrowSmall">
           查看全部
         </Button>
       </div>
@@ -154,7 +155,8 @@ export function AssetsPage() {
     });
 
   return (
-    <main className="tpl-as">
+    <ScrollArea className="tpl-as">
+    <main className="tpl-as__body">
       <section className="tpl-as__section">
         <SectionHead title="我的素材" />
         <div className="tpl-as__row">
@@ -174,7 +176,7 @@ export function AssetsPage() {
 
       <section className="tpl-as__section">
         <SectionHead title="我的画布">
-          <Button size={32} variant="text" leftIcon="AddSmall">
+          <Button size={32} variant="ghost" leftIcon="AddSmall">
             新建画布
           </Button>
         </SectionHead>
@@ -243,7 +245,7 @@ export function AssetsPage() {
             size={160}
             title={onlyCollected ? '暂无符合条件的收藏' : '没有找到相关生成记录'}
             action={
-              <Button variant="light" onClick={reset}>
+              <Button variant="secondary-muted" onClick={reset}>
                 重置筛选
               </Button>
             }
@@ -305,5 +307,6 @@ export function AssetsPage() {
         )}
       </MediaViewer>
     </main>
+    </ScrollArea>
   );
 }

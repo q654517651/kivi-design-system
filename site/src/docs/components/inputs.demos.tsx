@@ -126,7 +126,7 @@ function renderTextarea(s: TextareaState, update: Update) {
       actions={
         s.actions ? (
           <>
-            <Button size={28} variant="light">取消</Button>
+            <Button size={28} variant="secondary-muted">取消</Button>
             <Button size={28} variant="primary" disabled={!value.trim() || s.state === 'disabled'}>保存</Button>
           </>
         ) : undefined

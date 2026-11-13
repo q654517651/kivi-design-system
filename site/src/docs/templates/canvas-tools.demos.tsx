@@ -31,6 +31,7 @@ import {
   type AttachmentItem,
   type CropRect,
   type SelectOption,
+  ScrollArea,
 } from '@kivi';
 import { TemplateFrame } from './frame';
 
@@ -124,7 +125,8 @@ function VideoHdPanel() {
 export function ToolPanelsTemplate() {
   return (
     <TemplateFrame>
-      <div className="tpl-tool tpl-tool--panels">
+      <ScrollArea orientation="both" className="tpl-tool tpl-tool--panels">
+      <div className="tpl-tool__stage">
         <div className="tpl-tool__node">
           <NodeWrapper ratio="1:1" name="图片高清" selected>
             <NodeCard status="done" type="image">
@@ -142,6 +144,7 @@ export function ToolPanelsTemplate() {
           <VideoHdPanel />
         </div>
       </div>
+      </ScrollArea>
     </TemplateFrame>
   );
 }
@@ -266,13 +269,13 @@ function CropMode() {
         />
       </div>
       <ButtonGroup variant="glass" size={44} className="tpl-tool__bar">
-        <IconButton tooltip={false} icon="Close" label="关闭裁剪" variant="text" onClick={reset} />
+        <IconButton tooltip={false} icon="Close" label="关闭裁剪" variant="ghost" onClick={reset} />
         <span className="tpl-tool__bar-title">图片裁剪</span>
         <SizeField label="裁剪宽度" value={out.w} onCommit={(v) => commitSize('w', v)} />
         <IconButton
           icon={locked ? 'EnableConstraint' : 'DisableConstraint'}
           label={locked ? '解绑比例' : '约束比例'}
-          variant="text"
+          variant="ghost"
           size={28}
           selected={locked}
           onClick={toggleLock}
@@ -334,7 +337,7 @@ function ExpandMode() {
         />
       </div>
       <ButtonGroup variant="glass" size={44} className="tpl-tool__bar">
-        <IconButton tooltip={false} icon="Close" label="关闭扩图" variant="text" onClick={reset} />
+        <IconButton tooltip={false} icon="Close" label="关闭扩图" variant="ghost" onClick={reset} />
         <span className="tpl-tool__bar-hint">拖动边框进行扩图</span>
         <Dropdown
           haspopup="listbox"
@@ -362,10 +365,12 @@ function ExpandMode() {
 export function CropTemplate() {
   return (
     <TemplateFrame>
-      <div className="tpl-tool tpl-tool--crop">
+      <ScrollArea orientation="both" className="tpl-tool tpl-tool--crop">
+      <div className="tpl-tool__stage">
         <CropMode />
         <ExpandMode />
       </div>
+      </ScrollArea>
     </TemplateFrame>
   );
 }
@@ -551,7 +556,8 @@ export function PackagerTemplate() {
   const [type, setType] = useState<PackType>('vehicle');
   return (
     <TemplateFrame>
-      <div className="tpl-tool tpl-tool--dialog">
+      <ScrollArea orientation="both" className="tpl-tool tpl-tool--dialog">
+      <div className="tpl-tool__stage">
         <DialogPanel
           size={1024}
           title="视频封装"
@@ -567,18 +573,25 @@ export function PackagerTemplate() {
         >
           <div className="tpl-pack__body">
             {/* 类型：一列单选，当前项用选中底色（单行菜单项的规矩） */}
-            <div className="tpl-pack__nav" role="listbox" aria-label="封装类型">
-              {PACK_TYPES.map((t) => (
-                <MenuItem key={t.value} selected={type === t.value} onClick={() => setType(t.value)}>
-                  {t.label}
-                </MenuItem>
-              ))}
-            </div>
-            <PackMaterials key={type} type={type} />
-            <PackInspector key={`s-${type}`} type={type} />
+            <ScrollArea>
+              <div className="tpl-pack__nav" role="listbox" aria-label="封装类型">
+                {PACK_TYPES.map((t) => (
+                  <MenuItem key={t.value} selected={type === t.value} onClick={() => setType(t.value)}>
+                    {t.label}
+                  </MenuItem>
+                ))}
+              </div>
+            </ScrollArea>
+            <ScrollArea>
+              <PackMaterials key={type} type={type} />
+            </ScrollArea>
+            <ScrollArea>
+              <PackInspector key={`s-${type}`} type={type} />
+            </ScrollArea>
           </div>
         </DialogPanel>
       </div>
+      </ScrollArea>
     </TemplateFrame>
   );
 }

@@ -14,7 +14,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../utils';
-import { composeHandlers, rectOf, useControllable, useFloating, useHoverIntent, useMergedRef, usePresence, type FloatingPlacement } from '../hooks';
+import { composeHandlers, FloatingLayerContext, rectOf, useControllable, useFloating, useHoverIntent, useLayerNesting, useMergedRef, usePresence, type FloatingPlacement } from '../hooks';
 import './tooltip.css';
 
 export type PopoverOn = 'hover' | 'click';
@@ -101,6 +101,7 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
   const anchorRef = useRef<HTMLSpanElement>(null);
   const setAnchor = useMergedRef(anchorRef, ref);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const { nested, registerNested } = useLayerNesting(bubbleRef, mounted);
   const id = useId();
   const titleId = useId();
   const click = on === 'click';
@@ -163,7 +164,8 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' || e.isComposing) return;
+      for (const r of nested.current) if (r.current) return;
       e.stopPropagation();
       clearTimeout(timer.current);
       hover.leave(0);
@@ -173,6 +175,7 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
       if (bubbleRef.current?.contains(t) || anchorRef.current?.contains(t)) return;
+      for (const r of nested.current) if (r.current?.contains(t)) return;
       onInteractOutside?.(e);
       if (!e.defaultPrevented) setOpen(false);
     };
@@ -191,7 +194,7 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
   }, [open, click]);
 
   const inside = (el: EventTarget | null) =>
-    el instanceof Node && (anchorRef.current?.contains(el) || bubbleRef.current?.contains(el));
+    el instanceof Node && (anchorRef.current?.contains(el) || bubbleRef.current?.contains(el) || [...nested.current].some((r) => r.current?.contains(el)));
 
   // 面板里有能操作的东西，不能当 tooltip 读：悬停型也按对话框的写法
   const aria = click || panel
@@ -264,7 +267,9 @@ export const Popover = forwardRef<HTMLSpanElement, PopoverProps>(function Popove
                 {title}
               </b>
             )}
-            {panel || long ? content : <div className="kv-popover__text">{content}</div>}
+            <FloatingLayerContext.Provider value={registerNested}>
+              {panel || long ? content : <div className="kv-popover__text">{content}</div>}
+            </FloatingLayerContext.Provider>
           </div>,
           document.body,
         )}

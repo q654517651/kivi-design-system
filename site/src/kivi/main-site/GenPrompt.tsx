@@ -18,7 +18,7 @@ export interface GenPromptProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode;
 }
 
-/** 主站生成记录的头：一条记录最上面那块，提示词 + 参数。工具类任务只有参数。Figma「主站」页 GenPrompt */
+/** 主站生成记录的头：一条记录最上面那块，提示词 + 参数。工具类任务只有参数。Figma「生成记录」页 GenPrompt */
 export const GenPrompt = forwardRef<HTMLDivElement, GenPromptProps>(function GenPrompt(
   { length, prompt, onCopy, children, className, ...rest },
   ref,
@@ -68,7 +68,7 @@ export const GenPrompt = forwardRef<HTMLDivElement, GenPromptProps>(function Gen
                 icon={copied ? 'CheckSmall' : 'Copy'}
                 label={copied ? '已复制' : '复制提示词'}
                 size={28}
-                variant="light"
+                variant="ghost-muted"
                 onClick={async () => {
                   const text = typeof prompt === 'string' ? prompt : (textRef.current?.textContent ?? '');
                   if (await copy(text)) onCopy?.();
