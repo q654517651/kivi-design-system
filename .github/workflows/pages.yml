@@ -1,6 +1,10 @@
 name: Publish design site
 
 # 只在 main（正式版）更新时发布网站：test 是开发分支，推 test 不发布。发布流程见 CHANGELOG.md。
+# 功能分支预览：所有 preview/ 开头的分支（比如 preview/expert-mode）各打一份，放在网站的「功能名/」子目录（打开直接进演示站），
+# 名字读分支里的 .github/preview-label（没有就用功能名）。正式站还在根目录、照旧只用 main 的代码，两边代码没有交集；演示开关里能在这几个版本之间切。
+# 预览分支推送后由它自己的 preview-trigger.yml 叫这里重新发一次（跑的是 main 上的这份）。分支删了，下次发布它就不在了。
+# 某个预览分支打包失败只跳过它，不挡正式站发布。流程见 CLAUDE.md「功能分支预览」。
 
 on:
   push:
@@ -36,8 +40,41 @@ jobs:
         run: npm ci
       - name: Check components
         run: npm run check
+      - name: List branches
+        # 能切换的版本：正式版 + 所有 preview/ 分支。打包时传 VITE_PREVIEW_BRANCH / VITE_PREVIEW_LINKS，演示开关据此出「分支」切换（src/app/preview.ts）
+        run: |
+          SITE="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
+          git fetch --depth 1 origin '+refs/heads/preview/*:refs/remotes/origin/preview/*' || true
+          LINKS="[{\"name\":\"main\",\"label\":\"正式版\",\"url\":\"$SITE\"}"
+          NAMES=""
+          for NAME in $(git for-each-ref --format='%(refname:strip=4)' refs/remotes/origin/preview/); do
+            LABEL=$(git show "origin/preview/$NAME:.github/preview-label" 2>/dev/null | head -1 | tr -d '"\\')
+            LINKS="$LINKS,{\"name\":\"$NAME\",\"label\":\"${LABEL:-$NAME}\",\"url\":\"$SITE$NAME/\"}"
+            NAMES="$NAMES $NAME"
+          done
+          echo "VITE_PREVIEW_LINKS=$LINKS]" >> "$GITHUB_ENV"
+          echo "PREVIEW_NAMES=$NAMES" >> "$GITHUB_ENV"
+          echo "能切换的版本：$LINKS]"
       - name: Build site
         run: npm run build
+        env:
+          VITE_PREVIEW_BRANCH: main
+      - name: Build preview branches
+        run: |
+          for NAME in $PREVIEW_NAMES; do
+            echo "::group::预览 $NAME"
+            DIR="$RUNNER_TEMP/preview-$NAME"
+            if git worktree add --detach "$DIR" "origin/preview/$NAME" \
+              && (cd "$DIR/kivi-design-system/site" && npm ci && VITE_PREVIEW_BRANCH="$NAME" npm run build); then
+              rm -rf "dist/$NAME" && cp -R "$DIR/kivi-design-system/site/dist" "dist/$NAME"
+              # 预览只看演示站：没带 # 路径时直接进创作页
+              sed -i 's#<head>#<head><script>if(!location.hash||location.hash==="\#/")location.replace("\#/app/create")</script>#' "dist/$NAME/index.html"
+            else
+              echo "::warning::预览分支 preview/$NAME 打包失败，这次跳过"
+            fi
+            echo "::endgroup::"
+          done
+
       - name: Upload site
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:

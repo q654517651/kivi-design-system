@@ -1,6 +1,7 @@
-import { Button, IconButton, Popover, Switch, toast } from '@kivi';
+import { Button, IconButton, Popover, Switch, TabItem, Tabs, toast } from '@kivi';
 import { db } from '../data/db';
 import { demo, setDemo, useDemo, type DemoSwitches } from '../data/demo';
+import { PREVIEW_BRANCH, PREVIEW_LINKS, switchPreview } from '../preview';
 
 /*
   演示开关：右边竖向居中一个小按钮，点开切出错状态。不是产品功能，只在演示站里有。
@@ -26,6 +27,16 @@ export function DemoPanel() {
         title="演示开关"
         content={
           <div className="app-demo__panel">
+            {/* 部署的网站才有：切到别的分支版本，停在同一页（app/preview.ts） */}
+            {PREVIEW_LINKS.length > 1 && (
+              <Tabs variant="segment" value={PREVIEW_BRANCH} onChange={switchPreview} aria-label="分支">
+                {PREVIEW_LINKS.map((l) => (
+                  <TabItem key={l.name} value={l.name}>
+                    {l.label}
+                  </TabItem>
+                ))}
+              </Tabs>
+            )}
             {ROWS.map((r) => (
               <Switch key={r.key} checked={d[r.key]} onChange={(v) => setDemo({ [r.key]: v })}>
                 {r.label}

@@ -21,6 +21,13 @@
 - **更新日志**：仓库根目录 `CHANGELOG.md`，README 里有入口。每改一件事就在「未发布」下记一行（新增 / 改动 / 改名和删除 / 修复），不等发布时补；改名删除写旧名 → 新名，并指向网站「旧名对照」。
 - **发布步骤**（用户说「发布 x.y.z」时照做，发布前先和用户确认版本号）：改 `package.json` 版本号 → 「未发布」改成 `## [x.y.z] - 日期`、上面空出新的「未发布」→ 提交推 `test` → 开合并请求 `test` → `main` 并合入 → 在 `main` 上打标签 `vx.y.z`、发 GitHub Release（正文贴这一版日志）。
 - `skill` 分支只有 `kivi-design-system/`，所以**维护者自己的东西（规则、待办、记录、审查材料）一律不放进 `kivi-design-system/`**，放 `kivi-design-system-workspace/` 或仓库根目录。
+- **功能分支预览（11-19 用户定）**：别人提的新功能（合并请求）、UI 还没确认的大功能，不直接合进 `test`，单独挂在网站子目录里看，和正式代码不交叉：
+  1. 从 `test` 拉 `preview/功能名` 分支（功能名小写加连字符、不带 `/`），把对方的合并请求目标改到这个分支、合进来（`gh pr edit` 缺权限，用 `gh api -X PATCH repos/…/pulls/N -f base=…`）。
+  2. 分支里加 `.github/preview-label`（一行中文名，切换按钮里显示）和 `.github/workflows/preview-trigger.yml`（推送后叫 `main` 上的 `pages.yml` 重新发布，照 `preview/expert-mode` 那份抄）。
+  3. 部署时 `pages.yml` 自动找所有 `preview/` 分支，各打一份放在 `网站/功能名/`（打开直接进演示站），演示开关里的「分支」自动多一项，切过去停在同一页；功能分支的本机演示数据分开存（`src/app/preview.ts`）。不用改 `main`、不用发版。某个分支打包失败只跳过它。
+  4. 分支要接着改：跟着 `test` 合（`test` → 预览分支），对方的合并请求提到这个分支。
+  5. 用户确认 UI 后合进 `test`：先在分支上删掉那两个文件，开合并请求合进 `test`，再删掉 `preview/…` 分支，手动 `gh workflow run pages.yml --ref main` 重新发一次，切换按钮里那一项就没了。
+  - 现在挂着的：`preview/expert-mode`（专家模式，DD 提的）。
 - skill 和新 kit 一起正式上线（定 `1.0.0`）；上线前图标仓库要做好。技能改成克隆 `skill` 分支装，不再打包 `.skill`（11-05 定）。
 
 ## 目录
