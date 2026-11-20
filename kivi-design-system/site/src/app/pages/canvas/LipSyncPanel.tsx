@@ -37,7 +37,7 @@ export function LipSyncPanel({ canvasId, doc, node, busy }: LipSyncPanelProps) {
       type: slot,
       name: n.name,
       // 视频用封面，音频传音频地址（悬停预览里能播）
-      src: slot === 'video' ? it?.poster ?? it?.src : it?.src,
+      src: slot === 'video' ? it?.poster : it?.src,
       video: slot === 'video' ? it?.src : undefined,
       duration: it?.duration,
       badge: LIP_TEXT[slot],
@@ -63,7 +63,7 @@ export function LipSyncPanel({ canvasId, doc, node, busy }: LipSyncPanelProps) {
               {item ? (
                 <AttachmentStrip items={[item]} aria-label={LIP_TEXT[slot]} onRemove={busy ? undefined : (id) => disconnectPair(canvasId, id, node.id)} />
               ) : (
-                <AddTile label={LIP_TEXT[slot]} aria-label={`上传${LIP_TEXT[slot]}`} disabled={busy} onClick={() => pick(slot)} />
+                <AddTile variant="outline" label={LIP_TEXT[slot]} aria-label={`上传${LIP_TEXT[slot]}`} disabled={busy} onClick={() => pick(slot)} />
               )}
             </span>
           );

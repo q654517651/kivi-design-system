@@ -130,7 +130,7 @@ import { DropdownPlayground, MenuItemPlayground, MenuPlayground, PlainMenuPlaygr
 | `children` | `ReactNode` | — | 文字，13 常规，行高 20。高 36，圆角 8，左右内边距 12，元素间距 8 |
 | `variant` | `"default"` `"danger"` | `"default"` | 普通 / 危险。危险没有选中，放菜单最后，用 `Divider` 隔开 |
 | `icon` | `IconName` | — | 左图标，16。和 `thumb` 二选一 |
-| `thumb` | `ReactNode` | — | 缩略图：`<AssetThumb size={24} />`，可以是图片、音频，或图标（对话、画布没封面时用 `type="icon"`）。和 `icon` 二选一 |
+| `thumb` | `ReactNode` | — | 缩略图：`<AssetThumb size={24} />`，可以是图片、音频，或图标（对话、画布没封面时用 `type="icon"`）。和 `icon` 二选一。单行时缩略图四周都离边 6（左边内边距从 12 改 6），两行的照旧左 12 |
 | `description` | `ReactNode` | — | 说明：写了就是两行，第二行 12，secondary，一行省略。两行时左图标 20，选中不加底、在右边打勾 |
 | `shortcut` | `string` | — | 快捷键文字，比如 ⌘C，12，tertiary。和 `submenu`、`checked` 三选一 |
 | `submenu` | `boolean` | `false` | 子菜单箭头 `RightArrowSmall`，16，tertiary；同时加 `aria-haspopup="menu"` |

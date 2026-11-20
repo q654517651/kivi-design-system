@@ -1,12 +1,8 @@
 import { useMemo, useState, type MouseEvent } from 'react';
 import {
-  AttachmentStrip,
-  Button,
   Divider,
   Dropdown,
   EmptyState,
-  GenPrompt,
-  IconButton,
   Input,
   Masonry,
   Menu,
@@ -15,29 +11,26 @@ import {
   Select,
   Skeleton,
   TabItem,
-  Tag,
   WorkCard,
-  toast,
-  type MasonryColumns,
 } from '@kivi';
 import { CATS, DISCOVER_CATEGORIES, RATIO, WORKS, type Work } from '../../data/catalog';
-import { toggleFavorite, useFavorites } from '../../data/favorites';
+import { setLiked, toggleFavorite, useFavorites, useLikes } from '../../data/favorites';
 import { attempt } from '../../flows/errors';
+import { copyImage } from '../../flows/files';
+import { FolderSubMenu } from '../../parts/folder-menu';
+import { addWorkToReference, downloadWork, saveWorkToFolder } from './work-actions';
 import { useDebounced } from '../../hooks/useDebounced';
 import { usePaged, type MoreRef } from '../../hooks/usePaged';
-import { MediaViewer, ViewerAuthor, ViewerSection, useLastShown } from '../../parts/media-viewer';
-import { CopyPrompt } from '../../parts/asset-info';
-import { CategoryTabs } from './shared';
+import { CategoryTabs, WORK_COLUMNS } from './shared';
+import { WorkViewer } from './WorkViewer';
 
 /*
-  探索 · 发现：瀑布流，点作品铺满窗口看详情（照线上 CardDetailModal），右键出菜单。
+  探索 · 发现：瀑布流，点作品铺满窗口看详情（WorkViewer，照线上 CardDetailModal），右键出菜单。
   第一行是大类、小类筛选、我收藏的、搜索（需求「发现页」）；搜索停 0.5 秒再搜，滚到底出骨架再加载下一屏。
-  收藏存在 db.favorites；点赞只是本页状态。
+  收藏存在 db.favorites；点赞在 data/favorites.ts（不存本机，和创作首页同步）。
 */
 
 const WORK_PAGE = 20;
-// 最多 4 列（11-10 用户定：前期作品不多，列少一屏要的作品少、卡也大；1600 宽一张约 400，和即梦 1920 屏、LibTV 一样）
-const COLUMNS: MasonryColumns = { default: 4, 1100: 3, 700: 2, 500: 1 };
 
 export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; initialKeyword?: string }) {
   const [category, setCategory] = useState('all');
@@ -47,9 +40,9 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
   const k = useDebounced(keyword.trim());
   // 收藏在 db.favorites，先变后请求，失败退回
   const collected = useFavorites();
-  const [liked, setLiked] = useState<string[]>(['w4']);
+  // 点赞创作首页和探索页共用一份（data/favorites.ts）
+  const liked = useLikes();
   const [detail, setDetail] = useState<Work | null>(null);
-  const shownDetail = useLastShown(detail);
   const [menu, setMenu] = useState<{ x: number; y: number; work: Work } | null>(null);
 
   const list = useMemo(
@@ -66,9 +59,8 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
   );
   const { count, loading, done } = usePaged(list.length, WORK_PAGE, `${category}|${subs.join()}|${onlyCollected}|${k}`, moreRef);
   const shown = list.slice(0, count);
-  const skeletons = loading ? 8 : 0;
+  const skeletons = loading ? 10 : 0; // 加载下一屏的骨架：两排（一排 5 列）
 
-  const toggle = (set: typeof setLiked, id: string, on: boolean) => set((all) => (on ? [...all, id] : all.filter((x) => x !== id)));
   const collect = (id: string, on: boolean) => void attempt(() => toggleFavorite(id, on));
   const likesOf = (w: Work) => w.likes + (liked.includes(w.id) ? 1 : 0);
   // 小类：当前大类下的；「全部」时按大类分组列出
@@ -132,7 +124,7 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
           <EmptyState size={160} title="没有搜索到符合条件的内容" className="tpl-as__empty" />
         )
       ) : (
-        <Masonry columns={COLUMNS} gap={2} ratios={[...shown.map((w) => RATIO[w.ratio]), ...Array.from({ length: skeletons }, (_, i) => (i % 2 ? 1 : 3 / 4))]}>
+        <Masonry columns={WORK_COLUMNS} gap={2} ratios={[...shown.map((w) => RATIO[w.ratio]), ...Array.from({ length: skeletons }, (_, i) => (i % 2 ? 1 : 3 / 4))]}>
           {shown.map((w) => (
             <WorkCard
               key={w.id}
@@ -144,10 +136,10 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
               author={w.author}
               likes={likesOf(w)}
               liked={liked.includes(w.id)}
-              onLikedChange={(v) => toggle(setLiked, w.id, v)}
+              onLikedChange={(v) => setLiked(w.id, v)}
               collected={collected.includes(w.id)}
               onCollectedChange={(v) => collect(w.id, v)}
-              onDownload={() => toast.info('已开始下载')}
+              onDownload={() => downloadWork(w)}
               onOpen={() => setDetail(w)}
               onContextMenu={(e: MouseEvent) => {
                 e.preventDefault();
@@ -162,13 +154,15 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
       )}
       {!loading && done && shown.length > 0 && <p className="tpl-ex__end">没有更多内容了</p>}
 
-      {/* 右键菜单：复制、下载、收藏、添加到参考图、添加到文件夹（需求「发现页」）。只能看，点了出一条提示 */}
+      {/* 右键菜单：复制、下载、收藏、添加到参考图、添加到文件夹（需求「发现页」）。11-20 用户定都做成真的：复制只给图片 */}
       <Dropdown anchorPoint={menu ?? undefined} open={menu !== null} onOpenChange={(v) => !v && setMenu(null)}>
         <Menu aria-label="作品操作">
-          <MenuItem icon="Copy" onClick={() => toast.success('已复制')}>
-            复制
-          </MenuItem>
-          <MenuItem icon="Download" onClick={() => toast.info('已开始下载')}>
+          {menu && !menu.work.video && (
+            <MenuItem icon="Copy" onClick={() => void copyImage(menu.work.src)}>
+              复制
+            </MenuItem>
+          )}
+          <MenuItem icon="Download" onClick={() => menu && downloadWork(menu.work)}>
             下载
           </MenuItem>
           {menu && (
@@ -181,71 +175,15 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
             </MenuItem>
           )}
           <Divider />
-          <MenuItem icon="ImagePlus" onClick={() => toast.success('已添加到参考图')}>
+          <MenuItem icon="ImagePlus" onClick={() => menu && addWorkToReference(menu.work)}>
             添加到参考图
           </MenuItem>
-          <MenuItem icon="AddFolder" onClick={() => toast.success('已添加到文件夹')}>
-            添加到文件夹
-          </MenuItem>
+          <FolderSubMenu label="添加到文件夹" onPick={(f) => menu && saveWorkToFolder(menu.work, f)} />
         </Menu>
       </Dropdown>
 
-      {/* 详情：全站共用的查看大图（media-viewer.tsx）。头是作者和下载、收藏，内容是提示词和参数、参考图，最下面点赞。没有一键同款（11-09 用户定） */}
-      <MediaViewer
-        media={detail && { type: detail.video ? 'video' : 'image', src: detail.src, poster: detail.poster, alt: detail.prompt }}
-        onClose={() => setDetail(null)}
-        head={shownDetail && <ViewerAuthor name={shownDetail.author.name} avatar={shownDetail.author.avatar} date={shownDetail.date} />}
-        actions={
-          shownDetail && (
-            <>
-              <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => toast.info('已开始下载')} />
-              <IconButton
-                icon={collected.includes(shownDetail.id) ? 'CollectSolid' : 'Collect'}
-                label={collected.includes(shownDetail.id) ? '取消收藏' : '收藏'}
-                variant="secondary"
-                size={36}
-                data-collected={collected.includes(shownDetail.id) || undefined}
-                onClick={() => collect(shownDetail.id, !collected.includes(shownDetail.id))}
-              />
-            </>
-          )
-        }
-        footer={
-          shownDetail && (
-            <Button
-              size={36}
-              variant="secondary"
-              leftIcon={liked.includes(shownDetail.id) ? 'ThumbsUpFill' : 'ThumbsUp'}
-              onClick={() => toggle(setLiked, shownDetail.id, !liked.includes(shownDetail.id))}
-            >
-              {likesOf(shownDetail)}
-            </Button>
-          )
-        }
-      >
-        {shownDetail && (
-          <>
-            <ViewerSection title="提示词" action={<CopyPrompt text={shownDetail.prompt} />}>
-              <p className="tpl-viewer__prompt">{shownDetail.prompt}</p>
-            </ViewerSection>
-            <ViewerSection title="参数">
-              <GenPrompt>
-                <Tag>{shownDetail.video ? '视频生成' : '图片生成'}</Tag>
-                <Tag>{shownDetail.model}</Tag>
-                <Tag>{shownDetail.ratio}</Tag>
-              </GenPrompt>
-            </ViewerSection>
-            {/* 参考图：只放参考图（线上还有图生图、控制图、Lora 等，这里不做），多张放在一个容器里，悬停看大图 */}
-            {shownDetail.refs.length > 0 && (
-              <ViewerSection title="参考图">
-                <div className="tpl-viewer__refs">
-                  <AttachmentStrip items={shownDetail.refs} />
-                </div>
-              </ViewerSection>
-            )}
-          </>
-        )}
-      </MediaViewer>
+      {/* 详情：作品大图（WorkViewer，创作首页也用它） */}
+      <WorkViewer work={detail} onClose={() => setDetail(null)} />
     </>
   );
 }

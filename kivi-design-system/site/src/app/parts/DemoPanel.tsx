@@ -1,7 +1,39 @@
 import { Button, IconButton, Popover, Switch, TabItem, Tabs, toast } from '@kivi';
 import { db } from '../data/db';
 import { demo, setDemo, useDemo, type DemoSwitches } from '../data/demo';
+import { resetMemory } from '../data/memory';
 import { PREVIEW_BRANCH, PREVIEW_LINKS, switchPreview } from '../preview';
+
+/*
+  重置演示数据（11-20 修 S-3）：本机数据、演示开关、记忆都回到初始，再整页刷新，
+  页面里的选中、弹窗、挂起的慢请求一起清掉；刷新后出「演示数据已重置」。
+*/
+const RESET_FLAG = 'kivi-app-reset';
+
+function resetDemo() {
+  db.reset();
+  demo.reset();
+  resetMemory();
+  try {
+    sessionStorage.setItem(RESET_FLAG, '1');
+  } catch {
+    /* 存不了就不提示 */
+  }
+  location.reload();
+}
+
+/** 刷新后补一句提示 */
+function toastAfterReset() {
+  try {
+    if (sessionStorage.getItem(RESET_FLAG)) {
+      sessionStorage.removeItem(RESET_FLAG);
+      setTimeout(() => toast.success('演示数据已重置'), 300);
+    }
+  } catch {
+    /* 读不了就算了 */
+  }
+}
+if (typeof window !== 'undefined') toastAfterReset();
 
 /*
   演示开关：右边竖向居中一个小按钮，点开切出错状态。不是产品功能，只在演示站里有。
@@ -46,11 +78,7 @@ export function DemoPanel() {
               size={28}
               variant="secondary-muted"
               leftIcon="Reset"
-              onClick={() => {
-                db.reset();
-                demo.reset();
-                toast.success('演示数据已重置');
-              }}
+              onClick={resetDemo}
             >
               重置演示数据
             </Button>

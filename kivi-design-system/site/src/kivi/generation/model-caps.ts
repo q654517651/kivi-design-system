@@ -31,19 +31,31 @@ interface ModelCaps {
   maxChars?: number;
   /** 支持哪些参数值，没写的参数全部支持 */
   params?: GenParamLimits;
+  /** 能挂 Lora（照线上 SelectLora 组件），最多 4 个 */
+  lora?: boolean;
 }
 
 const IMAGE = (max: number, params?: GenParamLimits): ModelCaps => ({ inputs: { default: { image: [0, max] } }, params });
 const FRAMES_ONLY = (params?: GenParamLimits): ModelCaps => ({ inputs: { frames: { image: [1, 2] } }, params });
 const FRAMES: Partial<Record<InputKind, Range>> = { image: [1, 2] };
+const TEXT: ModelCaps = { inputs: { default: { image: [0, 4], video: [0, 1] } } };
 
 const CAPS: Record<string, ModelCaps> = {
-  'gpt-image-2': IMAGE(10, { ratio: ['智能', '1:1', '2:3', '3:2'], resolution: ['1K', '2K'] }),
+  // 文本模型（画布文本节点）：照线上 text_generation，图 0–4、视频 0–1，图片反推提示词、视频反推脚本用
+  'gemini-3.5-flash': TEXT,
+  'gemini-3.1-pro': TEXT,
+  'gpt-5.5': TEXT,
+  'gpt-5.4': TEXT,
+  'qwen-3.7-max': TEXT,
+  // 比例照线上规格（openspec preserve-dynamic-ratio-options：auto、1:1、3:4、4:3、16:9、9:16）；分辨率 1K / 2K / 4K 都给（11-20 用户要 4K）
+  'gpt-image-2': IMAGE(10, { ratio: ['智能', '1:1', '3:4', '4:3', '16:9', '9:16'] }),
   'nano-banana-2': IMAGE(14),
   'nano-banana-pro': IMAGE(14),
   'seedream-5-lite': IMAGE(10),
   'seedream-4.5': IMAGE(10),
   'qwen-image-3.0': IMAGE(3, { resolution: ['1K', '2K'] }),
+  // 带 Lora 的生图模型（照线上 image_lora 模板 qwen-image-2512），参考图只收 1 张（11-19 用户定）
+  'qwen-image-2512': { ...IMAGE(1), lora: true },
   'seedance-2.0': { inputs: { omni: { image: [0, 9], video: [0, 3], audio: [0, 3] }, frames: FRAMES } },
   'seedance-2.0-fast': { inputs: { omni: { image: [0, 9], video: [0, 3], audio: [0, 3] }, frames: FRAMES } },
   'seedance-2.5': {
@@ -77,6 +89,11 @@ export const AUDIO_CHAR_LIMIT: Record<string, number> = Object.fromEntries(
 /** 模型的能力。表里没有的（文字模型、Agent）返回 undefined，当作不设限 */
 export function modelCaps(model: string): ModelCaps | undefined {
   return CAPS[model];
+}
+
+/** 这个模型能不能挂 Lora */
+export function supportsLora(model: string): boolean {
+  return Boolean(CAPS[model]?.lora);
 }
 
 /** 一个模型在某种参考方式下，各类参考的 min–max。表里没有的模型不设限；表里没写的类型是 0–0（不收） */

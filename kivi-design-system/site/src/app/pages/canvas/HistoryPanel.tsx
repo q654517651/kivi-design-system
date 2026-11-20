@@ -5,7 +5,6 @@ import {
   Divider,
   Dropdown,
   EmptyState,
-  Icon,
   IconButton,
   Loading,
   Menu,
@@ -27,6 +26,7 @@ import { useBriefLoading } from '../../hooks/useBriefLoading';
 import { usePaged } from '../../hooks/usePaged';
 import { MediaViewer, ViewerAuthor, useLastShown, type ViewerMedia } from '../../parts/media-viewer';
 import { AssetInfo } from '../../parts/asset-info';
+import { AudioCell, activateProps } from '../../parts/asset-cell';
 import { GROUPS, groupOf, startOfDay, timeOf } from '../assets/assetCells';
 import { collectAssets } from '../assets/ops';
 
@@ -93,7 +93,7 @@ export function HistoryPanel({ open, onClose, onApply }: HistoryPanelProps) {
     void confirmDelete(async () => {
       if (viewId === a.id) setViewId(next?.id ?? null);
       await removeAssets([a.id]);
-    }, { description: '删除后将无法恢复，是否确认删除？' });
+    });
   };
   const openMenu = (e: MouseEvent, item: Asset) => {
     e.preventDefault();
@@ -102,18 +102,26 @@ export function HistoryPanel({ open, onClose, onApply }: HistoryPanelProps) {
 
   const cell = (a: Asset) =>
     a.media === 'audio' ? (
-      <div key={a.id} className="tpl-as__audio" style={{ cursor: 'zoom-in' }} onClick={() => setViewId(a.id)} onContextMenu={(e) => openMenu(e, a)}>
-        <Icon name="Music" size={24} />
-        <span className="tpl-as__audio-name" title={a.name}>
-          {a.name}
-        </span>
-        {a.duration && <span className="tpl-as__audio-time">{a.duration}</span>}
-      </div>
+      <AudioCell
+        key={a.id}
+        name={a.name}
+        duration={a.duration}
+        onOpen={() => setViewId(a.id)}
+        onContextMenu={(e) => openMenu(e, a)}
+        topActions={[
+          { icon: 'AddToCanvas', label: '应用到画布', onClick: () => apply(a) },
+          { icon: 'Delete', label: '删除', onClick: () => remove(a) },
+        ]}
+        collect
+        collected={a.collected}
+        onCollectedChange={(v) => void collectAssets([a.id], v)}
+      />
     ) : (
       <ResultTile
         key={a.id}
         style={{ cursor: 'zoom-in' }}
         onClick={(e) => !(e.target as HTMLElement).closest('button') && setViewId(a.id)}
+        {...activateProps(() => setViewId(a.id))}
         onPreview={a.media === 'video' ? () => setViewId(a.id) : undefined}
         onContextMenu={(e: MouseEvent) => openMenu(e, a)}
         title={a.name}

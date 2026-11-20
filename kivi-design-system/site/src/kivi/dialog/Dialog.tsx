@@ -23,6 +23,11 @@ function cssMs(name: string, fallback: number): number {
 export interface DialogPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   /** 宽度，默认 400：400 确认、重命名 · 560 单列表单、分步问答 · 800 阅读详情、带插图的说明 · 1024 卡片列表、裁剪 · 1200 编辑器、多栏 · full 铺满窗口、没有圆角。结构、内边距、间距都一样 */
   size?: DialogSize;
+  /**
+   * 固定高度（11-19，记忆管理用）：不传就跟着内容长、最高到离窗口边 32。传了就固定这么高（窗口矮时照样不超出），
+   * 内容区撑满剩下的高度、放不下在里面滚；里面的东西变高变矮（比如原地编辑），弹窗不跟着变
+   */
+  height?: number;
   /** 标题。不传就没有标题栏（关闭按钮也跟着没有） */
   title?: ReactNode;
   /** 描述：一句话说明要做什么，或者操作的后果。和标题栏间距 8 */
@@ -50,7 +55,7 @@ export interface DialogPanelProps extends Omit<HTMLAttributes<HTMLDivElement>, '
  * 文档里摆静态示意用；项目里用 Dialog。children 是内容区。
  */
 export const DialogPanel = forwardRef<HTMLDivElement, DialogPanelProps>(function DialogPanel(
-  { size = 400, title, description, footer, media, showClose = true, onClose, titleId, descriptionId, className, children, ...rest },
+  { size = 400, height, title, description, footer, media, showClose = true, onClose, titleId, descriptionId, className, style, children, ...rest },
   ref,
 ) {
   const hasTitle = has(title);
@@ -61,7 +66,7 @@ export const DialogPanel = forwardRef<HTMLDivElement, DialogPanelProps>(function
     <IconButton tooltip={false} icon="Close" label="关闭" size={32} variant={variant} onClick={onClose} />
   );
   return (
-    <div ref={ref} className={cx('kv-dialog', `kv-dialog--${size}`, className)} {...rest}>
+    <div ref={ref} className={cx('kv-dialog', `kv-dialog--${size}`, className)} style={height ? { height, ...style } : style} {...rest}>
       {hasMedia && (
         <div className="kv-dialog__media">
           {media}

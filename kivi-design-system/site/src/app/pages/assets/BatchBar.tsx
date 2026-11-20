@@ -66,7 +66,7 @@ export function AssetBatchActions({ items, folderId, onChanged }: { items: Asset
       leftIcon="Download"
       disabled={none}
       aria-disabled={tooMany || undefined}
-      onClick={(e) => (tooMany ? e.preventDefault() : downloadAssets())}
+      onClick={(e) => (tooMany ? e.preventDefault() : downloadAssets(items))}
     >
       下载
     </Button>

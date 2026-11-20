@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { DropOverlay, UPLOAD_SPECS, toast } from '@kivi';
 import { matchAccept, rejectMessage, useFileDrop } from '@kivi/hooks';
 import { removeTask, submitTask } from '../../data/tasks';
-import { takeFirstFailure } from '../../data/tool-mock';
 import { uid } from '../../data/store';
 import { TOOLS, toolOf, type ToolId } from '../../data/tools';
 import { confirmDelete } from '../../flows/delete';
@@ -77,16 +76,16 @@ export function ToolsPage({ account }: { account?: ReactNode }) {
     return () => document.removeEventListener('paste', onPaste);
   });
 
-  // 生成：舞台盖生成中的样子，参数照常能改、能再提交（不限并发），结果排在历史最上面。扩图、视频高清每个工具第一次固定失败一次
+  // 生成：舞台盖生成中的样子，参数照常能改、能再提交（不限并发），结果排在历史最上面
   const generate = (job: ToolJob) => {
     // 返回请求的 Promise：等它的时候生成按钮转圈
-    return attempt(() => submitTask({ ...toolTaskInput(job, { page: 'tools' }), forceFail: takeFirstFailure(job.tool) }));
+    return attempt(() => submitTask(toolTaskInput(job, { page: 'tools' })));
   };
   const removeSource = (id: ToolId) => {
     setSources((s) => ({ ...s, [id]: undefined }));
   };
 
-  const [preview, setPreview] = useState<HistoryItem | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   // 右键「加入当前工具」：换掉当前工具的原图，不切工具、不动别的（11-19 用户定）
   const useInTool = (r: HistoryItem) => setSources((s) => ({ ...s, [tool]: { id: uid('v'), media: r.media, src: r.src, ratio: r.ratio } }));
 
@@ -128,12 +127,12 @@ export function ToolsPage({ account }: { account?: ReactNode }) {
         account={account}
         items={history}
         media={media}
-        onPreview={setPreview}
+        onPreview={(r) => setPreviewId(r.id)}
         onUseInTool={useInTool}
         onRemove={(r) => void confirmDelete(() => removeTask(r.id))}
       />
 
-      <ToolsViewer item={preview} onClose={() => setPreview(null)} />
+      <ToolsViewer items={history.filter((r) => r.status === 'done')} id={previewId} onChange={setPreviewId} />
     </div>
   );
 }

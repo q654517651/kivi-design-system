@@ -100,7 +100,7 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `type` | `"image"` `"video"` | `"image"` | 图片 / 视频。视频就是播放器 VideoPlayer 卡片（见「图片和视频」页），时长、悬停播放、控制条都在里面 |
+| `type` | `"image"` `"video"` `"audio"` | `"image"` | 图片 / 视频 / 音频。视频就是播放器 VideoPlayer 卡片（见「图片和视频」页），时长、悬停播放、控制条都在里面；音频和画布音频节点同一块（NodeMedia 音频：波形能拖、时间、播放 32），默认 4:3，不放快捷操作 |
 | `status` | `"done"` `"generating"` `"failed"` | `"done"` | 完成 / 生成中 / 失败。生成中分两种：第一次生成（没有原素材）只有 `GeneratingDots` 铺满，没有遮罩；重新生成（传了 `src`）原素材 + 遮罩 `--color-bg-fill-container-dark`（黑 40%）+ 背景模糊 16（`--effect-mask-blur`），上面叠 `GeneratingDots` 和角标；失败：EmptyState 小 · 生成失败，居中，右上操作和 children 照常渲染（失败的格子还能删除）。完成的图片用 Image：加载中骨架屏，加载完淡入。从生成中变成完成时，生成中那层留在上面，图加载好后淡出（300ms ease-in），不跳变。悬停由鼠标触发 |
 | `src` | `string` | — | 图片是图片地址，视频是视频文件。生成中传了就是「有原素材」的样子（见 `status`） |
 | `poster` | `string` | — | 视频封面，没播时显示；不传是首帧 |
@@ -120,13 +120,13 @@ GenPrompt 参数里的参考区：缩略图 + 参考方式文字。高 24，圆�
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `items` | `MediaGroupItem[]` | — | 这一组结果，按生成顺序。每项 `id`、`src`（视频传封面）、`ratio`（数字或「16:9」，限制 9:16–16:9，默认 1:1）、`status`（`done` / `failed`）、`name`（悬停显示在左下） |
+| `items` | `MediaGroupItem[]` | — | 这一组结果，按生成顺序。每项 `id`、`src`（视频传封面）、`ratio`（数字或「16:9」，限制 9:16–16:9，默认 1:1）、`status`（`generating` / `done` / `failed`，生成中这一格是 Light 1 底 + 生成中点阵，不出名字和定位）、`name`（悬停显示在左下） |
 | `type` | `"image"` `"video"` | `"image"` | 产出类型，决定标题行的图标和文字 |
-| `title` | `ReactNode` | 按结果算 | 标题行，比如「图片已生成 ×2，图片生成失败 ×3」 |
+| `title` | `ReactNode` | 按结果算 | 标题行。有生成中的：「图片生成中 ×4」，动作文字扫光（ProcessRow 进行中）；完了：「图片已生成 ×2，图片生成失败 ×3」 |
 | `failedTitle` | `ReactNode` | `"生成失败，消耗猕猴桃已退回"` | 失败的那几张：标题。失败态就是 EmptyState 生成失败 · 96，和结果格、节点一样；格子矮于 170（16:9 这类）放不下插图，只留文字 |
 | `failedDescription` | `ReactNode` | — | 失败的那几张：副标题 |
 | `expanded` | `boolean` | — | 展开：受控。只有一张时不叠放，直接平铺 |
-| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值 |
+| `defaultExpanded` | `boolean` | `false` | 展开：非受控的初始值。有生成中的一直展开、不能收起（没有箭头）；全部生成完停 1 秒自己收起；一张的不能收起 |
 | `onExpandedChange` | `(expanded: boolean) => void` | — | 展开 / 收起时触发 |
 | `onItemClick` | `(item: MediaGroupItem) => void` | — | 展开后点某一张。画布里用来定位到节点 |
 

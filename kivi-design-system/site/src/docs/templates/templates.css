@@ -280,6 +280,32 @@
   pointer-events: auto;
 }
 
+/* 回到底部（11-19 用户定，照即梦）：往上翻了才出，浮在输入框上面正中、间距 12；进来淡入上浮 */
+.tpl-ms__to-bottom {
+  position: absolute;
+  bottom: calc(100% + var(--spacing-12));
+  left: 50%;
+  transform: translateX(-50%);
+  animation: tpl-to-bottom-in var(--motion-duration-200) var(--motion-ease-out);
+}
+
+@keyframes tpl-to-bottom-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+.tpl-ms__to-bottom-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: 0 var(--spacing-4) 0 var(--spacing-8);
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-13);
+  white-space: nowrap;
+}
+
 .tpl-ms__column {
   padding-bottom: calc(var(--tpl-composer-h, 220px) + var(--spacing-32));
 }
@@ -365,16 +391,6 @@
 /* 「复制用户 Key」：头像下面一整行的次要按钮（照即梦「创建团队」） */
 .tpl-ms__user-key {
   width: 100%;
-}
-
-.tpl-ms__feedback {
-  display: grid;
-  place-items: center;
-  height: 480px;
-  border-radius: var(--border-radius-12);
-  background: var(--color-bg-fill-container-dark);
-  color: var(--color-text-fill-tertiary);
-  font-size: var(--font-size-14);
 }
 
 /* 一条记录：记录头 + 结果网格 + 底部按钮，间距 12 */
@@ -669,17 +685,12 @@
 }
 
 .tpl-ca__title {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-text-fill-primary);
-  cursor: pointer;
+  /* 无底 Select 左右内边距 8：往左挪 8，标题文字还停在原来的位置 */
+  margin-left: calc(-1 * var(--spacing-8));
 }
 
-.tpl-ca__title > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.tpl-cv__head > .kv-dropdown {
+  min-width: 0;
 }
 
 .tpl-ca__head-actions {
@@ -1377,8 +1388,9 @@
   margin-right: var(--spacing-8);
 }
 
-/* 音频素材的格子（文件夹内页）：正方形，Container Light 1 底，音符图标 + 名字 + 时长。生成历史里没有音频 */
+/* 音频素材的格子（AudioCell，app/parts/asset-cell.tsx）：正方形，Container Light 1 底，音符图标 + 名字 + 时长；悬停出操作，和图片格一样 */
 .tpl-as__audio {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1391,6 +1403,52 @@
   border-radius: var(--border-radius-6);
   background: var(--color-bg-fill-container-light-1);
   color: var(--color-text-fill-primary);
+}
+
+.tpl-as__audio[data-openable] {
+  cursor: zoom-in;
+}
+
+.tpl-as__audio-actions {
+  position: absolute;
+  z-index: 3;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-in),
+    visibility 0s linear var(--motion-duration-150);
+}
+
+.tpl-as__audio-actions--top,
+.tpl-as__audio-pin {
+  top: var(--spacing-8);
+  right: var(--spacing-8);
+}
+
+.tpl-as__audio-actions--quick {
+  right: var(--spacing-8);
+  bottom: var(--spacing-8);
+}
+
+.tpl-as__audio:where(:hover, :focus-visible, :has(:focus-visible)) > .tpl-as__audio-actions {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-out),
+    visibility 0s;
+}
+
+/* 收藏了、不悬停：右上只留一个星，悬停时换成整条 */
+.tpl-as__audio-pin {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-150) var(--motion-ease-out);
+}
+
+.tpl-as__audio:where(:hover, :focus-visible, :has(:focus-visible)) > .tpl-as__audio-pin {
+  opacity: 0;
+  transition-timing-function: var(--motion-ease-in);
 }
 
 .tpl-as__audio-name {
@@ -2142,16 +2200,29 @@
   min-width: 0;
 }
 
-/* 首页发现：最高约两屏（高度 JS 量了写在 style 上），多的截掉；「更多」压在底部正中，离底 24 */
+/* 首页发现：最高约两屏（高度 JS 量了写在 style 上），多的截掉；「更多」压在底部正中，离底 24。
+   截掉的那条边：下面两个角和卡片一样圆角 4，底部盖一层黑色渐变蒙版（透明 → 遮罩黑 60%，高 160），「更多」浮在蒙版上（11-20 用户定） */
 .tpl-home__discover {
   position: relative;
   overflow: hidden;
+  border-radius: 0 0 var(--border-radius-4) var(--border-radius-4);
+}
+
+.tpl-home__discover::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 3; /* 盖过卡片上的按钮条（2） */
+  height: 160px;
+  background: linear-gradient(180deg, transparent, var(--color-bg-fill-mask));
+  pointer-events: none;
 }
 
 .tpl-home__discover-more {
   position: absolute;
   left: 50%;
   bottom: var(--spacing-24);
+  z-index: 4;
   transform: translateX(-50%);
 }
 
@@ -2160,7 +2231,7 @@
   gap: var(--spacing-4);
 }
 
-/* 最近更新：一排 4 张 16:9（窄了 3 张、2 张），横着滚（ScrollArea）、一张一张对齐，左右翻一屏。
+/* 最近更新：一排 5 张 16:9（窄了 4 / 3 / 2 张，11-20 从 4 加一列），横着滚（ScrollArea）、一张一张对齐，左右翻一屏。
    列宽按 ScrollArea 外层的宽算（容器查询单位 cqw，内容层是 max-content，不能用百分比） */
 .tpl-home__rail {
   container-type: inline-size;
@@ -2173,7 +2244,7 @@
 
 .tpl-home__rail-track {
   display: grid;
-  grid-auto-columns: calc((100cqw - 3 * var(--spacing-16)) / 4);
+  grid-auto-columns: calc((100cqw - 4 * var(--spacing-16)) / 5); /* 一排 5 张（11-20 用户定，从 4 加一列），窄了 4 / 3 / 2 */
   grid-auto-flow: column;
   gap: var(--spacing-16);
 }
@@ -2187,6 +2258,8 @@
   overflow: hidden;
   border: 0;
   border-radius: var(--border-radius-12);
+  outline: var(--border-width-1) solid var(--color-border); /* 媒体描边 12%，画在里面（设计规则 · 状态） */
+  outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-container-light-1);
   cursor: pointer;
   scroll-snap-align: start;
@@ -2197,12 +2270,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.tpl-home__banner-preview {
-  display: block;
-  width: 100%;
-  border-radius: var(--border-radius-8);
 }
 
 /* 最近项目：新建画布 + 最近 4 个（ProjectCard 封面样式，16:9），一排 5 格（窄了 3 格），间距 16；新建格跟着格子高，
@@ -2235,10 +2302,6 @@
 }
 
 @media (max-width: 1100px) {
-  .tpl-home__rail-track {
-    grid-auto-columns: calc((100cqw - 2 * var(--spacing-16)) / 3);
-  }
-
   .tpl-home__project-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -2249,7 +2312,20 @@
   }
 }
 
-@media (max-width: 700px) {
+/* 最近更新跟着自己的宽换列数，和下面「发现」的瀑布流用同一组断点（Masonry 也按容器宽算）：> 1100 五张，≤ 1100 四张，≤ 800 三张，≤ 550 两张 */
+@container (max-width: 1100px) {
+  .tpl-home__rail-track {
+    grid-auto-columns: calc((100cqw - 3 * var(--spacing-16)) / 4);
+  }
+}
+
+@container (max-width: 800px) {
+  .tpl-home__rail-track {
+    grid-auto-columns: calc((100cqw - 2 * var(--spacing-16)) / 3);
+  }
+}
+
+@container (max-width: 550px) {
   .tpl-home__rail-track {
     grid-auto-columns: calc((100cqw - var(--spacing-16)) / 2);
   }
@@ -2393,7 +2469,7 @@
 .tpl-viewer__nav {
   position: absolute;
   top: 50%;
-  right: 0;
+  right: calc(var(--spacing-16) * -1); /* 伸进和竖线之间的 32 空档，离竖线 16（11-20 用户定，原来贴着媒体区右边、离竖线 32 太远） */
   z-index: 1;
   display: flex;
   flex-direction: column;
@@ -2432,6 +2508,8 @@
   padding: var(--spacing-24) var(--spacing-32);
   box-sizing: border-box;
   border-radius: var(--border-radius-12);
+  outline: var(--border-width-1) solid var(--color-border); /* 媒体描边 12%，和图片、视频的大图框一样（设计规则 · 状态） */
+  outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-container-light-1);
 }
 
@@ -2538,13 +2616,6 @@
   color: var(--color-text-fill-tertiary);
   font-size: var(--font-size-13);
   font-weight: var(--font-weight-regular);
-}
-
-/* 参考图：多张放在一个容器里（底 Light 1，圆角 8，内边距 8），里面是只读的附件条（56，间距 4，放不下横着滚） */
-.tpl-viewer__refs {
-  padding: var(--spacing-8);
-  border-radius: var(--border-radius-8);
-  background: var(--color-bg-fill-container-light-1);
 }
 
 /* 提示词全文：14 / 22，主文字色，长的照常换行 */

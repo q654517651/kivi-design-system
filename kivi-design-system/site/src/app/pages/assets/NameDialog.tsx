@@ -19,10 +19,12 @@ export interface NameDialogProps {
 export function NameDialog({ state, onSubmit, onClose }: NameDialogProps) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
-  // 每次打开重置成初始名字
+  // 每次打开重置成初始名字（只在打开那一下：后台任务入库引起的重渲染不能把正在输入的字冲掉）
+  const open = state !== null;
   useEffect(() => {
-    if (state) setName(state.initial);
-  }, [state]);
+    if (open) setName(state.initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const empty = name.trim() === '';
   const submit = async () => {
@@ -58,7 +60,7 @@ export function NameDialog({ state, onSubmit, onClose }: NameDialogProps) {
         aria-label="名称"
         placeholder="请输入名称"
         onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && void submit()}
+        onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && void submit()}
       />
     </Dialog>
   );

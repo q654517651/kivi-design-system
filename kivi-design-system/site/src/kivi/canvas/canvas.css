@@ -780,6 +780,80 @@
   right: var(--spacing-12);
 }
 
+/* 参考素材这一行：Lora 格（LoraField）｜竖线｜参考图（AttachmentStrip，占满剩下的宽度、放不下就翻页），间距 8，竖线 32 高（照线上） */
+.kv-node-panel__refs {
+  --kv-divider-size: var(--spacing-32);
+
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
+
+.kv-node-panel__strip {
+  flex: 1 1 auto;
+}
+
+/* 有全屏按钮时，参考素材这一行右边让出它的位置：按钮离边 12、宽 32，伸进内容区 28，再空 8，共 36（11-19 用户定）。
+   放不下的在剩下的宽度里翻页（AttachmentStrip 自带渐隐和箭头），不会钻到按钮底下 */
+.kv-node-panel:has(> .kv-node-panel__expand) > .kv-node-panel__refs {
+  margin-right: calc(var(--spacing-12) + 32px - var(--spacing-16) + var(--spacing-8));
+}
+
+/* 全屏（照线上 bottom-panel-fullscreen-layer）：面板挪进 body 上的遮罩，屏幕正中 800 × 600，提示词框撑满、模型选择栏贴底；
+   遮罩黑 60%、不模糊，动效同弹窗：进 300ms ease-out 淡入 + 面板 96% → 100%，出 200ms ease-in 淡出 + 缩回 96%。面板不重建，平时和全屏都包在 host 里（不占布局） */
+.kv-node-panel__slot,
+.kv-node-panel__host {
+  display: contents;
+}
+
+.kv-node-panel__mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-fill-mask);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--motion-duration-300) var(--motion-ease-out),
+    visibility 0s;
+}
+
+.kv-node-panel__mask .kv-node-panel {
+  transform: scale(1);
+  transition: transform var(--motion-duration-300) var(--motion-ease-out);
+}
+
+/* 收起：200ms ease-in 淡出、缩回 96%，淡完再隐藏（同弹窗） */
+.kv-node-panel__mask[aria-hidden="true"] {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--motion-duration-200) var(--motion-ease-in),
+    visibility 0s linear var(--motion-duration-200);
+}
+
+.kv-node-panel__mask[aria-hidden="true"] .kv-node-panel {
+  transform: scale(0.96);
+  transition: transform var(--motion-duration-200) var(--motion-ease-in);
+}
+
+.kv-node-panel[data-fullscreen] {
+  width: 800px;
+  max-width: calc(100vw - var(--spacing-32) * 2);
+  height: 600px;
+  max-height: calc(100vh - var(--spacing-32) * 2);
+}
+
+.kv-node-panel[data-fullscreen] > .kv-node-panel__prompt {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
 /* ---------- NodeStack：多图节点 ----------
    收起：主图在最前，后面只露两层底，样子同 MediaGroup 的叠放（11-04 用户定）：往右错开 4 / 8，以中心旋转 2° / 4°，底白 18%（填充色阶 fill-4），
    不缩、没有阴影，第 3 张起和第 2 层叠在一起、不再加底；后面的卡里的内容藏起来，点不到。

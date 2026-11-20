@@ -1,4 +1,7 @@
-import { Skeleton, TabItem, Tabs } from '@kivi';
+import { Skeleton, TabItem, Tabs, type MasonryColumns } from '@kivi';
+
+/** 发现作品瀑布流的列数：探索页「发现」和创作首页「发现」共用。一排 5 列（11-20 用户定，原来 11-10 定最多 4 列），按容器宽：≤ 1100 四列、≤ 800 三列、≤ 550 两列；创作首页「最近更新」用同一组断点 */
+export const WORK_COLUMNS: MasonryColumns = { default: 5, 1100: 4, 800: 3, 550: 2, 400: 1 };
 
 /*
   探索页几块共用的小零件：分类条、卡片骨架。

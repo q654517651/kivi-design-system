@@ -62,7 +62,6 @@ export const GROUP_TEXT = {
   addToChat: '添加到对话',
   copy: '复制',
   copied: '节点已复制',
-  downloadStarted: '已开始下载',
   arrangeInvalid: '当前选择无法排列，请稍后重试',
   tidy: '整理画布',
   tidyConfirm: '是否保留此次整理结果？',

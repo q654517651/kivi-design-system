@@ -5,12 +5,13 @@ import { Playground } from '@shell';
 
 // ---------- AddTile ----------
 
-type AddTileState = { size: string; icon: string; label: boolean; text: string; state: string };
+type AddTileState = { variant: string; size: string; icon: string; label: boolean; text: string; state: string };
 
 export function AddTilePlayground() {
   return (
     <Playground<AddTileState>
       controls={[
+        { key: 'variant', label: '类型', type: 'segment', value: 'default', options: [['default', '默认'], ['outline', '描边']] },
         { key: 'size', label: '尺寸', type: 'segment', value: '56', options: [['56', '56'], ['72', '72']] },
         { key: 'icon', label: '图标', type: 'segment', value: 'AddSmall', options: [['AddSmall', 'AddSmall'], ['LoraModel', 'LoraModel']] },
         { key: 'label', label: '显示文字', type: 'toggle', value: false },
@@ -20,6 +21,7 @@ export function AddTilePlayground() {
       rules={(s) => (s.label ? {} : { text: true })}
       render={(s) => (
         <AddTile
+          variant={s.variant as 'default' | 'outline'}
           size={Number(s.size) as 56 | 72}
           icon={s.icon as IconName}
           label={s.label ? s.text : undefined}

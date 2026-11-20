@@ -197,10 +197,15 @@ import { AudioWavePlayground, CanvasHeaderPlayground, ConnectorPlayground, NodeP
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `type` | `'text'` `'image'` `'video'` `'audio'` | — | 生成节点的类型。传了出完整的生成面板：文字只有模型和生成按钮；图片、视频是张数 + 生成；音频是字数 / 上限 + 生成 |
-| `references` | `AttachmentItem[]` | `[]` | 参考素材：连进来的上游节点，按连接顺序排，右上角自动写「图片1、视频1」（每种类型各自编号，不分组），点缩略图把它 @ 进提示词（照线上），断开连线时提示词里的 @ 跟着删。文字节点不显示。首尾帧时前两张图片按顺序当首帧、尾帧。附件条里不能删（连线才是来源），首尾帧里能删 |
-| `onRemoveReference` | `(id: string) => void` | — | 首尾帧里点了删除，参数是那张图的 `id`（上游节点）：断开这条连线。不传就没有删除 |
-| `onAddReference` | `(slot: 'first' \| 'last') => void` | — | 首尾帧里点了空格的添加格，参数是哪一格：上传一张图，新建图片节点连进来（照线上） |
+| `references` | `AttachmentItem[]` | `[]` | 参考素材：连进来的上游节点，按连接顺序排，右上角自动写「图片1、视频1」（每种类型各自编号，不分组），点缩略图把它 @ 进提示词（照线上），断开连线时提示词里的 @ 跟着删。文字节点也有（图 4、视频 1）。首尾帧时前两张图片按顺序当首帧、尾帧。附件条、首尾帧里都能删：鼠标移上去右上角名字直接换成删除（不加过渡），点了断开连线（照线上） |
+| `onRemoveReference` | `(id: string) => void` | — | 点了参考图右上角的删除（附件条、首尾帧都有），参数是那张图的 `id`（上游节点）：断开这条连线。不传就没有删除 |
+| `onAddReference` | `(slot: 'first' \| 'last') => void` | — | 首尾帧里点了空格的添加格，参数是哪一格。不传时有 `onUploadReference` 就弹出选图片 |
+| `onUploadReference` | `(file: File) => void` | — | 快捷上传（照线上）：参考素材最后跟一个添加格（`AddTile` 56，首尾帧是空格），点了选一个本地文件，选完给你，新建素材节点连进来，传完添加格往右挪。只能选这个模型还收得下的类型（图片 png / jpg / webp、视频 mp4、音频 mp3 / wav），都满了就没有添加格；大小、时长不合格弹 Toast。不传就没有 |
 | `onReorderReference` | `(id: string, targetId: string) => void` | — | 参考图拖着排序：参数是挪的那张和挪到哪张的位置（都是上游节点 `id`），改连进来的顺序，名字（图片1…）和提示词里的 @ 跟着变。不分类型，随便换（11-18 用户定）。不传就不能拖 |
+| `loras` | `LoraFieldItem[]` | — | 已选的 Lora，传了就是受控。照线上：图片模型支持 Lora 时（现在是 Qwen Image 2512），参考素材这一行最前面是 Lora 格（`LoraField`），后面隔一条 32 高的竖线再是参考图，间距 8 |
+| `defaultLoras` | `LoraFieldItem[]` | `[]` | 非受控时一开始的 Lora |
+| `onLorasChange` | `(loras: LoraFieldItem[]) => void` | — | 已选的 Lora 变了（添加、删除、改权重） |
+| `loraOptions` | `LoraPickerItem[]` | — | 能选的 Lora：点 Lora 格弹出 `LoraPicker`（最多 4 个），新选的权重 1。不传就没有 Lora 入口；模型不支持 Lora 也不显示 |
 | `defaultValue` | `ReactNode` | — | 开头的提示词，只在第一次渲染时用 |
 | `onChange` | `(text: string) => void` | — | 提示词变了 |
 | `model` | `string` | — | 模型（值）。传了就是受控；不传用这个类型的默认模型 |
@@ -210,11 +215,16 @@ import { AudioWavePlayground, CanvasHeaderPlayground, ConnectorPlayground, NodeP
 | `defaultRefMode` | 同上 | `'omni'` | 非受控时一开始的参考方式 |
 | `onRefModeChange` | `(mode) => void` | — | 换了参考方式 |
 | `onGenerate` | `() => void` | — | 点了生成。不能生成时（按钮置灰、悬停说原因）不触发；原因包括参考不够 / 太多 / 互斥（读模型能力表）、没有描述、音频超字数。提示词最多 10000 个字符 |
-| `generating` | `boolean` | `false` | 正在生成：生成按钮置灰 |
+| `generating` | `boolean` | `false` | 正在生成：生成按钮置灰；传了 `onStop` 变停止（GenerateButton 的可停止 / 已锁定） |
+| `stopStartedAt` | `number` | — | 拿到任务号的时间，可停止倒计时（10 秒）从这里起；不传就是已锁定 |
+| `onStop` | `() => unknown` | — | 生成中点了停止（照线上：拿到任务号后 10 秒内能停，停了退回猕猴桃、Toast「任务取消成功」）。返回 Promise 时等它的这段转圈 |
 | `cost` | `number` | — | 消耗的猕猴桃数。不传按类型、模型、张数取示例数字（单张 × 张数） |
 | `placeholder` | `string` | `"描述任何你想要生成的内容"` | 没输入时的占位文字 |
-| `expand` | `boolean` | `false` | 右上角的全屏按钮：`IconButton` 32 · 无底灰（`FullScreen`，白 50%，悬停 100%），离边 12 |
-| `onExpand` | `() => void` | — | 点全屏按钮 |
+| `expand` | `boolean` | `false` | 右上角的全屏按钮：`IconButton` 32 · 无底灰（`FullScreen`，白 50%，悬停 100%），离边 12。点了面板放大到屏幕正中 800 × 600，背后遮罩黑 60%，动效同弹窗（进 300ms ease-out 淡入 + 96% → 100%，出 200ms ease-in 淡出 + 缩回 96%），提示词框撑满；按钮换成关闭（`Close`），点关闭、点遮罩、按 Esc、点生成都回到原位（照线上）。写的字和 @ 标签都还在 |
+| `expanded` | `boolean` | — | 全屏着没有。传了就是受控 |
+| `defaultExpanded` | `boolean` | `false` | 非受控时一开始全屏没有 |
+| `onExpandedChange` | `(expanded: boolean) => void` | — | 进出全屏 |
+| `onExpand` | `() => void` | — | 点全屏按钮（进全屏时） |
 
 - 只选中一个生成节点（文字、图片、视频、音频）才出，生成中也出（生成按钮不能点）；素材节点没有，文字节点编辑时收起。
 - 水平居中，离节点底 12；画布缩放到 50% 以上时不跟着缩放。
@@ -289,6 +299,7 @@ import { AudioWavePlayground, CanvasHeaderPlayground, ConnectorPlayground, NodeP
 | `canvases` | `CanvasItem[]` | — | 画布列表（受控），`{ id, name }`，按创建顺序 |
 | `defaultCanvases` | `CanvasItem[]` | `[{ id: 'canvas-1', name: '画布 1' }]` | 画布列表（非受控）。老工作区的内容都放进「画布 1」 |
 | `onCanvasesChange` | `(canvases: CanvasItem[]) => void` | — | 新建、改名、复制、删除后的新列表 |
+| `onDuplicate` | `(sourceId: string, newId: string) => void` | — | 复制画布时给出源画布和副本的 id，随后触发 `onCanvasesChange` |
 | `value` | `string` | — | 当前画布的 id（受控） |
 | `defaultValue` | `string` | 第一个 | 当前画布（非受控） |
 | `onChange` | `(id: string) => void` | — | 切到别的画布 |

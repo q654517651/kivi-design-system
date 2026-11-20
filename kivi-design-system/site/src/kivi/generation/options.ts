@@ -45,6 +45,8 @@ export const MODELS: Record<ModelType, SelectOption[]> = {
     { value: 'seedream-5-lite', label: 'Seedream 5 Lite', icon: 'Bytedance' },
     { value: 'seedream-4.5', label: 'Seedream 4.5', icon: 'Bytedance' },
     { value: 'qwen-image-3.0', label: 'Qwen Image 3.0', icon: 'Qwen' },
+    // 带 Lora 的生图模型（照线上 image_lora，参考图 1 张）
+    { value: 'qwen-image-2512', label: 'Qwen Image 2512', icon: 'Qwen' },
   ],
   video: [
     // 全能参考 + 生成音频
@@ -163,6 +165,7 @@ const GEN_MODEL_DESC: Record<string, string> = {
   'seedream-5-lite': '出图快，适合批量',
   'seedream-4.5': '支持多图参考和 4K',
   'qwen-image-3.0': '中文文字渲染好',
+  'qwen-image-2512': '支持 Lora 风格模型',
   'seedance-2.0': '多镜头叙事，音画同出',
   'seedance-2.0-fast': '更快的 Seedance 2.0',
   'seedance-2.5': '画面更稳，运动更自然',

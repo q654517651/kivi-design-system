@@ -121,13 +121,13 @@
   box-sizing: border-box;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--border-radius-4);
-  background: var(--color-fill-1);
+  background: var(--color-bg-fill-container-light-2);
   /* 状态切换：选中哪一处文字时框变色 */
   transition: background var(--motion-duration-200) var(--motion-ease-in-out);
 }
 
 .app-textedit__box[data-active] {
-  background: var(--color-fill-3);
+  background: var(--color-bg-fill-container-light-1);
 }
 
 .app-textedit__side {
@@ -166,12 +166,28 @@
   font-size: var(--font-size-14);
 }
 
-/* 右上角分享：和左上角画布切换同一排的玻璃按钮条 */
-.app-share {
+/* 右上角：分享｜余额｜头像收进一个玻璃按钮条 44（11-19 用户定），和左上角画布切换同一排 */
+.app-cv-corner {
   position: absolute;
   top: var(--spacing-16);
   right: var(--spacing-16);
   z-index: 3;
+}
+
+/* 余额：展示，不是按钮。左右 8 同左上角工作区名 */
+.app-cv-corner__balance {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: 0 var(--spacing-8);
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-13);
+}
+
+.app-cv-corner__balance > .kv-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-brand-solid);
 }
 
 .app-share__tip {

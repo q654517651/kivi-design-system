@@ -30,6 +30,8 @@ export interface LoraFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
   defaultValue?: LoraFieldItem[];
   /** 已选的变了（改权重、删除），参数是新的列表。添加走 onAdd，由外面打开 LoraPicker 再把选中的放进来 */
   onChange?: (value: LoraFieldItem[]) => void;
+  /** 格子尺寸：画布生成面板 56；主站输入框 72（和旁边的参考区一样大）。默认 56 */
+  size?: 56 | 72;
   /** 最多几个，默认 4。满了添加格隐藏 */
   max?: number;
   /** 点添加格 */
@@ -43,13 +45,13 @@ export interface LoraFieldProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
  * 悬停弹出设置面板（`LoraSettings`，鼠标能挪进去），悬停格子右上角出删除。
  */
 export const LoraField = forwardRef<HTMLDivElement, LoraFieldProps>(function LoraField(
-  { value, defaultValue = [], onChange, max = 4, onAdd, placement, className, ...rest },
+  { value, defaultValue = [], onChange, size = 56, max = 4, onAdd, placement, className, ...rest },
   ref,
 ) {
   const [items, setItems] = useControllable(value, defaultValue, onChange);
 
   return (
-    <div ref={ref} className={cx('kv-lora-field', className)} {...rest}>
+    <div ref={ref} className={cx('kv-lora-field', size === 72 && 'kv-lora-field--72', className)} {...rest}>
       {items.map((item) => (
         <Popover
           key={item.id}
@@ -66,7 +68,7 @@ export const LoraField = forwardRef<HTMLDivElement, LoraFieldProps>(function Lor
           }
         >
           <div className="kv-lora-field__item" role="group" aria-label={`${item.name}，权重 ${item.weight.toFixed(1)}`} tabIndex={0}>
-            <ReferenceItem size={56} src={item.cover} weight={item.weight.toFixed(1)} />
+            <ReferenceItem size={size} src={item.cover} weight={item.weight.toFixed(1)} />
             <button
               type="button"
               className="kv-lora-field__remove"
@@ -79,7 +81,7 @@ export const LoraField = forwardRef<HTMLDivElement, LoraFieldProps>(function Lor
         </Popover>
       ))}
       {items.length < max && (
-        <AddTile icon="LoraModel" label="Lora" aria-label="添加 Lora" onClick={onAdd} />
+        <AddTile variant="outline" size={size} icon="LoraModel" label="Lora" aria-label="添加 Lora" onClick={onAdd} />
       )}
     </div>
   );

@@ -36,7 +36,7 @@
 
   状态
     GenPrompt 长度  超出两行加 kv-gen-prompt--clamp（length="long"）
-    ResultTile 类型 视频加 kv-result-tile--video；画面要完整显示（比例不一致）加 kv-result-tile--fit
+    ResultTile 类型 视频加 kv-result-tile--video、音频加 kv-result-tile--audio（里面是画布音频节点那块 NodeMedia）；画面要完整显示（比例不一致）加 kv-result-tile--fit
     ResultTile 状态 生成中 aria-busy="true"（里面放 GeneratingDots）；失败 aria-invalid="true"；完成不用写；
                     悬停由鼠标触发，操作才出现；视频的时长、控制条由 VideoPlayer 自己管
     is-hover 只给文档摆静态的悬停用，项目里不用写
@@ -274,6 +274,11 @@
 
 .kv-result-tile--video > .kv-result-tile__actions--quick {
   bottom: 46px;
+}
+
+/* 音频：默认 4:3（同画布音频节点，音频横着长，方的没优势，11-19 用户定）；里面是 NodeMedia 音频那块 */
+.kv-result-tile--audio {
+  aspect-ratio: 4 / 3;
 }
 
 /* 生成中分两种：

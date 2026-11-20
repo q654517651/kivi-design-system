@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KIVI CLI</title>
+    <link rel="icon" href="./favicon.svg" />
+    <!--
+      演示站「最近更新」第二张 Banner 跳的网页：KIVI CLI 的占位页（11-20 用户要的，正式页面以后换）。
+      独立页面，不走网站外壳；颜色照 tokens.css 抄的几个值。
+    -->
+    <style>
+      :root {
+        --bg: #000000;
+        --surface: #181818;
+        --text: #ffffff;
+        --text-2: #ffffff99;
+        --text-3: #ffffff66;
+        --border: #ffffff1f;
+        --brand: #2bff75;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 16px;
+      }
+      main {
+        width: min(880px, 100%);
+      }
+      .hero {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        border-radius: 16px;
+      }
+      .badge {
+        display: inline-block;
+        margin-top: 40px;
+        padding: 4px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--text-2);
+        font-size: 12px;
+      }
+      h1 {
+        margin: 16px 0 8px;
+        font-size: 40px;
+        line-height: 1.2;
+      }
+      p {
+        margin: 0;
+        color: var(--text-2);
+        font-size: 16px;
+        line-height: 26px;
+      }
+      pre {
+        margin: 32px 0 0;
+        padding: 16px 20px;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface);
+        font: 14px/22px ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      pre .prompt {
+        color: var(--brand);
+        user-select: none;
+      }
+      pre .comment {
+        color: var(--text-3);
+      }
+      ul {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin: 32px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      li {
+        padding: 20px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      }
+      li strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 16px;
+      }
+      li span {
+        color: var(--text-2);
+        font-size: 14px;
+        line-height: 22px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img class="hero" src="./banners/kivi-cli.webp" alt="KIVI CLI" />
+      <span class="badge">即将上线 · 占位页</span>
+      <h1>KIVI CLI</h1>
+      <p>在终端里调用 KIVI：生成图片、视频，批量跑任务，接进你自己的脚本和工作流。</p>
+      <pre><span class="comment"># 示例命令，正式发布后以文档为准</span>
+<span class="prompt">$ </span>kivi login
+<span class="prompt">$ </span>kivi image "一只戴巫师帽的猕猴桃" --model gpt-image-2 --ratio 16:9
+<span class="prompt">$ </span>kivi video ./ref.png --model seedance-2.5 --duration 5</pre>
+      <ul>
+        <li><strong>命令行生成</strong><span>图片、视频、音频，一条命令出结果</span></li>
+        <li><strong>批量任务</strong><span>读一份表格，一次提交几百条</span></li>
+        <li><strong>接进工作流</strong><span>结果直接存进「我的资产」</span></li>
+      </ul>
+    </main>
+  </body>
+</html>

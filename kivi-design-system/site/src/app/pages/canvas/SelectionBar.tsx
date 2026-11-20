@@ -1,7 +1,8 @@
 import { type CSSProperties } from 'react';
-import { Button, ButtonGroup, Dropdown, Menu, MenuItem, toast, type IconName } from '@kivi';
+import { Button, ButtonGroup, Dropdown, Menu, MenuItem, type IconName } from '@kivi';
 import { arrangeNodes, arrangeTargets } from '../../data/canvas-layout';
 import { copyNodes, groupNodes, isBusy, withChildren } from '../../data/canvas-doc';
+import { downloadNodes } from './download';
 import { isMediaNode } from '../../rules/canvas';
 import { ARRANGE_OPTIONS, GROUP_TEXT, type ArrangeMode } from '../../rules/canvas-group';
 import type { CanvasDoc } from '../../data/types';
@@ -81,7 +82,7 @@ export function SelectionBar({ canvasId, doc, ids, bounds, zoom, onSelect, onAdd
         <Button leftIcon="Copy" onClick={() => copyNodes(canvasId, ids)}>
           {GROUP_TEXT.copy}
         </Button>
-        <Button leftIcon="Download" disabled={!canDownload} onClick={() => toast.success(GROUP_TEXT.downloadStarted)}>
+        <Button leftIcon="Download" disabled={!canDownload} onClick={() => downloadNodes(all)}>
           {GROUP_TEXT.download}
         </Button>
         <ArrangeButton disabled={arrangeTargets(doc, ids).length < 2} onPick={(mode) => arrangeNodes(canvasId, ids, mode)} />

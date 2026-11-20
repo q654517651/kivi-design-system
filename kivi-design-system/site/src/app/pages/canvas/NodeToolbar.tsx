@@ -10,7 +10,7 @@ import { attempt } from '../../flows/errors';
 import { ToolWorkbench, type ToolJob } from '../../parts/tool-workbench';
 import { toolCost, toolParams } from '../../parts/tool-workbench/options';
 import { INITIAL_STATE } from '../../parts/tool-workbench/types';
-import { AnnotateDialog } from './AnnotateDialog';
+import { AnnotateDialog, type AnnotationNote } from './AnnotateDialog';
 import { CropDialog } from './CropDialog';
 import { TEXT_EDIT_COST, TextEditDialog } from './TextEditDialog';
 
@@ -34,7 +34,7 @@ export interface NodeToolbarProps {
   onDownload: () => void;
   onView: () => void;
   /** 框选的评论里点「添加到对话」：把这个节点加进 Agent 输入框 */
-  onAddToChat?: (ids: string[]) => void;
+  onAddToChat?: (ids: string[], note?: AnnotationNote) => void;
 }
 
 type Tool = { icon: IconName; label: string; run: () => void };
@@ -133,7 +133,11 @@ export function NodeToolbar({ canvasId, node, onDownload, onView, onAddToChat }:
           void cropImage(src.src, ratioNum, rel).then((out) => spawnCropNode(canvasId, node, out));
         }}
       />
-      <AnnotateDialog open={dialog === 'annotate'} onOpenChange={(v) => !v && setDialog(null)} src={src.src} ratio={ratioNum} onAddToChat={() => onAddToChat?.([node.id])} />
+      <AnnotateDialog open={dialog === 'annotate'} onOpenChange={(v) => !v && setDialog(null)} src={src.src} ratio={ratioNum} onAddToChat={(note) => {
+        // 发送：关掉弹窗看回复；添加到对话：留着接着标
+        if (note.send) setDialog(null);
+        onAddToChat?.([node.id], note);
+      }} />
       <TextEditDialog
         open={dialog === 'text-edit'}
         onOpenChange={(v) => !v && setDialog(null)}

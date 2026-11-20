@@ -183,6 +183,8 @@
 
 .kv-explore-card__cover {
   aspect-ratio: 16 / 9;
+  outline: var(--border-width-1) solid var(--color-border); /* 媒体描边 12%，画在里面（设计规则 · 状态） */
+  outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-container-light-1);
 }
 

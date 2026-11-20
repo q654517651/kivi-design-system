@@ -1,7 +1,9 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { Dropdown, EmptyState, IconButton, Menu, MenuItem, ResultTile, ScrollArea, toast } from '@kivi';
+import { Dropdown, EmptyState, IconButton, Menu, MenuItem, ResultTile, ScrollArea } from '@kivi';
 import { countdownLabel, useNow } from '../../data/tasks';
 import { TOOLS, toolOf, type Media, type ToolId } from '../../data/tools';
+import { activateProps } from '../../parts/asset-cell';
+import { downloadMedia } from '../../flows/files';
 import { useFlip } from '../../hooks/useFlip';
 import type { HistoryItem } from './history';
 
@@ -83,13 +85,14 @@ export function ToolsHistory({ account, items, media, onPreview, onUseInTool, on
                     done
                       ? [
                           { icon: 'FullScreen', label: '查看大图', onClick: () => onPreview(r) },
-                          { icon: 'Download', label: '下载', onClick: () => toast.success('已开始下载') },
+                          { icon: 'Download', label: '下载', onClick: () => void downloadMedia([{ src: r.src }]) },
                         ]
                       : undefined
                   }
                   style={{ aspectRatio: '1 / 1', cursor: done && r.media === 'image' ? 'zoom-in' : undefined }}
                   onClick={done && r.media === 'image' ? (e) => !(e.target as HTMLElement).closest('button') && onPreview(r) : undefined}
                   onPreview={done ? () => onPreview(r) : undefined}
+                  {...activateProps(done ? () => onPreview(r) : undefined)}
                 />
               </figure>
             );
@@ -103,7 +106,7 @@ export function ToolsHistory({ account, items, media, onPreview, onUseInTool, on
           <MenuItem icon="Add" disabled={!menuOf || menuOf.status !== 'done' || menuOf.media !== media} onClick={() => menuOf && onUseInTool(menuOf)}>
             加入当前工具
           </MenuItem>
-          <MenuItem icon="Download" disabled={menuOf?.status !== 'done'} onClick={() => toast.success('已开始下载')}>
+          <MenuItem icon="Download" disabled={menuOf?.status !== 'done'} onClick={() => menuOf?.src && void downloadMedia([{ src: menuOf.src }])}>
             下载
           </MenuItem>
           <MenuItem variant="danger" icon="Delete" disabled={!menuOf || menuOf.status === 'generating'} onClick={() => menuOf && onRemove(menuOf)}>

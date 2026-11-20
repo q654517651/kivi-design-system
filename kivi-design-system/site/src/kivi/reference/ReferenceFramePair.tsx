@@ -111,7 +111,7 @@ export const ReferenceFramePair = forwardRef<HTMLDivElement, ReferenceFramePairP
         </>
       ) : (
         <>
-          <AddTile size={size} aria-label={`添加${LABEL[which]}`} onClick={() => onAdd?.(which)} />
+          <AddTile variant="outline" size={size} aria-label={`添加${LABEL[which]}`} onClick={() => onAdd?.(which)} />
           <span className="kv-reference-item__badge" aria-hidden="true">
             {LABEL[which]}
           </span>

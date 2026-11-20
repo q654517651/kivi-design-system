@@ -8,6 +8,8 @@ import { cx } from '../utils';
 import './generation.css';
 
 export interface PromptInputProps extends Omit<HTMLAttributes<HTMLDivElement>, 'placeholder'> {
+  /** 回车时触发（Shift + 回车换行；打 @ 弹出的素材菜单开着时回车先给菜单选；输入法选字时不算）。不传就是回车换行。主站 Agent 模式用来发送 */
+  onEnter?: () => void;
   /** 没输入时的占位文字，比如「描述任何你想要生成的内容」 */
   placeholder?: string;
   /** 开头的内容：文字，中间可以插 MentionChip。只在第一次渲染时用，之后由用户编辑 */
@@ -37,9 +39,11 @@ const NO_RESULT_MAX = 7;
 
 /** 提示词输入：无底、无内边距，14 号字，可以插 @素材（MentionChip）。表单里的多行输入用 Textarea，不用它。Figma「画布」页 PromptInput */
 export const PromptInput = forwardRef<HTMLDivElement, PromptInputProps>(function PromptInput(
-  { placeholder, minRows = 4, maxRows = 6, mentions, maxLength, className, style, children, onPaste, onDragStart, onDragEnd, onDrop, onInput, onCompositionEnd, onKeyDown, onKeyUp, onClick, ...rest },
+  { placeholder, minRows = 4, maxRows = 6, mentions, maxLength, onEnter, className, style, children, onPaste, onDragStart, onDragEnd, onDrop, onInput, onCompositionEnd, onKeyDown, onKeyUp, onClick, ...rest },
   ref,
 ) {
+  // 开头的内容只用第一次的：之后框里由用户编辑，外面再传新的（比如画布节点存的提示词每打一个字都变）不重画，不然会把 @ 标签冲成纯文字、光标跳回开头
+  const [initial] = useState(children);
   // 框里自己拖动文字（挪位置）照浏览器默认，带的就是框里的样子
   const draggingInside = useRef(false);
   // 记住光标位置：点参考缩略图快捷 @ 时焦点已经离开，插在离开前的光标处
@@ -169,7 +173,12 @@ export const PromptInput = forwardRef<HTMLDivElement, PromptInputProps>(function
       onDrop={composeHandlers(onDrop, dropPlain)}
       onInput={composeHandlers(onInput, readAt)}
       onCompositionEnd={composeHandlers(onCompositionEnd, trimOver)}
-      onKeyDown={composeHandlers(onKeyDown, atKeys)}
+      onKeyDown={composeHandlers(onKeyDown, (e: KeyboardEvent<HTMLDivElement>) => {
+        atKeys(e);
+        if (e.defaultPrevented || !onEnter || e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return;
+        e.preventDefault();
+        onEnter();
+      })}
       onKeyUp={composeHandlers(onKeyUp, (e: KeyboardEvent<HTMLDivElement>) => {
         // 方向键挑选项时不重读（重读会把高亮回到第一项）
         if (!(menuOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp'))) readAt();
@@ -177,7 +186,7 @@ export const PromptInput = forwardRef<HTMLDivElement, PromptInputProps>(function
       onClick={composeHandlers(onClick, readAt)}
       {...rest}
     >
-      {children}
+      {initial}
     </div>
     {/* 菜单出在 @ 下面（放不下翻到上面，不盖住这一行），焦点留在输入框里，方向键由输入框管 */}
     <Dropdown

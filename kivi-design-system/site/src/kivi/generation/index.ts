@@ -2,6 +2,8 @@ export * from './PromptBox';
 export * from './GenerateButton';
 export * from './DropOverlay';
 export * from './PromptInput';
+// 往提示词框里插标签（模型、技能、素材 @），画布 Agent 输入框也用
+export { insertChip } from './mentions';
 export * from './ParamPanel';
 export * from './ParamPicker';
 export * from './LoraSettings';

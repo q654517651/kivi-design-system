@@ -19,6 +19,7 @@ import { ratioNum } from '../../data/mock';
 import { uid } from '../../data/store';
 import { confirm } from '../../flows/dialogs';
 import { confirmDelete } from '../../flows/delete';
+import { copyImage, downloadMedia } from '../../flows/files';
 import { MaskLayer } from './mask-layer';
 import { BRUSH, EDIT_MODES, EXPAND_DEFAULT, EXPAND_SCALES, toolCost, toolParams, type CostContext } from './options';
 import { ToolPanel } from './panels';
@@ -29,6 +30,14 @@ import { checkToolFile, loadToolFile, mediaOfFile } from './upload';
 import { useStageView } from './use-stage-view';
 import { useStrokes } from './use-strokes';
 import { INITIAL_STATE, type Source, type ToolJob, type ToolState } from './types';
+
+/** 读 tokens.css 里的时长变量（系统开了「减少动态效果」时是 0） */
+function cssMs(name: string, fallback: number): number {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const n = parseFloat(v);
+  if (Number.isNaN(n)) return fallback;
+  return v.endsWith('ms') ? n : v.endsWith('s') ? n * 1000 : n;
+}
 
 /*
   一个工具的工作区：舞台（原图、扩图框、涂抹）+ 底部参数面板。工具页、创作页的工具弹窗都用它，
@@ -179,7 +188,7 @@ export function ToolWorkbench({ tool, source, onUpload, onRemove, onFile, onGene
   };
   const frameMoved = [frameRel.x, frameRel.y].some((v) => Math.abs(v) > 0.002) || [frameRel.w, frameRel.h].some((v) => Math.abs(v - 1) > 0.002);
   // 选比例 / 倍数：按原图的比例算（原图宽高比 = cur.ratio）。原比例：四周一起扩到几倍；别的比例：框的宽高比 = v，贴着原图往外长；自由比例：框不动
-  // 选比例、倍数时扩图框（和原图）滑到新位置，300ms；拖框、换原图不动画
+  // 选比例、倍数时扩图框（和原图）滑到新位置，时长读 --motion-duration-300；拖框、换原图不动画
   const [framing, setFraming] = useState(false);
   const framingTimer = useRef<number>();
   useEffect(() => () => window.clearTimeout(framingTimer.current), []);
@@ -187,7 +196,7 @@ export function ToolWorkbench({ tool, source, onUpload, onRemove, onFile, onGene
     if (animate) {
       setFraming(true);
       window.clearTimeout(framingTimer.current);
-      framingTimer.current = window.setTimeout(() => setFraming(false), 300);
+      framingTimer.current = window.setTimeout(() => setFraming(false), cssMs('--motion-duration-300', 300));
     }
     set('expandRatio', ratio);
     set('expandScale', ratio === 'original' ? scale : st.expandScale);
@@ -281,6 +290,7 @@ export function ToolWorkbench({ tool, source, onUpload, onRemove, onFile, onGene
       label,
       media: cur.media,
       src: cur.src,
+      src2: stitching ? second?.src : undefined,
       ratio: cur.ratio,
       targetRatio: tool === 'expand' && frame ? frame.w / frame.h : cur.ratio,
       params: toolParams(tool, st, ctx),
@@ -307,19 +317,9 @@ export function ToolWorkbench({ tool, source, onUpload, onRemove, onFile, onGene
 
   // 右键菜单、右上的重新上传 / 删除
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
-  const download = () => toast.success('已开始下载');
-  const copy = async () => {
-    // 图片真的放进剪贴板（浏览器不让就算了），演示里一律提示已复制
-    try {
-      if (cur?.media === 'image') {
-        const blob = await (await fetch(cur.src)).blob();
-        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-      }
-    } catch {
-      /* 剪贴板不可用，照样提示 */
-    }
-    toast.success('已复制');
-  };
+  const download = () => cur && void downloadMedia([{ src: cur.src }]);
+  // 只有图片能复制（视频不出这一项）
+  const copy = () => cur?.media === 'image' && void copyImage(cur.src);
   const reupload = async () => {
     const what = media === 'video' ? '原视频' : '原图';
     const ok = await confirm({ title: '重新上传', description: `重新上传后，${what}历史记录将清空`, confirmText: '重新上传', danger: false });
@@ -472,9 +472,11 @@ export function ToolWorkbench({ tool, source, onUpload, onRemove, onFile, onGene
           <MenuItem icon="Download" onClick={download}>
             下载
           </MenuItem>
-          <MenuItem icon="Copy" onClick={() => void copy()}>
-            复制
-          </MenuItem>
+          {cur?.media === 'image' && (
+            <MenuItem icon="Copy" onClick={copy}>
+              复制
+            </MenuItem>
+          )}
         </Menu>
       </Dropdown>
     </section>

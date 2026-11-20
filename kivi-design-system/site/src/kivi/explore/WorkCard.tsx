@@ -114,10 +114,10 @@ export const WorkCard = forwardRef<HTMLDivElement, WorkCardProps>(function WorkC
           onClick={() => setCollected(!collected)}
         />
       </ButtonGroup>
-      {/* 收藏了、不悬停：右上只留一颗实心星，悬停时换成整条（和 ResultTile 一样） */}
+      {/* 收藏了、不悬停：右上只留一颗实心星，悬停时换成整条（和 ResultTile 一样）。按钮条和悬停那条一样（框 32、星 16、同一处）；里面的星不设选中，只留按钮条一层玻璃（11-20 用户定：原来叠了选中的底，看着两层） */}
       {collected && (
         <ButtonGroup className="kv-work-card__pin" aria-hidden>
-          <IconButton icon="CollectSolid" label="已收藏" selected data-collected tabIndex={-1} />
+          <IconButton icon="CollectSolid" label="已收藏" tooltip={false} data-collected tabIndex={-1} />
         </ButtonGroup>
       )}
       <div className="kv-work-card__footer">

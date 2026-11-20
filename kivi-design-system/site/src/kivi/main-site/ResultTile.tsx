@@ -2,14 +2,15 @@ import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type HTMLAttr
 import { ButtonGroup, IconButton } from '../button';
 import { EmptyState, GENERATION_FAILED_TITLE } from '../feedback';
 import { GeneratingDots } from '../generating';
-import { useControllable } from '../hooks';
+import { useControllable, useMergedRef } from '../hooks';
 import type { IconName } from '../icons';
 import { Tag } from '../tags-avatar';
 import { cx } from '../utils';
 import { Image, VideoPlayer } from '../media';
+import { NodeMedia } from '../canvas/NodeMedia';
 import './main-site.css';
 
-export type ResultTileType = 'image' | 'video';
+export type ResultTileType = 'image' | 'video' | 'audio';
 export type ResultTileStatus = 'done' | 'generating' | 'failed';
 
 export interface ResultTileAction {
@@ -22,7 +23,7 @@ export interface ResultTileAction {
 }
 
 export interface ResultTileProps extends HTMLAttributes<HTMLDivElement> {
-  /** 类型：图片 / 视频，默认图片。视频用 VideoPlayer 卡片播：左下是时长，悬停出控制条 */
+  /** 类型：图片 / 视频 / 音频，默认图片。视频用 VideoPlayer 卡片播：左下是时长，悬停出控制条；音频和画布音频节点同一块（NodeMedia 音频：波形、时间、播放），不放快捷操作 */
   type?: ResultTileType;
   /** 状态：完成 / 生成中 / 失败，默认完成。悬停由鼠标触发，操作才出现 */
   status?: ResultTileStatus;
@@ -99,12 +100,14 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
   ref,
 ) {
   const [collected, setCollected] = useControllable(collectedProp, defaultCollected, onCollectedChange);
-  const cls = cx('kv-result-tile', type === 'video' && 'kv-result-tile--video', fit && 'kv-result-tile--fit', className);
+  const cls = cx('kv-result-tile', type !== 'image' && `kv-result-tile--${type}`, fit && 'kv-result-tile--fit', className);
 
   // 生成中 → 完成：生成中那层（连同当时的原素材）留在上面盖着，结果图加载好再淡出，露出下面的图，不跳变（11-18 用户定）
   const prev = useRef({ status, src, poster });
   const [leaving, setLeaving] = useState<{ src?: string; poster?: string; out: boolean } | null>(null);
   const mediaRef = useRef<HTMLImageElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const mergedRootRef = useMergedRef(ref, rootRef);
   useLayoutEffect(() => {
     if (prev.current.status === 'generating' && status === 'done') setLeaving({ src: prev.current.src, poster: prev.current.poster, out: false });
     else if (status !== 'done') setLeaving(null);
@@ -113,13 +116,25 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
   const fadeOut = () => setLeaving((l) => (l && !l.out ? { ...l, out: true } : l));
   useEffect(() => {
     if (!leaving || leaving.out) return;
-    // 视频有封面直接走；图片已经在缓存里（不会再来 load）也直接走。等不到 load 的兜底
-    if (type === 'video' || mediaRef.current?.complete) {
-      const raf = requestAnimationFrame(fadeOut);
-      return () => cancelAnimationFrame(raf);
-    }
+    // 兜底：等不到 load / 首帧（加载失败）也撤，露出的是骨架屏或失败态
     const t = window.setTimeout(fadeOut, LEAVE_WAIT_MS);
-    return () => window.clearTimeout(t);
+    if (type === 'image') {
+      // 图片已经在缓存里（不会再来 load）直接走，否则等 Image 的 onLoad
+      if (mediaRef.current?.complete) fadeOut();
+      return () => window.clearTimeout(t);
+    }
+    // 视频：等首帧（loadeddata）。媒体事件不冒泡，在根上用捕获接；生成中那层的原素材视频不算
+    const root = rootRef.current;
+    const ready = root?.querySelector<HTMLVideoElement>('video:not(.kv-result-tile__leaving video)');
+    if (ready && ready.readyState >= 2) fadeOut();
+    const onData = (e: Event) => {
+      if (e.target instanceof Element && !e.target.closest('.kv-result-tile__leaving')) fadeOut();
+    };
+    root?.addEventListener('loadeddata', onData, true);
+    return () => {
+      window.clearTimeout(t);
+      root?.removeEventListener('loadeddata', onData, true);
+    };
   }, [leaving, type]);
   // 淡出结束撤掉；transitionend 不来（减少动态效果、后台标签页）按时长兜底
   useEffect(() => {
@@ -170,10 +185,12 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
   }
 
   return (
-    <div ref={ref} className={cls} tabIndex={0} {...rest}>
+    <div ref={mergedRootRef} className={cls} tabIndex={0} {...rest}>
       {/* 图片：加载中骨架屏，加载完淡入（Image） */}
       {src && type === 'image' && <Image ref={mediaRef} className="kv-result-tile__media" src={src} fit={fit ? 'contain' : 'cover'} onLoad={fadeOut} />}
       {src && type === 'video' && <VideoPlayer src={src} poster={poster} fit={fit ? 'contain' : undefined} onFullscreen={onPreview} />}
+      {/* 音频：和画布音频节点同一块（波形能拖、时间、播放），11-19 用户定照画布做 */}
+      {src && type === 'audio' && <NodeMedia type="audio" src={src} />}
       {leaving && (
         <div
           className="kv-result-tile__leaving"
@@ -199,10 +216,10 @@ export const ResultTile = forwardRef<HTMLDivElement, ResultTileProps>(function R
           )
         }
       />
-      {/* 收藏了、不悬停：右上只留一个实心星，悬停时换成整条。只是标记，点不到（鼠标一移上去就是整条） */}
+      {/* 收藏了、不悬停：右上只留一个实心星，悬停时换成整条。只是标记，点不到（鼠标一移上去就是整条）。里面的星不设选中，只留按钮条一层玻璃（11-20 用户定：原来叠了选中的底，看着两层） */}
       {collect && collected && (
         <ButtonGroup className="kv-result-tile__pin" aria-hidden>
-          <IconButton icon="CollectSolid" label="已收藏" selected data-collected tabIndex={-1} />
+          <IconButton icon="CollectSolid" label="已收藏" tooltip={false} data-collected tabIndex={-1} />
         </ButtonGroup>
       )}
       <Actions list={quickActions} position="quick" />

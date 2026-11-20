@@ -170,11 +170,12 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `value` / `defaultValue` / `onChange` | `LoraFieldItem[]` | `[]` | 已选的 Lora。`LoraFieldItem` 是 `{ id, name, cover, weight, triggerWords?, template? }`。改权重、删除时 `onChange` 给新列表；添加不走这里，走 `onAdd` |
+| `size` | `56` `72` | `56` | 格子尺寸：画布生成面板 56，主站输入框 72（和旁边的参考区一样大） |
 | `max` | `number` | `4` | 最多几个。已选满了，添加格隐藏 |
 | `onAdd` | `() => void` | — | 点添加格。外面打开 `LoraPicker`，选好后把结果放回 `value` |
 | `placement` | `PopoverPlacement` | — | 点卡片弹出的设置面板往哪边弹，不传跟着 Popover（在下面），放不下自己翻 |
 
-一排间距 4（`--spacing-4`）。已选的是 56 见方的 `ReferenceItem`，底部通栏写权重（一位小数）。悬停已选格，延迟 200ms 在上方（`top-start`）弹出 `LoraSettings`（`Popover variant="panel"`），鼠标能挪进去，键盘聚焦也出；悬停或聚焦格子，右上角出删除（右上角离边 4 的 18 小圆，黑 40% + 模糊，同参考区的删除）。添加格是 `AddTile icon="LoraModel" label="Lora"`（见「上传」页）。其余原生 `<div>` 属性都能传。
+一排间距 4（`--spacing-4`）。已选的是 56 见方的 `ReferenceItem`，底部通栏写权重（一位小数）。悬停已选格，延迟 200ms 在上方（`top-start`）弹出 `LoraSettings`（`Popover variant="panel"`），鼠标能挪进去，键盘聚焦也出；悬停或聚焦格子，右上角出删除（右上角离边 4 的 18 小圆，黑 40% + 模糊，同参考区的删除）。添加格是 `AddTile variant="outline" icon="LoraModel" label="Lora"`（带弱描边，和参考区添加格一样，见「上传」页）。其余原生 `<div>` 属性都能传。
 
 ### LoraSettings
 

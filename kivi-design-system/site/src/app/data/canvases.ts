@@ -1,6 +1,7 @@
 import { request } from './api';
 import { db } from './db';
 import { uid } from './store';
+import { cloneTemplate } from './workflows';
 import type { CanvasMeta, DB } from './types';
 
 /*
@@ -45,9 +46,15 @@ export function ensureCanvas(name = '未命名画布'): string {
   return canvas.id;
 }
 
+/** 复制出来的画布 id → 源画布 id（CanvasHeader 的 onDuplicate 先记，随后 onCanvasesChange 里取） */
+const duplicateSource = new Map<string, string>();
+export function noteDuplicate(sourceId: string, newId: string) {
+  duplicateSource.set(newId, sourceId);
+}
+
 /**
  * 画布页左上角的画布切换（CanvasHeader）改了列表：新建、复制、改名、删除都在它里面做，这里同步进数据。
- * 复制出来的叫「原名 副本」，照名字找到原画布，节点和连线一起复制
+ * 复制出来的画布按 onDuplicate 给的源画布 id 找原画布，节点、组、连线都换新 id 一起复制
  */
 export function syncCanvasList(next: { id: string; name: string }[]) {
   db.set((s) => {
@@ -60,12 +67,17 @@ export function syncCanvasList(next: { id: string; name: string }[]) {
         if (old.name !== c.name) out = { ...out, canvases: out.canvases.map((x) => (x.id === c.id ? { ...x, name: c.name } : x)) };
         continue;
       }
-      const source = c.name.endsWith(' 副本') ? out.canvases.find((x) => x.name === c.name.slice(0, -3)) : undefined;
+      const sourceId = duplicateSource.get(c.id);
+      duplicateSource.delete(c.id);
+      const source = sourceId ? out.canvases.find((x) => x.id === sourceId) : undefined;
+      const sourceDoc = source ? out.canvasDocs[source.id] : undefined;
       const meta: CanvasMeta = { id: c.id, name: c.name, updatedAt: Date.now(), covers: source?.covers ?? [] };
       out = {
         ...out,
         canvases: [meta, ...out.canvases],
-        canvasDocs: source && out.canvasDocs[source.id] ? { ...out.canvasDocs, [c.id]: { nodes: out.canvasDocs[source.id].nodes.map((n) => ({ ...n, taskId: undefined })), edges: out.canvasDocs[source.id].edges } } : out.canvasDocs,
+        canvasDocs: sourceDoc
+          ? { ...out.canvasDocs, [c.id]: (() => { const { nodes, edges } = cloneTemplate(sourceDoc); return { nodes, edges: edges.map((e) => ({ ...e, id: uid('e') })) }; })() }
+          : out.canvasDocs,
       };
     }
     return out;

@@ -5,7 +5,7 @@ import { listDelay } from './api';
 import { db, useDB } from './db';
 import { nearestRatio } from './mock';
 import { createStore, uid, useStore } from './store';
-import { onTaskSettled, submitTask } from './tasks';
+import { cancelTask, onTaskSettled, submitTask } from './tasks';
 import type { CanvasDoc, CanvasEdge, CanvasItem, CanvasNode, CanvasNodeType, Media, Ratio, Task } from './types';
 
 /*
@@ -81,7 +81,7 @@ export function undo(canvasId: string) {
   if (!prev) return;
   const cur = getDoc(canvasId);
   h.future.push(content(cur));
-  put(canvasId, { ...prev, view: cur.view });
+  put(canvasId, restore(prev, cur));
   bump();
 }
 
@@ -91,8 +91,33 @@ export function redo(canvasId: string) {
   if (!next) return;
   const cur = getDoc(canvasId);
   h.past.push(content(cur));
-  put(canvasId, { ...next, view: cur.view });
+  put(canvasId, restore(next, cur));
   bump();
+}
+
+/** 不进撤销栈改的东西（生成面板的输入、生成结果）：撤销 / 重做时留现在的，只还原位置、大小、连线、增删（11-20 修 C-12） */
+const LIVE_KEYS = ['prompt', 'model', 'refMode', 'params', 'count', 'loras', 'clip', 'pack', 'taskId', 'items', 'archive'] as const;
+
+/**
+ * 把快照套回画布：两边都有的节点，结构用快照的、生成相关的用现在的；
+ * 快照里没有、但正在生成 / 上传的节点不撤掉（任务还在跑），连着它的线也留着。视角保持现在的
+ */
+function restore(snap: CanvasDoc, cur: CanvasDoc): CanvasDoc {
+  const now = new Map(cur.nodes.map((n) => [n.id, n]));
+  const nodes = snap.nodes.map((n) => {
+    const live = now.get(n.id);
+    if (!live) return n;
+    const keep: Partial<CanvasNode> = {};
+    for (const k of LIVE_KEYS) (keep as Record<string, unknown>)[k] = live[k];
+    return { ...n, ...keep };
+  });
+  const inSnap = new Set(snap.nodes.map((n) => n.id));
+  const busy = cur.nodes.filter((n) => !inSnap.has(n.id) && isBusy(n));
+  const all = [...nodes, ...busy];
+  const ids = new Set(all.map((n) => n.id));
+  const edgeIds = new Set(snap.edges.map((e) => e.id));
+  const busyEdges = busy.length ? cur.edges.filter((e) => !edgeIds.has(e.id) && ids.has(e.from) && ids.has(e.to)) : [];
+  return { ...snap, nodes: all, edges: [...snap.edges, ...busyEdges], view: cur.view };
 }
 
 // ---------- 忙：生成中、上传中 ----------
@@ -172,7 +197,7 @@ export function updateNode(canvasId: string, nodeId: string, p: Partial<CanvasNo
 }
 
 /** 改生成面板里的东西（提示词、模型、参数、张数），不进撤销栈 */
-export function setNodeInputs(canvasId: string, nodeId: string, p: Pick<Partial<CanvasNode>, 'prompt' | 'model' | 'refMode' | 'params' | 'count' | 'clip' | 'pack'>) {
+export function setNodeInputs(canvasId: string, nodeId: string, p: Pick<Partial<CanvasNode>, 'prompt' | 'model' | 'refMode' | 'params' | 'count' | 'loras' | 'clip' | 'pack'>) {
   patch(canvasId, (d) => ({ ...d, nodes: d.nodes.map((n) => (n.id === nodeId ? { ...n, ...p } : n)) }));
 }
 
@@ -392,7 +417,7 @@ export function ungroup(canvasId: string, groupId: string) {
 const mediaOf = (f: File): Media | 'text' => (f.type.startsWith('video') ? 'video' : f.type.startsWith('audio') ? 'audio' : f.type.startsWith('image') ? 'image' : 'text');
 
 /** 读本地文件：图片宽高、视频宽高和时长、音频时长、文本内容 */
-function probe(f: File): Promise<{ src: string; ratio?: Ratio; duration?: string; text?: string }> {
+function probe(f: File): Promise<{ src: string; poster?: string; ratio?: Ratio; duration?: string; text?: string }> {
   const media = mediaOf(f);
   if (media === 'text') return f.text().then((text) => ({ src: '', text }));
   const src = URL.createObjectURL(f);
@@ -407,8 +432,38 @@ function probe(f: File): Promise<{ src: string; ratio?: Ratio; duration?: string
     }
     const el = document.createElement(media === 'video' ? 'video' : 'audio');
     el.preload = 'metadata';
-    el.onloadedmetadata = () =>
-      resolve({ src, ratio: media === 'video' ? nearestRatio((el as HTMLVideoElement).videoWidth / (el as HTMLVideoElement).videoHeight || 16 / 9) : undefined, duration: clock(el.duration) });
+    el.muted = true;
+    const done = (poster?: string) =>
+      resolve({
+        src,
+        poster,
+        ratio: media === 'video' ? nearestRatio((el as HTMLVideoElement).videoWidth / (el as HTMLVideoElement).videoHeight || 16 / 9) : undefined,
+        duration: clock(el.duration),
+      });
+    el.onloadedmetadata = () => {
+      if (media !== 'video') return done();
+      // 视频：跳到靠前一点抽一帧当封面（blob 地址）；抽不到就没有封面
+      const v = el as HTMLVideoElement;
+      let settled = false;
+      const finish = (poster?: string) => {
+        if (settled) return;
+        settled = true;
+        done(poster);
+      };
+      window.setTimeout(() => finish(), 3000);
+      v.onseeked = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = v.videoWidth;
+          c.height = v.videoHeight;
+          c.getContext('2d')!.drawImage(v, 0, 0, c.width, c.height);
+          c.toBlob((b) => finish(b ? URL.createObjectURL(b) : undefined), 'image/jpeg', 0.85);
+        } catch {
+          finish();
+        }
+      };
+      v.currentTime = Math.min(0.1, (v.duration || 0) / 2);
+    };
     el.onerror = () => resolve({ src });
     el.src = src;
   });
@@ -422,7 +477,7 @@ export async function addFileNodes(canvasId: string, files: File[], at: { x: num
     const m = metas[i];
     const pos = { x: at.x + i * stagger, y: at.y + i * stagger };
     if (media === 'text') return makeNode('text', pos, { name: f.name, text: m.text });
-    return makeNode(media, pos, { name: f.name, upload: true, ratio: m.ratio, items: [{ src: m.src, duration: m.duration, poster: undefined }] });
+    return makeNode(media, pos, { name: f.name, upload: true, ratio: m.ratio, items: [{ src: m.src, duration: m.duration, poster: m.poster }] });
   });
   const ids = addNodes(canvasId, nodes);
   // 假上传：转一会儿圈（慢网更久）
@@ -431,11 +486,32 @@ export async function addFileNodes(canvasId: string, files: File[], at: { x: num
   return ids;
 }
 
+/**
+ * 生成面板的快捷上传（照线上 createPrefixNode）：本地文件建一个素材节点，放在这个节点左边（离 200，撞上了往右下错开），
+ * 连进来排在参考最后；先出上传中，传完换成内容。返回新节点 id
+ */
+export async function addUpstreamFile(canvasId: string, nodeId: string, file: File): Promise<string | undefined> {
+  const media = mediaOf(file);
+  if (media === 'text') return undefined;
+  const m = await probe(file);
+  const d = getDoc(canvasId);
+  const target = nodeById(d, nodeId);
+  if (!target) return undefined;
+  const size = nodeSize(media, m.ratio);
+  const at = freeSpot(d, { x: target.x - size.w - 200, y: target.y + target.h / 2 - size.h / 2 }, size);
+  const node = makeNode(media, at, { name: file.name, upload: true, ratio: m.ratio, items: [{ src: m.src, duration: m.duration, poster: m.poster }] });
+  const [id] = addNodes(canvasId, [node], [{ from: node.id, to: nodeId }]);
+  if (!id) return undefined;
+  setUploading(id, true);
+  window.setTimeout(() => setUploading(id, false), listDelay() + 400);
+  return id;
+}
+
 /** 素材节点右上「上传」：换一个文件 */
 export async function replaceNodeFile(canvasId: string, nodeId: string, file: File) {
   const m = await probe(file);
   setUploading(nodeId, true);
-  updateNode(canvasId, nodeId, { name: file.name, items: [{ src: m.src, duration: m.duration }], ...(m.ratio ? { ratio: m.ratio, ...nodeSize(nodeById(getDoc(canvasId), nodeId)!.type, m.ratio) } : {}) });
+  updateNode(canvasId, nodeId, { name: file.name, items: [{ src: m.src, duration: m.duration, poster: m.poster }], ...(m.ratio ? { ratio: m.ratio, ...nodeSize(nodeById(getDoc(canvasId), nodeId)!.type, m.ratio) } : {}) });
   window.setTimeout(() => setUploading(nodeId, false), listDelay() + 400);
 }
 
@@ -480,6 +556,31 @@ export async function generateNode(canvasId: string, nodeId: string, s: NodePane
   // 改了比例：空节点（还没结果）跟着比例改尺寸，有内容的不动（照线上）
   const resize = (node.type === 'image' || node.type === 'video') && !node.items?.length && ratio !== node.ratio ? { ratio, ...nodeSize(node.type, ratio) } : {};
   patch(canvasId, (doc) => ({ ...doc, nodes: doc.nodes.map((n) => (n.id === nodeId ? { ...n, ...resize, taskId: task.id } : n)) }));
+  stopStarts.set(task.id, Date.now());
+}
+
+/*
+  生成后停止（11-19 照线上 node-cancel-manager）：拿到任务号起 10 秒内能停，过了不能停。
+  起点只记在内存里：刷新后就是「已锁定」（同线上）。停了退回猕猴桃，节点回到生成前的样子
+*/
+const stopStarts = new Map<string, number>();
+export const stopStartOf = (taskId?: string) => (taskId ? stopStarts.get(taskId) : undefined);
+
+export async function stopNodeGen(canvasId: string, nodeId: string) {
+  const node = nodeById(getDoc(canvasId), nodeId);
+  const taskId = node?.taskId;
+  if (!taskId) return;
+  try {
+    await cancelTask(taskId);
+  } catch {
+    // 取消失败（演示开关断网、接口出错）：照线上只提示「取消失败」，按钮锁定
+    stopStarts.delete(taskId);
+    toast.error('取消失败');
+    return;
+  }
+  stopStarts.delete(taskId);
+  patch(canvasId, (d) => ({ ...d, nodes: d.nodes.map((n) => (n.id === nodeId && n.taskId === taskId ? { ...n, taskId: undefined } : n)) }));
+  toast.success('任务取消成功');
 }
 
 /** 任务出结果：写回节点。成功的结果放进节点（多张叠放，新的在上面）；失败节点自己从任务读失败态 */
@@ -541,11 +642,11 @@ export function agentCreateNode(
 ): CanvasNode {
   const d = getDoc(canvasId);
   const sources = sourceIds.map((id) => nodeById(d, id)).filter((n): n is CanvasNode => !!n && n.type !== 'group');
-  const size = nodeSize(g.media, g.ratio);
+  const size = nodeSize(g.media, g.media === 'audio' ? undefined : g.ratio);
   const center = viewCenters.get(canvasId)?.() ?? { x: 0, y: 0 };
   const want = sources[0] ? { x: sources[0].x + sources[0].w + 200, y: sources[0].y + sources[0].h / 2 - size.h / 2 } : { x: center.x - size.w / 2, y: center.y - size.h / 2 };
   const at = freeSpot(d, want, size);
-  const node = makeNode(g.media, at, { ratio: g.ratio, model: g.model, params: g.params, count: String(g.count), prompt: g.prompt });
+  const node = makeNode(g.media, at, { ...(g.media === 'audio' ? {} : { ratio: g.ratio }), model: g.model, params: g.params, count: String(g.count), prompt: g.prompt });
   addNodes(canvasId, [node], sources.map((src) => ({ from: src.id, to: node.id })));
   agentSelectListeners.forEach((l) => l(canvasId, [node.id]));
   return node;

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { AttachmentStrip, DropOverlay, Dropdown, Menu, MenuItem, UPLOAD_SPECS, referenceTypeOf, GenModelPicker, IconButton, MentionChip, PromptInput, SendButton, SkillPicker, placeholderImageSrc, toast, type AttachmentItem, type IconName, type PlaceholderImageName } from '@kivi';
+import { useEffect, useImperativeHandle, useRef, useState, type ReactElement, type Ref } from 'react';
+import { AttachmentStrip, DropOverlay, Dropdown, Menu, MenuItem, UPLOAD_SPECS, referenceTypeOf, GenModelPicker, IconButton, MentionChip, insertChip as insertChipAt, PromptInput, SendButton, SkillPicker, placeholderImageSrc, toast, type AttachmentItem, type IconName, type PlaceholderImageName } from '@kivi';
 import { checkFiles, rejectMessage, useControllable, useFileDrop, usePasteFiles } from '@kivi/hooks';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../../docs/business/skill-data';
+import { MemoryManager } from './memory';
 
 // Agent 输入框：画布页右侧 Agent、创作首页「画布」、技能面板模板共用这一份。
 // 传了 onSend 才能发：发出去后输入框和附件条清空；回复中发送按钮变停止
@@ -16,6 +16,14 @@ export interface AgentComposerMessage {
 }
 
 export type AgentMode = 'manual' | 'auto';
+
+/** 外面往输入框里放东西（画布框选标注「添加到对话」「发送」用） */
+export interface AgentComposerHandle {
+  /** 在光标处插一个标签（MentionChip） */
+  insert: (chip: ReactElement) => void;
+  /** 不经过输入框直接发一条（用当前的手动 / 自动模式）。没传 onSend 时什么都不做 */
+  submit: (message: Omit<AgentComposerMessage, 'mode'>) => void;
+}
 
 export interface AgentComposerProps {
   /** 附件（受控）：画布里「添加到对话」往这里加 */
@@ -36,6 +44,8 @@ export interface AgentComposerProps {
   placement?: 'top-start' | 'bottom-start';
   /** 点发送（有字时）。不传就只能看 */
   onSend?: (message: AgentComposerMessage) => void;
+  /** 拿到 AgentComposerHandle：往输入框插标签、直接发一条 */
+  handleRef?: Ref<AgentComposerHandle>;
   className?: string;
 }
 
@@ -45,15 +55,21 @@ const DROP_COVERS: PlaceholderImageName[] = ['ip-peek', 'bunny-gouache', 'monste
 // Agent 输入框贴在侧栏底部：模型偏好、技能面板都往上弹（Dropdown 默认往下，用的地方改方向；放不下自己翻）
 const UP = 'top-start' as const;
 
+// 切换对话用的大模型（照线上 useChatController 的 CHAT_MODEL_OPTIONS）：内部测试用的隐藏功能，图标照线上一直是 Openai
+const CHAT_MODELS = ['gpt-6.1-sol', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.5', 'gpt-5.4', 'qwen-3.7-max', 'gemini-3.5-flash', 'gemini-3.1-pro', 'claude-opus-4.8'];
+
 /** Agent 输入框：附件条、PromptInput、工具条（添加 / 模型偏好 / 技能 / 手 / 切换对话模型）、发送。拖文件进来盖一层「松手上传」 */
-export function AgentComposer({ attachments: attachmentsProp, defaultAttachments = [], onAttachmentsChange, generating, onStop, skillOpen, skill, placement = UP, onSend, className }: AgentComposerProps) {
+export function AgentComposer({ attachments: attachmentsProp, defaultAttachments = [], onAttachmentsChange, generating, onStop, skillOpen, skill, placement = UP, onSend, handleRef, className }: AgentComposerProps) {
   const [text, setText] = useState('');
   const [attachments, setAttachmentsRaw] = useControllable(attachmentsProp, defaultAttachments, onAttachmentsChange);
   const latestAttachments = useRef(attachments);
   latestAttachments.current = attachments;
   const setAttachments = (fn: (list: AttachmentItem[]) => AttachmentItem[]) => setAttachmentsRaw(fn(latestAttachments.current));
-  // 手动（生成前先出确认卡，默认）/ 自动生成：手的按钮点了选（照线上 AgentModeSelector）
+  // 手动（生成前先出确认卡，默认）/ 自动生成：手的按钮点了选（照线上 AgentModeSelector：两项各带图标 Hand / Auto，触发按钮的图标跟着当前模式）
   const [mode, setMode] = useState<AgentMode>('manual');
+  const [chatModel, setChatModel] = useState(CHAT_MODELS[0]);
+  // 「+」添加附件：照线上 UploadTrigger，选本地文件（多选），和拖进来、粘贴走同一套校验
+  const fileInput = useRef<HTMLInputElement>(null);
   // 输入框是 contentEditable：模型、技能插进去是 MentionChip（data-model 记值），删了标签就不算，用来判断每组选满没有
   const input = useRef<HTMLDivElement>(null);
   const [models, setModels] = useState<string[]>([]);
@@ -63,15 +79,8 @@ export function AgentComposer({ attachments: attachmentsProp, defaultAttachments
     setModels([...el.querySelectorAll<HTMLElement>('[data-model]')].map((c) => c.dataset.model!));
     setText((el.textContent ?? '').trim() || (el.querySelector('.kv-mention-chip') ? '@' : ''));
   };
-  const insertChip = (chip: ReactElement) => {
-    const el = input.current;
-    if (!el) return;
-    const box = document.createElement('div');
-    box.innerHTML = renderToStaticMarkup(chip);
-    el.append(...box.childNodes, document.createTextNode(' '));
-    el.focus();
-    sync();
-  };
+  // 插在光标处（焦点离开了就插回离开前的位置），和主站输入框同一份；插完触发 input，sync 跟着算
+  const insertChip = (chip: ReactElement) => insertChipAt(input.current, chip);
   const insertModel = (m: { value: string; label: string; icon?: IconName }) =>
     insertChip(
       <MentionChip type="model" icon={m.icon} data-model={m.value}>
@@ -92,11 +101,24 @@ export function AgentComposer({ attachments: attachmentsProp, defaultAttachments
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useImperativeHandle(handleRef, () => ({
+    insert: insertChip,
+    submit: (m) => onSend?.({ ...m, mode }),
+  }));
+
   const send = () => {
     const el = input.current;
     const value = (el?.textContent ?? '').trim();
-    if (!value || !onSend) return;
-    onSend({ text: value, attachments, mode });
+    if (!el || !value || !onSend) return;
+    // 标注胶囊（画布框选「添加到对话」插进来的）：发出去写成「[标注1] 评论」，标注的那张图跟着进附件（同一张只带一次）
+    const copy = el.cloneNode(true) as HTMLElement;
+    const extra: AttachmentItem[] = [];
+    copy.querySelectorAll<HTMLElement>('[data-annotation]').forEach((chip) => {
+      chip.replaceWith(`[标注${chip.dataset.annotation}] ${chip.dataset.note ?? ''} `);
+      const img = chip.dataset.image;
+      if (img && ![...attachments, ...extra].some((a) => a.src === img)) extra.push({ id: `annot-${Date.now()}-${extra.length}`, type: 'image', name: '标注图', src: img });
+    });
+    onSend({ text: (copy.textContent ?? '').trim(), attachments: [...attachments, ...extra], mode });
     // 发出去就清空（对话输入框的习惯）
     if (el) el.textContent = '';
     setText('');
@@ -150,7 +172,19 @@ export function AgentComposer({ attachments: attachmentsProp, defaultAttachments
       />
       <div className="tpl-cv__tools">
         <div>
-          <IconButton icon="Add" label="添加" variant="ghost" />
+          <IconButton icon="Add" label="添加附件" variant="ghost" onClick={() => fileInput.current?.click()} />
+          <input
+            ref={fileInput}
+            type="file"
+            hidden
+            multiple
+            accept="image/*,video/*,audio/*"
+            onChange={(e) => {
+              const files = [...(e.target.files ?? [])];
+              e.target.value = '';
+              if (files.length) void addFiles(files);
+            }}
+          />
           <GenModelPicker placement={placement} picked={models} onPick={insertModel} />
           <SkillPicker
             placement={placement}
@@ -165,18 +199,28 @@ export function AgentComposer({ attachments: attachmentsProp, defaultAttachments
               )
             }
           />
-          <Dropdown placement={placement} trigger={<IconButton icon="Hand" label={mode === 'manual' ? '手动模式：生成前先确认' : '自动生成：不再询问'} variant="ghost" />}>
+          <Dropdown placement={placement} trigger={<IconButton icon={mode === 'manual' ? 'Hand' : 'Auto'} label={mode === 'manual' ? '手动模式：生成前先确认' : '自动生成：不再询问'} variant="ghost" />}>
             <Menu width={200}>
-              <MenuItem selected={mode === 'manual'} description="每次生成前先确认" onClick={() => setMode('manual')}>
+              <MenuItem icon="Hand" selected={mode === 'manual'} description="每次生成前先确认" onClick={() => setMode('manual')}>
                 手动模式
               </MenuItem>
-              <MenuItem selected={mode === 'auto'} description="Agent 完全自动生成" onClick={() => setMode('auto')}>
+              <MenuItem icon="Auto" selected={mode === 'auto'} description="Agent 完全自动生成" onClick={() => setMode('auto')}>
                 自动生成
               </MenuItem>
             </Menu>
           </Dropdown>
-          {/* 切换对话用的大模型（GPT、Claude、千问…）：内部测试用的隐藏功能，图标是当前模型的厂商 Logo */}
-          <IconButton icon="Openai" label="切换对话模型（内部测试）" variant="ghost" />
+          {/* 记忆管理：照线上放在手和切换对话模型之间 */}
+          <MemoryManager />
+          {/* 切换对话用的大模型：内部测试用的隐藏功能，单选列表，当前项选中底色 */}
+          <Dropdown placement={placement} haspopup="listbox" trigger={<IconButton icon="Openai" label={`对话模型：${chatModel}`} variant="ghost" />}>
+            <Menu role="listbox" aria-label="对话模型">
+              {CHAT_MODELS.map((m) => (
+                <MenuItem key={m} selected={chatModel === m} onClick={() => setChatModel(m)}>
+                  {m}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Dropdown>
         </div>
         {/* 没传 onSend 只能看：有字也发不出去 */}
         <SendButton disabled={!generating && !text.trim()} generating={generating} onClick={generating ? onStop : send} />

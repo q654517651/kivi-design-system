@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Icon, IconButton, Menu, MenuItem, ScrollArea } from '@kivi';
 import { useControllable } from '@kivi/hooks';
-import { createCanvas, deleteCanvas, pinCanvas, renameCanvas } from '../../data/canvases';
+import { createCanvas, pinCanvas, renameCanvas } from '../../data/canvases';
 import { createChat, deleteChat, pinChat, renameChat, sortRecent } from '../../data/chats';
 import { useDB } from '../../data/db';
-import { confirmDelete } from '../../flows/delete';
+import { confirmDelete, confirmDeleteCanvases } from '../../flows/delete';
 import { attempt } from '../../flows/errors';
 import { HistoryGroup, type HistoryItem } from './HistoryGroup';
 
@@ -128,12 +128,12 @@ export function Sidebar({ collapsed: collapsedProp, defaultCollapsed = false, on
               collapsed={collapsed}
               onSelect={(id) => open('canvas', id)}
               onNew={() => void attempt(() => createCanvas('未命名画布')).then((c) => c && open('canvas', c.id))}
-              onRemove={(id) => void confirmDelete(() => deleteCanvas(id))}
+              onRemove={(id) => void confirmDeleteCanvases([id])}
               onRename={(id, name) => void attempt(() => renameCanvas(id, name))}
               onPin={(id) => void attempt(() => pinCanvas(id))}
               onAll={() => onNavigate?.('assets')}
               // 演示：新标签页打开画布模板（不套网站外壳）
-              onOpenNewTab={() => window.open(`${location.pathname}#/app/canvas`, '_blank', 'noopener')}
+              onOpenNewTab={(id) => window.open(`${location.pathname}#/app/canvas/${id}`, '_blank', 'noopener')}
             />
           </Menu>
         </aside>

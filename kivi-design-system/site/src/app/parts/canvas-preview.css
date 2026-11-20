@@ -1,0 +1,58 @@
+/* 画布预览弹窗（canvas-preview.tsx）：弹窗 full 的内边距里放一块只读画布，四角和画布页一样浮两条玻璃按钮条 */
+
+.app-cvp {
+  position: relative;
+  height: calc(100dvh - var(--spacing-24) * 2);
+  overflow: hidden;
+  border-radius: var(--border-radius-8);
+  outline: var(--border-width-1) solid var(--color-border);
+  outline-offset: calc(var(--border-width-1) * -1);
+}
+
+.app-cvp__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.app-cvp__bar {
+  position: absolute;
+  top: var(--spacing-16);
+  z-index: 1;
+  max-width: calc(50% - var(--spacing-24));
+}
+
+.app-cvp__bar--left {
+  left: var(--spacing-16);
+}
+
+.app-cvp__bar--right {
+  right: var(--spacing-16);
+}
+
+/* 作者、名称：展示，不是按钮。左右 8，同画布左上角工作区名 */
+.app-cvp__owner,
+.app-cvp__name,
+.app-cvp__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-width: 0;
+  padding: 0 var(--spacing-8);
+  font-size: var(--font-size-13);
+  white-space: nowrap;
+}
+
+.app-cvp__owner {
+  color: var(--color-text-fill-primary);
+}
+
+.app-cvp__name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-fill-secondary);
+}
+
+.app-cvp__hint {
+  color: var(--color-text-fill-tertiary);
+}

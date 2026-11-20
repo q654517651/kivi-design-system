@@ -197,6 +197,7 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   SquareLibrary: { means: '知识库、资料库', note: 'Agent 搜索知识库用' },
   Brain: { means: '记忆、长期记忆', note: 'Agent 更新记忆用；思考用 Lightbulb' },
   Rename: { means: '重命名', note: '侧栏「⋯」菜单用。Lucide pen-line；和 NewChat（新建）区分开' },
+  Question: { means: '帮助、说明', note: 'Hugeicons help-circle；线上旧字体有，备用' },
   // 系统（9）
   Home: { means: '首页' },
   Document: { means: '文档、教程' },

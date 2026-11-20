@@ -76,6 +76,16 @@ export function addToFolder(ids: string[], folderId: string) {
   return request(() => patchAssets(ids, (a) => (a.folderIds.includes(folderId) ? a : { ...a, folderIds: [...a.folderIds, folderId] })));
 }
 
+/** 别处的作品（探索页）存进文件夹：同一张已经存过就只加文件夹，没存过先存成素材（算上传的） */
+export function saveToFolder(input: Pick<Asset, 'media' | 'src' | 'ratio' | 'poster' | 'name'>, folderId: string) {
+  return request(() => {
+    const had = db.get().assets.find((a) => a.source === 'upload' && a.src === input.src);
+    if (had) return patchAssets([had.id], (a) => (a.folderIds.includes(folderId) ? a : { ...a, folderIds: [...a.folderIds, folderId] }));
+    const asset: Asset = { ...input, id: uid('u'), createdAt: Date.now(), source: 'upload', collected: false, folderIds: [folderId] };
+    db.set((s) => ({ ...s, assets: [...s.assets, asset] }));
+  });
+}
+
 export function removeFromFolder(ids: string[], folderId: string) {
   return request(() => patchAssets(ids, (a) => ({ ...a, folderIds: a.folderIds.filter((x) => x !== folderId) })));
 }

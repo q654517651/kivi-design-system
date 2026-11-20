@@ -1,0 +1,114 @@
+/*
+  记忆管理（演示站，类名 app-memory）。只用 tokens.css 里的变量。
+  列表、输入框、按钮、问卷都是组件库的组件，这里只管摆放。
+*/
+
+.app-memory__scene {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-24);
+  /* 弹窗固定 800 高：各阶段撑满内容区，问卷的卡片（QuestionPanel fill）跟着撑到底、按钮贴底 */
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 460px;
+}
+.app-memory__scene--center {
+  align-items: center;
+  justify-content: center;
+}
+
+/* 列表 */
+.app-memory__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-24);
+}
+.app-memory__placeholder {
+  color: var(--color-text-fill-tertiary);
+}
+.app-memory__none {
+  padding: var(--spacing-12) 0;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-14);
+  list-style: none;
+}
+
+/* 问卷：形象 + 一句话 */
+.app-memory__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-12);
+  transition: opacity var(--motion-duration-150) var(--motion-ease-in);
+}
+.app-memory__hero[data-leaving] {
+  opacity: 0;
+}
+.app-memory__hero-label {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-24);
+  text-align: center;
+}
+.app-memory__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  max-width: 360px;
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+  text-align: center;
+}
+.app-memory__intro p {
+  margin: 0;
+}
+.app-memory__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+}
+.app-memory__fade {
+  animation: app-memory-fade var(--motion-duration-200) var(--motion-ease-out);
+}
+@keyframes app-memory-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 生成中：答案摘要 */
+.app-memory__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  width: 100%;
+  max-width: 480px;
+}
+.app-memory__summary-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+.app-memory__summary-label {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+  line-height: var(--font-line-height-16);
+}
+.app-memory__summary-value {
+  color: var(--color-text-fill-primary);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+/* 答题：卡片撑满到弹窗底部，切题时不跳 */
+.app-memory__step {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
