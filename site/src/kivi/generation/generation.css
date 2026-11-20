@@ -198,6 +198,13 @@
   gap: var(--spacing-12);
 }
 
+/* 有 Lora 时：Lora 格 ｜ 竖线 ｜ 参考区，竖线 32 高、上下居中（11-19，和画布生成面板一样） */
+.kv-prompt-box__refs:has(> .kv-lora-field) {
+  --kv-divider-size: var(--spacing-32);
+
+  align-items: center;
+}
+
 /* 提示词：PromptInput（contentEditable，能放 @ 标签，11-18 从 textarea 换），14 / 22，无底无描边，聚焦也不加描边。
    随内容长高，最矮 120，最高是 maxHeight（写在 style 上），再多就在里面滚 */
 
@@ -440,6 +447,12 @@
   outline: none;
 }
 
+/* 主站输入框：72，和旁边的参考区一样大（11-19） */
+.kv-lora-field--72 .kv-lora-field__item {
+  width: 72px;
+  height: 72px;
+}
+
 /* 删除：悬停或聚焦到这一格，右上角出现，样子同参考区的删除（右上角标） */
 
 .kv-lora-field__item:where(:hover, :focus-visible, :has(:focus-visible)) > .kv-lora-field__remove {
@@ -567,6 +580,8 @@
   min-width: 0;
   overflow: hidden;
   border-radius: var(--border-radius-12);
+  outline: var(--border-width-1) solid var(--color-border); /* 媒体描边 12%，画在里面（设计规则 · 状态） */
+  outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-container-light-1);
   color: var(--color-text-fill-primary);
   font-family: var(--font-family);
@@ -1005,4 +1020,51 @@
   position: absolute;
   inset: 0;
   margin: auto;
+}
+
+/* 生成中（画布）：按钮变停止（11-19 照线上 generate-btn）。猕猴桃和消耗数藏起来撑宽度，停止图标 20 叠在正中 */
+.kv-generate-button[data-stop] {
+  position: relative;
+}
+
+.kv-generate-button[data-stop] > .kv-icon:not([data-spinner]),
+.kv-generate-button[data-stop] > .kv-button__label {
+  visibility: hidden;
+}
+
+.kv-generate-button__stop {
+  position: absolute;
+  inset: 0;
+  width: 20px;
+  height: 20px;
+  margin: auto;
+  visibility: visible;
+  fill: currentColor;
+}
+
+.kv-generate-button__track,
+.kv-generate-button__ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+}
+
+.kv-generate-button__track {
+  opacity: var(--opacity-20);
+}
+
+/* 剩余可停止时间：从 12 点起顺时针收完。倒计时是计时，不是位移，匀速（同循环的例外） */
+.kv-generate-button__ring {
+  transform: rotate(-90deg);
+  transform-origin: center;
+  stroke-linecap: round;
+  animation-name: kv-generate-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes kv-generate-countdown {
+  to {
+    stroke-dashoffset: 50.27;
+  }
 }

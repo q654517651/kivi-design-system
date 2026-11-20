@@ -1,16 +1,17 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent, type Ref } from 'react';
 import {
   ActionCard,
   Button,
   Dropdown,
   GeneratingDots,
-  Icon,
   IconButton,
   Kimo,
   MediaGroup,
   Menu,
   MenuItem,
   ScrollArea,
+  Select,
+  Tooltip,
   type AttachmentItem,
   type GeneratingType,
 } from '@kivi';
@@ -20,7 +21,7 @@ import { db, useDB } from '../../data/db';
 import type { AgentTurn as AgentTurnData, Task } from '../../data/types';
 import { attempt } from '../../flows/errors';
 import { isMediaNode } from '../../rules/canvas';
-import { AgentComposer, type AgentComposerMessage } from '../../parts/agent-composer';
+import { AgentComposer, type AgentComposerHandle, type AgentComposerMessage } from '../../parts/agent-composer';
 import { AgentTurn } from '../create/AgentTurn';
 
 /*
@@ -35,6 +36,8 @@ import { AgentTurn } from '../create/AgentTurn';
 const WIDTH = { min: 360, max: 720, base: 500 };
 /** 发过的开场消息（开发模式 effect 跑两遍也只发一次） */
 const sentIntros = new WeakSet<AgentComposerMessage>();
+/** 离底多少以内算「在底部」，回复变长时跟着滚 */
+const FOLLOW_GAP = 80;
 
 export interface CanvasAgentProps {
   canvasId: string;
@@ -47,9 +50,11 @@ export interface CanvasAgentProps {
   /** 「添加到对话」的节点（父组件往这里加） */
   attachments: AttachmentItem[];
   onAttachmentsChange: (attachments: AttachmentItem[]) => void;
+  /** 输入框的句柄：框选标注往里插胶囊、直接发 */
+  composerRef?: Ref<AgentComposerHandle>;
 }
 
-export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onAttachmentsChange }: CanvasAgentProps) {
+export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onAttachmentsChange, composerRef }: CanvasAgentProps) {
   const allChats = useDB((s) => s.canvasChats);
   const turns = useDB((s) => s.agentTurns);
   const tasks = useDB((s) => s.tasks);
@@ -94,13 +99,32 @@ export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onA
   const taskMap = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
   const assetMap = useMemo(() => new Map(assets.map((a) => [a.id, a])), [assets]);
 
-  // 新消息、回复在长：滚到底
+  // 换对话、发了新消息：滚到底
   const stream = useRef<HTMLDivElement>(null);
-  const last = chatTurns[chatTurns.length - 1];
+  const streamBody = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const el = stream.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [chatId, chatTurns.length, last?.blocks.length, last?.blocks[last.blocks.length - 1]]);
+  }, [chatId, chatTurns.length]);
+  // 回复往下长（逐字、思考、工具、出卡、出结果、图片加载完撑高）时跟着滚到底；用户往上翻了（离底超过 80）就不跟，同创作页（11-19 用户指出没跟着滚）
+  useEffect(() => {
+    const el = stream.current;
+    const inner = streamBody.current;
+    if (!el || !inner) return;
+    let atBottom = true;
+    const onScroll = () => {
+      atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < FOLLOW_GAP;
+    };
+    const ro = new ResizeObserver(() => {
+      if (atBottom) el.scrollTop = el.scrollHeight;
+    });
+    el.addEventListener('scroll', onScroll, { passive: true });
+    ro.observe(inner);
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      ro.disconnect();
+    };
+  }, []);
 
   // 创作首页带进来的那句话：对话建好后发一次
   useEffect(() => {
@@ -114,7 +138,7 @@ export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onA
     void attempt(() =>
       sendAgent(
         chatId,
-        { text, refs: atts.map((a) => ({ type: a.type === 'file' ? 'image' : a.type, src: a.video ?? a.src ?? '', name: a.name, duration: a.duration, nodeId: nodeIdOf(a) })) },
+        { text, refs: atts.map((a) => ({ type: a.type, src: a.video ?? a.src ?? '', name: a.name, duration: a.duration, nodeId: nodeIdOf(a) })) },
         { canvasId, mode },
       ),
     );
@@ -136,18 +160,21 @@ export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onA
 
   const renderTask = (task: Task) => {
     const nodeId = task.where.page === 'canvas' ? task.where.nodeId : undefined;
-    // 生成中：和结果组封面一样大的一格（半宽、按比例），里面是生成中点阵；点阵铺满最近的定位父元素，所以外面要有这一格
-    if (task.status === 'running')
-      return (
-        <div className="tpl-ca__generating" style={{ aspectRatio: task.ratio.replace(':', ' / ') }} aria-label="生成中">
-          <GeneratingDots type={task.media as GeneratingType} />
-        </div>
-      );
+    const name = getDoc(canvasId).nodes.find((n) => n.id === nodeId)?.name;
+    // 生成中也是这一组（照线上 GenerationCardGroup）：每张一格生成中点阵，标题「图片生成中 ×N」，生成完停 1 秒自己收起
     const items = task.outputs.map((o, i) => {
       const a = o.assetId ? assetMap.get(o.assetId) : undefined;
-      return { id: `${task.id}-${i}`, src: a?.poster ?? a?.src, ratio: task.ratio, status: o.status === 'failed' ? ('failed' as const) : ('done' as const), name: getDoc(canvasId).nodes.find((n) => n.id === nodeId)?.name };
+      const status = o.status === 'running' ? ('generating' as const) : o.status === 'failed' ? ('failed' as const) : ('done' as const);
+      return { id: `${task.id}-${i}`, src: a?.poster ?? a?.src, ratio: task.ratio, status, name };
     });
     if (task.media === 'text' || task.media === 'audio') {
+      // 文字、音频生成中：一格生成中点阵（没有结果组）
+      if (task.status === 'running')
+        return (
+          <div className="tpl-ca__generating" style={{ aspectRatio: task.ratio.replace(':', ' / ') }} aria-label="生成中">
+            <GeneratingDots type={task.media as GeneratingType} />
+          </div>
+        );
       // 文字、音频没有缩略图：一行按钮定位到节点
       return (
         <Button variant="secondary-muted" leftIcon={task.media === 'text' ? 'Text' : 'Audio'} onClick={() => nodeId && onLocate([nodeId])}>
@@ -166,14 +193,14 @@ export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onA
       <div className="tpl-ca__resize" onPointerDown={startResize} aria-hidden />
       <div className="tpl-cv__head">
         <Dropdown
+          haspopup="listbox"
           trigger={
-            <button type="button" className="tpl-cv__title tpl-ca__title">
-              <span>{chat?.title ?? NEW_CHAT}</span>
-              <Icon name="DownArrowSmall" />
-            </button>
+            <Select variant="plain" className="tpl-ca__title" aria-label="切换对话">
+              {chat?.title ?? NEW_CHAT}
+            </Select>
           }
         >
-          <Menu width={280} aria-label="历史对话">
+          <Menu role="listbox" width={280} aria-label="历史对话">
             {chats.map((c) => (
               <MenuItem key={c.id} selected={c.id === chatId} onClick={() => setChatId(c.id)}>
                 {c.title}
@@ -188,7 +215,7 @@ export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onA
       </div>
 
       <ScrollArea className="tpl-cv__stream" viewportRef={stream}>
-        <div className="tpl-cv__stream-body" data-empty={chatTurns.length === 0 || undefined}>
+        <div ref={streamBody} className="tpl-cv__stream-body" data-empty={chatTurns.length === 0 || undefined}>
           {chatTurns.length === 0 ? (
             <div className="tpl-ca__empty">
               {/* 小 Kimo 在外面飞的时候，面板里这个先藏着，免得出现两个 */}
@@ -196,7 +223,7 @@ export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onA
               <span>今天一起创作点什么？</span>
             </div>
           ) : (
-            chatTurns.map((t: AgentTurnData) => <AgentTurn key={t.id} turn={t} tasks={taskMap} assets={assetMap} renderTask={renderTask} />)
+            chatTurns.map((t: AgentTurnData) => <AgentTurn key={t.id} turn={t} tasks={taskMap} assets={assetMap} renderTask={renderTask} regenerate={false} />)
           )}
         </div>
       </ScrollArea>
@@ -235,6 +262,7 @@ export function CanvasAgent({ canvasId, skill, intro, onLocate, attachments, onA
           generating={!!active}
           onStop={() => active && stopAgent(active.id)}
           onSend={send}
+          handleRef={composerRef}
         />
       </div>
     </aside>
@@ -285,9 +313,11 @@ function KimoPet({ from, leaving, leaveTo, onLeft, onClick }: { from: DOMRect | 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leaving]);
   return (
-    <button ref={ref} type="button" className="tpl-ca__pet" aria-label="展开对话面板" title="展开对话面板" disabled={leaving} onClick={onClick}>
-      <Kimo size={90} shadow={false} />
-    </button>
+    <Tooltip content="展开对话面板" placement="top" disabled={leaving}>
+      <button ref={ref} type="button" className="tpl-ca__pet" aria-label="展开对话面板" disabled={leaving} onClick={onClick}>
+        <Kimo size={90} shadow={false} />
+      </button>
+    </Tooltip>
   );
 }
 
@@ -296,7 +326,7 @@ export function nodeAttachment(canvasId: string, nodeId: string): AttachmentItem
   const n = getDoc(canvasId).nodes.find((x) => x.id === nodeId);
   if (!n || !isMediaNode(n)) return undefined;
   const item = n.items?.[0];
-  return { id: `${NODE_PREFIX}${n.id}`, type: n.type === 'text' ? 'file' : n.type, name: n.name, src: item?.poster ?? item?.src, duration: item?.duration, ext: n.type === 'text' ? 'TXT' : undefined };
+  return { id: `${NODE_PREFIX}${n.id}`, type: n.type === 'text' ? 'file' : n.type, name: n.name, src: item?.poster ?? (n.type === 'video' ? undefined : item?.src), duration: item?.duration, ext: n.type === 'text' ? 'TXT' : undefined };
 }
 
 /** 附件的 id 是「node-节点 id」就是画布节点 */

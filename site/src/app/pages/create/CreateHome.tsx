@@ -1,17 +1,27 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Button, CreateCard, ExploreCard, Masonry, ProjectCard, PromptBox, ScrollArea, TabItem, Tabs, WorkCard, placeholderImageSrc, type PromptBoxSubmit } from '@kivi';
+import { Button, CreateCard, ExploreCard, Masonry, ProjectCard, PromptBox, ScrollArea, TabItem, Tabs, WorkCard, placeholderImageSrc, type PromptBoxSubmit, type ReferenceStackItem } from '@kivi';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../../../docs/business/skill-data';
-import { RATIO, SKILLS, WORKS, flowsOf } from '../../data/catalog';
+import { LORAS } from '../../../docs/business/lora-data';
+import { RATIO, SKILLS, WORKS, flowsOf, type ExploreSkill, type Flow, type Work } from '../../data/catalog';
 import { sendAgent } from '../../data/agent';
 import { addChatTask, createChat, deleteChat } from '../../data/chats';
 import { useDB } from '../../data/db';
+import { appendReferences, useReferenceInbox } from '../../data/ref-inbox';
 import { submitTask } from '../../data/tasks';
 import { attempt } from '../../flows/errors';
 import { AgentComposer } from '../../parts/agent-composer';
+import { useCanvasCards } from '../../parts/canvas-card';
 import type { ExploreTab } from '../explore';
+import { FlowPreview } from '../explore/FlowPreview';
+import { SkillDetail } from '../explore/SkillDetail';
+import { WorkViewer } from '../explore/WorkViewer';
+import { downloadWork } from '../explore/work-actions';
+import { WORK_COLUMNS } from '../explore/shared';
+import { setLiked, toggleFavorite, useFavorites, useLikes } from '../../data/favorites';
 import { ComposerMotion, HomeAtmosphere, SHOW_COMPOSER_MOTION } from './HomeBackdrop';
 import { HomeHead, RecentUpdates } from './HomeParts';
 import { genTaskInput } from './submit';
+import { handOffComposer } from './handoff';
 
 type HomeMode = 'generate' | 'canvas';
 
@@ -46,6 +56,8 @@ const DISCOVER_SCREENS = 2;
 export function CreateHome({
   onSubmit,
   onOpenCanvas,
+  onOpenProject,
+  onUseSkill,
   onExplore,
   onAllCanvases,
 }: {
@@ -53,23 +65,41 @@ export function CreateHome({
   onSubmit: (chatId: string) => void;
   /** 画布：新建画布、打开最近项目、提交想法，都进画布页 */
   onOpenCanvas: () => void;
-  /** 广场搜索框回车（带着关键词）、点作品：去探索页对应选项卡 */
+  /** 最近项目：打开点的那块画布 */
+  onOpenProject: (canvasId: string) => void;
+  /** 技能详情里点「使用」：新建画布，Agent 输入框带上这个技能 */
+  onUseSkill: (name: string) => void;
+  /** 广场搜索框回车（带着关键词）、「查看全部」「更多」：去探索页对应选项卡 */
   onExplore: (tab: ExploreTab, keyword?: string) => void;
   /** 最近项目「查看全部」：去我的资产看全部画布 */
   onAllCanvases: () => void;
 }) {
   const [mode, setMode] = useState<HomeMode>('generate');
+  // 生成输入框的参考区：探索页「添加到参考图」排着的素材进来就加上
+  const [refs, setRefs] = useState<ReferenceStackItem[]>([]);
+  useReferenceInbox((items) => {
+    setMode('generate');
+    setRefs((list) => appendReferences(list, items));
+  });
+  const projectCards = useCanvasCards(onOpenProject);
+  // 发现、广场的卡点了直接开详情（11-20 用户定，照线上）：作品看大图、技能看详情、创作精选和工作流看画布预览
+  const [work, setWork] = useState<Work | null>(null);
+  const [skill, setSkill] = useState<ExploreSkill | null>(null);
+  const [flow, setFlow] = useState<Flow | null>(null);
+  // 发现卡上的收藏、点赞和探索页同一份
+  const collected = useFavorites();
+  const liked = useLikes();
   // 最近项目：最近改过的 4 块画布（和侧栏画布历史、资产页「我的画布」同一批）
   const canvases = useDB((s) => s.canvases);
   const recent = useMemo(() => [...canvases].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, PROJECT_COLS - 1), [canvases]);
   // 提交中不重复提交（新建对话和提交任务各有一次请求的延迟）
   const submitting = useRef(false);
   const submit = async (s: PromptBoxSubmit) => {
-    if (submitting.current) return;
+    if (submitting.current) return false;
     submitting.current = true;
     try {
       const chat = await attempt(() => createChat(s.text.trim().slice(0, 20) || '新对话'));
-      if (!chat) return;
+      if (!chat) return false;
       // Agent：把这句话（连同参考区的素材）发出去，进对话页看它回复
       if (s.task === 'agent') {
         const sent = await attempt(() =>
@@ -77,7 +107,7 @@ export function CreateHome({
         );
         if (!sent) {
           await attempt(() => deleteChat(chat.id));
-          return;
+          return false;
         }
         onSubmit(chat.id);
         return;
@@ -91,6 +121,8 @@ export function CreateHome({
         }
         addChatTask(chat.id, task.id);
       }
+      // 对话页输入框接着用这次的配置（任务类型、模型、提示词、参数、素材）
+      handOffComposer(chat.id, s);
       onSubmit(chat.id);
     } finally {
       submitting.current = false;
@@ -148,7 +180,7 @@ export function CreateHome({
   const swapContent = (m: HomeMode) => (
     <>
       {m === 'generate' ? (
-        <RecentUpdates />
+        <RecentUpdates onOpenCanvas={onOpenProject} />
       ) : (
         <section className="tpl-home__section" aria-label="最近项目">
           <HomeHead title="最近项目" onMore={onAllCanvases} />
@@ -156,7 +188,7 @@ export function CreateHome({
             {/* 一排 5 格：新建画布占掉最近项目没占的格子，一个画布都没有时铺满整排（11-10 用户定，照即梦） */}
 <CreateCard variant="canvas" label="新建画布" onClick={onOpenCanvas} />
             {recent.map((c) => (
-              <ProjectCard key={c.id} name={c.name} covers={c.covers} updatedAt={c.updatedAt} onOpen={onOpenCanvas} />
+              <ProjectCard key={c.id} name={c.name} covers={c.covers} updatedAt={c.updatedAt} {...projectCards.cardProps(c.id)} />
             ))}
           </div>
         </section>
@@ -168,7 +200,7 @@ export function CreateHome({
             <HomeHead title="发现" onMore={() => onExplore('discover')} search={{ placeholder: '搜索提示词、模型、作者', onSearch: (k) => onExplore('discover', k) }} />
             {/* 最高约两屏，下面压着的截掉，底部正中「更多」去探索页发现（11-17 用户定） */}
             <div className="tpl-home__discover" style={screen ? { maxHeight: screen * DISCOVER_SCREENS } : undefined}>
-              <Masonry columns={{ default: 4, 1100: 3, 700: 2, 500: 1 }} gap={2} ratios={HOME_WORKS.map((w) => RATIO[w.ratio])}>
+              <Masonry columns={WORK_COLUMNS} gap={2} ratios={HOME_WORKS.map((w) => RATIO[w.ratio])}>
                 {HOME_WORKS.map((w) => (
                   <WorkCard
                     key={w.id}
@@ -178,8 +210,13 @@ export function CreateHome({
                     ratio={w.ratio}
                     title={w.prompt}
                     author={w.author}
-                    likes={w.likes}
-                    onOpen={() => onExplore('discover')}
+                    likes={w.likes + (liked.includes(w.id) ? 1 : 0)}
+                    liked={liked.includes(w.id)}
+                    onLikedChange={(v) => setLiked(w.id, v)}
+                    collected={collected.includes(w.id)}
+                    onCollectedChange={(v) => void attempt(() => toggleFavorite(w.id, v))}
+                    onDownload={() => downloadWork(w)}
+                    onOpen={() => setWork(w)}
                   />
                 ))}
               </Masonry>
@@ -210,11 +247,11 @@ export function CreateHome({
                       cover={s.poster ?? placeholderImageSrc(s.cover, '16:9')}
                       video={s.video}
                       author={s.author ?? { name: 'KIVI' }}
-                      onOpen={() => onExplore('skill')}
+                      onOpen={() => setSkill(s)}
                     />
                   ))
                 : (square === 'featured' ? FEATURED : WORKFLOWS).map((f) => (
-                    <ExploreCard key={f.id} name={f.name} cover={f.cover} video={f.video} showTime author={f.author} onOpen={() => onExplore(square)} />
+                    <ExploreCard key={f.id} name={f.name} cover={f.cover} video={f.video} showTime author={f.author} onOpen={() => setFlow(f)} />
                   ))}
             </div>
           </>
@@ -247,7 +284,7 @@ export function CreateHome({
             <div className="tpl-home__shell" data-ready={shellReady || undefined} style={shellHeight != null ? { height: shellHeight } : undefined}>
               {SHOW_COMPOSER_MOTION && <ComposerMotion />}
               <div ref={generateBox} className="tpl-home__box" data-active={mode === 'generate' || undefined}>
-                <PromptBox placement="bottom-start" onSubmit={submit} skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} />
+                <PromptBox placement="bottom-start" references={refs} onReferencesChange={setRefs} onSubmit={submit} skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} loraOptions={LORAS} />
               </div>
               <div ref={canvasBox} className="tpl-home__box" data-active={mode === 'canvas' || undefined} style={generateHeight != null ? { minHeight: generateHeight } : undefined}>
                 <AgentComposer className="tpl-home__agent" placement="bottom-start" onSend={onOpenCanvas} />
@@ -263,6 +300,10 @@ export function CreateHome({
         </div>
         </div>
       </ScrollArea>
+      <WorkViewer work={work} onClose={() => setWork(null)} />
+      <SkillDetail skill={skill} onClose={() => setSkill(null)} onUse={(s) => onUseSkill(s.title)} />
+      <FlowPreview flow={flow} onClose={() => setFlow(null)} onCloned={onOpenProject} />
+      {projectCards.dialog}
     </main>
   );
 }

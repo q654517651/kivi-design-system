@@ -9,7 +9,7 @@
       <span class="kv-icon" data-icon="AddSmall"></span><span class="kv-add-tile__label">Lora</span>   文字可省
     </button>
   状态（写在元素上，有就是开）
-    AddTile     disabled       禁用；data-labeled 有文字（图标和文字 tertiary，没有文字时图标是 primary）
+    AddTile     disabled       禁用；data-labeled 有文字（图标和文字 tertiary，没有文字时图标是 primary）；kv-add-tile--outline 加弱描边
 */
 
 /* ---------- AddTile ---------- */
@@ -40,6 +40,12 @@
 .kv-add-tile--72 {
   width: 72px;
   height: 72px;
+}
+
+/* 描边（variant="outline"，11-19 用户定）：底色照旧，再加一圈 1 的弱描边 border-subtle，画在里面不占尺寸。所有上传占位都用它 */
+.kv-add-tile--outline {
+  outline: var(--border-width-1) solid var(--color-border-subtle);
+  outline-offset: calc(var(--border-width-1) * -1);
 }
 
 .kv-add-tile[data-labeled] {

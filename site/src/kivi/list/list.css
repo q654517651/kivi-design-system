@@ -20,6 +20,7 @@
 
   条目上下 12、左右不留，左右边距由外面的容器给。条目没有悬停底色。
   分割线 data-divider：条目之间 1px，颜色和 Divider 共用 --kv-divider-color（默认 --color-border），不带左右留白。
+  卡片 kv-list--card（11-19，照 3.14 记忆管理稿）：Light 2 底、圆角 12、内边距 24，压在弹窗上；标题行 kv-list__header 在最前面。
 */
 
 .kv-list {
@@ -37,6 +38,55 @@
   padding: var(--spacing-12) 0;
   color: var(--color-text-fill-primary);
   font-family: var(--font-family);
+}
+
+.kv-list--card {
+  /* 大块容器压在 surface 上用 Light 2，里面的控件跟着换 Light 2 档（设计规则 · 颜色和底色） */
+  --kv-nested-fill: var(--color-bg-fill-container-light-2);
+  --kv-nested-fill-hover: var(--color-bg-fill-container-light-2-hover);
+  --kv-nested-fill-pressed: var(--color-bg-fill-container-light-2-pressed);
+  padding: var(--spacing-24);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-2);
+}
+
+/* 卡片里第一条不留上边距、最后一条不留下边距，内边距由卡片给 */
+.kv-list--card > .kv-list-item:first-child,
+.kv-list--card > .kv-list__header + .kv-list-item {
+  padding-top: 0;
+}
+
+.kv-list--card > .kv-list-item:last-child {
+  padding-bottom: 0;
+}
+
+/* 标题行：图标 16 secondary + 标题 14 / 22 primary，间距 4；有操作时高 28；和第一条隔 16 */
+.kv-list__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-height: 28px;
+  margin-bottom: var(--spacing-16);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  line-height: var(--font-line-height-22);
+}
+
+.kv-list__icon {
+  flex: none;
+  color: var(--color-text-fill-secondary);
+}
+
+.kv-list__title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.kv-list__action {
+  display: flex;
+  flex: none;
+  align-items: center;
 }
 
 .kv-list[data-divider] > .kv-list-item + .kv-list-item {

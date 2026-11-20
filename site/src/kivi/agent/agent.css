@@ -175,6 +175,18 @@
   gap: var(--spacing-8);
 }
 
+/* 撑满（fill）：卡片高度跟着外面，选项区 / 文本题输入框占满剩下的，按钮贴底 */
+.kv-question-panel[data-fill] {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.kv-question-panel[data-fill] > .kv-question-panel__options,
+.kv-question-panel[data-fill] > .kv-question-panel__text {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 /* ---------- _QuestionOption：选项（不发布，只在 QuestionPanel 里用） ---------- */
 .kv-question-option {
   display: flex;

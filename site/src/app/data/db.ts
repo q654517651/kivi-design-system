@@ -3,6 +3,7 @@ import { ASSETS_SEED } from './seed/assets';
 import { CANVAS_SEED } from './seed/canvas';
 import { CREATE_SEED } from './seed/create';
 import type { Asset, DB } from './types';
+import { pic } from './mock';
 import { workflowSeed } from './seed/workflows';
 
 /*
@@ -35,16 +36,34 @@ export const db = createStore<DB>({
     flags: {},
   }),
   // 本次上传的本地文件（blob: 地址）刷新后就没了：上传的素材、拿它当原图的任务、结果直接用原图的素材都不存，
-  // 不然刷新后历史里留一张「加载失败」
+  // 不然刷新后历史里留一张「加载失败」。画布节点里上传的素材刷新后回到空素材（11-20 用户定），
+  // 对话里带的本地附件去掉，自己上传的工作流封面换回占位图
   save: (s) => ({
     ...s,
     assets: s.assets.filter((a: Asset) => !a.local && !isBlob(a.src)),
     tasks: s.tasks.filter((t) => !t.refs.some((r) => isBlob(r.src))),
+    canvasDocs: dropBlobs(s.canvasDocs),
+    canvasChats: dropBlobs(s.canvasChats),
+    agentTurns: dropBlobs(s.agentTurns),
+    chats: dropBlobs(s.chats),
+    workflows: s.workflows.map((w) => (isBlob(w.cover) ? { ...w, cover: pic(0, '16:9') } : w)),
   }),
 });
 
+const isBlob = (src?: unknown) => typeof src === 'string' && src.startsWith('blob:');
+
+/** 去掉 blob 地址：列表里 src 是 blob 的那一项整项去掉（节点回到空素材），别的字段是 blob 的删掉这个字段 */
+function dropBlobs<T>(v: T): T {
+  if (Array.isArray(v)) return v.filter((x) => !(x && typeof x === 'object' && isBlob((x as { src?: unknown }).src))).map(dropBlobs) as T;
+  if (v && typeof v === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, x] of Object.entries(v)) if (!isBlob(x)) out[k] = dropBlobs(x);
+    return out as T;
+  }
+  return v;
+}
+
 /** 读一部分数据，见 store.ts 的 useStore 说明 */
-const isBlob = (src?: string) => !!src && src.startsWith('blob:');
 
 export const useDB = <S,>(selector: (s: DB) => S) => useStore(db, selector);
 

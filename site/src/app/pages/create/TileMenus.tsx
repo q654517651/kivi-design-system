@@ -1,4 +1,8 @@
-import { Divider, Dropdown, Menu, MenuItem, toast } from '@kivi';
+import { Divider, Dropdown, Menu, MenuItem } from '@kivi';
+import { addToFolder } from '../../data/assets';
+import { run } from '../assets/ops';
+import { copyImage, downloadMedia } from '../../flows/files';
+import { FolderSubMenu } from '../../parts/folder-menu';
 import { moreTools, type TileRef } from './tiles';
 import type { ToolId } from '../../data/tools';
 
@@ -30,6 +34,7 @@ export function TileMenus({ more, menu, onCloseMore, onCloseMenu, onTool, onAddR
       <Dropdown anchorPoint={more ?? undefined} placement="top-end" open={more !== null} onOpenChange={(v) => !v && onCloseMore()}>
         <Menu aria-label="更多工具">
           {more &&
+            more.tile.media !== 'audio' &&
             moreTools(more.tile.media).map((t) => (
               <MenuItem key={t.id} icon={t.icon} onClick={() => onTool(t.id, more.tile)}>
                 {t.name}
@@ -41,18 +46,21 @@ export function TileMenus({ more, menu, onCloseMore, onCloseMenu, onTool, onAddR
       <Dropdown anchorPoint={menu ?? undefined} open={menu !== null} onOpenChange={(v) => !v && onCloseMenu()}>
         <Menu aria-label="结果操作">
           <MenuItem icon="ImagePlus" onClick={() => menu && onAddRef(menu.tile)}>
-            加入参考图
+            {menu?.tile.media === 'audio' ? '加入参考' : '加入参考图'}
           </MenuItem>
-          <MenuItem icon="AddFolder" onClick={() => toast.success('已添加到文件夹')}>
-            添加到文件夹
-          </MenuItem>
+          {/* 没有素材的格子（生成中、失败）不能加文件夹 */}
+          <FolderSubMenu
+            label="添加到文件夹"
+            disabled={!menu?.tile.assetId}
+            onPick={(f) => menu?.tile.assetId && void run(() => addToFolder([menu.tile.assetId!], f), '已添加到文件夹')}
+          />
           <Divider />
           {menu?.tile.media === 'image' && (
-            <MenuItem icon="Copy" onClick={() => toast.success('已复制')}>
+            <MenuItem icon="Copy" disabled={!menu.tile.src} onClick={() => void copyImage(menu.tile.src)}>
               复制
             </MenuItem>
           )}
-          <MenuItem icon="Download" onClick={() => toast.info('已开始下载')}>
+          <MenuItem icon="Download" disabled={!menu?.tile.src} onClick={() => menu && void downloadMedia([{ src: menu.tile.src }])}>
             下载
           </MenuItem>
           <Divider />

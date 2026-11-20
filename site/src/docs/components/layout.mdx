@@ -90,6 +90,10 @@ import { CollapsePlayground, DividerPlayground, ListPlayground, MasonryPlaygroun
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `divider` | `boolean` | `false` | 条目之间加 1px 横线，颜色和 Divider 一样（`--color-border`，可用 `--kv-divider-color` 换），不带左右留白 |
+| `variant` | `"plain"` `"card"` | `"plain"` | 类型。无底：左右不留，边距由外面给；卡片：一块 Light 2 底（白 6%）、圆角 12、内边距 24 的分组，压在弹窗（surface）上用，里面的控件自动换 Light 2 档（`--kv-nested-fill`）；第一条不留上边距、最后一条不留下边距。比如记忆管理的「基础信息」「用户记忆」 |
+| `title` | `ReactNode` | — | 标题行：图标 16 secondary + 标题 14 / 22 primary，间距 4，有操作时高 28，和第一条隔 16。也当列表的读屏名 |
+| `icon` | `IconName` | — | 标题前的图标 |
+| `action` | `ReactNode` | — | 标题行最右边的操作，比如「添加」（Button 28 · 无底 + AddSmall） |
 
 `<ul role="list">`，其余原生属性都能传。左右不留边距，由外面的容器给。
 
@@ -105,7 +109,14 @@ import { CollapsePlayground, DividerPlayground, ListPlayground, MasonryPlaygroun
 | `editing` | `boolean` | — | 编辑中（受控）。正文原地换成 Textarea，框里右下角取消（次要）/ 保存（主要），按钮 28；说明和「⋯」不显示 |
 | `defaultEditing` | `boolean` | `false` | 默认是否在编辑（非受控） |
 | `onEditingChange` | `(editing: boolean) => void` | — | 进入、退出编辑 |
-| `onSave` | `(text: string) => void` | — | 保存，传去掉首尾空格的内容。回车或点「保存」保存，Shift + 回车换行；空的不能保存；Esc 或「取消」退出不保存，不连外层弹窗一起关 |
+| `editValue` | `string` | 正文 | 编辑框里的字（受控）。要知道改没改（关弹窗时问「放弃修改？」）时用；不传从正文起、自己存 |
+| `onEditValueChange` | `(value: string) => void` | — | 编辑框里的字变了 |
+| `maxLength` | `number` | — | 最多几个字，传了框里出「字数 / 上限」 |
+| `placeholder` | `string` | — | 编辑框没字时的占位 |
+| `saveLabel` | `string` | `"保存"` | 保存按钮的字；新加一条时写「添加」 |
+| `saving` | `boolean` | `false` | 保存中：保存按钮转圈 |
+| `allowEmpty` | `boolean` | `false` | 能不能存空的 |
+| `onSave` | `(text: string) => void` | — | 保存，传去掉首尾空格的内容。回车或点「保存」保存，Shift + 回车换行；空的不能保存（`allowEmpty` 除外）；Esc 或「取消」退出不保存，不连外层弹窗一起关。非受控时存完自己退出编辑；受控（传了 `editing`）时由外面存好后把 `editing` 改回去，存失败就还在编辑 |
 
 上下内边距 12，小标题、正文、说明之间 4，「⋯」离正文 8、上下居中。没有悬停底色。`<li>`，其余原生属性都能传。
 

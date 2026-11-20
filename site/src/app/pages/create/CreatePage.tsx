@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Dialog, EmptyState, GenPrompt, IconButton, PromptBox, type GenFrames, type GenParamValues, type GenTask, ScrollArea, Loading, Skeleton, placeholderImageSrc, referenceName, toast, type PromptBoxSubmit, type ReferenceStackItem } from '@kivi';
+import { Button, ButtonGroup, Dialog, EmptyState, GenPrompt, IconButton, PromptBox, ScrollArea, Loading, Skeleton, placeholderImageSrc, referenceName, toast, type PromptBoxSubmit, type ReferenceStackItem } from '@kivi';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../../../docs/business/skill-data';
+import { LORAS } from '../../../docs/business/lora-data';
 import { activeTurnOf, sendAgent, stopAgent } from '../../data/agent';
 import { removeAssets, setCollected } from '../../data/assets';
 import { addChatTask } from '../../data/chats';
 import { byId, useDB } from '../../data/db';
 import { ratioNum } from '../../data/mock';
 import { removeOutput } from '../../data/outputs';
-import { CREATE_COMPOSER_REFS } from '../../data/seed/create';
+import { clearComposer, peekComposer, type ComposerFill } from './handoff';
 import { removeTask, rerunTask, submitTask, type TaskInput } from '../../data/tasks';
 import { uid } from '../../data/store';
 import { toolOf, type ToolId } from '../../data/tools';
@@ -19,10 +20,13 @@ import { ToolWorkbench, toolTaskInput, type Source, type ToolJob } from '../../p
 import { toolCost, toolParams } from '../../parts/tool-workbench/options';
 import { INITIAL_STATE } from '../../parts/tool-workbench/types';
 import { useBriefLoading } from '../../hooks/useBriefLoading';
+import { isScrollingToBottom, scrollToBottom } from '../../hooks/scrollToBottom';
 import { useOlderPages } from '../../hooks/useOlderPages';
 import { TaskTags } from '../../parts/task-tags';
 import { AssetInfo, CopyPrompt } from '../../parts/asset-info';
 import { RecordFeed } from './RecordFeed';
+import { downloadMedia } from '../../flows/files';
+import { appendReferences, useReferenceInbox } from '../../data/ref-inbox';
 import { TileMenus, type TileMenuState } from './TileMenus';
 import { genTaskInput } from './submit';
 import type { TileContext, TileRef, ViewerInfo } from './tiles';
@@ -44,16 +48,6 @@ interface ViewItem {
   info: ViewerInfo;
 }
 /** 「重新编辑」要填回输入框的东西 */
-interface ComposerFill {
-  key: number;
-  task: Exclude<GenTask, 'agent'>;
-  model?: string;
-  refMode?: string;
-  text: string;
-  frames?: GenFrames;
-  params: GenParamValues;
-  count: number;
-}
 const FRESH_MS = 10_000;
 const PAGE_SIZE = 10;
 /** 首次进入对话先出几个骨架 */
@@ -91,7 +85,7 @@ function ChatView({ chat }: { chat: Chat }) {
           t.outputs.flatMap((o) => {
             const a = o.assetId ? assets.find((x) => x.id === o.assetId) : undefined;
             return a
-              ? [{ media: { type: a.media === 'video' ? 'video' : 'image', src: a.src, poster: a.poster } as ViewerMedia, assetId: a.id, info: { prompt: t.prompt, tags: <TaskTags task={t} /> } }]
+              ? [{ media: { type: a.media, src: a.src, poster: a.poster, name: a.name } as ViewerMedia, assetId: a.id, info: { prompt: t.prompt, tags: <TaskTags task={t} /> } }]
               : [];
           }),
         ),
@@ -109,9 +103,14 @@ function ChatView({ chat }: { chat: Chat }) {
   });
   // 没有素材的格子（Agent 那一轮）收藏只记在页面里
   const [viewCollected, setViewCollected] = useState<string[]>([]);
-  const [refs, setRefs] = useState<ReferenceStackItem[]>(CREATE_COMPOSER_REFS);
+  // 开局参考区是空的（11-20 修 R-7：原来带两张演示图）；从首页提交过来的接着用那次的素材和配置
+  const [handoff] = useState(() => peekComposer(chat.id));
+  useEffect(() => clearComposer(chat.id), [chat.id]);
+  const [refs, setRefs] = useState<ReferenceStackItem[]>(handoff?.refs ?? []);
+  // 探索页「添加到参考图」排着的素材：进来就加进参考区
+  useReferenceInbox((items) => setRefs((list) => appendReferences(list, items)));
   // 「重新编辑」回填：参数整组换掉，输入框按新的一份重新挂上（key 变了），素材走上面受控的 refs
-  const [fill, setFill] = useState<ComposerFill | null>(null);
+  const [fill, setFill] = useState<ComposerFill | null>(handoff?.fill ?? null);
   const [removed, setRemoved] = useState<string[]>([]);
   const [tool, setTool] = useState<{ id: ToolId; source: Source } | null>(null);
   // 「更多」和右键各一个菜单，锚在点的位置
@@ -133,7 +132,7 @@ function ChatView({ chat }: { chat: Chat }) {
   const addRef = (t: TileRef) =>
     setRefs((list) => [
       ...list,
-      { id: uid('c'), type: t.media, name: referenceName(list, t.media), src: t.media === 'video' ? t.poster : t.src, duration: t.media === 'video' ? '5s' : undefined },
+      { id: uid('c'), type: t.media, name: referenceName(list, t.media), src: t.media === 'video' ? t.poster : t.src, duration: t.media === 'video' ? '5s' : t.media === 'audio' ? '12s' : undefined },
     ]);
 
   // 弹窗里点生成：关弹窗，记录流最后多一条工具任务（只有参数，没有提示词）
@@ -143,6 +142,8 @@ function ChatView({ chat }: { chat: Chat }) {
   };
   // 抠图、视频抠图不开弹窗，点了直接生成（11-11 用户定）；视频抠图用默认输出模式透明视频
   const openTool = (id: ToolId, t: TileRef) => {
+    // 工具只给图片、视频（音频格没有工具入口）
+    if (t.media === 'audio') return;
     const ratio = ratioNum(t.ratio);
     if (id === 'cutout' || id === 'video-cutout') {
       runJob({ tool: id, label: toolOf(id).name, media: t.media, src: t.src, ratio, targetRatio: ratio, params: toolParams(id, INITIAL_STATE), cost: toolCost(id, INITIAL_STATE) });
@@ -209,6 +210,8 @@ function ChatView({ chat }: { chat: Chat }) {
       sendAgent(chat.id, { text, refs: withRefs.map((r) => ({ type: r.type, src: r.src ?? '', name: r.name, duration: r.duration })) }),
     );
     if (sent && withRefs.length) setRefs([]);
+    // 没发出去：告诉输入框别清空提示词
+    return !!sent;
   };
 
   const submit = (s: PromptBoxSubmit) => {
@@ -234,18 +237,28 @@ function ChatView({ chat }: { chat: Chat }) {
     const el = feed.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, []);
-  // Agent 回复往下长（逐字、出卡、出结果）时跟着滚到底；用户往上翻了（离底超过 80）就不跟
+  // 跟着滚（11-19 用户定，照即梦）：在底部（离底 80 以内）时，回复变长、新记录进来都跟着往上推（新记录平滑推上去，逐字变长直接跟）；
+  // 往上翻了就不动，输入框上面浮「生成中 · 回到底部」
   const column = useRef<HTMLDivElement>(null);
+  const atBottomRef = useRef(true);
+  const [awayFromBottom, setAway] = useState(false);
+  const smoothNext = useRef(false);
   useEffect(() => {
     const el = feed.current;
     const inner = column.current;
     if (!el || !inner) return;
-    let atBottom = true;
     const onScroll = () => {
-      atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < FOLLOW_GAP;
+      const at = isScrollingToBottom(el) || el.scrollHeight - el.scrollTop - el.clientHeight < FOLLOW_GAP;
+      atBottomRef.current = at;
+      setAway(!at);
     };
     const ro = new ResizeObserver(() => {
-      if (atBottom) el.scrollTop = el.scrollHeight;
+      if (!atBottomRef.current) return;
+      // 新记录进来：平滑推上去（位移动画）；回复逐字变长：直接跟
+      if (smoothNext.current) {
+        smoothNext.current = false;
+        scrollToBottom(el);
+      } else if (!isScrollingToBottom(el)) el.scrollTop = el.scrollHeight;
     });
     el.addEventListener('scroll', onScroll, { passive: true });
     ro.observe(inner);
@@ -254,11 +267,25 @@ function ChatView({ chat }: { chat: Chat }) {
       ro.disconnect();
     };
   }, []);
+  const toBottom = () => {
+    if (!feed.current) return;
+    atBottomRef.current = true;
+    setAway(false);
+    scrollToBottom(feed.current);
+  };
   const count = chat.items.length;
   // 分页：先显示最后 10 条，往上滚到顶加载更早的（新的在下面，和线上方向相反）；首次进入先出骨架
   // 刚新建、刚动过（10 秒内）的对话数据就在手上，不出骨架；从侧栏点进别的对话才像线上那样先加载
   const entering = useBriefLoading(chat.id, Date.now() - chat.updatedAt < FRESH_MS);
   const older = useOlderPages(count, PAGE_SIZE, chat.id, feed);
+  // 骨架屏换成内容那一下先落到最下面（在「滚到顶加载更早的」检查之前），不然会先加载一页、停在半截
+  useLayoutEffect(() => {
+    const el = feed.current;
+    if (entering || !el) return;
+    el.scrollTop = el.scrollHeight;
+    atBottomRef.current = true;
+    setAway(false);
+  }, [entering]);
   const { hasMore, loadOlder } = older;
   useEffect(() => {
     const el = feed.current;
@@ -271,12 +298,16 @@ function ChatView({ chat }: { chat: Chat }) {
     if (hasMore && el.scrollHeight <= el.clientHeight) loadOlder();
     return () => el.removeEventListener('scroll', check);
   });
+  // 新记录进来：在底部就等它撑高时平滑推上去；不在底部不动（不再强行滚到底）
   const prevCount = useRef(count);
-  useEffect(() => {
-    const el = feed.current;
-    if (el && count > prevCount.current) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  useLayoutEffect(() => {
+    if (count > prevCount.current && atBottomRef.current) smoothNext.current = true;
     prevCount.current = count;
   }, [count]);
+  // 这个对话里生成中的：几格出了 / 一共几格（照即梦「0/1 生成中…」）
+  const running = tasks.filter((t) => t.where.page === 'create' && t.where.chatId === chat.id && t.status === 'running');
+  const runTotal = running.reduce((n, t) => n + t.outputs.length, 0);
+  const runDone = running.reduce((n, t) => n + t.outputs.filter((o) => o.status !== 'running').length, 0);
 
   // 看大图里的收藏：有素材的看素材，没有的看页面里记的
   const viewAsset = shownView?.assetId ? assets.find((a) => a.id === shownView.assetId) : undefined;
@@ -309,6 +340,20 @@ function ChatView({ chat }: { chat: Chat }) {
           </div>
         </ScrollArea>
         <div ref={composer} className="tpl-ms__composer">
+          {/* 往上翻了：输入框上面浮一条（玻璃按钮条 44）：有生成中的写进度，点「回到底部」平滑滚下去 */}
+          {awayFromBottom && !entering && (
+            <ButtonGroup variant="glass" size={44} className="tpl-ms__to-bottom" aria-label="回到底部">
+              {runTotal > 0 && (
+                <span className="tpl-ms__to-bottom-status">
+                  <Loading size={16} />
+                  {runDone}/{runTotal} 生成中…
+                </span>
+              )}
+              <Button variant="ghost" rightIcon="DownArrowSmall" onClick={toBottom}>
+                回到底部
+              </Button>
+            </ButtonGroup>
+          )}
           <PromptBox
             key={fill?.key}
             defaultValue={fill?.text}
@@ -322,6 +367,7 @@ function ChatView({ chat }: { chat: Chat }) {
             onReferencesChange={setRefs}
             skills={SKILL_ITEMS}
             skillCategories={SKILL_CATEGORIES}
+            loraOptions={LORAS}
             onSubmit={submit}
             generating={!!active}
             onStop={() => active && stopAgent(active.id)}
@@ -360,7 +406,7 @@ function ChatView({ chat }: { chat: Chat }) {
         actions={
           shownView && (
             <>
-              <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => toast.info('已开始下载')} />
+              <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => void downloadMedia([{ src: shownView.media.src }])} />
               {shownView.assetId && (
                 <IconButton
                   icon="Delete"

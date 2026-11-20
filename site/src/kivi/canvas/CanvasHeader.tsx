@@ -26,6 +26,8 @@ export interface CanvasHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 
   defaultCanvases?: CanvasItem[];
   /** 新建、改名、复制、删除后的新列表 */
   onCanvasesChange?: (canvases: CanvasItem[]) => void;
+  /** 复制画布：源画布 id 和副本 id（紧接着触发 onCanvasesChange） */
+  onDuplicate?: (sourceId: string, newId: string) => void;
   /** 当前画布的 id（受控） */
   value?: string;
   /** 默认的当前画布（非受控），不写是第一个 */
@@ -57,6 +59,7 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
     canvases: canvasesProp,
     defaultCanvases = [{ id: 'canvas-1', name: '画布 1' }],
     onCanvasesChange,
+    onDuplicate,
     value: valueProp,
     defaultValue,
     onChange,
@@ -113,6 +116,7 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
   const duplicate = (c: CanvasItem) => {
     if (full()) return;
     const item = { id: uid(), name: `${c.name} 副本` };
+    onDuplicate?.(c.id, item.id);
     setCanvases([...canvases, item]);
     setScrollTo(item.id);
   };
@@ -212,7 +216,7 @@ export const CanvasHeader = forwardRef<HTMLDivElement, CanvasHeaderProps>(functi
         open={removing !== null}
         onOpenChange={(v) => !v && setRemoving(null)}
         title={`确定要删除画布「${removing?.name ?? ''}」吗？`}
-        description="此操作不可恢复。"
+        description="删除后，画布中生成的资产仍可在「生成历史」中找到"
         footer={
           <>
             <Button size={36} variant="secondary" onClick={() => setRemoving(null)}>

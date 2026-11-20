@@ -32,7 +32,8 @@ export function ExplorePage({
   /** 进来时搜索框里已经填好的字：创作首页广场的搜索框带过来，只对 initialTab 那个选项卡生效 */
   initialKeyword?: string;
   onUseSkill?: (name: string) => void;
-  onOpenCanvas?: () => void;
+  /** 克隆好了：打开这块新画布 */
+  onOpenCanvas?: (canvasId: string) => void;
 }) {
   const [tab, setTab] = useState<ExploreTab>(initialTab);
   const viewport = useRef<HTMLDivElement>(null);
@@ -41,9 +42,9 @@ export function ExplorePage({
 
   const body: Record<ExploreTab, ReactNode> = {
     discover: <Discover moreRef={moreRef} initialKeyword={initialTab === 'discover' ? initialKeyword : undefined} />,
-    featured: <FlowGallery key="featured" kind="featured" onClone={() => onOpenCanvas?.()} moreRef={moreRef} initialKeyword={initialTab === 'featured' ? initialKeyword : undefined} />,
+    featured: <FlowGallery key="featured" kind="featured" onClone={(id) => onOpenCanvas?.(id)} moreRef={moreRef} initialKeyword={initialTab === 'featured' ? initialKeyword : undefined} />,
     skill: <Skills onUse={(s) => onUseSkill?.(s.title)} moreRef={moreRef} initialKeyword={initialTab === 'skill' ? initialKeyword : undefined} />,
-    workflow: <FlowGallery key="workflow" kind="workflow" onClone={() => onOpenCanvas?.()} moreRef={moreRef} initialKeyword={initialTab === 'workflow' ? initialKeyword : undefined} />,
+    workflow: <FlowGallery key="workflow" kind="workflow" onClone={(id) => onOpenCanvas?.(id)} moreRef={moreRef} initialKeyword={initialTab === 'workflow' ? initialKeyword : undefined} />,
   };
 
   return (

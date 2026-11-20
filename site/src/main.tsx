@@ -30,6 +30,15 @@ createRoot(document.getElementById('root')!).render(
             </Suspense>
           }
         />
+        {/* 带 id：#/app/canvas/<画布>、#/app/create/<对话>，新标签页打开、刷新都停在那一个 */}
+        <Route
+          path="/app/:page/:id"
+          element={
+            <Suspense fallback={null}>
+              <KiviApp />
+            </Suspense>
+          }
+        />
         <Route element={<Layout />}>
           {pages.map(({ id, path, Page }) => (
             <Route key={id} path={path} element={<Page components={mdxComponents} />} />

@@ -301,12 +301,19 @@ button.kv-process-row:is(:hover, :focus-visible, .is-hover) > .kv-process-row__a
   overflow: hidden;
   border: 0;
   border-radius: var(--border-radius-16);
+  outline: var(--border-width-1) solid var(--color-border); /* 媒体描边 12%，画在里面（设计规则 · 状态） */
+  outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-surface);
   cursor: pointer;
   transform-origin: 0 0;
   transition:
     transform var(--kv-media-group-duration) var(--motion-ease-expand),
     opacity var(--kv-media-group-duration) var(--motion-ease-out);
+}
+
+/* 生成中这一格：Light 1 底 + 生成中点阵铺满（在 Agent 面板的 surface 上要看得出格子） */
+.kv-media-group__card[data-generating] {
+  background: var(--color-bg-fill-container-light-1);
 }
 
 .kv-media-group__card[data-cover] {

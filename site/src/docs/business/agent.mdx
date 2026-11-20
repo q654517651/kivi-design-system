@@ -138,6 +138,13 @@ Agent 问用户（问题卡）或生成前确认，在对话里留的一行，�
 | `onNext` | `() => void` | — | 点分页右边的「下一题」 |
 | `prevDisabled` | `boolean` | `false` | 「上一题」不能点，第一题时用 |
 | `nextDisabled` | `boolean` | `false` | 「下一题」不能点，最后一题时用 |
+| `type` | `"choice"` `"text"` | `"choice"` | 题型。选择题下面是选项；文本题下面是一个输入框（Textarea），字数、「忽略」「确认提交」放在框里右下角（按钮 28），没写字时提交不能点，⌘ / Ctrl + 回车提交。比如记忆管理问卷「你负责哪些产品、项目？」 |
+| `text` | `string` | — | 文本题的字（受控） |
+| `defaultText` | `string` | `""` | 文本题的字（非受控初始值） |
+| `onTextChange` | `(text: string) => void` | — | 文本题的字变了 |
+| `maxLength` | `number` | — | 文本题最多几个字，传了框里出「字数 / 上限」 |
+| `placeholder` | `string` | — | 文本题没字时的占位 |
+| `fill` | `boolean` | `false` | 撑满外面给的高度（弹窗里的问卷用）：选项区 / 输入框占满剩下的，按钮贴底，换题时卡片不跳 |
 | `multiple` | `boolean` | `false` | 多选。默认单选，只有一项选中，选项和「其他」互斥：选了选项清掉「其他」里的字，在「其他」里打字清掉已选的选项 |
 | `value` | `string[]` | — | 选中的值：受控。值是 QuestionOption 的 `value`，单选最多一项 |
 | `defaultValue` | `string[]` | `[]` | 选中的值：非受控的初始值 |

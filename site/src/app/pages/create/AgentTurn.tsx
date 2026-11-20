@@ -20,9 +20,11 @@ export interface AgentTurnProps {
   ctx?: TileContext;
   /** 结果怎么画（画布侧栏：缩略图组，点了定位节点）；不传用主站的结果格 */
   renderTask?: (task: Task) => ReactNode;
+  /** 反馈条里的「重新生成」，默认有。画布 Agent 照线上没有（11-19 用户指出） */
+  regenerate?: boolean;
 }
 
-export function AgentTurn({ turn, tasks, assets, ctx, renderTask }: AgentTurnProps) {
+export function AgentTurn({ turn, tasks, assets, ctx, renderTask, regenerate = true }: AgentTurnProps) {
   const busy = turn.status === 'running' || turn.status === 'waiting';
   // 反馈条复制的是回复里所有文字
   const reply = turn.blocks
@@ -94,7 +96,7 @@ export function AgentTurn({ turn, tasks, assets, ctx, renderTask }: AgentTurnPro
       })}
 
       {/* 回复完、停止、出错后才出反馈条（照线上） */}
-      {!busy && <MessageFeedback text={reply} traceId={`trace-${turn.id}`} onRegenerate={() => void attempt(() => regenerateAgent(turn.id))} />}
+      {!busy && <MessageFeedback text={reply} traceId={`trace-${turn.id}`} onRegenerate={regenerate ? () => void attempt(() => regenerateAgent(turn.id)) : undefined} />}
     </div>
   );
 }

@@ -131,21 +131,28 @@ const QUICK: Record<ResultTileType, ResultTileAction[]> = {
     { icon: 'VideoLoop', label: '视频循环' },
     { icon: 'More', label: '更多' },
   ],
+  // 音频没有快捷操作
+  audio: [],
 };
 
 const PIC: Record<ResultTileType, { done: string; hover: string }> = {
   image: { done: 'kiwi-glass', hover: 'monstera-dots' },
   video: { done: 'bunny-gouache', hover: 'ip-kiwi-pile' },
+  audio: { done: 'kiwi-glass', hover: 'monstera-dots' },
 };
+
+// 演示音频：assets 里没有纯音频，用 mp4 的音轨
+const DEMO_AUDIO = './placeholders/video/kivi-demo-9x16.mp4';
 
 type ResultTileState = { type: ResultTileType; state: string; source: boolean; collected: boolean };
 
 function renderResultTile(s: ResultTileState, update: (patch: Partial<PlaygroundState>) => void) {
   const video = s.type === 'video';
-  const type = video ? 'video' : undefined;
+  const audio = s.type === 'audio';
+  const type = video || audio ? s.type : undefined;
   if (s.state === 'generating') {
     // 有原素材：重新生成，原来的图或视频垫在遮罩下面
-    const src = s.source ? (video ? VIDEO.wide : `${IMG}${PIC[s.type].done}-1x1.webp`) : undefined;
+    const src = s.source && !audio ? (video ? VIDEO.wide : `${IMG}${PIC[s.type].done}-1x1.webp`) : undefined;
     return <ResultTile type={type} status="generating" src={src} badge="59s 生成中" />;
   }
   // 失败的格子还能删除：只有右上「删除」
@@ -154,12 +161,12 @@ function renderResultTile(s: ResultTileState, update: (patch: Partial<Playground
   return (
     <ResultTile
       type={type}
-      src={video ? VIDEO.wide : `${IMG}${PIC[s.type][hover ? 'hover' : 'done']}-1x1.webp`}
+      src={video ? VIDEO.wide : audio ? DEMO_AUDIO : `${IMG}${PIC[s.type][hover ? 'hover' : 'done']}-1x1.webp`}
       topActions={TOP}
       collect
       collected={s.collected}
       onCollectedChange={(v) => update({ collected: v })}
-      quickActions={QUICK[s.type]}
+      quickActions={QUICK[s.type].length ? QUICK[s.type] : undefined}
       onPreview={video ? (t) => openPreview(VIDEO.wide, t) : undefined}
       className={hover ? 'is-hover' : undefined}
     />
@@ -170,12 +177,12 @@ export function ResultTilePlayground() {
   return (
     <Playground<ResultTileState>
       controls={[
-        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频']] },
+        { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频'], ['audio', '音频']] },
         { key: 'state', label: '状态', type: 'segment', value: 'done', options: [['generating', '生成中'], ['done', '完成'], ['hover', '悬停'], ['failed', '失败']] },
         { key: 'source', label: '有原素材（重新生成）', type: 'toggle', value: false },
         { key: 'collected', label: '已收藏', type: 'toggle', value: false },
       ]}
-      rules={(s) => ({ source: s.state !== 'generating', collected: s.state === 'generating' || s.state === 'failed' })}
+      rules={(s) => ({ source: s.state !== 'generating' || s.type === 'audio', collected: s.state === 'generating' || s.state === 'failed' })}
       render={renderResultTile}
     />
   );
@@ -210,7 +217,12 @@ const PANEL: CSSProperties = { display: 'flex', flexDirection: 'column', alignIt
 
 type MediaGroupState = { items: string; type: string; expand: string };
 
-const RESULT_SETS: Record<string, MediaGroupItem[]> = { mixed: RESULT_MIXED, ratios: RESULT_RATIOS };
+const RESULT_SETS: Record<string, MediaGroupItem[]> = {
+  mixed: RESULT_MIXED,
+  ratios: RESULT_RATIOS,
+  // 生成中：每张一格生成中点阵，标题「图片生成中 ×4」扫光
+  generating: RESULT_RATIOS.slice(0, 4).map((it) => ({ ...it, src: undefined, status: 'generating' as const })),
+};
 
 /** 点标题行或叠放展开，点标题行收起；展开写回面板 */
 function renderMediaGroup(s: MediaGroupState, update: Update) {
@@ -230,7 +242,7 @@ export function MediaGroupPlayground() {
   return (
     <Playground<MediaGroupState>
       controls={[
-        { key: 'items', label: '结果', type: 'segment', value: 'mixed', options: [['mixed', '中间有失败'], ['ratios', '比例不同']] },
+        { key: 'items', label: '结果', type: 'segment', value: 'mixed', options: [['generating', '生成中'], ['mixed', '中间有失败'], ['ratios', '比例不同']] },
         { key: 'type', label: '类型', type: 'segment', value: 'image', options: [['image', '图片'], ['video', '视频']] },
         { key: 'expand', label: '展开', type: 'segment', value: 'no', options: [['no', '否'], ['yes', '是']] },
       ]}

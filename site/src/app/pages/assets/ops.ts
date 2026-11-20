@@ -2,6 +2,8 @@ import { toast } from '@kivi';
 import { removeAssets, setCollected } from '../../data/assets';
 import { handleError } from '../../flows/errors';
 import { confirmDelete } from '../../flows/delete';
+import { downloadMedia } from '../../flows/files';
+import type { Asset } from '../../data/types';
 
 /*
   资产页的动作：生成历史、文件夹内页、批量条共用，页面里不再各写一份。
@@ -26,6 +28,6 @@ export const collectAssets = (ids: string[], collected: boolean) => run(() => se
 /** 删除素材：先确认，返回是否删了 */
 export const deleteAssets = (ids: string[]) => confirmDelete(() => removeAssets(ids));
 
-/** 下载（演示只出提示）。一次最多 20 个 */
+/** 下载：一个直接存，几个打 ZIP（flows/files）。一次最多 20 个 */
 export const DOWNLOAD_LIMIT = 20;
-export const downloadAssets = () => toast.info('已开始下载');
+export const downloadAssets = (items: Pick<Asset, 'src'>[]) => void downloadMedia(items.map((a) => ({ src: a.src })));

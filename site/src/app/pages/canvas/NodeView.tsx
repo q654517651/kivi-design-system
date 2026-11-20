@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import { Button, ButtonGroup, IconButton, NodeCard, NodeMedia, NodeStack, NodeStackToggle, NodeWrapper, toast, type NodeCardType, type NodeMediaType, type NodeWrapperRatio } from '@kivi';
+import { Button, ButtonGroup, IconButton, NodeCard, NodeMedia, NodeStack, NodeStackToggle, NodeWrapper, type NodeCardType, type NodeMediaType, type NodeWrapperRatio } from '@kivi';
 import { countdownLabel } from '../../data/tasks';
 import type { CanvasItem, CanvasNode, Task } from '../../data/types';
 import { PACK_TEXT } from '../../rules/packager';
@@ -124,7 +124,14 @@ export function NodeView({ node, task, uploading, now, selected, inLinked, outLi
     // 工具节点（抠图、高清…）还没生成：待生成的样子，选中后下面出这个工具的参数面板
     body = <NodeCard status="pending" type={type} />;
   } else if (type === 'text' ? !node.text : !items.length) {
-    body = node.output ? <NodeCard status="failed" type={type} /> : <NodeCard status="guide" type={type} onGuideSelect={onGuideSelect} />;
+    // 空节点：还没写提示词出引导菜单；一写提示词马上换成待生成（中间图标），所有类型都这样（11-19 用户定，照线上）
+    body = node.output ? (
+      <NodeCard status="failed" type={type} />
+    ) : node.prompt?.trim() ? (
+      <NodeCard status="pending" type={type} />
+    ) : (
+      <NodeCard status="guide" type={type} onGuideSelect={onGuideSelect} />
+    );
   } else if (items.length > 1) {
     body = (
       <NodeStack expanded={stackOpen}>
@@ -171,7 +178,7 @@ export function NodeView({ node, task, uploading, now, selected, inLinked, outLi
       {archive && selected && node.archive?.done && (
         <div className="cv-float cv-float--toolbar app-archive__float" style={{ left: "50%", top: -40 }}>
           <ButtonGroup variant="glass" size={44} aria-label="节点工具栏">
-            <IconButton icon="Download" label="下载" onClick={() => toast.success('已开始下载')} />
+            <IconButton icon="Download" label="下载" onClick={onDownload} />
           </ButtonGroup>
         </div>
       )}

@@ -1,5 +1,6 @@
 import { Children, cloneElement, forwardRef, isValidElement, useCallback, useMemo, useRef, useState, type HTMLAttributes, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
 import { Button, IconButton } from '../button';
+import { Textarea } from '../inputs/Textarea';
 import { cx } from '../utils';
 import { useControllable } from '../hooks';
 import { QuestionContext } from './QuestionContext';
@@ -19,6 +20,23 @@ export interface QuestionPanelProps extends Omit<HTMLAttributes<HTMLElement>, 't
   prevDisabled?: boolean;
   /** 「下一题」不能点：最后一题时用 */
   nextDisabled?: boolean;
+  /**
+   * 题型（11-19，照 3.14 记忆管理稿）：选择题 `choice`（默认，下面是选项）；文本题 `text`：题目下面一个输入框，
+   * 字数、「忽略」「确认提交」放在框里右下角（按钮 28），没写字时提交不能点，⌘ / Ctrl + 回车提交
+   */
+  type?: 'choice' | 'text';
+  /** 文本题的字：受控 */
+  text?: string;
+  /** 文本题的字：非受控的初始值 */
+  defaultText?: string;
+  /** 文本题的字变了 */
+  onTextChange?: (text: string) => void;
+  /** 文本题最多几个字：传了框里出「字数 / 上限」 */
+  maxLength?: number;
+  /** 文本题没字时的占位，比如「比如：KIVI 主站、画布」 */
+  placeholder?: string;
+  /** 撑满外面给的高度（弹窗里的问卷用）：选项区 / 输入框占满剩下的，按钮贴底，换题时卡片不跳 */
+  fill?: boolean;
   /** 多选：默认单选，只有一项选中，选项和「其他」互斥（选了选项清掉「其他」里的字，在「其他」打字清掉已选的）；多选可以选多项 */
   multiple?: boolean;
   /** 选中的值：受控。单选最多一项，值是 QuestionOption 的 value */
@@ -62,6 +80,13 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
     submitText = '确认提交',
     onSubmit,
     disabled = false,
+    type = 'choice',
+    text: textProp,
+    defaultText = '',
+    onTextChange,
+    maxLength,
+    placeholder,
+    fill = false,
     children,
     className,
     ...rest
@@ -69,6 +94,7 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
   ref,
 ) {
   const [value, setValue] = useControllable(valueProp, defaultValue, onChange);
+  const [text, setText] = useControllable(textProp, defaultText, onTextChange);
 
   // 单选时选项和「其他」互斥：各个「其他」登记清空方法，选了选项就都清掉
   const others = useRef(new Map<string, () => void>());
@@ -93,7 +119,7 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
   const reportOther = useCallback((id: string, on: boolean) => {
     setFilled((f) => (f[id] === on ? f : { ...f, [id]: on }));
   }, []);
-  const canSubmit = value.length > 0 || Object.values(filled).some(Boolean);
+  const canSubmit = type === 'text' ? text.trim().length > 0 : value.length > 0 || Object.values(filled).some(Boolean);
 
   // 没写编号的选项按顺序补 1、2、3；顺便找出单选的 Tab 停点
   const keys: string[] = [];
@@ -133,6 +159,7 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
       aria-label="追问"
       aria-busy={disabled || undefined}
       data-disabled={disabled ? '' : undefined}
+      data-fill={fill ? '' : undefined}
       {...rest}
     >
       <div className="kv-question-panel__head">
@@ -145,27 +172,60 @@ export const QuestionPanel = forwardRef<HTMLElement, QuestionPanelProps>(functio
           </div>
         )}
       </div>
-      <QuestionContext.Provider value={ctx}>
-        <div
-          className="kv-question-panel__options"
-          role={multiple ? 'group' : 'radiogroup'}
-          aria-label={typeof title === 'string' ? title : undefined}
-          aria-disabled={disabled || undefined}
-          onKeyDown={onOptionsKeyDown}
-        >
-          {options}
-        </div>
-      </QuestionContext.Provider>
-      <div className="kv-question-panel__actions">
-        {skip && (
-          <Button variant="ghost" onClick={onSkip} disabled={disabled}>
-            {skipText}
-          </Button>
-        )}
-        <Button variant="primary" onClick={onSubmit} disabled={disabled || !canSubmit}>
-          {submitText}
-        </Button>
-      </div>
+      {type === 'text' ? (
+        <Textarea
+          className="kv-question-panel__text"
+          aria-label={typeof title === 'string' ? title : '回答'}
+          value={text}
+          maxLength={maxLength}
+          placeholder={placeholder}
+          disabled={disabled}
+          counter={maxLength != null ? `${Array.from(text).length}/${maxLength}` : undefined}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !e.nativeEvent.isComposing && canSubmit && !disabled) {
+              e.preventDefault();
+              onSubmit?.();
+            }
+          }}
+          actions={
+            <>
+              {skip && (
+                <Button size={28} variant="ghost" onClick={onSkip} disabled={disabled}>
+                  {skipText}
+                </Button>
+              )}
+              <Button size={28} variant="primary" onClick={onSubmit} disabled={disabled || !canSubmit}>
+                {submitText}
+              </Button>
+            </>
+          }
+        />
+      ) : (
+        <>
+          <QuestionContext.Provider value={ctx}>
+            <div
+              className="kv-question-panel__options"
+              role={multiple ? 'group' : 'radiogroup'}
+              aria-label={typeof title === 'string' ? title : undefined}
+              aria-disabled={disabled || undefined}
+              onKeyDown={onOptionsKeyDown}
+            >
+              {options}
+            </div>
+          </QuestionContext.Provider>
+          <div className="kv-question-panel__actions">
+            {skip && (
+              <Button variant="ghost" onClick={onSkip} disabled={disabled}>
+                {skipText}
+              </Button>
+            )}
+            <Button variant="primary" onClick={onSubmit} disabled={disabled || !canSubmit}>
+              {submitText}
+            </Button>
+          </div>
+        </>
+      )}
     </section>
   );
 });

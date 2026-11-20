@@ -128,6 +128,8 @@
 /* 类型：图片 底白 10%，加载前垫着；文字 底白 18% */
 .kv-avatar--image {
   background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
+  outline: var(--border-width-1) solid var(--color-border); /* 媒体描边 12%，画在里面（设计规则 · 状态） */
+  outline-offset: calc(var(--border-width-1) * -1);
 }
 
 .kv-avatar--text {

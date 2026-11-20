@@ -1,4 +1,4 @@
-import { GEN_PARAM_DEFAULTS, DEFAULT_MODEL, genCost, placeholderImageSrc, type PlaceholderImageName, type ReferenceStackItem } from '@kivi';
+import { GEN_PARAM_DEFAULTS, DEFAULT_MODEL, genCost, placeholderImageSrc, type PlaceholderImageName } from '@kivi';
 import { DEMO_AUDIO, DEMO_VIDEO } from '../mock';
 import type { AgentTurn, Asset, Chat, DB, Media, Ratio, Task } from '../types';
 
@@ -218,7 +218,7 @@ const agentTurns: AgentTurn[] = [];
     id: 'a1',
     chatId: 'chat-1',
     user: { text: prompt, refs: [{ type: 'image', src: still('kiwi-light', '1:1') }] },
-    script: 'poster',
+    script: 'image-poster',
     step: 99,
     beatAt: NOW - 35 * MIN,
     status: 'done',
@@ -273,9 +273,3 @@ SIMPLE.forEach(([title, kind, prompt], i) => {
 });
 
 export const CREATE_SEED: Pick<DB, 'chats' | 'tasks' | 'assets' | 'agentTurns'> = { chats, tasks, assets, agentTurns };
-
-/** 对话页输入框参考区一开始的两张演示图（创作页「加入参考」也往里加）。只是界面初始状态，不进 db */
-export const CREATE_COMPOSER_REFS: ReferenceStackItem[] = [
-  { id: 'c1', type: 'image', name: '图片1', src: still('kiwi-glass', '1:1') },
-  { id: 'c2', type: 'image', name: '图片2', src: still('kiwi-light', '1:1') },
-];

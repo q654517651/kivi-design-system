@@ -1,13 +1,15 @@
 import { type CSSProperties } from 'react';
 import { NodePanel, type AttachmentItem, type GenNodeType } from '@kivi';
-import { disconnectPair, generateNode, reorderInputs, setNodeInputs, upstreamOf } from '../../data/canvas-doc';
+import { addUpstreamFile, disconnectPair, generateNode, reorderInputs, setNodeInputs, stopNodeGen, stopStartOf, upstreamOf, useNodeTask } from '../../data/canvas-doc';
 import type { ToolId } from '../../data/tools';
 import { attempt } from '../../flows/errors';
 import { isGenNode } from '../../rules/canvas';
 import type { CanvasDoc, CanvasItem, CanvasNode } from '../../data/types';
 import { NodeToolbar } from './NodeToolbar';
+import type { AnnotationNote } from './AnnotateDialog';
 import { LipSyncPanel } from './LipSyncPanel';
 import { NodeToolPanel, PANEL_TOOLS } from './NodeToolPanel';
+import { LORAS } from '../../../docs/business/lora-data';
 
 /*
   选中一个节点时浮在它上下的东西（照线上，同原来的小画布）：
@@ -31,19 +33,21 @@ export interface NodeFloatProps {
   onView: (item: CanvasItem) => void;
   onDownload: () => void;
   /** 节点工具栏的框选：把节点加进对话 */
-  onAddToChat?: (ids: string[]) => void;
+  onAddToChat?: (ids: string[], note?: AnnotationNote) => void;
 }
 
 export function NodeFloat({ canvasId, doc, node, busy, zoom, onView, onDownload, onAddToChat }: NodeFloatProps) {
   const fixed = { '--cv-unzoom': 1 / Math.max(zoom, 0.5) } as CSSProperties;
   const center = node.x + node.w / 2;
   const hasResult = node.type === 'text' ? !!node.text : !!node.items?.length;
+  // 生成中（有任务在跑，不算上传中）：生成按钮变停止
+  const running = useNodeTask(node.taskId)?.status === 'running';
   const toolbar = hasResult && !busy && node.items?.[0] && (node.type === 'image' || node.type === 'video');
 
   // 参考素材：连进来的上游（文字节点的上游文字拼进提示词，不进附件条）
   const references: AttachmentItem[] = upstreamOf(doc, node.id)
     .filter((n) => n.type !== 'text' && n.type !== 'group')
-    .map((n) => ({ id: n.id, type: n.type as AttachmentItem['type'], name: n.name, src: n.items?.[0]?.poster ?? n.items?.[0]?.src, duration: n.items?.[0]?.duration }));
+    .map((n) => ({ id: n.id, type: n.type as AttachmentItem['type'], name: n.name, src: n.items?.[0]?.poster ?? (n.type === 'video' ? undefined : n.items?.[0]?.src), duration: n.items?.[0]?.duration }));
 
   return (
     <>
@@ -80,10 +84,16 @@ export function NodeFloat({ canvasId, doc, node, busy, zoom, onView, onDownload,
             onParamsChange={(params) => setNodeInputs(canvasId, node.id, { params })}
             count={node.count}
             onCountChange={(count) => setNodeInputs(canvasId, node.id, { count })}
+            loras={node.loras}
+            onLorasChange={(loras) => setNodeInputs(canvasId, node.id, { loras })}
+            loraOptions={LORAS}
             onRemoveReference={(from) => disconnectPair(canvasId, from, node.id)}
             onReorderReference={(from, target) => reorderInputs(canvasId, node.id, from, target)}
+            onUploadReference={(file) => void addUpstreamFile(canvasId, node.id, file)}
             onGenerate={(s) => attempt(() => generateNode(canvasId, node.id, s))}
             generating={busy}
+            stopStartedAt={running ? stopStartOf(node.taskId) : undefined}
+            onStop={running ? () => stopNodeGen(canvasId, node.id) : undefined}
           />
         </div>
         )

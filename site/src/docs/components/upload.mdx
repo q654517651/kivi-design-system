@@ -44,6 +44,7 @@ import { AddTilePlayground, UploadRingPlayground } from './upload.demos';
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
+| `variant` | `"default"` `"outline"` | `"default"` | 类型：默认只有底色；描边再加一圈 1 的弱描边（`--color-border-subtle`，画在里面不占尺寸），所有上传占位都用描边（参考素材、首尾帧空格、对口型、拼接），添加 Lora 这类不是上传的用默认 |
 | `size` | `56` `72` | `56` | 尺寸：72 只给主站输入框首尾帧的空格（`ReferenceFramePair size={72}`），别处都是 56 |
 | `icon` | `IconName` | `"AddSmall"` | 图标，固定 20，`--color-text-fill-primary`；带文字时是 `--color-text-fill-tertiary` |
 | `label` | `ReactNode` | — | 图标下面的一行字，12 / 16 号，`--color-text-fill-tertiary`，和图标间距 2（`--spacing-2`），比如「Lora」。不传就只有图标 |

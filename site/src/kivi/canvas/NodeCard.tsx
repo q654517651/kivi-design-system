@@ -170,10 +170,10 @@ export const NodeCard = forwardRef<HTMLDivElement, NodeCardProps>(function NodeC
               {textButton}
             </ButtonGroup>
           )}
-          {/* 收藏了、不悬停：右上只留一个星，悬停时换成整条。只是标记，点不到（鼠标一移上去就是整条） */}
+          {/* 收藏了、不悬停：右上只留一个星，悬停时换成整条。只是标记，点不到（鼠标一移上去就是整条）。里面的星不设选中，只留按钮条一层玻璃（11-20 用户定：原来叠了选中的底，看着两层） */}
           {collect && collected && hoverActions && (
             <ButtonGroup className="kv-node-card__pin" aria-hidden>
-              <IconButton icon="CollectSolid" label="已收藏" selected data-collected tabIndex={-1} />
+              <IconButton icon="CollectSolid" label="已收藏" tooltip={false} data-collected tabIndex={-1} />
             </ButtonGroup>
           )}
         </>

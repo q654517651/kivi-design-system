@@ -44,7 +44,7 @@
   margin: 0;
   border: var(--border-width-1) solid transparent;
   border-radius: var(--border-radius-8);
-  background: var(--color-bg-fill-container-light-1);
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1)); /* 放进铺了 Light 2 的大块容器（卡片列表）里是 Light 2 */
   color: var(--color-text-fill-primary);
   font-family: var(--font-family);
   font-size: var(--font-size-13);
@@ -82,6 +82,15 @@
 /* 聚焦：底色回到白 10%，不加描边 */
 :is(.kv-input, .kv-number-input, .kv-textarea):where(:focus-within, .is-focus):not(:has(:disabled)) {
   background: var(--color-bg-fill-container-light-1);
+}
+
+/* 多行输入放进铺了 Light 2 的大块容器（卡片列表）里：平时、悬停、聚焦都换 Light 2 档（--kv-nested-fill） */
+.kv-textarea:where(:hover, .is-hover):not(:has(:disabled)) {
+  background: var(--kv-nested-fill-hover, var(--color-bg-fill-container-light-1-hover));
+}
+
+.kv-textarea:where(:focus-within, .is-focus):not(:has(:disabled)) {
+  background: var(--kv-nested-fill, var(--color-bg-fill-container-light-1));
 }
 
 /* 错误：1px danger 描边 */

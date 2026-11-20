@@ -40,7 +40,7 @@ export function NodeToolPanel({ canvasId, doc, node, busy }: NodeToolPanelProps)
   const st = toolStateOf(node);
   const fileRef = useRef<HTMLInputElement>(null);
   const ups = upstreamOf(doc, node.id).filter((n) => (n.type === 'image' || n.type === 'video') && n.items?.[0]);
-  const items: AttachmentItem[] = ups.map((n) => ({ id: n.id, type: n.type as 'image' | 'video', name: n.name, src: n.items![0].poster ?? n.items![0].src, duration: n.items![0].duration }));
+  const items: AttachmentItem[] = ups.map((n) => ({ id: n.id, type: n.type as 'image' | 'video', name: n.name, src: n.items![0].poster ?? (n.type === 'video' ? undefined : n.items![0].src), duration: n.items![0].duration }));
   const stitching = tool === 'stitch';
   const duration = secondsOf(ups[0]?.items?.[0].duration);
   const ctx = { duration };
@@ -69,7 +69,7 @@ export function NodeToolPanel({ canvasId, doc, node, busy }: NodeToolPanelProps)
   const lead = (
     <div className="app-toolstrip">
       {items.length > 0 && <AttachmentStrip items={items} aria-label="素材" onRemove={(id) => disconnectPair(canvasId, id, node.id)} />}
-      {stitching && ups.length < STITCH_MAX && <AddTile label="上传" aria-label="上传视频" onClick={() => fileRef.current?.click()} />}
+      {stitching && ups.length < STITCH_MAX && <AddTile variant="outline" label="上传" aria-label="上传视频" onClick={() => fileRef.current?.click()} />}
       {stitching && <input ref={fileRef} type="file" hidden accept="video/*" onChange={(e) => (e.target.files?.[0] && void takeFile(e.target.files[0]), (e.target.value = ''))} />}
     </div>
   );

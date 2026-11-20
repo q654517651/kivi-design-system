@@ -15,7 +15,7 @@ export function toolTaskInput(job: ToolJob, where: Where): TaskInput {
     tool: job.tool,
     label: job.label,
     params: job.params ?? {},
-    refs: [{ type: job.media, src: job.src }],
+    refs: [{ type: job.media, src: job.src }, ...(job.src2 ? [{ type: job.media, src: job.src2 }] : [])],
     ratio: nearestRatio(job.targetRatio),
     cost: job.cost ?? 0,
     // 扩图、智能编辑出新画面；别的工具画面不变，结果直接用原图

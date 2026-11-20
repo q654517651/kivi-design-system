@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, Dialog, IconButton, Input, ScrollArea, placeholderImageSrc } from '@kivi';
+import { Button, Dialog, IconButton, Input, Prose, ScrollArea, toast } from '@kivi';
+import { db } from '../../data/db';
+import { useLastShown } from '../../parts/media-viewer';
 import { BANNERS, type Banner } from '../../data/banners';
 
 /*
@@ -41,10 +43,21 @@ export function HomeHead({ title, onMore, search, children }: { title?: string; 
 }
 
 /** 最近更新：横排 Banner，一排 4 张，放不下左右翻（翻一屏），到头那边的按钮禁用；都放得下就不出按钮 */
-export function RecentUpdates() {
+/** 最近更新：点 Banner 按后台配的三种行为走（链接 / 画布 / 公告弹窗） */
+export function RecentUpdates({ onOpenCanvas }: { onOpenCanvas: (canvasId: string) => void }) {
   const rail = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: true });
   const [open, setOpen] = useState<Banner | null>(null);
+  const shown = useLastShown(open);
+  const activate = (b: Banner) => {
+    const a = b.action;
+    if (a.kind === 'link') window.open(a.url, '_blank', 'noopener');
+    else if (a.kind === 'canvas') {
+      if (db.get().canvases.some((c) => c.id === a.canvasId)) onOpenCanvas(a.canvasId);
+      else toast.error('画布已不存在');
+    } else setOpen(b);
+  };
+  const dialog = shown?.action.kind === 'dialog' ? shown.action : null;
 
   useLayoutEffect(() => {
     const el = rail.current;
@@ -81,15 +94,41 @@ export function RecentUpdates() {
       <ScrollArea orientation="horizontal" className="tpl-home__rail" viewportRef={rail} viewportProps={{ className: 'tpl-home__rail-viewport' }}>
         <div className="tpl-home__rail-track">
           {BANNERS.map((b) => (
-            <button key={b.title} type="button" className="tpl-home__banner" aria-label={`查看：${b.title}`} onClick={() => setOpen(b)}>
-              <img src={placeholderImageSrc(b.image, '16:9')} alt="" draggable={false} />
+            <button key={b.title} type="button" className="tpl-home__banner" aria-label={b.title} onClick={() => activate(b)}>
+              <img src={b.image} alt="" draggable={false} />
             </button>
           ))}
         </div>
       </ScrollArea>
-      <Dialog size={800} title={open?.title} open={open !== null} onOpenChange={(v) => !v && setOpen(null)}>
-        {open && <img className="tpl-home__banner-preview" src={placeholderImageSrc(open.image, '16:9')} alt={open.title} />}
+      {/* 新功能公告：照 Dialog「新功能公告」，560、顶图、标题、说明、分点、一个按钮 */}
+      <Dialog
+        size={560}
+        open={open !== null}
+        onOpenChange={(v) => !v && setOpen(null)}
+        media={shown && <img src={shown.image} alt="" />}
+        title={dialog?.title}
+        description={dialog?.description}
+        footer={
+          dialog && (
+            <Button size={36} variant="primary" onClick={() => setOpen(null)}>
+              {dialog.button}
+            </Button>
+          )
+        }
+      >
+        {dialog && (
+          <Prose>
+            <ul>
+              {dialog.points.map((p) => (
+                <li key={p.name}>
+                  <strong>{p.name}</strong>：{p.text}
+                </li>
+              ))}
+            </ul>
+          </Prose>
+        )}
       </Dialog>
     </section>
   );
 }
+

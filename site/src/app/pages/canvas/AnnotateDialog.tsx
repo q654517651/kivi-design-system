@@ -5,8 +5,15 @@ import './node-tools.css';
 /*
   框选（照线上 image-annotation-plugin）：在图上拖出选区，写评论，每个选区一个序号；再点序号改、悬停看一行预览；
   只画了框没写字的，收起时算放弃。线上是图放大居中后在画布上原地标注，评论「发送」直接发给 Agent、「添加到对话」放进对话输入框；
-  这里是弹窗，两个按钮都只是把这张图加进对话输入框（标注文字没有带过去）。
+  这里是弹窗：「添加到对话」往 Agent 输入框插一个标注胶囊（缩略图 + 序号 + 评论），「发送」直接发给 Agent（11-19 用户定补上）。
 */
+
+/** 一条标注带进对话：序号、评论；send 是直接发出去 */
+export interface AnnotationNote {
+  index: number;
+  text: string;
+  send?: boolean;
+}
 
 interface Annotation {
   id: number;
@@ -26,8 +33,8 @@ export interface AnnotateDialogProps {
   src: string;
   /** 原图宽 / 高 */
   ratio: number;
-  /** 点评论里的「发送」「添加到对话」：把这张图加进对话输入框 */
-  onAddToChat: () => void;
+  /** 点评论里的「发送」「添加到对话」：带上这条标注 */
+  onAddToChat: (note: AnnotationNote) => void;
 }
 
 export function AnnotateDialog({ open, onOpenChange, src, ratio, onAddToChat }: AnnotateDialogProps) {
@@ -89,8 +96,8 @@ function AnnotateStage({ src, ratio, onAddToChat }: Omit<AnnotateDialogProps, 'o
   };
 
   const pct = (r: Annotation['rect']) => ({ left: `${r.x * 100}%`, top: `${r.y * 100}%`, width: `${r.w * 100}%`, height: `${r.h * 100}%` });
-  const add = (a: Annotation) => {
-    onAddToChat();
+  const add = (a: Annotation, send = false) => {
+    onAddToChat({ index: a.id, text: a.text.trim(), send });
     patch(a.id, { added: true });
     setEditing(null);
   };
@@ -122,7 +129,7 @@ function AnnotateStage({ src, ratio, onAddToChat }: Omit<AnnotateDialogProps, 'o
                       added={a.added}
                       changed
                       onDelete={() => (setList((l) => l.filter((x) => x.id !== a.id)), setEditing(null))}
-                      onSend={() => add(a)}
+                      onSend={() => add(a, true)}
                       onAddToChat={() => add(a)}
                       onUpdate={() => add(a)}
                       onCollapse={closeEditing}

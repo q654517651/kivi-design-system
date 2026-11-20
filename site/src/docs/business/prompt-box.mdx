@@ -80,11 +80,15 @@ import { GenerateButtonPlayground, PromptBoxLab, PromptBoxPlayground, PromptInpu
 | `count` | `number` | — | 张数（图片、视频，1 / 2 / 4）。传了就是受控 |
 | `defaultCount` | `number` | `1` | 非受控时一开始的张数 |
 | `onCountChange` | `(count) => void` | — | 张数变了 |
+| `loras` | `LoraFieldItem[]` | — | 已选的 Lora，传了就是受控。图片模型支持 Lora 时（现在是 Qwen Image 2512），参考区最左边是 Lora 格（`LoraField size={72}`），后面隔一条 32 高的竖线再是参考区，和画布生成面板一样 |
+| `defaultLoras` | `LoraFieldItem[]` | `[]` | 非受控时一开始的 Lora |
+| `onLorasChange` | `(loras: LoraFieldItem[]) => void` | — | 已选的 Lora 变了（添加、删除、改权重） |
+| `loraOptions` | `LoraPickerItem[]` | — | 能选的 Lora：点 Lora 格弹出 `LoraPicker`（最多 4 个），新选的权重 1；生成时 `onSubmit` 带上 `loras`。不传就没有 Lora 入口；模型不支持 Lora 也不显示 |
 | `onAddReference` | `() => void` | — | 点了添加格。不传就弹出选文件，选完加进参考区（视频取第一帧当封面、带时长） |
 | `referencesExpanded` | `boolean` | — | 参考区固定展开（受控）。不传是鼠标移上去展开 |
 | `onReferencesExpandedChange` | `(expanded) => void` | — | 参考区展开收起 |
-| `onSubmit` | `(submit) => void` | — | 点了生成 / 发送，参数是任务、模型、参考方式、提示词、素材、首尾帧，以及参数面板选的值 `params`（`GenParamValues`）和张数 `count`。不能生成时不触发；发出后提示词不清空（照线上），要清自己改 `value` |
-| `generating` | `boolean` | `false` | 正在生成：生成按钮置灰，Agent 的发送按钮变停止 |
+| `onSubmit` | `(submit) => unknown` | — | 点了生成 / 发送，参数是任务、模型、参考方式、提示词、素材、首尾帧，以及参数面板选的值 `params`（`GenParamValues`）和张数 `count`。不能生成时不触发。生成发出后提示词不清空（照线上）；Agent 发出去清空，返回 `false` 表示没发出去、不清 |
+| `generating` | `boolean` | `false` | Agent 正在回复：Agent 的发送按钮变停止、不能再发；切到图片、视频等任务照常生成 |
 | `onStop` | `() => void` | — | Agent 正在回复（`generating`）时，发送按钮变成停止，点了触发 |
 | `cost` | `number` | — | 消耗的猕猴桃数。不传按任务、模型、张数取示例数字（`genTotalCost`：单张 × 张数） |
 | `placement` | `'top-start'` `'bottom-start'` | `'top-start'` | 工具条里的下拉往哪边弹：贴在页面底部往上，在页面上面（创作首页）往下 |
@@ -113,6 +117,10 @@ import { GenerateButtonPlayground, PromptBoxLab, PromptBoxPlayground, PromptInpu
 | `loading` | `boolean` | `false` | 点了等结果时用：猕猴桃换成转圈，数字和宽度不变，不能点 |
 | `disabledReason` | `ReactNode` | — | 现在不能生成的原因，比如「请输入画面描述」「请至少上传 1 个视频」。传了按钮置灰、点了不触发，悬停、键盘聚焦时上方出 Popover（提示）写这句；用 `aria-disabled`，不用 `disabled`，好收到悬停 |
 | `disabled` | `boolean` | `false` | 不用说原因的禁用；条件不满足要说原因的用 `disabledReason` |
+| `generating` | `boolean` | `false` | 任务已提交、正在生成（画布用）。和 `onStop` 一起传时按钮变停止，宽度不变（猕猴桃和数字藏起来撑宽）：`stopStartedAt` 起 `stopWindow` 内是「可停止」，正中 20 的环（粗 2.5、白 20% 轨道）从 12 点起匀速收完、中间 5 × 5 圆角 1.5 的方块，点了停止；过了窗口或没传起点是「已锁定」：禁用样子，实心圆挖掉方块，悬停上方 Popover「任务生成中不能停止」。没传 `onStop` 只置灰（主站） |
+| `stopStartedAt` | `number` | — | 拿到任务号的时间（`Date.now()`），可停止倒计时从这里起 |
+| `stopWindow` | `number` | `10000` | 可停止的时长，毫秒 |
+| `onStop` | `() => unknown` | — | 点了停止。返回 Promise 时等它的这段转圈（取消中）、不能点 |
 | `aria-label` | `string` | `"生成，消耗 N 个猕猴桃"` | 读屏用，N 是 `cost` |
 
 ### PromptInput
@@ -126,4 +134,5 @@ import { GenerateButtonPlayground, PromptBoxLab, PromptBoxPlayground, PromptInpu
 | `minRows` | `number` | `4` | 最少几行高。工具弹窗里一横条的输入框用 `1` |
 | `maxRows` | `number` | `6` | 最多长到几行，再多滚动 |
 | `maxLength` | `number` | — | 最多多少个字符（一个表情算一个，@ 标签按「@图片1」算），照线上：超了输入前拦住、粘贴超了截掉，不弹提示。PromptBox、NodePanel 传 10000（`PROMPT_MAX_LENGTH`）。不传不限 |
+| `onEnter` | `() => void` | — | 回车时触发：Shift + 回车换行，打 @ 弹出的素材菜单开着时回车先选素材，输入法选字时不算。不传就是回车换行。PromptBox 只在 Agent 模式传（回车发送），生成模式回车换行 |
 | `mentions` | `{ id, type, name, src? }[]` | — | 打 @ 能引用的素材（照线上）：打「@」在 @ 下面弹出菜单（玻璃，离 4，放不下翻到上面），列出素材（缩略图 24 / 音频图标 + 名字），接着打字按名字筛；第一项高亮，↑ ↓ 挑，回车、Tab 或点一下把打的「@名字」换成 MentionChip；Esc、点外面关掉，光标还在这个 @ 后面时不再弹。没有匹配的写「暂无结果」，@ 后面打了 7 个字以上还没有就不弹。不传或空的不弹。PromptBox、NodePanel 自带（参考素材） |

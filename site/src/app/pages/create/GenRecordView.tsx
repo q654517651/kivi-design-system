@@ -63,6 +63,8 @@ export function TaskGrid({ task, assets, ctx }: { task: Task; assets: Map<string
   const info: ViewerInfo = { prompt: task.prompt, tags: <TaskTags task={task} /> };
   const grid = gridOf(task.ratio, task.outputs.length);
   const video = task.media === 'video';
+  // 结果格的类型：音频生成出来是音频格（11-19，原来当图片画，一直显示失败）
+  const media: TileRef['media'] = video ? 'video' : task.media === 'audio' ? 'audio' : 'image';
   // 工具任务生成中先用原图垫着（视频用封面）
   const origin = task.kind === 'tool' ? task.refs[0]?.src ?? '' : '';
   return (
@@ -70,16 +72,16 @@ export function TaskGrid({ task, assets, ctx }: { task: Task; assets: Map<string
       {task.outputs.map((o, i) => {
         const base = { key: `${task.id}-${i}`, ratio: task.ratio, info, taskId: task.id, index: i };
         if (o.status === 'failed') {
-          const tile: TileRef = { ...base, media: video ? 'video' : 'image', src: '' };
+          const tile: TileRef = { ...base, media, src: '' };
           return <RecordTile key={i} tile={tile} ctx={ctx} status="failed" span={grid.span} />;
         }
         if (o.status === 'running') {
-          const tile: TileRef = { ...base, media: video ? 'video' : 'image', src: origin, poster: video && origin ? videoPoster(task.ratio) : undefined };
+          const tile: TileRef = { ...base, media, src: origin, poster: video && origin ? videoPoster(task.ratio) : undefined };
           return <RecordTile key={i} tile={tile} ctx={ctx} status="generating" badge={countdownLabel(task, now)} span={grid.span} />;
         }
         const asset = o.assetId ? assets.get(o.assetId) : undefined;
         if (!asset) return null;
-        const tile: TileRef = { ...base, media: video ? 'video' : 'image', src: asset.src, poster: asset.poster, assetId: asset.id };
+        const tile: TileRef = { ...base, media, src: asset.src, poster: asset.poster, assetId: asset.id };
         return <RecordTile key={i} tile={tile} ctx={ctx} span={grid.span} collected={asset.collected} />;
       })}
     </div>

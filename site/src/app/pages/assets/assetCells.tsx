@@ -3,22 +3,21 @@ import {
   Divider,
   Dropdown,
   GenPrompt,
-  Icon,
   IconButton,
   Menu,
   MenuItem,
-  MenuSub,
   ResultTile,
   Tag,
   placeholderImageSrc,
-  toast,
 } from '@kivi';
 import { addToFolder, removeAssets, removeFromFolder } from '../../data/assets';
 import { byId, useDB } from '../../data/db';
 import type { Asset } from '../../data/types';
 import { confirmDelete } from '../../flows/delete';
 import { AssetInfo } from '../../parts/asset-info';
+import { AudioCell, activateProps } from '../../parts/asset-cell';
 import { MediaViewer, ViewerAuthor, useLastShown, type ViewerMedia } from '../../parts/media-viewer';
+import { FolderSubMenu } from '../../parts/folder-menu';
 import { Pickable } from './Pickable';
 import { collectAssets, deleteAssets, downloadAssets, run } from './ops';
 
@@ -57,7 +56,6 @@ export interface AssetCellsOptions {
 
 export function useAssetCells(list: Asset[], { folderId, picking, picked, onToggle }: AssetCellsOptions) {
   const assets = useDB((s) => s.assets);
-  const folders = useDB((s) => s.folders);
   const [viewId, setViewId] = useState<string | null>(null);
   const [menu, setMenu] = useState<MenuState | null>(null);
 
@@ -82,15 +80,29 @@ export function useAssetCells(list: Asset[], { folderId, picking, picked, onTogg
   const card = (item: Asset): ReactNode => {
     if (item.media === 'audio') {
       return (
-        <div
-          className="tpl-as__audio"
-          style={{ cursor: picking ? undefined : 'zoom-in' }}
-          onClick={picking ? undefined : () => setViewId(item.id)}
-          onContextMenu={picking ? undefined : (e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY, item }); }}>
-          <Icon name="Music" size={24} />
-          <span className="tpl-as__audio-name" title={item.name}>{item.name}</span>
-          {item.duration && <span className="tpl-as__audio-time">{item.duration}</span>}
-        </div>
+        <AudioCell
+          name={item.name}
+          duration={item.duration}
+          onOpen={picking ? undefined : () => setViewId(item.id)}
+          onContextMenu={picking ? undefined : (e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY, item }); }}
+          collect={!picking}
+          collected={item.collected}
+          onCollectedChange={(v) => void collectAssets([item.id], v)}
+          quickActions={
+            picking
+              ? undefined
+              : [
+                  {
+                    icon: 'More',
+                    label: '更多',
+                    onClick: (e: MouseEvent<HTMLButtonElement>) => {
+                      const b = e.currentTarget.getBoundingClientRect();
+                      setMenu({ x: b.right, y: b.top - 4, item, placement: 'top-end' });
+                    },
+                  },
+                ]
+          }
+        />
       );
     }
     const video = item.media === 'video';
@@ -100,6 +112,7 @@ export function useAssetCells(list: Asset[], { folderId, picking, picked, onTogg
         style={{ cursor: picking ? undefined : 'zoom-in' }}
         onClick={picking ? undefined : (e) => !(e.target as HTMLElement).closest('button') && setViewId(item.id)}
         onPreview={video ? () => setViewId(item.id) : undefined}
+        {...activateProps(picking ? undefined : () => setViewId(item.id))}
         onContextMenu={
           picking
             ? undefined
@@ -139,22 +152,13 @@ export function useAssetCells(list: Asset[], { folderId, picking, picked, onTogg
     <>
       <Dropdown anchorPoint={menu ?? undefined} placement={menu?.placement} open={menu !== null} onOpenChange={(v) => !v && setMenu(null)}>
         <Menu aria-label="素材操作">
-          <MenuSub trigger={<MenuItem icon="AddFolder">添加至文件夹</MenuItem>}>
-            <Menu aria-label="选择文件夹">
-              {folders.length === 0 && <MenuItem disabled>暂无文件夹</MenuItem>}
-              {folders.map((f) => (
-                <MenuItem key={f.id} icon="Folder" onClick={() => menu && void run(() => addToFolder([menu.item.id], f.id), '已添加至文件夹')}>
-                  {f.name}
-                </MenuItem>
-              ))}
-            </Menu>
-          </MenuSub>
+          <FolderSubMenu onPick={(f) => menu && void run(() => addToFolder([menu.item.id], f), '已添加至文件夹')} />
           {folderId && (
             <MenuItem icon="Folder" onClick={() => menu && void run(() => removeFromFolder([menu.item.id], folderId), '已移出文件夹')}>
               移出文件夹
             </MenuItem>
           )}
-          <MenuItem icon="Download" onClick={downloadAssets}>
+          <MenuItem icon="Download" onClick={() => menu && downloadAssets([menu.item])}>
             下载
           </MenuItem>
           <Divider />
@@ -174,7 +178,7 @@ export function useAssetCells(list: Asset[], { folderId, picking, picked, onTogg
         actions={
           shownView && (
             <>
-              <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => toast.info('已开始下载')} />
+              <IconButton icon="Download" label="下载" variant="secondary" size={36} onClick={() => downloadAssets([shownView])} />
               <IconButton icon="Delete" label="删除" variant="secondary" size={36} onClick={deleteViewing} />
               <IconButton
                 icon={viewCollected ? 'CollectSolid' : 'Collect'}

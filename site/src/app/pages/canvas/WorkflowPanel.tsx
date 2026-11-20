@@ -1,20 +1,19 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { Avatar, Button, Dialog, Divider, Dropdown, EmptyState, ExploreCard, Menu, MenuItem, Popover, ScrollArea, TabItem, Tabs, placeholderImageSrc, toast } from '@kivi';
+import { Divider, Dropdown, EmptyState, ExploreCard, Menu, MenuItem, Popover, ScrollArea, TabItem, Tabs, placeholderImageSrc, toast } from '@kivi';
 import { attempt } from '../../flows/errors';
 import { confirmDelete } from '../../flows/delete';
 import { useBriefLoading } from '../../hooks/useBriefLoading';
 import { usePaged } from '../../hooks/usePaged';
 import { cloneTemplate, deleteWorkflow, officialWorkflows, renameWorkflow, useMyWorkflows, WORKFLOW_CATEGORIES } from '../../data/workflows';
 import type { Workflow } from '../../data/types';
-import { useLastShown } from '../../parts/media-viewer';
 import { NameDialog } from '../assets/NameDialog';
 import { CardSkeleton, CategoryTabs } from '../explore/shared';
-import { TemplatePreview } from './TemplatePreview';
+import { CanvasPreviewDialog } from '../../parts/canvas-preview';
 
 /*
   画布底部「工作流」（照线上 left-toolbar/workflow-panel）：点按钮往上弹一块面板（玻璃），再点、点外面、Esc 关。
   - 选项卡：官方工作流（下面一排分类）/ 我的工作流。一行 3 张卡，滚到底加载下一屏。
-  - 点卡片：预览（只读画布，看节点和连线），底下「应用画布」。右键：查看、应用；我的还能重命名、删除。
+  - 点卡片：预览（只读画布，看节点和连线），右上角「应用画布」（CanvasPreviewDialog，和探索页同一个）。右键：查看、应用；我的还能重命名、删除。
   - 应用：整段节点复制进画布、放在视口中心，选中并放进视野，Toast「工作流应用成功」，面板关上。
   预览、确认删除、重命名开着时点外面不关面板（照线上）。
 */
@@ -36,7 +35,6 @@ export function WorkflowPanel({ onApply, children, open, onOpenChange }: Workflo
   const [tab, setTab] = useState<'public' | 'private'>('public');
   const [category, setCategory] = useState('all');
   const [view, setView] = useState<Workflow | null>(null);
-  const shownView = useLastShown(view);
   const [menu, setMenu] = useState<{ x: number; y: number; wf: Workflow } | null>(null);
   const [renaming, setRenaming] = useState<Workflow | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -74,7 +72,7 @@ export function WorkflowPanel({ onApply, children, open, onOpenChange }: Workflo
   };
   const remove = async (wf: Workflow) => {
     setConfirming(true);
-    await confirmDelete(() => deleteWorkflow(wf.id), { description: '删除后将无法恢复，是否确认删除？' });
+    await confirmDelete(() => deleteWorkflow(wf.id));
     setConfirming(false);
     if (view?.id === wf.id) setView(null);
   };
@@ -157,33 +155,13 @@ export function WorkflowPanel({ onApply, children, open, onOpenChange }: Workflo
         </Menu>
       </Dropdown>
 
-      {/* 预览：标题、作者（官方是 KIVI，我的是自己），只读画布，关闭和「应用画布」（照线上 WorkflowPreview） */}
-      <Dialog
-        size={1200}
-        title={shownView?.name}
-        description={
-          shownView && (
-            <span className="tpl-ex__detail-author">
-              <Avatar name={shownView.scope === 'private' ? '我' : 'KIVI'} src={placeholderImageSrc('ip-peek', '1:1')} size={24} />
-              {shownView.scope === 'private' ? '我' : 'KIVI'}
-            </span>
-          )
-        }
-        open={view !== null}
-        onOpenChange={(v) => !v && setView(null)}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setView(null)}>
-              关闭
-            </Button>
-            <Button variant="primary" onClick={() => view && apply(view)}>
-              应用画布
-            </Button>
-          </>
-        }
-      >
-        {shownView && <TemplatePreview template={shownView.template} className="tpl-ex__canvas-preview" />}
-      </Dialog>
+      {/* 预览：只读画布，作者（官方是 KIVI，我的是自己），右上角「应用画布」（照线上 WorkflowPreview，和探索页预览同一个） */}
+      <CanvasPreviewDialog
+        item={view && { name: view.name, author: { name: view.scope === 'private' ? '我' : 'KIVI', avatar: placeholderImageSrc('ip-peek', '1:1') }, template: view.template }}
+        onClose={() => setView(null)}
+        actionLabel="应用画布"
+        onAction={() => view && apply(view)}
+      />
 
       <NameDialog
         state={renaming && { title: '重命名', initial: renaming.name }}

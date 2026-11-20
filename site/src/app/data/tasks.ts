@@ -19,8 +19,6 @@ export type TaskInput = Omit<Task, 'id' | 'outputs' | 'status' | 'createdAt' | '
   count?: number;
   /** 估时（秒），不传按类型 */
   seconds?: number;
-  /** 这次固定失败（演示：工具第一次生成失败一次）；不传看演示开关「下次生成失败」 */
-  forceFail?: boolean;
 };
 
 /** 平时的估时（秒）；演示开关「快速出结果」打开时一律 3 秒 */
@@ -41,11 +39,11 @@ function charge(cost: number) {
 }
 
 /** 提交一个生成任务。余额不够、断网会抛 ApiError，交给 handleError */
-export function submitTask({ count = 1, seconds, forceFail, ...input }: TaskInput): Promise<Task> {
+export function submitTask({ count = 1, seconds, ...input }: TaskInput): Promise<Task> {
   return request(() => {
     charge(input.cost);
     const now = Date.now();
-    const willFail = forceFail || demo.get().failNext || undefined;
+    const willFail = demo.get().failNext || undefined;
     if (willFail) setDemo({ failNext: false });
     const task: Task = {
       ...input,

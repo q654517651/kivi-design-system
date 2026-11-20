@@ -22,7 +22,7 @@ export function TaskTags({ task }: { task: Task }) {
     return (
       <>
         <Tag icon={tool?.icon}>{task.label ?? tool?.name}</Tag>
-        <GenPromptRefs label={media === 'image' ? '原图' : '原视频'} items={[{ type: media, src: media === 'video' ? videoPoster(task.ratio) : task.refs[0]?.src }]} />
+        <GenPromptRefs label={media === 'image' ? '原图' : '原视频'} items={media === 'video' ? task.refs.map(() => ({ type: media, src: videoPoster(task.ratio) })) : [{ type: media, src: task.refs[0]?.src }]} />
       </>
     );
   }

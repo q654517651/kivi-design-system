@@ -105,7 +105,7 @@ export function GenerateButtonPlayground() {
       controls={[
         { key: 'size', label: '尺寸', type: 'segment', value: '32', options: [['28', '小'], ['32', '中'], ['36', '大']] },
         { key: 'cost', label: '消耗', type: 'text', value: '99' },
-        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['active', '按下'], ['disabled', '禁用'], ['loading', '加载中']] },
+        { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['active', '按下'], ['disabled', '禁用'], ['loading', '加载中'], ['countdown', '可停止'], ['locked', '已锁定']] },
       ]}
       render={(s) => (
         <GenerateButton
@@ -114,6 +114,10 @@ export function GenerateButtonPlayground() {
           className={GEN_CLASS[s.state]}
           disabled={s.state === 'disabled' || undefined}
           loading={s.state === 'loading' || undefined}
+          // 可停止：每次切到这一档重新倒数 10 秒，倒完自己变已锁定；点了停止转圈 1 秒
+          generating={s.state === 'countdown' || s.state === 'locked' || undefined}
+          stopStartedAt={s.state === 'countdown' ? Date.now() : undefined}
+          onStop={() => new Promise((r) => setTimeout(r, 1000))}
         />
       )}
     />

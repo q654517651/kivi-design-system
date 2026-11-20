@@ -23,6 +23,8 @@ export interface ToolJob {
   media: Media;
   /** 原图 / 原视频 */
   src: string;
+  /** 视频拼接的第二段 */
+  src2?: string;
   ratio: number;
   /** 出来的结果大概是什么比例（扩图按扩图框） */
   targetRatio: number;

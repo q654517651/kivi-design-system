@@ -1,5 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { Connector, DropOverlay, Dropdown, toast } from '@kivi';
+import { copyImage, copyText } from '../../flows/files';
+import { downloadNode } from './download';
 import { useFileDrop } from '@kivi/hooks';
 import {
   addFileNodes,
@@ -44,6 +46,7 @@ import { TextNodeEdit } from './TextNodeEdit';
 import { cancelTidy, isTidyPreviewing, keepTidy, previewTidy, resizeNode } from '../../data/canvas-layout';
 import { TEXT_NODE_MAX, TEXT_NODE_MIN } from '../../rules/canvas-group';
 // 浮层（节点工具栏、生成面板）、视图工具栏的样式和业务页的小画布同一份
+import type { AnnotationNote } from './AnnotateDialog';
 import '../../../docs/business/canvas.demos.css';
 
 /*
@@ -75,7 +78,7 @@ interface CanvasBoardProps {
   /** 全屏看一张 */
   onView: (item: CanvasItem, node: CanvasNode) => void;
   /** 添加到对话 */
-  onAddToChat?: (ids: string[]) => void;
+  onAddToChat?: (ids: string[], note?: AnnotationNote) => void;
 }
 
 type Drag =
@@ -98,7 +101,6 @@ type Menu =
   | { kind: 'node'; x: number; y: number };
 
 const clampK = (k: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, k));
-const download = () => toast.success('已开始下载');
 
 export const CanvasBoard = forwardRef<CanvasBoardHandle, CanvasBoardProps>(function CanvasBoard({ canvasId, onView, onAddToChat }, ref) {
   const doc = useCanvasDoc(canvasId);
@@ -320,6 +322,8 @@ export const CanvasBoard = forwardRef<CanvasBoardHandle, CanvasBoardProps>(funct
       capture();
       return;
     }
+    // 节点外的按钮（连线中间的删除这类）：留给按钮自己，不框选、不抓指针，不然 click 会被画布截走
+    if (t.closest('button, a, input, textarea')) return;
     // 空白：框选
     if (!e.shiftKey) setSel(NONE);
     setStackOpen(null);
@@ -470,6 +474,7 @@ export const CanvasBoard = forwardRef<CanvasBoardHandle, CanvasBoardProps>(funct
   };
   useCanvasKeys({
     canvasId,
+    boardRef: vp,
     sel,
     setSel: (nodes, edges = []) => setSel({ nodes, edges }),
     onSpace: setSpace,
@@ -616,7 +621,7 @@ export const CanvasBoard = forwardRef<CanvasBoardHandle, CanvasBoardProps>(funct
                   fileRef.current?.click();
                 }}
                 onView={(item) => onView(item, n)}
-                onDownload={download}
+                onDownload={() => downloadNode(doc, n)}
                 onGuideSelect={(option) => (n.type === 'text' && option === '自己编写内容' ? setEditing(n.id) : toast.info('在下面的面板里写提示词，点生成'))}
                 ready={isProcessor(n) ? (n.type === 'clip' ? canOpenClip(doc, n) : canOpenPack(doc, n)) : undefined}
               />
@@ -635,7 +640,7 @@ export const CanvasBoard = forwardRef<CanvasBoardHandle, CanvasBoardProps>(funct
         ))}
         {marquee && <div className="tpl-cb__marquee" style={{ left: marquee.x, top: marquee.y, width: marquee.w, height: marquee.h, '--cb-k': view.k } as CSSProperties} />}
         {selNode && selNode.type !== 'group' && (
-          <NodeFloat canvasId={canvasId} doc={doc} node={selNode} busy={busyOf(selNode)} zoom={view.k} onView={(item) => onView(item, selNode)} onDownload={download} onAddToChat={onAddToChat} />
+          <NodeFloat canvasId={canvasId} doc={doc} node={selNode} busy={busyOf(selNode)} zoom={view.k} onView={(item) => onView(item, selNode)} onDownload={() => downloadNode(doc, selNode)} onAddToChat={onAddToChat} />
         )}
         {selNode?.type === 'group' && <GroupFloat canvasId={canvasId} doc={doc} group={selNode} zoom={view.k} />}
         {/* 多选浮条：选中两个及以上，在选区上方 */}
@@ -747,8 +752,8 @@ export const CanvasBoard = forwardRef<CanvasBoardHandle, CanvasBoardProps>(funct
               setMenu(null);
             }}
             onCopyContent={() => {
-              if (one?.type === 'text' && one.text) void navigator.clipboard?.writeText(one.text).catch(() => undefined);
-              toast.success(CANVAS_TEXT.copied);
+              if (one?.type === 'text' && one.text) void copyText(one.text, CANVAS_TEXT.copied);
+              else if (one?.type === 'image' && one.items?.[0]) void copyImage(one.items[0].src, CANVAS_TEXT.copied);
               setMenu(null);
             }}
             onScatter={() => {

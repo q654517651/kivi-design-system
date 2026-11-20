@@ -1,5 +1,5 @@
 import { ApiError, request } from './api';
-import { scriptOf, pickScript, type Beat, type ScriptGenerate } from './agent-scripts';
+import { kindOf, scriptOf, pickScript, type Beat, type ScriptGenerate } from './agent-scripts';
 import { db } from './db';
 import { demo } from './demo';
 import { uid } from './store';
@@ -8,7 +8,7 @@ import { agentCreateNode, executeNode, getDoc, nodeCost } from './canvas-doc';
 import type { AgentBlock, AgentTurn, AgentUserMessage } from './types';
 
 /*
-  Agent 的假后端：发消息 → 随机挑一个剧本 → 一步步播（思考、逐字说话、工具调用一行行出、生成、等结果）。
+  Agent 的假后端：发消息 → 按带的素材挑一组、组里随机挑一个剧本（agent-scripts.ts） → 一步步播（思考、逐字说话、工具调用一行行出、生成、等结果）。
   生成走 submitTask，和普通生成同一套（扣费、倒计时、失败退回、结果进素材）。
   播放进度存在 db 里，刷新后接着播。页面只调 sendAgent / stopAgent / regenerateAgent。
 */
@@ -67,10 +67,22 @@ function advance(t: AgentTurn, now: number): AgentTurn {
       if (!submitting.has(t.id)) void startGenerate(t.id, beat.generate);
       return t;
     }
-    const task = db.get().tasks.find((x) => x.id === last.taskId);
-    return !task || task.status !== 'running' ? next(t, now) : t;
+    return afterTask(t, last.taskId, now);
   }
   return t;
+}
+
+/**
+ * 等生成结果：还在跑就等；成功往下播；失败、取消就结束这一轮，出错误卡，不再播「生成好了」（11-20 修 R-8）
+ */
+function afterTask(t: AgentTurn, taskId: string, now: number): AgentTurn {
+  const task = db.get().tasks.find((x) => x.id === taskId);
+  if (task?.status === 'running') return t;
+  if (task?.status === 'failed' || task?.status === 'cancelled') {
+    const text = task.status === 'failed' ? '生成失败，消耗猕猴桃已退回' : '生成已取消';
+    return { ...t, status: 'failed', blocks: [...t.blocks, { kind: 'error', text }] };
+  }
+  return next(t, now);
 }
 
 /**
@@ -83,10 +95,7 @@ function canvasGenerate(t: AgentTurn, g: ScriptGenerate, now: number): AgentTurn
   if (submitting.has(t.id)) return t;
   const last = lastBlock(t);
   // 已经在等结果
-  if (last?.kind === 'task') {
-    const task = db.get().tasks.find((x) => x.id === last.taskId);
-    return !task || task.status !== 'running' ? next(t, now) : t;
-  }
+  if (last?.kind === 'task') return afterTask(t, last.taskId, now);
   if (last?.kind === 'confirm') {
     if (last.answer === 'cancelled') return { ...t, status: 'done' };
     if (last.answer !== 'approved') return t.status === 'waiting' ? t : { ...t, status: 'waiting' };
@@ -110,9 +119,18 @@ async function startCanvasRun(turnId: string, canvasId: string, nodeIds: string[
   try {
     for (const id of nodeIds) await executeNode(canvasId, id);
     const taskIds = nodeIds.map((id) => getDoc(canvasId).nodes.find((n) => n.id === id)?.taskId).filter((x): x is string => !!x);
+    // 一个任务都没挂上（比如确认前节点被删了）：结束这一轮，不然确认卡一直是最后一块，会反复执行
+    if (!taskIds.length) throw new Error('no-task');
     patchTurn(turnId, (x) => (x.status === 'running' ? { ...x, beatAt: Date.now(), blocks: [...x.blocks, ...taskIds.map((taskId) => ({ kind: 'task' as const, taskId }))] } : x));
   } catch (e) {
-    const text = e instanceof ApiError && e.code === 'balance' ? '猕猴桃余额不足，这次没有生成' : e instanceof ApiError ? e.message : '生成确认提交失败，请重新发起生成';
+    const text =
+      e instanceof ApiError && e.code === 'balance'
+        ? '猕猴桃余额不足，这次没有生成'
+        : e instanceof ApiError
+          ? e.message
+          : e instanceof Error && e.message === 'no-task'
+            ? '要生成的节点已经不在画布上，这次没有生成'
+            : '生成确认提交失败，请重新发起生成';
     patchTurn(turnId, (x) => (x.status === 'running' ? { ...x, status: 'failed', blocks: [...x.blocks, { kind: 'error', text }] } : x));
   } finally {
     submitting.delete(turnId);
@@ -150,7 +168,7 @@ async function startGenerate(turnId: string, g: ScriptGenerate) {
       prompt: t.user.text,
       model: g.model,
       params: g.params,
-      refs: t.user.refs.map((r) => ({ type: r.type, src: r.src })),
+      refs: t.user.refs.flatMap((r) => (r.type === 'file' ? [] : [{ type: r.type, src: r.src }])),
       ratio: g.ratio,
       count: g.count,
       cost: g.unitCost * g.count,
@@ -197,7 +215,7 @@ if (typeof window !== 'undefined') tick();
 export function sendAgent(chatId: string, user: AgentUserMessage, canvas?: AgentTurn['canvas']): Promise<AgentTurn> {
   return request(() => {
     const now = Date.now();
-    const turn: AgentTurn = { id: uid('ag'), chatId, user, script: pickScript(), step: 0, beatAt: now, status: 'running', blocks: [], createdAt: now, canvas };
+    const turn: AgentTurn = { id: uid('ag'), chatId, user, script: pickScript(kindOf(user.refs)), step: 0, beatAt: now, status: 'running', blocks: [], createdAt: now, canvas };
     db.set((s) => ({
       ...s,
       agentTurns: [...s.agentTurns, turn],
@@ -233,10 +251,10 @@ export function stopAgent(turnId: string) {
   });
 }
 
-/** 重新生成：同一条用户消息，换一个剧本从头播 */
+/** 重新生成：同一条用户消息，同一组里换一个剧本从头播 */
 export function regenerateAgent(turnId: string) {
   return request(() => {
-    patchTurn(turnId, (x) => ({ ...x, script: pickScript(x.script), step: 0, beatAt: Date.now(), status: 'running', blocks: [] }));
+    patchTurn(turnId, (x) => ({ ...x, script: pickScript(scriptOf(x.script).kind, x.script), step: 0, beatAt: Date.now(), status: 'running', blocks: [] }));
     tick();
   });
 }

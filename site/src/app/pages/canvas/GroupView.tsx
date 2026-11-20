@@ -3,6 +3,7 @@ import { AssetThumb, Button, ButtonGroup, Input, Menu, MenuItem, NodeWrapper, Po
 import { arrangeTargets, arrangeNodes } from '../../data/canvas-layout';
 import { cancelGroup, childrenOf, createWorkflow, executeGroup, groupBusy, groupCover, updateWorkflow, useGroupRun } from '../../data/canvas-group';
 import { ungroup, updateNode } from '../../data/canvas-doc';
+import { downloadNodes } from './download';
 import { useMyWorkflows } from '../../data/workflows';
 import { attempt } from '../../flows/errors';
 import { GROUP_TEXT, WORKFLOW_NAME_MAX } from '../../rules/canvas-group';
@@ -211,7 +212,7 @@ export function GroupFloat({ canvasId, doc, group, zoom }: GroupFloatProps) {
           {GROUP_TEXT.ungroup}
         </Button>
         <ArrangeButton disabled={arrangeTargets(doc, [group.id]).length < 2} onPick={(mode) => arrangeNodes(canvasId, [group.id], mode)} />
-        <Button leftIcon="Download" disabled={busy || !canDownload} onClick={() => toast.success(GROUP_TEXT.downloadStarted)}>
+        <Button leftIcon="Download" disabled={busy || !canDownload} onClick={() => downloadNodes(kids)}>
           {GROUP_TEXT.download}
         </Button>
       </ButtonGroup>

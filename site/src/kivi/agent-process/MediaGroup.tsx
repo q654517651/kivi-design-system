@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -9,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { EmptyState, GENERATION_FAILED_TITLE } from '../feedback';
+import { GeneratingDots } from '../generating/GeneratingDots';
 import { Icon } from '../Icon';
 import type { IconName } from '../icons';
 import { Tag } from '../tags-avatar';
@@ -26,8 +28,8 @@ export interface MediaGroupItem {
   src?: string;
   /** 宽高比：数字（宽 / 高）或「16:9」这种写法，限制在 9:16 到 16:9 之间，默认 1:1 */
   ratio?: number | string;
-  /** 结果：成功 / 失败，默认成功 */
-  status?: 'done' | 'failed';
+  /** 结果：生成中 / 成功 / 失败，默认成功。生成中这一格是生成中点阵（11-19 照线上：生成中也显示这一组） */
+  status?: 'generating' | 'done' | 'failed';
   /** 节点名，悬停时显示在左下 */
   name?: string;
 }
@@ -37,7 +39,7 @@ export interface MediaGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   items: MediaGroupItem[];
   /** 产出类型，决定标题行的图标和文字，默认图片 */
   type?: MediaGroupType;
-  /** 标题行文字。不传按结果算，比如「图片已生成 ×2，图片生成失败 ×3」 */
+  /** 标题行文字。不传按结果算：生成中「图片生成中 ×4」（扫光），完了「图片已生成 ×2，图片生成失败 ×3」 */
   title?: ReactNode;
   /** 失败的那几张：标题，默认「生成失败，消耗猕猴桃已退回」。失败态就是 EmptyState 生成失败 · 96，和结果格、节点一样 */
   failedTitle?: ReactNode;
@@ -45,7 +47,7 @@ export interface MediaGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
   failedDescription?: ReactNode;
   /** 展开：受控 */
   expanded?: boolean;
-  /** 展开：非受控的初始值，默认收起 */
+  /** 展开：非受控的初始值，默认收起。生成中一直展开、不能收起；生成中变成全部生成完，停 1 秒自己收起 */
   defaultExpanded?: boolean;
   /** 展开 / 收起时触发 */
   onExpandedChange?: (expanded: boolean) => void;
@@ -60,6 +62,7 @@ const GAP = 12;
 const LAYER_OFFSET = 4;
 const LAYER_ROTATE = 2;
 const MIN_RATIO = 9 / 16;
+const AUTO_COLLAPSE_MS = 1000;
 const MAX_RATIO = 16 / 9;
 
 const TYPE_TEXT: Record<MediaGroupType, { label: string; icon: IconName }> = {
@@ -97,7 +100,7 @@ export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function M
     failedTitle = GENERATION_FAILED_TITLE,
     failedDescription,
     expanded: expandedProp,
-    defaultExpanded = false,
+    defaultExpanded,
     onExpandedChange,
     onItemClick,
     className,
@@ -106,9 +109,22 @@ export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function M
   },
   ref,
 ) {
-  const [expandedState, setExpanded] = useControllable(expandedProp, defaultExpanded, onExpandedChange);
-  const collapsible = items.length > 1;
+  const generating = items.some((it) => it.status === 'generating');
+  const [expandedState, setExpanded] = useControllable(expandedProp, defaultExpanded ?? false, onExpandedChange);
+  // 一张的、还有在生成的都不能收起（11-19 用户定：生成中一直展开，生成完停 1 秒自己收起）
+  const collapsible = items.length > 1 && !generating;
   const expanded = !collapsible || expandedState;
+
+  // 生成中 → 全部生成完：停 1 秒自己收起（照线上 AUTO_COLLAPSE_DELAY）。一张的不能收起，挂上时就生成完的不管
+  const wasGenerating = useRef(generating);
+  useEffect(() => {
+    const was = wasGenerating.current;
+    wasGenerating.current = generating;
+    if (!was || generating || items.length <= 1) return;
+    const t = setTimeout(() => setExpanded(false), AUTO_COLLAPSE_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generating]);
 
   // 列宽跟着容器宽度走
   const boxRef = useRef<HTMLDivElement>(null);
@@ -167,12 +183,14 @@ export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function M
     };
   });
 
-  const done = items.filter((it) => it.status !== 'failed').length;
+  const done = items.filter((it) => it.status !== 'failed' && it.status !== 'generating').length;
   const failed = items.length - done;
   const { label, icon } = TYPE_TEXT[type];
   const heading =
     title ??
-    [done > 0 && `${label}已生成 ×${done}`, failed > 0 && `${label}生成失败 ×${failed}`].filter(Boolean).join('，');
+    (generating
+      ? `${label}生成中 ×${items.length}`
+      : [done > 0 && `${label}已生成 ×${done}`, failed > 0 && `${label}生成失败 ×${failed}`].filter(Boolean).join('，'));
 
   return (
     <div
@@ -182,7 +200,7 @@ export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function M
       style={{ '--kv-media-group-duration': duration, ...style } as CSSProperties}
       {...rest}
     >
-      <ProcessRow icon={icon} action={heading} arrow={collapsible} expanded={expanded} onExpandedChange={setExpanded} />
+      <ProcessRow icon={icon} action={heading} status={generating ? 'running' : undefined} arrow={collapsible} expanded={expanded} onExpandedChange={setExpanded} />
       <div
         ref={boxRef}
         className="kv-media-group__body"
@@ -217,25 +235,28 @@ export const MediaGroup = forwardRef<HTMLDivElement, MediaGroupProps>(function M
               data-cover={isCover ? '' : undefined}
               data-hidden={hidden ? '' : undefined}
               data-failed={tileFailed ? '' : undefined}
+              data-generating={it.status === 'generating' ? '' : undefined}
               tabIndex={hidden ? -1 : undefined}
               aria-hidden={hidden || undefined}
               aria-label={expanded ? `在画布里定位：${it.name ?? `第 ${i + 1} 个结果`}` : `展开 ${items.length} 个结果`}
               style={{ width: open.w, height: open.h, transform: `translate(${p.x}px, ${p.y}px) scale(${p.s})` }}
               onClick={() => (expanded ? onItemClick?.(it) : setExpanded(true))}
             >
-              {tileFailed ? (
+              {it.status === 'generating' ? (
+                <GeneratingDots type={type} />
+              ) : tileFailed ? (
                 <span className="kv-media-group__failed">
                   <EmptyState type="failed" size={96} title={failedTitle} description={failedDescription} />
                 </span>
               ) : (
                 it.src && <img className="kv-media-group__media" src={it.src} alt="" draggable={false} />
               )}
-              {it.name && !tileFailed && (
+              {it.name && !tileFailed && it.status !== 'generating' && (
                 <span className="kv-media-group__overlay" aria-hidden>
                   <span className="kv-media-group__name">{it.name}</span>
                 </span>
               )}
-              {!tileFailed && (
+              {!tileFailed && it.status !== 'generating' && (
                 <span className="kv-media-group__locate" aria-hidden>
                   <Icon name="Locate" />
                 </span>

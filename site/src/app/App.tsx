@@ -4,7 +4,7 @@ import { Notifier, Toaster } from '@kivi';
 import { PreviewHost } from '../docs/components/media.demos';
 import { TemplateFrame } from '../docs/templates/frame';
 import '../docs/templates/templates.css';
-import { useDB } from './data/db';
+import { db, useDB } from './data/db';
 import { useBalanceTip } from './flows/balance-tip';
 import { FlowHost } from './flows/dialogs';
 import { AssetsPage } from './pages/assets';
@@ -31,11 +31,27 @@ import './app.css';
 const PAGES: AppPage[] = ['create', 'explore', 'tools', 'assets', 'canvas'];
 const NONE = { kind: 'chat' as HistoryKind, id: '' };
 
-export function KiviApp({ page, onNavigate }: { page: AppPage; onNavigate: (page: AppPage) => void }) {
+export function KiviApp({
+  page,
+  onNavigate,
+  routeId,
+  onSelectedChange,
+}: {
+  page: AppPage;
+  onNavigate: (page: AppPage) => void;
+  /** 地址里带的对话 / 画布 id（单独 Tab 才有） */
+  routeId?: string;
+  /** 选中的对话 / 画布变了：单独 Tab 写回地址，刷新、新标签页打开都停在它 */
+  onSelectedChange?: (id: string) => void;
+}) {
   useBalanceTip();
   const [collapsed, setCollapsed] = useState(false);
   // 侧栏选中哪条对话 / 画布：进来是创作首页，什么都不选
-  const [selected, setSelected] = useState(NONE);
+  const [selected, setSelected] = useState<{ kind: HistoryKind; id: string }>(() => {
+    if (routeId && page === 'canvas' && db.get().canvases.some((c) => c.id === routeId)) return { kind: 'canvas', id: routeId };
+    if (routeId && page === 'create' && db.get().chats.some((c) => c.id === routeId)) return { kind: 'chat', id: routeId };
+    return NONE;
+  });
   // 进探索页停在哪个选项卡：创作首页「查看全部」带过来
   const [exploreTab, setExploreTab] = useState<ExploreTab>('discover');
   // 创作首页广场的搜索框里填的字，进探索页时带过去
@@ -45,6 +61,16 @@ export function KiviApp({ page, onNavigate }: { page: AppPage; onNavigate: (page
 
   // 选中的对话被删掉了，回到创作首页
   const chats = useDB((s) => s.chats);
+  // 地址带 id 进来（新标签页打开、刷新）：选中那条对话 / 那块画布（11-20 修 S-1）
+  useEffect(() => {
+    if (!routeId) return;
+    if (page === 'canvas' && db.get().canvases.some((c) => c.id === routeId)) setSelected({ kind: 'canvas', id: routeId });
+    if (page === 'create' && db.get().chats.some((c) => c.id === routeId)) setSelected({ kind: 'chat', id: routeId });
+  }, [page, routeId]);
+  useEffect(() => {
+    onSelectedChange?.((page === 'canvas' && selected.kind === 'canvas') || (page === 'create' && selected.kind === 'chat') ? selected.id : '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, selected]);
   useEffect(() => {
     if (selected.kind === 'chat' && selected.id && !chats.some((c) => c.id === selected.id)) setSelected(NONE);
   }, [chats, selected]);
@@ -75,10 +101,21 @@ export function KiviApp({ page, onNavigate }: { page: AppPage; onNavigate: (page
     setCanvasIntro(message && typeof message === 'object' && 'text' in message ? message : undefined);
     onNavigate('canvas');
   };
+  // 打开已有的那块画布（创作首页最近项目、资产页画布卡）
+  const openCanvasById = (id: string) => {
+    setSelected({ kind: 'canvas', id });
+    setSkill(undefined);
+    setCanvasIntro(undefined);
+    onNavigate('canvas');
+  };
   // 直接进画布页没带画布（比如新 Tab 打开）：打开最近改过的那块
   const canvases = useDB((s) => s.canvases);
   const recentCanvas = canvases.reduce<string | undefined>((best, c) => (!best || c.updatedAt > (canvases.find((x) => x.id === best)?.updatedAt ?? 0) ? c.id : best), undefined);
   const canvasId = selected.kind === 'canvas' && selected.id ? selected.id : recentCanvas;
+  // 画布全删了还进画布页：建一块，不留空白页（11-20 修 S-10）
+  useEffect(() => {
+    if (page === 'canvas' && !canvasId) setSelected({ kind: 'canvas', id: ensureCanvas() });
+  }, [page, canvasId]);
 
   return (
     <>
@@ -113,6 +150,8 @@ export function KiviApp({ page, onNavigate }: { page: AppPage; onNavigate: (page
               // 提交后进新建的那个对话（侧栏里它排在最前）
               onSubmit={(chatId) => setSelected({ kind: 'chat', id: chatId })}
               onOpenCanvas={openCanvas}
+              onOpenProject={openCanvasById}
+              onUseSkill={(name) => openCanvas(undefined, name)}
               onExplore={(tab, keyword = '') => {
                 setExploreTab(tab);
                 setExploreKeyword(keyword);
@@ -127,11 +166,11 @@ export function KiviApp({ page, onNavigate }: { page: AppPage; onNavigate: (page
             initialTab={exploreTab}
             initialKeyword={exploreKeyword}
             onUseSkill={(name) => openCanvas(undefined, name)}
-            onOpenCanvas={openCanvas}
+            onOpenCanvas={openCanvasById}
           />
         )}
         {page === 'tools' && <ToolsPage account={<Wallet className="tpl-at__wallet" />} />}
-        {page === 'assets' && <AssetsPage />}
+        {page === 'assets' && <AssetsPage onOpenCanvas={openCanvasById} />}
         {/* 公共的头：右上角余额和头像，每一页一样的位置（中线离顶 32，和侧栏 Logo 对齐），换页不动。AI 工具页的放进右栏顶上 */}
         {page !== 'tools' && <Wallet />}
       </div>
@@ -166,7 +205,7 @@ export function UiPreview() {
 
 /** 单独一个 Tab：#/app/<页>，铺满窗口，没有网站的目录和顶栏 */
 export default function KiviAppRoute() {
-  const { page } = useParams();
+  const { page, id } = useParams();
   const go = useNavigate();
   useEffect(() => {
     const prev = document.title;
@@ -178,7 +217,15 @@ export default function KiviAppRoute() {
   if (!PAGES.includes(page as AppPage)) return <Navigate to="/app/create" replace />;
   return (
     <div className="tpl-app">
-      <KiviApp page={page as AppPage} onNavigate={(next) => go(`/app/${next}`)} />
+      <KiviApp
+        page={page as AppPage}
+        onNavigate={(next) => go(`/app/${next}`)}
+        routeId={id}
+        onSelectedChange={(sel) => {
+          const want = sel ? `/app/${page}/${sel}` : `/app/${page}`;
+          if (location.hash.slice(1) !== want) go(want, { replace: true });
+        }}
+      />
     </div>
   );
 }

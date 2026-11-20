@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button, Dropdown, EmptyState, FolderCard, IconButton, Menu, MenuItem, ProjectCard, ScrollArea } from '@kivi';
 import { useDB } from '../../data/db';
-import { deleteCanvas } from '../../data/canvases';
 import type { CanvasMeta } from '../../data/types';
-import { confirmDelete } from '../../flows/delete';
+import { confirmDelete, confirmDeleteCanvases } from '../../flows/delete';
+import { shareCanvas } from '../../flows/share';
 import { AssetBatchActions, BatchControls } from './BatchBar';
 import { Pickable } from './Pickable';
 import { useAssetCells } from './assetCells';
@@ -13,13 +13,16 @@ import { useAssetCells } from './assetCells';
   头：返回 + 标题（+ 右边操作），内容和首页同一套格子；批量编辑沿用首页生成历史那条批量条。
 */
 
-/** 二级页的头：返回 + 标题，标题旁可放「⋯」，右边放操作 */
+/** 二级页的头：返回 + 标题是一个无底按钮（左边返回箭头，点标题也能返回，11-20 用户定：大家第一反应会点标题返回），标题旁可放「⋯」，右边放操作 */
 function SubHead({ title, onBack, aside, children }: { title: string; onBack: () => void; aside?: ReactNode; children?: ReactNode }) {
   return (
     <header className="tpl-as__head">
       <div className="tpl-as__head-title">
-        <IconButton icon="LeftArrow" label="返回" variant="ghost-muted" size={28} onClick={onBack} />
-        <h2>{title}</h2>
+        <h2>
+          <Button variant="ghost" size={32} leftIcon="LeftArrow" aria-label={`${title}，返回`} onClick={onBack}>
+            {title}
+          </Button>
+        </h2>
         {aside}
       </div>
       <div className="tpl-as__head-actions">{children}</div>
@@ -162,8 +165,11 @@ export function FolderPage({ id, onBack, onRename, onDelete }: { id: string; onB
 export function CanvasesPage({
   onBack,
   onCreate,
+  onOpen,
   onRename,
 }: {
+  /** 点卡打开那块画布 */
+  onOpen: (canvasId: string) => void;
   onBack: () => void;
   onCreate: () => void;
   onRename: (c: CanvasMeta) => void;
@@ -191,9 +197,7 @@ export function CanvasesPage({
   const ids = canvases.filter((c) => picked.has(c.id)).map((c) => c.id);
   const removeMany = async () => {
     // 一个个删，出错就停（handleError 在 confirmDelete 里已提示）
-    const ok = await confirmDelete(async () => {
-      for (const id of ids) await deleteCanvas(id);
-    });
+    const ok = await confirmDeleteCanvases(ids);
     if (ok) setPicked(new Set());
   };
 
@@ -228,7 +232,15 @@ export function CanvasesPage({
             <div className="tpl-as__cards">
               {canvases.map((c) => (
                 <Pickable key={c.id} picking={picking} checked={picked.has(c.id)} onToggle={() => toggle(c.id)} label={c.name}>
-                  <ProjectCard name={c.name} covers={c.covers} updatedAt={c.updatedAt} onRename={() => onRename(c)} onDelete={() => void confirmDelete(() => deleteCanvas(c.id))} />
+                  <ProjectCard
+                    name={c.name}
+                    covers={c.covers}
+                    updatedAt={c.updatedAt}
+                    onOpen={() => onOpen(c.id)}
+                    onShare={() => void shareCanvas(c.id)}
+                    onRename={() => onRename(c)}
+                    onDelete={() => void confirmDeleteCanvases([c.id])}
+                  />
                 </Pickable>
               ))}
             </div>

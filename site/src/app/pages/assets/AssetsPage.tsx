@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, ProjectCard, ScrollArea } from '@kivi';
 import { useDB } from '../../data/db';
-import { createCanvas, deleteCanvas, renameCanvas } from '../../data/canvases';
+import { createCanvas, renameCanvas } from '../../data/canvases';
 import { createFolder, deleteFolder, renameFolder } from '../../data/assets';
-import { confirmDelete } from '../../flows/delete';
+import { confirmDelete, confirmDeleteCanvases } from '../../flows/delete';
+import { shareCanvas } from '../../flows/share';
 import { HistorySection } from './HistorySection';
 import { NameDialog } from './NameDialog';
 import { CanvasesPage, FolderPage, FoldersPage, renderFolderCard, type FolderCardData, type FolderHandlers } from './SubPages';
@@ -45,7 +46,7 @@ const DELETE_FOLDER_DESCRIPTION = "删除后，文件夹内容在'我的资产'�
 type NameTarget = { kind: 'new-folder' } | { kind: 'rename-folder'; id: string } | { kind: 'rename-canvas'; id: string } | null;
 
 /** 资产页主区（侧栏在 UI 页面预览的外壳里） */
-export function AssetsPage() {
+export function AssetsPage({ onOpenCanvas }: { onOpenCanvas: (canvasId: string) => void }) {
   const assets = useDB((s) => s.assets);
   const allFolders = useDB((s) => s.folders);
   const canvases = useDB((s) => s.canvases);
@@ -126,7 +127,7 @@ export function AssetsPage() {
   if (view.kind === 'canvases') {
     return (
       <>
-        <CanvasesPage onBack={home} onCreate={newCanvas} onRename={(c) => setNameTarget({ kind: 'rename-canvas', id: c.id })} />
+        <CanvasesPage onBack={home} onCreate={newCanvas} onOpen={onOpenCanvas} onRename={(c) => setNameTarget({ kind: 'rename-canvas', id: c.id })} />
         {dialog}
       </>
     );
@@ -157,8 +158,10 @@ export function AssetsPage() {
                 name={c.name}
                 covers={c.covers}
                 updatedAt={c.updatedAt}
+                onOpen={() => onOpenCanvas(c.id)}
+                onShare={() => void shareCanvas(c.id)}
                 onRename={() => setNameTarget({ kind: 'rename-canvas', id: c.id })}
-                onDelete={() => void confirmDelete(() => deleteCanvas(c.id))}
+                onDelete={() => void confirmDeleteCanvases([c.id])}
               />
             ))}
           </div>

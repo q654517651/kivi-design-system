@@ -245,6 +245,8 @@
   height: 160px;
   overflow: hidden;
   border-radius: var(--border-radius-8);
+  outline: var(--border-width-1) solid var(--color-border); /* 媒体描边 12%，画在里面（设计规则 · 状态） */
+  outline-offset: calc(var(--border-width-1) * -1);
   background: var(--color-bg-fill-container-light-1);
 }
 
@@ -499,7 +501,8 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
-  border: var(--border-width-1) solid transparent;
+  /* 添加格是上传占位：一圈弱描边（设计规则 · 状态，11-19）；缩成右下角小圆时换成 border，跟着一起过渡 */
+  border: var(--border-width-1) solid var(--color-border-subtle);
   border-radius: var(--border-radius-8);
   background: var(--color-bg-fill-container-light-1);
   color: var(--color-text-fill-primary);
@@ -772,8 +775,53 @@
 }
 
 /* ---------- AttachmentStrip：附件条 ----------
-   一排平铺的 56 缩略图，间距 4，超出横向滚动（ScrollArea 的细滑块）。删除、上传中的样子和上面的参考卡片一样（上面的规则共用），
+   一排平铺的 56 缩略图，间距 4，超出横向滚动（不显示滚动条，两头渐隐 + 翻页箭头）。删除、上传中的样子和上面的参考卡片一样（上面的规则共用），
    这里只管排列和显示：鼠标移上去或聚焦到某一格，右上角出删除；上传中不出删除 */
+
+/* 外层：放箭头用。放不下时（data-overflow-start / -end）那一头渐隐 56（mask，不盖底色，背景是什么都行），
+   渐隐上放箭头（玻璃按钮条 ButtonGroup glass · 32：玻璃底 + 模糊 + 弱描边，11-19 用户定），竖着居中、贴着那一头；点一下翻一页，翻到头那边的箭头就没了（11-19，照线上） */
+.kv-attachment-strip {
+  --kv-strip-fade-start: 0px;
+  --kv-strip-fade-end: 0px;
+
+  position: relative;
+  min-width: 0;
+}
+
+.kv-attachment-strip[data-overflow-start] {
+  --kv-strip-fade-start: 56px;
+}
+
+.kv-attachment-strip[data-overflow-end] {
+  --kv-strip-fade-end: 56px;
+}
+
+.kv-attachment-strip__scroll {
+  overflow-x: auto; /* 原生滚动：滚动条藏起来（下面 scrollbar-width: none），翻页用两头的箭头 */
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, transparent, black var(--kv-strip-fade-start), black calc(100% - var(--kv-strip-fade-end)), transparent);
+  mask-image: linear-gradient(to right, transparent, black var(--kv-strip-fade-start), black calc(100% - var(--kv-strip-fade-end)), transparent);
+}
+
+.kv-attachment-strip__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.kv-attachment-strip__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+}
+
+.kv-attachment-strip__arrow--prev {
+  left: 0;
+}
+
+.kv-attachment-strip__arrow--next {
+  right: 0;
+}
 
 .kv-attachment-strip__items {
   display: flex;
