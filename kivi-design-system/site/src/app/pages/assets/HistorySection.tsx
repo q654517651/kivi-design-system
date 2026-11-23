@@ -19,6 +19,7 @@ import { useDB } from '../../data/db';
 import { useBriefLoading } from '../../hooks/useBriefLoading';
 import { useDebounced } from '../../hooks/useDebounced';
 import { usePaged, type MoreRef } from '../../hooks/usePaged';
+import { useStuck } from '../../hooks/useStuck';
 import { GROUPS, SOURCE_LABEL, groupOf, startOfDay, useAssetCells } from './assetCells';
 import { AssetBatchActions, BatchControls } from './BatchBar';
 
@@ -33,9 +34,6 @@ const PAGE_SIZE = 20;
 /** 首次进入、换筛选先出几个骨架 */
 const SKELETON_COUNT = 10;
 
-/** 筛选条吸顶的位置：余额、头像那一排下面（和 CSS 的 top 一致） */
-const STICK_TOP = 64;
-
 export function HistorySection({ moreRef }: { moreRef: MoreRef }) {
   const assets = useDB((s) => s.assets);
   const [source, setSource] = useState<string | null>('all');
@@ -46,18 +44,8 @@ export function HistorySection({ moreRef }: { moreRef: MoreRef }) {
   // 批量编辑：按钮在筛选行最右边，进去后格子出勾选框，按钮原地换成批量控件
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
-  // 筛选条吸顶了没有：看它前面那条 0 高的哨兵滚出可视区没有
-  // 哨兵用回调 ref 记进 state：加载中、加载完它会重新挂上，要跟着换观察对象
-  const [sentinelEl, sentinel] = useState<HTMLDivElement | null>(null);
-  const [stuck, setStuck] = useState(false);
-  useEffect(() => {
-    const el = sentinelEl;
-    if (!el) return;
-    // 筛选条吸在离顶 64 的地方：看哨兵越过这条线没有
-    const io = new IntersectionObserver(([e]) => setStuck(!e.isIntersecting && e.boundingClientRect.top < (e.rootBounds?.top ?? 0)), { threshold: 0, rootMargin: `-${STICK_TOP}px 0px 0px 0px` });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [sentinelEl]);
+  // 筛选条吸顶了没有（hooks/useStuck）
+  const [sentinel, stuck] = useStuck();
 
   // 搜索框打完字停一会儿才搜（和探索页一样）
   const k = useDebounced(keyword).trim();

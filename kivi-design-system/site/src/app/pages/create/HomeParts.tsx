@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Button, Dialog, IconButton, Input, Prose, ScrollArea, toast } from '@kivi';
-import { db } from '../../data/db';
+import { flowsOf, type Flow } from '../../data/catalog';
 import { useLastShown } from '../../parts/media-viewer';
 import { BANNERS, type Banner } from '../../data/banners';
 
@@ -44,7 +44,7 @@ export function HomeHead({ title, onMore, search, children }: { title?: string; 
 
 /** 最近更新：横排 Banner，一排 4 张，放不下左右翻（翻一屏），到头那边的按钮禁用；都放得下就不出按钮 */
 /** 最近更新：点 Banner 按后台配的三种行为走（链接 / 画布 / 公告弹窗） */
-export function RecentUpdates({ onOpenCanvas }: { onOpenCanvas: (canvasId: string) => void }) {
+export function RecentUpdates({ onPreviewFlow }: { onPreviewFlow: (flow: Flow) => void }) {
   const rail = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: true });
   const [open, setOpen] = useState<Banner | null>(null);
@@ -53,7 +53,8 @@ export function RecentUpdates({ onOpenCanvas }: { onOpenCanvas: (canvasId: strin
     const a = b.action;
     if (a.kind === 'link') window.open(a.url, '_blank', 'noopener');
     else if (a.kind === 'canvas') {
-      if (db.get().canvases.some((c) => c.id === a.canvasId)) onOpenCanvas(a.canvasId);
+      const flow = [...flowsOf('featured'), ...flowsOf('workflow')].find((f) => f.id === a.flowId);
+      if (flow) onPreviewFlow(flow);
       else toast.error('画布已不存在');
     } else setOpen(b);
   };

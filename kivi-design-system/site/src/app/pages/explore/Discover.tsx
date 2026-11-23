@@ -21,7 +21,7 @@ import { FolderSubMenu } from '../../parts/folder-menu';
 import { addWorkToReference, downloadWork, saveWorkToFolder } from './work-actions';
 import { useDebounced } from '../../hooks/useDebounced';
 import { usePaged, type MoreRef } from '../../hooks/usePaged';
-import { CategoryTabs, WORK_COLUMNS } from './shared';
+import { CategoryTabs, FilterBar, WORK_COLUMNS } from './shared';
 import { WorkViewer } from './WorkViewer';
 
 /*
@@ -63,13 +63,13 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
 
   const collect = (id: string, on: boolean) => void attempt(() => toggleFavorite(id, on));
   const likesOf = (w: Work) => w.likes + (liked.includes(w.id) ? 1 : 0);
-  // 小类：当前大类下的；「全部」时按大类分组列出
-  const subGroups = category === 'all' ? CATS : [category];
+  // 小类：当前大类下的；「全部」时按大类分组列出。「其他」没有小类，不出组；一个小类都没有时筛选置灰
+  const subGroups = (category === 'all' ? CATS : [category]).filter((c) => DISCOVER_CATEGORIES[c].length);
 
   return (
     <>
       {/* 第一行：大类、小类筛选、我收藏的、搜索（需求「发现页」：去掉最新 / 热门，一套内容流） */}
-      <div className="tpl-as__filters">
+      <FilterBar>
         <CategoryTabs
           label="素材分类"
           value={category}
@@ -84,7 +84,7 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
           haspopup="menu"
           closeOnSelect={false}
           trigger={
-            <Select variant="plain" leftIcon="Configuration" aria-label="筛选小类">
+            <Select variant="plain" leftIcon="Configuration" aria-label="筛选小类" disabled={!subGroups.length}>
               {subs.length ? `筛选 · ${subs.length}` : '筛选'}
             </Select>
           }
@@ -114,8 +114,8 @@ export function Discover({ moreRef, initialKeyword = '' }: { moreRef: MoreRef; i
         >
           我收藏的
         </TabItem>
-        <Input leftIcon="Search" clearable placeholder="搜索提示词、模型、作者" aria-label="搜索作品" className="tpl-as__search" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
-      </div>
+        <Input leftIcon="Search" clearable placeholder="搜索提示词、模型、作者" aria-label="搜索作品" className="tpl-as__search tpl-ex__search" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+      </FilterBar>
 
       {list.length === 0 ? (
         onlyCollected && category === 'all' && !subs.length && !k ? (

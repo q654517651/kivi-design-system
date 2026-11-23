@@ -448,6 +448,43 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [references]);
 
+  // 参考区展开全部：参考区一整行在上、提示词排到下面（11-23 照即梦）。
+  // 切之前量好内容区多高、提示词在哪，切完从旧样子补间过去：内容区高度撑开 / 收回，提示词移下来 / 移回去（FLIP）
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [refsAll, setRefsAll] = useState(false);
+  const flipFrom = useRef<{ height: number; left: number; top: number; duration: string } | null>(null);
+  useLayoutEffect(() => {
+    const from = flipFrom.current;
+    const content = contentRef.current;
+    const input = textRef.current;
+    flipFrom.current = null;
+    if (!from || !content || !input) return;
+    const to = input.getBoundingClientRect();
+    const height = content.offsetHeight;
+    const ease = `${from.duration} var(--motion-ease-expand)`;
+    content.style.transition = 'none';
+    content.style.height = `${from.height}px`;
+    input.style.transition = 'none';
+    input.style.transform = `translate(${from.left - to.left}px, ${from.top - to.top}px)`;
+    void content.offsetHeight;
+    content.style.transition = `height ${ease}`;
+    content.style.height = `${height}px`;
+    input.style.transition = `transform ${ease}`;
+    input.style.transform = '';
+    const done = () => {
+      content.style.transition = '';
+      content.style.height = '';
+      input.style.transition = '';
+    };
+    const ms = parseFloat(getComputedStyle(content).transitionDuration) * 1000;
+    const t = window.setTimeout(done, (Number.isFinite(ms) ? ms : 0) + 50);
+    return () => {
+      window.clearTimeout(t);
+      done();
+      input.style.transform = '';
+    };
+  }, [refsAll]);
+
   // 参考区展开了多宽，就把提示词左边这么宽、4 行高的一块藏起来（再多一段渐隐）
   const ctx = useMemo(
     () => ({
@@ -457,6 +494,15 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
         const over = width - el.offsetLeft;
         el.style.setProperty('--kv-prompt-cover', over > 0 ? `${over + FADE}px` : '0px');
         if (duration) el.style.setProperty('--kv-prompt-cover-duration', duration);
+      },
+      setShowAll: (next: boolean, duration: string) => {
+        const content = contentRef.current;
+        const input = textRef.current;
+        if (content && input) {
+          const r = input.getBoundingClientRect();
+          flipFrom.current = { height: content.offsetHeight, left: r.left, top: r.top, duration };
+        }
+        setRefsAll(next);
       },
     }),
     [],
@@ -473,7 +519,7 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
         onPasteCapture={composeHandlers(onPasteCapture, paste.onPasteCapture)}
         {...rest}
       >
-        <div className="kv-prompt-box__content">
+        <div ref={contentRef} className="kv-prompt-box__content" data-all={refsAll && !framesNow ? '' : undefined}>
           <div className="kv-prompt-box__refs">
             {lora && (
               <>
@@ -502,6 +548,9 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
                 onExpandedChange={onReferencesExpandedChange}
                 onAdd={onAddReference ?? (() => fileRef.current?.click())}
                 onRemove={(id) => setReferences(references.filter((i) => i.id !== id))}
+                onClear={() => setReferences([])}
+                // 展开全部由输入框记着（它要跟着换排法）；切走首尾帧再回来还是展开的
+                showAll={refsAll}
                 onReorder={(from, to) => {
                   const next = [...references];
                   next.splice(to, 0, ...next.splice(from, 1));

@@ -432,7 +432,48 @@
   width: 72px;
   height: 72px;
   outline: none;
-  transition: width var(--kv-reference-stack-duration) var(--motion-ease-expand);
+  transition:
+    width var(--kv-reference-stack-duration) var(--motion-ease-expand),
+    height var(--kv-reference-stack-duration) var(--motion-ease-expand);
+}
+
+/* 展开全部：铺满输入框宽度，顶上一行 32（类型选项卡｜清空全部素材、收起），空 12，下面格子换行排，72、间距 6。
+   卡片从三格的位置飞到格子里（transform），不裁；顶上一行淡入（出现 200 ease-out，消失 150 ease-in） */
+.kv-reference-stack__head {
+  position: absolute;
+  top: 0;
+  left: 0; /* 宽度由 JS 给展开后的宽，不跟着悬停区变宽，只淡入淡出 */
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  height: 32px;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-in),
+    visibility 0s linear var(--motion-duration-150);
+}
+
+.kv-reference-stack__tray[data-all] > .kv-reference-stack__head {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity var(--motion-duration-200) var(--motion-ease-out);
+}
+
+.kv-reference-stack__head-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.kv-reference-stack__tray[data-all] .kv-reference-stack__scroller {
+  height: 100%;
+  overflow: visible;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 /* 往右、往下多出 10，和上传按钮探出去的一样多 */
@@ -763,6 +804,58 @@
 
 /* 上传中：盖一层黑 40%，中间是 UploadRing（进度环 36 和百分比，样式在 upload.css），上传完 JS 去掉 */
 
+/* 「查看全部」提示的外壳：铺满卡片，按钮在里面铺满 */
+.kv-reference-stack__more-anchor {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* 超过 2 张、悬停展开三格时，第二张盖着「展开全部」：遮罩 + 模糊 16，中间 Expand 20（照即梦）。
+   跟着展开淡入（200 ease-out）、收起淡出（150 ease-in）；盖着时这张不出序号、删除、@、预览 */
+.kv-reference-stack__more {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-dark);
+  -webkit-backdrop-filter: blur(var(--effect-mask-blur));
+  backdrop-filter: blur(var(--effect-mask-blur));
+  color: var(--color-on-media-text);
+  cursor: pointer;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--motion-duration-150) var(--motion-ease-in),
+    visibility 0s linear var(--motion-duration-150);
+}
+
+.kv-reference-stack__card[data-more] .kv-reference-stack__more {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity var(--motion-duration-200) var(--motion-ease-out);
+}
+
+/* 遮罩盖住了缩略图自己的那圈描边，在遮罩上再画一圈（媒体都要描边，和 ReferenceItem 一样：1、--color-border、往里缩，不占尺寸） */
+.kv-reference-stack__more::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--border-width-1) solid var(--color-border);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.kv-reference-stack__more > .kv-icon {
+  width: 20px;
+  height: 20px;
+}
+
 .kv-reference-stack__upload,
 .kv-attachment-strip__upload {
   position: absolute;
@@ -884,5 +977,12 @@
 
 .kv-attachment-strip__items[data-sorting] .kv-attachment-strip__item:not([data-uploading]) .kv-reference-item__badge {
   opacity: 1;
+  transition: none;
+}
+
+/* 展开全部里切类型选项卡：下面的格子、添加格、高度都硬切，不做移动和淡入淡出（11-23 用户定）。
+   切的那一帧 JS 加 data-filtering，画完就去掉。放在最后，盖过上面各处的过渡 */
+.kv-reference-stack__tray[data-filtering],
+.kv-reference-stack__tray[data-filtering] :is(.kv-reference-stack__card, .kv-reference-stack__trigger, .kv-reference-stack__trigger-icon, .kv-reference-item__badge) {
   transition: none;
 }

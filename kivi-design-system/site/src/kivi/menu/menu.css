@@ -352,6 +352,22 @@
   display: inline-flex;
 }
 
+/* 置顶标识：和「⋯」同一个 28 的格子、图标 16 tertiary；「⋯」出来时它藏起来（两个互斥），收起、刚展开时也不显示 */
+.kv-menu-item > .kv-menu-item__pin {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--color-text-fill-tertiary);
+}
+
+.kv-menu-item:where(:hover, :focus-visible, :has(:focus-visible), .is-hover, [aria-current="page"], [data-collapsed], [data-expanding]) > .kv-menu-item__pin,
+.kv-menu-item:has([aria-expanded="true"]) > .kv-menu-item__pin {
+  display: none;
+}
+
 /* actions 里几个按钮间距 4，和「⋯」也离 4（条目本身间距 8，这里往回收 4） */
 .kv-menu-item > .kv-menu-item__actions {
   align-items: center;

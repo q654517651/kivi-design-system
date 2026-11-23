@@ -310,6 +310,31 @@
   padding-bottom: calc(var(--tpl-composer-h, 220px) + var(--spacing-32));
 }
 
+/* 新对话的初始页（11-23）：Kimo 160 +「今天一起创作点什么？」，样子同画布 Agent 空态（.tpl-ca__empty），
+   在记录流可见区域（顶上 104 到输入框上沿）上下居中。第一条发出去时盖在记录流上淡出 150ms ease-in */
+/* 记录流的内容层高度跟内容走，100% 量不到；按主区的高度（容器单位）撑满，主区高度由页面给，不受这一行影响 */
+.tpl-ms__main:has(.tpl-ms__empty) {
+  container-type: size;
+}
+
+.tpl-ms__column:has(> .tpl-ms__empty) {
+  position: relative;
+  min-height: 100cqh;
+}
+
+.tpl-ms__empty[data-leaving] {
+  position: absolute;
+  inset: 104px var(--spacing-24) calc(var(--tpl-composer-h, 220px) + var(--spacing-32)); /* Figma 没变量：和记录流上下内边距一样 */
+  pointer-events: none;
+  animation: tpl-ms-empty-out var(--motion-duration-150) var(--motion-ease-in) forwards;
+}
+
+@keyframes tpl-ms-empty-out {
+  to {
+    opacity: 0;
+  }
+}
+
 /* 右上角：猕猴桃余额 + 头像。离边 16、内边距 4 / 12、间距 8、头像 24；玻璃（和菜单一样：glass + 模糊 80 + 描边 border-subtle），11-03 用户定 */
 /* 右上角：和页面内容的右边对齐（11-11 用户定）：内容最宽 1600 的页（创作首页、探索、我的资产）离右边至少 32、屏幕再宽跟着内容往里收；
    对话页跟记录流（最宽 1024、左右 24）；AI 工具的放在右栏顶上，离右 12（.tpl-at__wallet）。
@@ -470,12 +495,13 @@
 }
 
 /* 画布工具栏：底部正中，离底 16（和左下角视图工具栏同一条底线） */
+/* 画布工具栏：左边上下居中、离左 16（11-23 用户定从底部正中挪回侧面，底部不方便） */
 .tpl-cv__toolbar {
   position: absolute;
-  bottom: var(--spacing-16);
-  left: 50%;
+  top: 50%;
+  left: var(--spacing-16);
   z-index: 1;
-  transform: translateX(-50%);
+  transform: translateY(-50%);
 }
 
 .tpl-cv__agent {
@@ -746,11 +772,15 @@
 
 /* 收起后：右下角一个小 Kimo（照原站悬浮宠物，离右下 32），点了展开。
    新对话：从面板里 Kimo 的位置飞过来、展开时飞回去；已经在聊：从右边滑进来、展开时滑出去。400ms ease-in-out，和面板收起同时长 */
-.tpl-ca__pet {
+/* 定位在 Tooltip 外壳上（它是 .tpl-cv 网格的直接子元素，必须脱离文档流），按钮自己只管飞进飞出的变换 */
+.tpl-ca__pet-anchor {
   position: absolute;
   right: var(--spacing-32);
   bottom: var(--spacing-32);
   z-index: 2;
+}
+
+.tpl-ca__pet {
   padding: 0;
   border: 0;
   border-radius: var(--border-radius-round);
@@ -1233,6 +1263,11 @@
   flex: 0 1 240px;
   min-width: 0;
   margin-left: var(--spacing-16); /* 紧跟在筛选后面，和前面隔 16（同「类型」这类标签）；11-09 从靠右改，宽屏离得太远 */
+}
+
+/* 探索页四个选项卡的搜索一律靠右（11-20 用户定），资产页还是紧跟筛选 */
+.tpl-ex__search {
+  margin-left: auto;
 }
 
 /* 按天分组：「今天」，下面正方形格子，最小 200（11-05 从 136 调大，1920 屏约 8 列和线上一样）、间距 4，一排能放几个放几个，窄了先缩、放不下少一列 */
@@ -2081,6 +2116,22 @@
 
 /* 输入框外壳：只有一个、切换时不动。最宽 1040、圆角 24、描边 border-subtle（画在里面，不占位置）、渐变玻璃底 + 模糊（和主站输入框一样）。
    里面两套内容叠在同一格（生成：主站提示词框；画布：画布 Agent 输入框），外壳高度由页面按显示的那套量出来（两套高度不一样时切换有高度动画） */
+/* 输入框下面的两套内容（生成：最近更新 + 广场；画布：最近项目 + 广场）。当前那套正常排；另一套照样排版（宽度不变）、
+   高度收成 0、看不见，切回来不用重新量宽重排、不用重新解码图片，不闪（11-23 修：原来用 hidden 从排版里拿掉，切回来闪一两帧） */
+.tpl-home__swap {
+  position: relative;
+}
+
+.tpl-home__swap > :not([data-active]) {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
 .tpl-home__shell {
   position: relative;
   display: grid;
@@ -2093,8 +2144,9 @@
   overflow: clip; /* 高度在动的时候，里面的内容不露出外壳 */
 }
 
-/* 切模式两套高度不一样：外壳高度 200ms ease-in-out，和两套内容的交叉淡化同时长；第一次出现不动 */
-.tpl-home__shell[data-ready] {
+/* 切模式两套高度不一样：外壳高度 200ms ease-in-out，和两套内容的交叉淡化同时长；第一次出现不动。
+   只在切模式时加（data-switching）；平时外壳跟着输入框同步变高，不另加过渡，免得慢半拍 */
+.tpl-home__shell[data-switching] {
   transition: height var(--motion-duration-200) var(--motion-ease-in-out);
 }
 
@@ -2370,6 +2422,8 @@
 /* 顶部四个选项卡：Tabs 36，离顶 24，和筛选条之间不留（筛选条自己有上下 12） */
 /* 选项卡这一行：和右上角余额、头像在同一条中线上（离顶 32）：选项卡 36，上面空 14 */
 .tpl-ex__head {
+  position: relative;
+  z-index: 3; /* 压在筛选条吸顶后铺的那 64 底色上面：页签离顶不到 64，筛选条一进来就算吸住，不抬上来页签会被盖掉；页签自己没底，滚上去的内容照样被底色挡住 */
   padding-top: calc(var(--tpl-head-center, 32px) - 36px / 2);
 }
 

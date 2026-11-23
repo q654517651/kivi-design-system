@@ -120,10 +120,10 @@ export function CanvasPage({ onHome, skill }: { onHome?: () => void; skill?: str
           ]}
           onLogoClick={onHome}
         />
-        {/* 底部正中：画布工具栏（ButtonGroup 实色 · 56），左边添加（主要），右边工作流、上传、历史。
-            点添加往上弹添加节点菜单；只能看，点了节点不真的加。工作流、上传、历史点了没反应 */}
-        <ButtonGroup variant="surface" size={56} aria-label="画布工具栏" className="tpl-cv__toolbar">
-          <Dropdown placement="top-start" trigger={<IconButton icon="Add" label="添加" variant="primary" />}>
+        {/* 左边上下居中：画布工具栏（ButtonGroup 实色 · 44 · 竖排），上面添加（次要），下面工作流、上传、历史。
+            点添加往右弹添加节点菜单；只能看，点了节点不真的加。工作流、上传、历史点了没反应 */}
+        <ButtonGroup variant="surface" size={44} orientation="vertical" aria-label="画布工具栏" className="tpl-cv__toolbar">
+          <Dropdown placement="right-start" offset={8} trigger={<IconButton icon="Add" label="添加" variant="secondary" tooltip={{ placement: 'right' }} />}>
             <Menu width={200}>
               <MenuLabel>添加节点</MenuLabel>
               {ADD_NODES.map((n) => (
@@ -133,9 +133,9 @@ export function CanvasPage({ onHome, skill }: { onHome?: () => void; skill?: str
               ))}
             </Menu>
           </Dropdown>
-          <IconButton icon="Template" label="工作流" />
-          <IconButton icon="Upload" label="上传" />
-          <IconButton icon="History" label="历史" />
+          <IconButton icon="Template" label="工作流" tooltip={{ placement: 'right' }} />
+          <IconButton icon="Upload" label="上传" tooltip={{ placement: 'right' }} />
+          <IconButton icon="History" label="历史" tooltip={{ placement: 'right' }} />
         </ButtonGroup>
       </div>
       <AgentPanel onLocate={(key) => canvas.current?.focus(key)} skill={skill} />

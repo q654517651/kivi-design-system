@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Button, ButtonGroup, Dialog, EmptyState, GenPrompt, IconButton, PromptBox, ScrollArea, Loading, Skeleton, placeholderImageSrc, referenceName, toast, type PromptBoxSubmit, type ReferenceStackItem } from '@kivi';
+import { Button, ButtonGroup, Dialog, GenPrompt, IconButton, Kimo, PromptBox, ScrollArea, Loading, Skeleton, placeholderImageSrc, referenceName, toast, type PromptBoxSubmit, type ReferenceStackItem } from '@kivi';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../../../docs/business/skill-data';
 import { LORAS } from '../../../docs/business/lora-data';
 import { activeTurnOf, sendAgent, stopAgent } from '../../data/agent';
@@ -274,6 +274,21 @@ function ChatView({ chat }: { chat: Chat }) {
     scrollToBottom(feed.current);
   };
   const count = chat.items.length;
+  // 新对话的初始页：Kimo +「今天一起创作点什么？」，和画布 Agent 的空态一样（11-23 用户定）。
+  // 第一条发出去时 Kimo 淡出（150ms ease-in），盖在记录流上播完再卸掉，记录照常出来
+  const [emptyLeaving, setEmptyLeaving] = useState(false);
+  const hadNone = useRef(count === 0);
+  useEffect(() => {
+    if (count === 0) {
+      hadNone.current = true;
+      return;
+    }
+    if (!hadNone.current) return;
+    hadNone.current = false;
+    setEmptyLeaving(true);
+    const t = window.setTimeout(() => setEmptyLeaving(false), 200);
+    return () => window.clearTimeout(t);
+  }, [count]);
   // 分页：先显示最后 10 条，往上滚到顶加载更早的（新的在下面，和线上方向相反）；首次进入先出骨架
   // 刚新建、刚动过（10 秒内）的对话数据就在手上，不出骨架；从侧栏点进别的对话才像线上那样先加载
   const entering = useBriefLoading(chat.id, Date.now() - chat.updatedAt < FRESH_MS);
@@ -333,7 +348,12 @@ function ChatView({ chat }: { chat: Chat }) {
             ) : (
               <>
                 {older.loading && <Loading className="tpl-ms__older">加载中</Loading>}
-                {count === 0 && <EmptyState type="empty" size={160} title="暂无数据" />}
+                {(count === 0 || emptyLeaving) && (
+                  <div className="tpl-ca__empty tpl-ms__empty" data-leaving={count > 0 || undefined}>
+                    <Kimo size={160} />
+                    <span>今天一起创作点什么？</span>
+                  </div>
+                )}
                 <RecordFeed chat={chat} tasks={tasks} assets={assets} agentTurns={agentTurns} ctx={ctx} start={older.start} />
               </>
             )}

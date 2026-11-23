@@ -49,6 +49,8 @@ export interface MenuItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonEleme
   more?: ReactNode;
   /** 「⋯」左边的按钮（IconButton 28 · 无底灰，比如画布的「在新标签页打开」）：和「⋯」一起悬停、选中时才出现，收起、重命名时不显示；点它不触发条目的点击。写了之后外层也改用 div */
   actions?: ReactNode;
+  /** 置顶：右边常驻一个图钉（Pin 16 · tertiary，占「⋯」的位置）；悬停、选中、菜单开着时换成「⋯」，两个互斥。收起、重命名时不显示 */
+  pinned?: boolean;
   /** 「⋯」的说明，读屏用，默认「更多」 */
   moreLabel?: string;
   /** 重命名中（受控）：文字换成输入框（Input，右边「字数/上限」），自动聚焦、全选；「⋯」不显示。照线上：回车提交，点外面取消，Esc 也取消。children 要是字符串 */
@@ -122,6 +124,7 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
     collapsed,
     more,
     actions,
+    pinned,
     moreLabel = '更多',
     editing: editingProp,
     defaultEditing = false,
@@ -209,6 +212,11 @@ export const MenuItem = forwardRef<HTMLElement, MenuItemProps>(function MenuItem
       {shortcut && <span className="kv-menu-item__shortcut">{shortcut}</span>}
       {submenu && <Icon name="RightArrowSmall" className="kv-menu-item__arrow" />}
       {(checked || (twoLine && selected)) && <Icon name="CheckSmall" className="kv-menu-item__check" />}
+      {pinned && !editing && (
+        <span className="kv-menu-item__pin" role="img" aria-label="已置顶">
+          <Icon name="Pin" size={16} />
+        </span>
+      )}
       {actions != null && !editing && (
         <span className="kv-menu-item__actions" onClick={(e) => e.stopPropagation()}>
           {actions}

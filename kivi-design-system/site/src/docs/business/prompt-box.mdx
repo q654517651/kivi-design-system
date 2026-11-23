@@ -70,7 +70,7 @@ import { GenerateButtonPlayground, PromptBoxLab, PromptBoxPlayground, PromptInpu
 | `onRefModeChange` | `(mode) => void` | — | 换了参考方式 |
 | `references` | `ReferenceStackItem[]` | — | 参考区的素材，在提示词左边，间距 24 `--spacing-24`，从顶端对齐；展开时浮在提示词上面，被盖住的字藏起来。传了就是受控 |
 | `defaultReferences` | `ReferenceStackItem[]` | `[]` | 非受控时一开始的素材，空的只有添加格 |
-| `onReferencesChange` | `(items) => void` | — | 素材变了：点添加格选了文件、拖进来、删了一张、拖着换了顺序（参考区展开后按住一张左右拖，同 `ReferenceStack` 的 `onReorder`）。名字按顺序重新编过（图片1、视频1…） |
+| `onReferencesChange` | `(items) => void` | — | 素材变了：点添加格选了文件、拖进来、删了一张、拖着换了顺序（参考区展开后按住一张左右拖，同 `ReferenceStack` 的 `onReorder`）、展开全部里「清空全部素材」。名字按顺序重新编过（图片1、视频1…）。3 张起参考区悬停只展开三格，点「展开全部」参考区一整行铺在上面、输入框撑高、提示词移到下面（同 `ReferenceStack` 的 `showAll`） |
 | `frames` | `{ first?, last? }` | — | 首尾帧的两张图（地址）。进首尾帧时两格空着，就把参考区前两张图搬进来；出首尾帧时参考区空着，就把首尾帧搬回参考区。传了就是受控 |
 | `defaultFrames` | 同上 | `{}` | 非受控时一开始的首尾帧 |
 | `onFramesChange` | `(frames) => void` | — | 首尾帧变了：互换、拖进来、搬过来 |

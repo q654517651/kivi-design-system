@@ -1,0 +1,135 @@
+/*
+  素材库（11-23 原型，3.14 不做）：内容一栏，主站侧栏和画布浮卡共用。外框（宽、底、描边、圆角）由用的地方给。
+  竖排：头（生成历史 / 我的文件夹 ｜ 关闭）→（文件夹里：返回）→ 类型选项卡 → 滚动的格子，一行 3 格、间距 4
+*/
+
+.tpl-lib {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  padding: var(--spacing-12) var(--spacing-16) 0;
+}
+
+.tpl-lib__head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+}
+
+.tpl-lib__crumb,
+.tpl-lib__kinds {
+  flex: none;
+}
+
+/* 返回按钮：图标对齐左边内容线 */
+.tpl-lib__crumb {
+  margin-left: calc(var(--spacing-8) * -1);
+}
+
+.tpl-lib__list {
+  flex: 1;
+  min-height: 0;
+}
+
+.tpl-lib__list > * {
+  padding-bottom: var(--spacing-16);
+}
+
+.tpl-lib__day + .tpl-lib__day {
+  margin-top: var(--spacing-16);
+}
+
+.tpl-lib__day h3 {
+  margin: 0 0 var(--spacing-8);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-regular);
+}
+
+.tpl-lib__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.tpl-lib__folders {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-12);
+}
+
+.tpl-lib__empty {
+  flex: 1;
+  justify-content: center;
+}
+
+/* 外壳多一列给素材库（关着宽 0） */
+.tpl-ms:has(> .tpl-ms__library) {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+/* ---------- 主站：对话页右侧推出一栏（宽 400，过渡宽度 300ms ease-in-out，里面固定宽、跟着滑） ---------- */
+
+/* 选择器多带一个 aside：压过外壳「除侧栏都放第 2 列」那条 */
+.tpl-ms > aside.tpl-ms__library {
+  grid-row: 1;
+  grid-column: 3;
+  width: 0;
+  min-height: 0;
+  overflow: hidden;
+  transition: width var(--motion-duration-300) var(--motion-ease-in-out);
+}
+
+.tpl-ms > aside.tpl-ms__library[data-open] {
+  width: 400px;
+}
+
+.tpl-ms__library > .tpl-ms__library-panel {
+  box-sizing: border-box;
+  width: 400px;
+  height: 100%;
+  border-left: var(--border-width-1) solid var(--color-border-subtle);
+  background: var(--color-bg-fill-base);
+}
+
+/* ---------- 画布：工具栏右边浮一张大卡（玻璃 + 描边，圆角 16）。
+   左边 = 工具栏 16 + 44 + 8；上下各让出左上角画布切换（16 + 44 + 12）、左下角视图工具栏（16 + 32 + 12） ---------- */
+
+.tpl-cv__library {
+  position: absolute;
+  top: calc(var(--spacing-16) + 44px + var(--spacing-12));
+  bottom: calc(var(--spacing-16) + 32px + var(--spacing-12));
+  left: calc(var(--spacing-16) + 44px + var(--spacing-8));
+  z-index: 2;
+  box-sizing: border-box;
+  width: 400px;
+  border: var(--border-width-1) solid var(--color-border-subtle);
+  border-radius: var(--border-radius-16);
+  background: var(--color-bg-fill-glass);
+  -webkit-backdrop-filter: blur(var(--effect-glass-blur));
+  backdrop-filter: blur(var(--effect-glass-blur));
+  transform-origin: left center;
+  animation: tpl-lib-in var(--motion-duration-200) var(--motion-ease-out);
+}
+
+@keyframes tpl-lib-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--spacing-8) * -1)) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tpl-ms > aside.tpl-ms__library {
+    transition: none;
+  }
+
+  .tpl-cv__library {
+    animation: none;
+  }
+}

@@ -4,13 +4,14 @@ import { placeholderImageSrc } from '@kivi';
   创作首页「最近更新」运营位：后台配置的 Banner，只读（不存本机）。图在 assets/banners/（11-20 用户给的）。
   点了做什么后台配三种（11-20 用户定）：
   - link：新标签页打开一个地址（比如飞书文档）
-  - canvas：打开一块画布（官方示例画布）
+  - canvas：打开一块官方画布的预览（创作精选 / 工作流里的一条），「应用画布」，和探索页点卡片一样（11-20 用户定）
   - dialog：弹新功能公告（上图、标题、说明、分点、一个按钮，照 Dialog 的「新功能公告」）
 */
 
 export type BannerAction =
   | { kind: 'link'; url: string }
-  | { kind: 'canvas'; canvasId: string }
+  /** flowId：创作精选、工作流的 id（catalog.ts 的 flowsOf） */
+  | { kind: 'canvas'; flowId: string }
   | {
       kind: 'dialog';
       title: string;
@@ -65,5 +66,5 @@ export const BANNERS: Banner[] = [
     },
   },
   // 第五张先占位（11-20 用户：别空着），用占位图，点了打开官方示例画布；正式图和去处以后换
-  { title: '官方画布 · 短剧制作流程', image: placeholderImageSrc('ip-future', '16:9'), action: { kind: 'canvas', canvasId: 'c3' } },
+  { title: '官方画布 · 短剧制作流程', image: placeholderImageSrc('ip-future', '16:9'), action: { kind: 'canvas', flowId: 'featured-1' } },
 ];

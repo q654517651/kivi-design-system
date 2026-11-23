@@ -18,6 +18,7 @@ import { ProcessorHost } from './processor/ProcessorHost';
 import { AddNodeMenu } from './menus';
 import { CanvasCorner } from './ShareButton';
 import { WorkflowPanel } from './WorkflowPanel';
+import { AssetLibrary } from '../../parts/asset-library';
 
 /*
   画布页：左边画布（左上角画布切换、底部画布工具栏、左下角视图工具栏），右边 Agent 侧栏。
@@ -71,6 +72,8 @@ export function CanvasPage({ canvasId: id, onCanvasChange, skill, intro, onHome 
   // 底部「工作流」面板、「历史」弹窗
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  // 素材库（11-23 原型，3.14 不做）：工具栏右边浮一张大卡，挑的素材应用到画布
+  const [libraryOpen, setLibraryOpen] = useState(false);
   // Agent 建了节点：画布选中它
   useAgentSelect(id, (ids) => board.current?.select(ids));
 
@@ -91,9 +94,10 @@ export function CanvasPage({ canvasId: id, onCanvasChange, skill, intro, onHome 
         />
         {/* 右上角：分享，再是余额和头像（11-19 用户定：和主站一样，点头像出账号菜单） */}
         <CanvasCorner canvasId={id} />
-        {/* 底部正中：画布工具栏（ButtonGroup 实色 · 56）：添加（主要）、工作流、上传、历史 */}
-        <ButtonGroup variant="surface" size={56} aria-label="画布工具栏" className="tpl-cv__toolbar">
-          <Dropdown placement="top-start" trigger={<IconButton icon="Add" label="添加" variant="primary" />}>
+        {/* 左边上下居中：画布工具栏（ButtonGroup 实色 · 44 · 竖排，11-23 从底部挪过来，56 嫌大降一档）：添加（次要，11-23 从主要改，品牌绿太抢）、工作流、上传、历史。
+            提示、菜单、工作流面板都往右出 */}
+        <ButtonGroup variant="surface" size={44} orientation="vertical" aria-label="画布工具栏" className="tpl-cv__toolbar">
+          <Dropdown placement="right-start" offset={8} trigger={<IconButton icon="Add" label="添加" variant="secondary" tooltip={{ placement: 'right' }} />}>
             <AddNodeMenu doc={doc} onPick={(type, preset) => board.current?.addAtCenter(type, preset)} />
           </Dropdown>
           <WorkflowPanel
@@ -106,11 +110,34 @@ export function CanvasPage({ canvasId: id, onCanvasChange, skill, intro, onHome 
               requestAnimationFrame(() => board.current?.focus(ids));
             }}
           >
-            <IconButton icon="Template" label="工作流" selected={workflowOpen} tooltip={!workflowOpen} />
+            <IconButton icon="Template" label="工作流" selected={workflowOpen} tooltip={workflowOpen ? false : { placement: 'right' }} />
           </WorkflowPanel>
-          <IconButton icon="Upload" label="上传" onClick={() => board.current?.upload()} />
-          <IconButton icon="History" label="历史" onClick={() => setHistoryOpen(true)} />
+          <IconButton icon="Upload" label="上传" tooltip={{ placement: 'right' }} onClick={() => board.current?.upload()} />
+          <IconButton icon="History" label="历史" tooltip={{ placement: 'right' }} onClick={() => setHistoryOpen(true)} />
+          {/* 素材库（11-23 原型，3.14 不做） */}
+          <IconButton
+            icon="Folder"
+            label="素材库"
+            selected={libraryOpen}
+            tooltip={libraryOpen ? false : { placement: 'right' }}
+            onClick={() => setLibraryOpen((v) => !v)}
+          />
         </ButtonGroup>
+        {libraryOpen && (
+          <AssetLibrary
+            className="tpl-cv__library"
+            onClose={() => setLibraryOpen(false)}
+            use={{
+              icon: 'AddToCanvas',
+              label: '应用到画布',
+              onUse: (asset) => {
+                const nid = placeAsset(id, asset);
+                requestAnimationFrame(() => board.current?.select([nid]));
+                toast.success('已应用到画布');
+              },
+            }}
+          />
+        )}
       </div>
       <CanvasAgent
         canvasId={id}

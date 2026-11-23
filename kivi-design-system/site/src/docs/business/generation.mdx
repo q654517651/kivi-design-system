@@ -314,7 +314,7 @@ Agent 控件：Agent 模式下工具条上的模型、技能和生成模式。
 
 | 属性 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `count` | `number` | `0` | 现在的字数（一个表情算一个）。超过上限字变红（`--color-status-danger`），同时生成按钮置灰、悬停说「输入文本不能超过{n}个字符」（`genBlockedReason`） |
+| `count` | `number` | `0` | 现在的字数（一个表情算一个）。超过上限字变红（`--color-status-danger`），同时生成按钮置灰、悬停说「输入文本不能超过 N 个字符」（`genBlockedReason`） |
 | `model` | `string` | `"seed-audio-1.0"` | 音频模型的值，上限跟着它变（`AUDIO_CHAR_LIMIT`，从模型能力表 `model-caps.ts` 算出来：Seed 3000、MiniMax 10000、Eleven 5000） |
 
 ### GenModelPicker

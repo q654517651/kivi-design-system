@@ -52,13 +52,13 @@ export function ZoomBadge({ z, onReset }: { z: number; onReset: () => void }) {
   );
 }
 
-/** 右上：下载、重新上传、删除 */
+/** 右上：下载、重新上传、清空（把舞台清回空的上传状态，结果都还在历史里；不是删除，11-20 用户定用扫把、不弹确认） */
 export function StageActions({ onDownload, onReupload, onRemove }: { onDownload: () => void; onReupload: () => void; onRemove?: () => void }) {
   return (
     <ButtonGroup variant="glass" size={44} className="tpl-at__actions">
       <IconButton icon="Download" label="下载" tooltip={{ placement: 'bottom' }} onClick={onDownload} />
       <IconButton icon="ReUpload" label="重新上传" tooltip={{ placement: 'bottom' }} onClick={onReupload} />
-      {onRemove && <IconButton icon="Delete" label="删除" tooltip={{ placement: 'bottom' }} onClick={onRemove} />}
+      {onRemove && <IconButton icon="Clean" label="清空" tooltip={{ placement: 'bottom' }} onClick={onRemove} />}
     </ButtonGroup>
   );
 }

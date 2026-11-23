@@ -20,6 +20,8 @@ interface DragState {
   to: number;
   /** 被拖的那项跟着鼠标走了多远（算上容器滚了多少） */
   dx: number;
+  /** 竖着走了多远：换行排的时候用，一排的时候不用 */
+  dy: number;
 }
 
 /** 按下后挪多远才算开始拖，不到这个距离还是点击 */
@@ -53,7 +55,10 @@ export function useSortable({ count, getItems, scrollerRef, onMove, onDragChange
     const t = setTimeout(() => setSettling(false), SETTLE_MS);
     return () => clearTimeout(t);
   }, [settling]);
+  // 每一项的中心（相对滚动容器）。都在一排时只按横向排；换行排（几排）时按离谁的中心最近排（11-23 参考区展开全部）
   const lefts = useRef<number[]>([]);
+  const tops = useRef<number[]>([]);
+  const isGrid = () => tops.current.some((y) => Math.abs(y - tops.current[0]) > 1);
   const focusAfter = useRef<number | null>(null);
 
   // 松手后下一帧放开过渡，被拖的那项滑进新位置
@@ -83,9 +88,24 @@ export function useSortable({ count, getItems, scrollerRef, onMove, onDragChange
     focusAfter.current = null;
   });
 
-  /** 被拖那项的中心越过了谁就排到谁的位置 */
-  const targetOf = (from: number, dx: number) => {
+  /** 被拖那项的中心越过了谁就排到谁的位置；换行排时落到离它中心最近的那一格 */
+  const targetOf = (from: number, dx: number, dy: number) => {
     const xs = lefts.current;
+    if (isGrid()) {
+      const ys = tops.current;
+      const cx = xs[from] + dx;
+      const cy = ys[from] + dy;
+      let best = from;
+      let bestD = Infinity;
+      xs.forEach((x, i) => {
+        const d = Math.hypot(x - cx, ys[i] - cy);
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      });
+      return best;
+    }
     const center = xs[from] + dx;
     let to = from;
     for (let i = from + 1; i < xs.length; i++) if (center > xs[i]) to = i;
@@ -93,17 +113,19 @@ export function useSortable({ count, getItems, scrollerRef, onMove, onDragChange
     return to;
   };
 
-  /** 第 index 项现在离它本来的位置偏多少（px） */
-  const offset = (index: number) => {
-    const xs = lefts.current;
-    if (drop) return index === drop.to ? xs[drop.from] + drop.dx - xs[drop.to] : 0;
+  /** 第 index 项现在离它本来的位置偏多少（px）：横向 */
+  const shift = (xs: number[], index: number, d: 'dx' | 'dy') => {
+    if (drop) return index === drop.to ? xs[drop.from] + drop[d] - xs[drop.to] : 0;
     if (!drag) return 0;
-    const { from, to, dx } = drag;
-    if (index === from) return dx;
+    const { from, to } = drag;
+    if (index === from) return drag[d];
     if (from < to && index > from && index <= to) return xs[index - 1] - xs[index];
     if (to < from && index >= to && index < from) return xs[index + 1] - xs[index];
     return 0;
   };
+  const offset = (index: number) => shift(lefts.current, index, 'dx');
+  /** 竖向偏多少：只有换行排时不是 0 */
+  const offsetY = (index: number) => (isGrid() ? shift(tops.current, index, 'dy') : 0);
 
   /** 第 index 项在排好以后是第几个：拖的过程中序号先跟着变 */
   const order = (index: number) => {
@@ -118,10 +140,10 @@ export function useSortable({ count, getItems, scrollerRef, onMove, onDragChange
   const measure = () => {
     const scroller = scrollerRef?.current;
     const base = scroller ? scroller.getBoundingClientRect().left - scroller.scrollLeft : 0;
-    lefts.current = latest.current.getItems().map((el) => {
-      const r = el.getBoundingClientRect();
-      return r.left + r.width / 2 - base;
-    });
+    const top = scroller ? scroller.getBoundingClientRect().top : 0;
+    const rects = latest.current.getItems().map((el) => el.getBoundingClientRect());
+    lefts.current = rects.map((r) => r.left + r.width / 2 - base);
+    tops.current = rects.map((r) => r.top + r.height / 2 - top);
   };
 
   const itemProps = (index: number) => ({
@@ -136,13 +158,16 @@ export function useSortable({ count, getItems, scrollerRef, onMove, onDragChange
       const startY = e.clientY;
       const startScroll = scroller?.scrollLeft ?? 0;
       let lastX = startX;
+      let lastY = startY;
       let started = false;
       let raf = 0;
-      let state: DragState = { from: index, to: index, dx: 0 };
+      let state: DragState = { from: index, to: index, dx: 0, dy: 0 };
 
       const update = () => {
         const dx = lastX - startX + ((scroller?.scrollLeft ?? 0) - startScroll);
-        state = { from: index, to: targetOf(index, dx), dx };
+        // 一排的时候只横着跟手（照原来）；换行排时竖着也跟手
+        const dy = isGrid() ? lastY - startY : 0;
+        state = { from: index, to: targetOf(index, dx, dy), dx, dy };
         setDrag(state);
       };
       // 拖到滚动容器两头：每帧滚一点，越靠边越快
@@ -177,12 +202,13 @@ export function useSortable({ count, getItems, scrollerRef, onMove, onDragChange
         const out = !!ev && !!box && (ev.clientY < box.top - CANCEL_OUT || ev.clientY > box.bottom + CANCEL_OUT);
         const to = cancel || out ? index : state.to;
         setDrag(null);
-        setDrop({ from: index, to, dx: state.dx });
+        setDrop({ from: index, to, dx: state.dx, dy: state.dy });
         if (to !== index) latest.current.onMove(index, to);
         latest.current.onDragChange?.(false, ev ?? undefined);
       };
       const move = (ev: globalThis.PointerEvent) => {
         lastX = ev.clientX;
+        lastY = ev.clientY;
         if (!started) {
           if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < THRESHOLD) return;
           started = true;
@@ -228,6 +254,7 @@ export function useSortable({ count, getItems, scrollerRef, onMove, onDragChange
     /** 正在拖、刚松手、还在滑进新位置：组件用它切换过渡、藏删除按钮、不出预览 */
     sorting: drag != null || drop != null || settling,
     offset,
+    offsetY,
     order,
     /** 这一项这一刻不加过渡：拖动中被拖的那项，松手那一帧所有项 */
     instant: (index: number) => drop != null || drag?.from === index,

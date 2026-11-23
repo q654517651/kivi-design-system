@@ -103,6 +103,8 @@ export interface Chat {
   id: string;
   title: string;
   pinned?: boolean;
+  /** 默认对话：一直置顶、排在对话列表第一个，不能取消置顶、不能删（11-23 用户定） */
+  fixed?: boolean;
   updatedAt: number;
   items: ChatItem[];
 }

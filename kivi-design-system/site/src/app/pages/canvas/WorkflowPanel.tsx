@@ -122,7 +122,8 @@ export function WorkflowPanel({ onApply, children, open, onOpenChange }: Workflo
       <Popover
         variant="panel"
         on="click"
-        placement="top"
+        // 工具栏在左边：面板往右出，离条 4（按钮到条边 4 + 4，11-23）
+        placement="right"
         offset={8}
         open={open}
         // 预览、确认、重命名、右键菜单开着：焦点移过去、点在它们上面都不关面板
@@ -157,9 +158,8 @@ export function WorkflowPanel({ onApply, children, open, onOpenChange }: Workflo
 
       {/* 预览：只读画布，作者（官方是 KIVI，我的是自己），右上角「应用画布」（照线上 WorkflowPreview，和探索页预览同一个） */}
       <CanvasPreviewDialog
-        item={view && { name: view.name, author: { name: view.scope === 'private' ? '我' : 'KIVI', avatar: placeholderImageSrc('ip-peek', '1:1') }, template: view.template }}
+        item={view && { name: view.name, owner: view.scope === 'private' ? { name: '我', avatar: placeholderImageSrc('ip-peek', '1:1') } : undefined, template: view.template }}
         onClose={() => setView(null)}
-        actionLabel="应用画布"
         onAction={() => view && apply(view)}
       />
 

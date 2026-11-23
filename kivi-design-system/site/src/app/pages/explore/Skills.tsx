@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { EmptyState, ExploreCard, Input, placeholderImageSrc } from '@kivi';
+import { Divider, Dropdown, EmptyState, ExploreCard, Input, Menu, MenuItem, Select, placeholderImageSrc } from '@kivi';
 import { SKILLS, SKILL_CATS, type ExploreSkill } from '../../data/catalog';
 import { useDebounced } from '../../hooks/useDebounced';
 import { usePaged, type MoreRef } from '../../hooks/usePaged';
-import { CardSkeleton, CategoryTabs } from './shared';
+import { CardSkeleton, CategoryTabs, FilterBar } from './shared';
 import { SkillDetail } from './SkillDetail';
 
 /*
@@ -13,23 +13,50 @@ import { SkillDetail } from './SkillDetail';
 
 const SKILL_PAGE = 12;
 
+/** 排序：按时间（新发布的在前）、按用量（用得多的在前），默认按时间（11-20 用户定） */
+type SkillSort = 'time' | 'uses';
+const SORTS: { value: SkillSort; label: string }[] = [
+  { value: 'time', label: '按时间排序' },
+  { value: 'uses', label: '按用量排序' },
+];
+
 export function Skills({ onUse, moreRef, initialKeyword = '' }: { onUse: (s: ExploreSkill) => void; moreRef: MoreRef; initialKeyword?: string }) {
   const [category, setCategory] = useState('all');
+  const [sort, setSort] = useState<SkillSort>('time');
   const [keyword, setKeyword] = useState(initialKeyword);
   const k = useDebounced(keyword.trim());
   const [detail, setDetail] = useState<ExploreSkill | null>(null);
   // 只匹配名称或描述（需求）
-  const list = SKILLS.filter((s) => (category === 'all' || s.category === category) && (!k || s.title.includes(k) || s.description?.includes(k)));
-  const { count, loading } = usePaged(list.length, SKILL_PAGE, `${category}|${k}`, moreRef);
+  const list = SKILLS.filter((s) => (category === 'all' || s.category === category) && (!k || s.title.includes(k) || s.description?.includes(k))).sort((a, b) =>
+    sort === 'uses' ? b.uses - a.uses : b.publishedAt - a.publishedAt,
+  );
+  const { count, loading } = usePaged(list.length, SKILL_PAGE, `${category}|${k}|${sort}`, moreRef);
   // 公开的技能一定有封面（11-10 用户定）
   const cover = (s: ExploreSkill) => s.poster ?? placeholderImageSrc(s.cover, '16:9');
 
   return (
     <>
-      <div className="tpl-as__filters">
+      <FilterBar>
         <CategoryTabs label="技能分类" value={category} options={SKILL_CATS} onChange={setCategory} />
-        <Input leftIcon="Search" clearable placeholder="搜索技能" aria-label="搜索技能" className="tpl-as__search" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
-      </div>
+        <Divider orientation="vertical" />
+        <Dropdown
+          haspopup="listbox"
+          trigger={
+            <Select variant="plain" aria-label="技能排序">
+              {SORTS.find((o) => o.value === sort)?.label}
+            </Select>
+          }
+        >
+          <Menu role="listbox" aria-label="技能排序">
+            {SORTS.map((o) => (
+              <MenuItem key={o.value} selected={o.value === sort} onClick={() => setSort(o.value)}>
+                {o.label}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Dropdown>
+        <Input leftIcon="Search" clearable placeholder="搜索技能" aria-label="搜索技能" className="tpl-as__search tpl-ex__search" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+      </FilterBar>
       {list.length === 0 ? (
         <EmptyState size={160} title="没有找到相关技能" className="tpl-as__empty" />
       ) : (

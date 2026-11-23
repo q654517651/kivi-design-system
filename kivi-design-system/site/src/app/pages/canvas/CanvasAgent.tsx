@@ -313,7 +313,8 @@ function KimoPet({ from, leaving, leaveTo, onLeft, onClick }: { from: DOMRect | 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leaving]);
   return (
-    <Tooltip content="展开对话面板" placement="top" disabled={leaving}>
+    // 定位写在 Tooltip 的外壳上：外壳是画布页网格的直接子元素，不脱离文档流会多撑出一行，把画布挤到上半截（11-20 修）
+    <Tooltip content="展开对话面板" placement="top" disabled={leaving} className="tpl-ca__pet-anchor">
       <button ref={ref} type="button" className="tpl-ca__pet" aria-label="展开对话面板" disabled={leaving} onClick={onClick}>
         <Kimo size={90} shadow={false} />
       </button>

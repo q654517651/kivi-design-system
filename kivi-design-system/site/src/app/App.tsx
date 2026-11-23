@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Notifier, Toaster } from '@kivi';
+import { Notifier, Toaster, toast } from '@kivi';
 import { PreviewHost } from '../docs/components/media.demos';
 import { TemplateFrame } from '../docs/templates/frame';
 import '../docs/templates/templates.css';
@@ -9,13 +9,15 @@ import { useBalanceTip } from './flows/balance-tip';
 import { FlowHost } from './flows/dialogs';
 import { AssetsPage } from './pages/assets';
 import { CanvasPage } from './pages/canvas';
-import { CreateHome, CreatePage } from './pages/create';
+import { CreateHome, CreatePage, type HomeMode } from './pages/create';
 import { ExplorePage, type ExploreTab } from './pages/explore';
 import { ToolsPage } from './pages/tools';
 import { Sidebar, Wallet, type AppPage, type HistoryKind } from './parts/shell';
 import { DemoPanel } from './parts/DemoPanel';
 import type { AgentComposerMessage } from './parts/agent-composer';
 import { ensureCanvas } from './data/canvases';
+import { sendToReference } from './data/ref-inbox';
+import { AssetLibrary } from './parts/asset-library';
 import './app.css';
 
 /*
@@ -58,6 +60,12 @@ export function KiviApp({
   const [exploreKeyword, setExploreKeyword] = useState('');
   // 进画布页时带着的技能：探索页技能点「使用」新建画布，Agent 输入框带上技能引用
   const [skill, setSkill] = useState<string | undefined>();
+  // 创作首页停在「生成」还是「画布」：从全部画布页返回时回到「画布」
+  const [homeMode, setHomeMode] = useState<HomeMode>('generate');
+  // 资产页从哪进来：创作首页最近项目「查看全部」直接进全部画布页，返回回创作首页（11-20 用户定）；key 换了资产页重新挂载
+  const [assetsEntry, setAssetsEntry] = useState<{ key: number; from?: 'create' }>({ key: 0 });
+  // 素材库（11-23 原型，3.14 不做）：创作页右上角点开，右侧推出一栏；挑的素材加进输入框的参考区
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   // 选中的对话被删掉了，回到创作首页
   const chats = useDB((s) => s.chats);
@@ -86,13 +94,15 @@ export function KiviApp({
   const navigate = (next: AppPage) => {
     setSelected(NONE);
     setSkill(undefined);
+    setHomeMode('generate');
+    if (next === 'assets') setAssetsEntry((e) => ({ key: e.key + 1 }));
     if (next === 'explore') {
       setExploreTab('discover');
       setExploreKeyword('');
     }
     onNavigate(next);
   };
-  // 新建画布进画布页（创作首页「画布」提交、探索页克隆、技能「使用」）：在点的时候就建好，带着 id 进去。
+  // 新建画布进画布页（创作首页「画布」提交、探索页应用画布、技能「使用」）：在点的时候就建好，带着 id 进去。
   // 创作首页「画布」输入框里发的那句话，进去后 Agent 接着发
   const [canvasIntro, setCanvasIntro] = useState<AgentComposerMessage | undefined>();
   const openCanvas = (message?: AgentComposerMessage, withSkill?: string) => {
@@ -147,6 +157,7 @@ export function KiviApp({
             <CreatePage key={selected.id} chatId={selected.id} />
           ) : (
             <CreateHome
+              initialMode={homeMode}
               // 提交后进新建的那个对话（侧栏里它排在最前）
               onSubmit={(chatId) => setSelected({ kind: 'chat', id: chatId })}
               onOpenCanvas={openCanvas}
@@ -157,7 +168,10 @@ export function KiviApp({
                 setExploreKeyword(keyword);
                 onNavigate('explore');
               }}
-              onAllCanvases={() => navigate('assets')}
+              onAllCanvases={() => {
+                setAssetsEntry((e) => ({ key: e.key + 1, from: 'create' }));
+                onNavigate('assets');
+              }}
             />
           ))}
         {page === 'explore' && (
@@ -170,9 +184,46 @@ export function KiviApp({
           />
         )}
         {page === 'tools' && <ToolsPage account={<Wallet className="tpl-at__wallet" />} />}
-        {page === 'assets' && <AssetsPage onOpenCanvas={openCanvasById} />}
-        {/* 公共的头：右上角余额和头像，每一页一样的位置（中线离顶 32，和侧栏 Logo 对齐），换页不动。AI 工具页的放进右栏顶上 */}
-        {page !== 'tools' && <Wallet />}
+        {page === 'assets' && (
+          <AssetsPage
+            key={assetsEntry.key}
+            initialView={assetsEntry.from === 'create' ? 'canvases' : undefined}
+            onBackOut={
+              assetsEntry.from === 'create'
+                ? () => {
+                    setHomeMode('canvas');
+                    onNavigate('create');
+                  }
+                : undefined
+            }
+            onOpenCanvas={openCanvasById}
+          />
+        )}
+        {/* 公共的头：右上角余额和头像，每一页一样的位置（中线离顶 32，和侧栏 Logo 对齐），换页不动。AI 工具页的放进右栏顶上。
+            创作页多一个素材库入口（11-23 原型，3.14 不做） */}
+        {page !== 'tools' && <Wallet library={page === 'create' ? { open: libraryOpen, onToggle: () => setLibraryOpen((v) => !v) } : undefined} />}
+        {page === 'create' && (
+          <aside
+            className="tpl-ms__library"
+            data-open={libraryOpen || undefined}
+            aria-label="素材库"
+            aria-hidden={!libraryOpen || undefined}
+            {...(libraryOpen ? {} : { inert: '' })}
+          >
+            <AssetLibrary
+              className="tpl-ms__library-panel"
+              onClose={() => setLibraryOpen(false)}
+              use={{
+                icon: 'ImagePlus',
+                label: '加入参考',
+                onUse: (a) => {
+                  sendToReference({ type: a.media, src: a.media === 'video' ? (a.poster ?? a.src) : a.src, duration: a.duration });
+                  toast.success('已加入参考');
+                },
+              }}
+            />
+          </aside>
+        )}
       </div>
       {page === 'canvas' && canvasId && (
         <CanvasPage

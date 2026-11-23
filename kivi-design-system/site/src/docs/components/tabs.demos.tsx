@@ -18,8 +18,9 @@ const picked = (s: TabState) => {
 
 // 面板「状态」说的是第一项；点了别的项，记在面板上不显示的 picked 里
 function renderTabs(s: TabState, update: (patch: Partial<PlaygroundState>) => void) {
-  const segment = s.style === 'segment';
-  const vertical = s.layout === 'vertical';
+  const segment = s.style !== 'tab';
+  // 分段 · 品牌只横排（页面级主切换）
+  const vertical = s.layout === 'vertical' && s.style !== 'segment-brand';
   const icons = segment && vertical ? RATIO_ICONS : TAB_ICONS;
   const texts = [s.text, '选项 2', '选项 3'];
   const values = ['a', 'b', 'c'];
@@ -27,7 +28,7 @@ function renderTabs(s: TabState, update: (patch: Partial<PlaygroundState>) => vo
   return (
     <Tabs
       key={[s.style, s.layout, s.size, s.left].join()}
-      variant={segment ? 'segment' : 'tab'}
+      variant={s.style as 'tab' | 'segment' | 'segment-brand'}
       layout={vertical ? 'vertical' : 'horizontal'}
       size={vertical ? undefined : (Number(s.size) as TabSize)}
       value={s.state === 'selected' ? 'a' : (picked(s) ?? 'b')}
@@ -55,7 +56,7 @@ export function TabItemPlayground() {
   return (
     <Playground<TabState>
       controls={[
-        { key: 'style', label: '样式', type: 'segment', value: 'tab', options: [['tab', '选项卡'], ['segment', '分段']] },
+        { key: 'style', label: '样式', type: 'segment', value: 'tab', options: [['tab', '选项卡'], ['segment', '分段'], ['segment-brand', '分段 · 品牌']] },
         { key: 'layout', label: '布局', type: 'segment', value: 'horizontal', options: [['horizontal', '横排'], ['vertical', '竖排']] },
         { key: 'size', label: '尺寸', type: 'segment', value: '32', options: [['32', '中'], ['36', '大']] },
         { key: 'state', label: '状态', type: 'segment', value: 'default', options: [['default', '默认'], ['hover', '悬停'], ['selected', '选中'], ['disabled', '禁用']] },
@@ -64,9 +65,10 @@ export function TabItemPlayground() {
       ]}
       // 竖排不分尺寸、自带图标；分段横排没有左图标
       rules={(s) => {
-        const segment = s.style === 'segment';
-        const vertical = s.layout === 'vertical';
+        const segment = s.style !== 'tab';
+        const vertical = s.layout === 'vertical' && s.style !== 'segment-brand';
         return {
+          ...(s.style === 'segment-brand' ? { layout: true } : {}),
           ...(vertical ? { size: true } : {}),
           ...(segment || vertical ? { left: true } : {}),
         };

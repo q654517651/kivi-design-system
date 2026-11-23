@@ -34,6 +34,8 @@ export const DISCOVER_CATEGORIES: Record<string, string[]> = {
   礼物: ['礼物', '座驾', '头像框', '麦圈', '勋章'],
   游戏: ['角色', '图标', '场景'],
   品牌: ['Logo', 'IP 形象', '物料'],
+  // 没归进上面几类的放「其他」，没有小类（11-20 用户定：探索页所有分类最后都有「其他」）
+  其他: [],
 };
 export const CATS = Object.keys(DISCOVER_CATEGORIES);
 
@@ -84,7 +86,7 @@ export const WORKS: Work[] = Array.from({ length: 120 }, (_, i) => {
     author: AUTHORS[(i * 5) % AUTHORS.length],
     likes: (i * 37) % 260,
     category,
-    sub: subs[Math.floor(i / CATS.length) % subs.length],
+    sub: subs.length ? subs[Math.floor(i / CATS.length) % subs.length] : '',
     model: video ? 'Seedance 2.0' : ['Nano Banana 2.1', 'Seedream 4.0', 'GPT Image 1'][i % 3],
     date: `2026-11-${String(9 - (i % 9)).padStart(2, '0')}`,
     refs: Array.from({ length: i % 5 }, (_, j) => ({ id: `w${i}-r${j}`, type: 'image' as const, name: `图片${j + 1}`, src: pic(i + j + 2) })),
@@ -104,7 +106,7 @@ export interface Flow {
 }
 
 /** 分类：初期参考线上工作流，以后台配置为准 */
-export const FLOW_CATEGORIES = ['品牌', 'UI', '游戏', '视觉', '礼物'];
+export const FLOW_CATEGORIES = ['品牌', 'UI', '游戏', '视觉', '礼物', '其他'];
 const FLOW_NAMES: Record<'featured' | 'workflow', string[]> = {
   featured: [
     '电商主图全套', '短剧分镜到成片', '新春海报一条龙', '产品宣传短视频', 'IP 形象延展', '直播间物料', '小红书封面组', '品牌 KV 延展',
@@ -138,7 +140,7 @@ export const flowsOf = (kind: 'featured' | 'workflow'): Flow[] =>
   });
 
 /** 分类：从现有技能分类数据读，这里是演示 */
-export const SKILL_CATS = ['礼物', '游戏', '品牌', '活动'];
+export const SKILL_CATS = ['礼物', '游戏', '品牌', '活动', '其他'];
 /** 探索页的公开技能：演示数据，24 个名字 × 3 个版本 = 72 个，一屏 12 个、六屏 */
 const SKILL_SEED: [string, string][] = [
   ['海报设计', '按主题、尺寸和文案出一组海报，自动排版标题和信息层级'],
@@ -182,6 +184,10 @@ export const SKILLS = Array.from({ length: SKILL_SEED.length * SKILL_VARIANTS.le
     // 每 4 个里有一个配了封面视频，封面图是视频第一帧
     video: i % 4 === 1 ? CLIPS[Math.floor(i / 4) % CLIPS.length].video : undefined,
     poster: i % 4 === 1 ? CLIPS[Math.floor(i / 4) % CLIPS.length].poster : undefined,
+    /** 发布时间（按时间排序用）：越往后越早 */
+    publishedAt: Date.UTC(2026, 10, 20) - i * 9 * 3600_000,
+    /** 用了多少次（按用量排序用） */
+    uses: (i * 7919) % 5000,
   };
 });
 export type ExploreSkill = (typeof SKILLS)[number];

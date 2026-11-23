@@ -48,17 +48,13 @@
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  /* 悬停、按下的底色不做过渡（11-19 用户定：Chrome 跑底色过渡偶尔丢一帧，快速划过时闪），文字颜色、透明度照旧 */
-  transition:
-    color var(--motion-duration-100) var(--motion-ease-in-out),
-    opacity var(--motion-duration-100) var(--motion-ease-in-out);
+  /* 悬停、按下不做过渡：底色（11-19 用户定：Chrome 跑底色过渡偶尔丢一帧，快速划过时闪）、文字颜色和透明度（11-23 用户定）都直接切 */
 }
 
 /* 文字和图标整体透明度，「灰」的两种（次要灰、无底灰）用 */
 .kv-button > *,
 .kv-icon-button > * {
   opacity: var(--kv-content-opacity);
-  transition: opacity var(--motion-duration-100) var(--motion-ease-in-out);
 }
 
 .kv-button > .kv-icon,
@@ -372,9 +368,22 @@
   border-radius: var(--border-radius-round);
 }
 
+/* 竖排：按钮从上往下排（画布左侧工具栏，11-23）。
+   44 的竖条照即梦排得紧：按钮 36（图标 20）、内边距 4、间距 4，宽还是 44，圆角 12 不变（先试过 56 胶囊嫌大、44 横条那套 32 按钮间距 8 嫌松） */
+.kv-button-group--vertical {
+  flex-direction: column;
+}
+
+.kv-button-group--44.kv-button-group--vertical {
+  gap: var(--spacing-4);
+  width: 44px;
+  height: auto;
+  padding: var(--spacing-4);
+}
+
 /* 56 的条里图标是 24 */
 .kv-button-group--56 .kv-icon-button:not(.kv-icon-button--primary) {
   --kv-icon-size: 24px;
 }
 
-/* 条里强调的那一个按钮（画布工具栏的「添加」）用 IconButton 主要，图标保持 20（11-05 从白底黑图标改成品牌绿） */
+/* 条里主要按钮图标保持 20。画布工具栏的「添加」11-23 从主要改成次要（品牌绿太抢），现在没有条里用主要 */
