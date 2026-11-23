@@ -437,18 +437,14 @@
     height var(--kv-reference-stack-duration) var(--motion-ease-expand);
 }
 
-/* 展开全部：铺满输入框宽度，顶上一行 32（类型选项卡｜清空全部素材、收起），空 12，下面格子换行排，72、间距 6。
-   卡片从三格的位置飞到格子里（transform），不裁；顶上一行淡入（出现 200 ease-out，消失 150 ease-in） */
+/* 展开全部：铺满输入框宽度，格子从顶上换行排，72、间距 6，右边留 40 给右上角的「收起」（32，不另占一行，11-23 用户定）。
+   卡片从三格的位置飞到格子里（transform），不裁；「收起」只淡入淡出（出现 200 ease-out，消失 150 ease-in），
+   位置由 JS 按展开后的宽直接给（left），不跟着悬停区变宽滑过来 */
 .kv-reference-stack__head {
   position: absolute;
   top: 0;
-  left: 0; /* 宽度由 JS 给展开后的宽，不跟着悬停区变宽，只淡入淡出 */
   z-index: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-12);
-  height: 32px;
   visibility: hidden;
   opacity: 0;
   transition:
@@ -460,13 +456,6 @@
   visibility: visible;
   opacity: 1;
   transition: opacity var(--motion-duration-200) var(--motion-ease-out);
-}
-
-.kv-reference-stack__head-actions {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: var(--spacing-4);
 }
 
 .kv-reference-stack__tray[data-all] .kv-reference-stack__scroller {
@@ -977,12 +966,5 @@
 
 .kv-attachment-strip__items[data-sorting] .kv-attachment-strip__item:not([data-uploading]) .kv-reference-item__badge {
   opacity: 1;
-  transition: none;
-}
-
-/* 展开全部里切类型选项卡：下面的格子、添加格、高度都硬切，不做移动和淡入淡出（11-23 用户定）。
-   切的那一帧 JS 加 data-filtering，画完就去掉。放在最后，盖过上面各处的过渡 */
-.kv-reference-stack__tray[data-filtering],
-.kv-reference-stack__tray[data-filtering] :is(.kv-reference-stack__card, .kv-reference-stack__trigger, .kv-reference-stack__trigger-icon, .kv-reference-item__badge) {
   transition: none;
 }
