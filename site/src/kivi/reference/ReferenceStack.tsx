@@ -8,7 +8,11 @@ import {
   type CSSProperties,
   type HTMLAttributes,
 } from 'react';
+import { Button, IconButton } from '../button';
+import { Dialog } from '../dialog';
 import { Icon } from '../Icon';
+import { TabItem, Tabs } from '../navigation';
+import { Tooltip } from '../tooltip';
 import { UploadRing } from '../upload/UploadRing';
 import { cx } from '../utils';
 import { useControllable, useMergedRef, useSortable } from '../hooks';
@@ -65,6 +69,20 @@ const CELL = 72; // 卡片、添加格
 const STACK_SCALE = 56 / 72; // 叠放时卡片缩到 56
 const STEP = 78; // 展开后每格占的宽：72 + 间距 6
 const GHOST_EXTRA = 50; // 删掉的卡片等消失动画（150ms）播完，再多留这么久才卸掉
+const GAP = STEP - CELL; // 格子间距 6
+/** 超过几张悬停只展开三格：第一张、展开全部、添加（照即梦，11-23 用户定） */
+const CONDENSE_FROM = 3;
+/** 展开全部时顶上一行（类型选项卡、清空、收起）32 高，下面空 12 再排格子 */
+const HEAD = 32 + 12;
+
+/** 展开全部时按类型看：全部 / 图片 / 视频 / 音频，只是切着看，不改顺序 */
+type Filter = 'all' | ReferenceType;
+const FILTERS: { value: Filter; label: string }[] = [
+  { value: 'all', label: '全部' },
+  { value: 'image', label: '图片' },
+  { value: 'video', label: '视频' },
+  { value: 'audio', label: '音频' },
+];
 
 /** 展开、收起的时长是 --motion-duration-400 的几倍：400ms 起，每多一张加 10ms，最多 700ms（照 BytePlus 参考区）。
  *  乘在变量上，系统开了减少动态效果、文档里慢放时跟着变 */
@@ -98,8 +116,18 @@ interface CardLayout {
   hidden: boolean;
 }
 
+/** 展开全部时第 p 格在哪：一排 cols 格，从顶上一行下面开始排 */
+const gridAt = (p: number, cols: number) => ({ tx: STEP * (p % cols), ty: HEAD + STEP * Math.floor(p / cols) });
+
+/** 超过 CONDENSE_FROM 张、悬停展开时：第一张在第 1 格，第二张在第 2 格（盖着「展开全部」），后面的都藏在第 2 格下面 */
+function condensedLayout(index: number): CardLayout {
+  if (index === 0) return { tx: 0, ty: 0, rot: 0, scale: 1, opacity: 1, z: 2, label: true, hidden: false };
+  return { tx: STEP, ty: 0, rot: 0, scale: 1, opacity: index === 1 ? 1 : 0, z: index === 1 ? 3 : 1, label: false, hidden: index > 1 };
+}
+
 /** lead：展开后卡片前面有几格添加格，满了（`max`）添加格隐藏就是 0，平时是 1 */
 function cardLayout(index: number, count: number, open: boolean, lead = 1): CardLayout {
+  if (open && count >= CONDENSE_FROM) return condensedLayout(index);
   if (open) return { tx: STEP * (index + lead), ty: 0, rot: 0, scale: 1, opacity: 1, z: index + 1, label: true, hidden: false };
   if (count === 1) return { tx: 0, ty: 0, rot: 0, scale: 1, opacity: 1, z: 5, label: true, hidden: false };
   const k = count - 1 - index; // 0 是最上面那张，也就是最后加的
@@ -117,7 +145,7 @@ function cardLayout(index: number, count: number, open: boolean, lead = 1): Card
   };
 }
 
-// 新卡片从最上面那张的位置、小一点、透明地出现
+// 叠着时新卡片从最上面那张的位置、小一点、透明地出现（展开着时原地出现，见 ReferenceStackCard）
 const ENTER: CardLayout = {
   tx: STACK[0].dx,
   ty: STACK[0].dy,
@@ -155,6 +183,15 @@ export interface ReferenceStackProps extends Omit<HTMLAttributes<HTMLDivElement>
   onReorder?: (from: number, to: number) => void;
   /** 快捷引用（照线上）：展开后鼠标移到卡片上，右下角出「@」，点卡片触发，把这张素材以 @ 引用插进提示词。传了它点卡片就是引用，不再触发 `onItemClick` */
   onQuote?: (item: ReferenceStackItem) => void;
+  /** 展开全部（受控）。超过 2 张时悬停只展开三格：第一张、「展开全部」（盖在第二张上）、添加；点「展开全部」参考区铺满输入框宽度，
+   *  顶上一行类型选项卡（只是切着看）、「清空全部素材」、收起，下面所有素材换行排开，最后是添加格。点收起、按 Esc、素材删光了收回 */
+  showAll?: boolean;
+  /** 非受控时的初始状态，默认不展开 */
+  defaultShowAll?: boolean;
+  /** 展开全部、收回时触发 */
+  onShowAllChange?: (showAll: boolean) => void;
+  /** 展开全部时顶上的「清空全部素材」：先弹确认（Dialog 400），点「清空」才触发，在这里删掉全部素材。不传就没有这个按钮 */
+  onClear?: () => void;
 }
 
 interface Ghost {
@@ -184,6 +221,10 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
     max,
     onReorder,
     onQuote,
+    showAll: showAllProp,
+    defaultShowAll = false,
+    onShowAllChange,
+    onClear,
     className,
     style,
     ...rest
@@ -201,12 +242,35 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
   const [atEnd, setAtEnd] = useState(true);
   const mounted = useRef(false);
 
-  const open = n > 0 && expanded;
+  const [showAllState, setShowAllState] = useControllable(showAllProp, defaultShowAll, onShowAllChange);
+  const all = n > 0 && showAllState;
+  const [filter, setFilter] = useState<Filter>('all');
+  // 切类型选项卡：下面的格子硬切，不做移动、淡入淡出（11-23 用户定）。切的那一帧关掉过渡，画完再开回来
+  const [filtering, setFiltering] = useState(false);
+  useLayoutEffect(() => {
+    if (!filtering) return;
+    void rootRef.current?.offsetHeight;
+    const id = requestAnimationFrame(() => setFiltering(false));
+    return () => cancelAnimationFrame(id);
+  }, [filtering, filter]);
+  // 「清空全部素材」的二次确认（11-23 用户定）
+  const [confirmClear, setConfirmClear] = useState(false);
+  // 悬停展开；展开全部时一直算展开（序号、删除、@、预览都照展开时的样子）
+  const open = n > 0 && (expanded || all);
+  const condensed = !all && n >= CONDENSE_FROM;
   const atMax = max != null && n >= max; // 放满了：添加格隐藏
   const lead = atMax ? 0 : 1;
-  const full = STEP * (n + lead);
-  const over = open && full > avail;
-  const trayWidth = open ? (over ? avail : full) : CELL;
+  const full = condensed ? STEP * (2 + lead) : STEP * (n + lead);
+  const over = open && !all && full > avail;
+
+  // 展开全部：一排能放几格，按类型筛完排第几格
+  const cols = Math.max(1, Math.floor((avail + GAP) / STEP));
+  const shownIds = items.filter((i) => filter === 'all' || i.type === filter).map((i) => i.id);
+  const cells = Math.max(1, shownIds.length + lead);
+  const allWidth = Number.isFinite(avail) ? avail : full;
+  const allHeight = HEAD + STEP * Math.ceil(cells / cols) - GAP;
+  const trayWidth = all ? allWidth : open ? (over ? avail : full) : CELL;
+  const trayHeight = all ? allHeight : CELL;
   const factor = durationFactor(n);
   const duration = `calc(var(--motion-duration-400) * ${factor})`;
 
@@ -241,10 +305,27 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
     };
   }, [maxWidth]);
 
-  // 告诉输入框：展开到多宽了，被盖住的字要藏起来，用多长时间
+  // 告诉输入框：展开到多宽了，被盖住的字要藏起来，用多长时间。展开全部时提示词排到下面，不用盖
   useLayoutEffect(() => {
-    box?.setCoverWidth(open ? trayWidth : 0, duration);
-  }, [box, open, trayWidth, duration]);
+    box?.setCoverWidth(open && !all ? trayWidth : 0, duration);
+  }, [box, open, all, trayWidth, duration]);
+
+  // 展开全部、收回：先让输入框量好变之前的样子（它要把高度撑开、提示词移下来的动画接上），再切。收回时顺手收起悬停展开，卡片飞回叠放
+  const toggleAll = (next: boolean) => {
+    if (next === all) return;
+    box?.setShowAll(next, duration);
+    setShowAllState(next);
+    setFilter('all');
+    if (!next) setExpanded(false);
+  };
+  // 素材删光了：收回（删最后一张、清空的时候在点击里已经收了，这里兜底外面直接改 items 的情况）
+  useEffect(() => {
+    if (showAllState && n === 0) {
+      box?.setShowAll(false, duration);
+      setShowAllState(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n === 0]);
   useLayoutEffect(() => () => box?.setCoverWidth(0), [box]);
 
   // 滚动提示：没滚到头，右边有渐隐
@@ -277,14 +358,15 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
   useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
   const enter = () => {
     window.clearTimeout(leaveTimer.current);
-    setExpanded(true);
+    if (!all) setExpanded(true);
   };
   const leave = () => {
     window.clearTimeout(leaveTimer.current);
-    setExpanded(false);
+    if (!all) setExpanded(false);
   };
   // 鼠标移开时，键盘焦点（:focus-visible）还在参考区里就不收，免得删除按钮藏起来、焦点却还在上面
   const mouseLeave = () => {
+    if (all) return;
     if (dragging.current || rootRef.current?.querySelector(':focus-visible')) return;
     window.clearTimeout(leaveTimer.current);
     leaveTimer.current = window.setTimeout(() => setExpanded(false), LEAVE_GRACE);
@@ -303,7 +385,8 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
       const r = tray?.getBoundingClientRect();
       if (!d && e && r && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) mouseLeave();
     },
-    disabled: !onReorder || !open || !settled,
+    // 悬停只展开三格时不能拖；展开全部时只在「全部」里拖（按类型筛着看时顺序是断开的）
+    disabled: !onReorder || !open || !settled || condensed || (all && filter !== 'all'),
   });
 
   // 删掉的卡片先留着，播完消失动画再卸掉
@@ -335,7 +418,13 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
   }, [ghosts]);
 
   // 每张卡片这一刻的位置；记下来，被删掉时从这个位置开始播消失动画
-  const layouts = items.map((_, i) => cardLayout(i, n, open, lead));
+  // 展开全部：筛掉的那几张在第一格淡出
+  const layouts = items.map((item, i): CardLayout => {
+    if (!all) return cardLayout(i, n, open, lead);
+    const p = shownIds.indexOf(item.id);
+    if (p < 0) return { ...gridAt(0, cols), rot: 0, scale: 0.8, opacity: 0, z: 0, label: false, hidden: true };
+    return { ...gridAt(p, cols), rot: 0, scale: 1, opacity: 1, z: i + 1, label: true, hidden: false };
+  });
   items.forEach((item, i) => lastLayouts.current.set(item.id, layouts[i]));
   useEffect(() => {
     mounted.current = true;
@@ -361,26 +450,37 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
 
   // 有素材又没展开时，添加格缩成右下角的圆形上传按钮
   const compact = n > 0 && !open;
+  // 添加格的位置：平时排最前；只展开三格时在第 3 格；展开全部时跟在最后一张后面
+  const addAt = all ? gridAt(shownIds.length, cols) : condensed && open ? { tx: STEP * 2, ty: 0 } : null;
+  const remove = onRemove && ((id: string) => {
+    if (all && n === 1) toggleAll(false);
+    onRemove(id);
+  });
+  // 类型选项卡上的数：有才写
+  const countOf = (f: Filter) => (f === 'all' ? n : items.filter((i) => i.type === f).length);
 
   return (
     <div
       ref={setRoot}
       className={cx('kv-reference-stack', className)}
-      style={{ '--kv-reference-stack-duration': duration, '--kv-reference-stack-scale': STACK_SCALE, ...style } as CSSProperties}
+      data-all={all ? '' : undefined}
+      style={{ '--kv-reference-stack-duration': duration, '--kv-reference-stack-scale': STACK_SCALE, ...(all ? { width: allWidth, height: allHeight } : null), ...style } as CSSProperties}
       {...rest}
     >
       <div
         className="kv-reference-stack__tray"
         data-open={open ? '' : undefined}
+        data-all={all ? '' : undefined}
         data-stacked={n > 1 && !open ? '' : undefined}
         data-settled={open && settled ? '' : undefined}
         data-full={over ? '' : undefined}
         data-at-end={over && atEnd ? '' : undefined}
         data-sorting={sortable.sorting ? '' : undefined}
+        data-filtering={filtering ? '' : undefined}
         role="group"
         aria-label="参考素材"
         tabIndex={n > 0 ? 0 : undefined}
-        style={{ width: trayWidth }}
+        style={{ width: trayWidth, height: trayHeight }}
         onMouseEnter={enter}
         onMouseLeave={mouseLeave}
         // 只有键盘聚焦才展开：点了添加格开文件窗口，窗口关掉后浏览器把焦点还给添加格，这时鼠标早不在这里了，不能再展开（展开了就收不回去，要鼠标再碰一下）
@@ -394,23 +494,53 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
           if (e.key === 'Escape' && open) {
             // 收起这一层自己吃掉 Esc，不连外层弹窗一起关
             e.preventDefault();
-            setExpanded(false);
+            if (all) toggleAll(false);
+            else setExpanded(false);
           }
         }}
         onTouchStart={(e) => {
-          if ((e.target as HTMLElement).closest('button')) return;
+          if (all || (e.target as HTMLElement).closest('button')) return;
           setExpanded(!expanded);
         }}
       >
         {/* 悬停区往右下多出 10，盖住上传按钮探出去的那块：从按钮上展开后按钮变走了，鼠标还在这里，不会马上收起 */}
         <span className="kv-reference-stack__hit" aria-hidden="true" />
+        {/* 展开全部时顶上一行：类型选项卡（只是切着看）｜清空全部素材、收起。平时藏着，展开全部时淡入。
+            宽度直接给展开后的宽，不跟着悬停区变宽：只淡入淡出，右边的按钮不从左边滑过来（11-23 用户定） */}
+        {n > 0 && (
+          <div className="kv-reference-stack__head" style={{ width: allWidth }} aria-hidden={!all || undefined} {...(all ? null : { inert: '' })}>
+            <Tabs size={32} value={filter} onChange={(v) => {
+                setFiltering(true);
+                setFilter(v as Filter);
+              }} aria-label="按类型看参考素材">
+              {FILTERS.map((f) => (
+                <TabItem key={f.value} value={f.value}>
+                  {countOf(f.value) ? `${f.label} (${countOf(f.value)})` : f.label}
+                </TabItem>
+              ))}
+            </Tabs>
+            <div className="kv-reference-stack__head-actions">
+              {onClear && (
+                <Button
+                  size={32}
+                  variant="ghost-muted"
+                  onClick={() => setConfirmClear(true)}
+                >
+                  清空全部素材
+                </Button>
+              )}
+              <IconButton icon="Fold" label="收起素材面板" size={32} variant="ghost-muted" onClick={() => toggleAll(false)} />
+            </div>
+          </div>
+        )}
         <div ref={scrollerRef} className="kv-reference-stack__scroller" onScroll={updateEnd}>
-          <div className="kv-reference-stack__track" style={{ width: open ? full : CELL }}>
+          <div className="kv-reference-stack__track" style={{ width: all ? allWidth : open ? full : CELL, height: all ? allHeight : undefined }}>
             {!atMax && (
               <button
                 type="button"
                 className="kv-reference-stack__trigger"
                 data-compact={compact ? '' : undefined}
+                style={addAt ? { left: addAt.tx, top: addAt.ty } : undefined}
                 aria-label="添加参考素材"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -425,7 +555,7 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
                 key={item.id}
                 item={item}
                 label={ghost ? item.name : labels[sortable.order(index)]}
-                layout={ghost || !open ? layout : { ...layout, tx: layout.tx + sortable.offset(index), z: sortable.drag?.from === index ? 200 : layout.z }}
+                layout={ghost || !open ? layout : { ...layout, tx: layout.tx + sortable.offset(index), ty: layout.ty + sortable.offsetY(index), z: sortable.drag?.from === index ? 200 : layout.z }}
                 dragging={!ghost && sortable.drag?.from === index}
                 instant={!ghost && open && sortable.instant(index)}
                 sortProps={!ghost && onReorder && open ? sortable.itemProps(index) : undefined}
@@ -433,14 +563,44 @@ export const ReferenceStack = forwardRef<HTMLDivElement, ReferenceStackProps>(fu
                 ghost={ghost}
                 enter={mounted.current}
                 open={open}
-                onRemove={onRemove}
+                onRemove={remove}
                 onItemClick={onQuote ?? onItemClick}
                 quotable={!!onQuote}
+                // 只展开三格时第二张盖着「展开全部」
+                more={!ghost && condensed && index === 1 ? { shown: open, count: n, onClick: () => toggleAll(true) } : undefined}
               />
             ))}
           </div>
         </div>
       </div>
+      {/* 放在参考区外层、不放进 tray：弹窗里按 Esc 冒泡上来不会顺手把面板也收起 */}
+      {onClear && (
+        <Dialog
+          size={400}
+          open={confirmClear}
+          onOpenChange={setConfirmClear}
+          title="确定清空全部素材吗？"
+          description="清空后，提示词里引用这些素材的 @ 也会一起删掉。"
+          footer={
+            <>
+              <Button size={36} variant="secondary" onClick={() => setConfirmClear(false)}>
+                取消
+              </Button>
+              <Button
+                size={36}
+                variant="danger"
+                onClick={() => {
+                  setConfirmClear(false);
+                  toggleAll(false);
+                  onClear();
+                }}
+              >
+                清空
+              </Button>
+            </>
+          }
+        />
+      )}
     </div>
   );
 });
@@ -470,9 +630,11 @@ interface CardProps {
   quotable?: boolean;
   /** 能排序时的拖动、键盘事件 */
   sortProps?: ReturnType<ReturnType<typeof useSortable>['itemProps']>;
+  /** 这张盖着「展开全部」：模糊 + Expand 图标，shown 时才显示；盖着时不出序号、删除、@、预览，点了展开全部 */
+  more?: { shown: boolean; count: number; onClick: () => void };
 }
 
-function ReferenceStackCard({ item, label, layout, ghost, enter, open, onRemove, onItemClick, quotable, dragging, instant, sorting, sortProps }: CardProps) {
+function ReferenceStackCard({ item, label, layout, ghost, enter, open, onRemove, onItemClick, quotable, dragging, instant, sorting, sortProps, more }: CardProps) {
   const [entered, setEntered] = useState(!enter);
   useEffect(() => {
     if (entered) return;
@@ -487,8 +649,11 @@ function ReferenceStackCard({ item, label, layout, ghost, enter, open, onRemove,
     };
   }, [entered]);
 
-  const l = entered ? layout : ENTER;
+  // 新卡片从哪出来：叠着的时候从最上面那张的位置飞过来；已经展开了（悬停展开、展开全部）就在自己的格子里原地放大、淡入，
+  // 别的格子不动，只有添加格往后挪一格（11-23 用户定）
+  const l = entered ? layout : open ? { ...layout, scale: layout.scale * 0.8, opacity: 0 } : ENTER;
   const uploading = item.progress != null && item.progress < 100;
+  const covered = !!more?.shown;
   const progress = Math.max(0, Math.min(100, item.progress ?? 0));
 
   // 平移、旋转、缩放分开写，展开收起时三样各自补间
@@ -504,8 +669,9 @@ function ReferenceStackCard({ item, label, layout, ghost, enter, open, onRemove,
       data-labeled={l.label ? '' : undefined}
       data-uploading={uploading ? '' : undefined}
       data-leaving={ghost ? '' : undefined}
-      data-clickable={onItemClick ? '' : undefined}
-      data-removable={onRemove ? '' : undefined}
+      data-clickable={onItemClick && !covered ? '' : undefined}
+      data-removable={onRemove && !covered ? '' : undefined}
+      data-more={covered ? '' : undefined}
       data-sortable={ghost ? undefined : ''}
       data-draggable={sortProps ? '' : undefined}
       data-dragging={dragging ? '' : undefined}
@@ -515,28 +681,28 @@ function ReferenceStackCard({ item, label, layout, ghost, enter, open, onRemove,
       aria-label={label}
       aria-hidden={l.hidden || ghost || undefined}
       // 能预览、能排序的卡片能用键盘聚焦（展开后才聚焦得到，和删除按钮一样），Enter、Space 打开预览，Alt + ← / → 换位置
-      tabIndex={(onItemClick || sortProps) && open && !ghost && !l.hidden ? 0 : undefined}
-      onClick={() => onItemClick?.(item)}
+      tabIndex={(onItemClick || sortProps) && open && !ghost && !l.hidden && !covered ? 0 : undefined}
+      onClick={() => !covered && onItemClick?.(item)}
       onPointerDown={sortProps?.onPointerDown}
       onDragStart={sortProps?.onDragStart}
       aria-keyshortcuts={sortProps?.['aria-keyshortcuts']}
       onKeyDown={(e) => {
         sortProps?.onKeyDown(e);
         // 焦点在里面的删除按钮上时，按键留给按钮自己
-        if (e.defaultPrevented || !onItemClick || e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+        if (covered || e.defaultPrevented || !onItemClick || e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
         e.preventDefault();
         onItemClick(item);
       }}
     >
       {/* 展开后悬停出预览卡（和附件条同一个）：图片、视频看大图，音频看名字和时长；上传中、没有图的不出 */}
       <PreviewPopover
-        disabled={!open || ghost || sorting || uploading || (item.type !== 'audio' && !item.src)}
+        disabled={!open || ghost || sorting || uploading || covered || (item.type !== 'audio' && !item.src)}
         preview={{ type: item.type, src: item.src, video: item.video, name: item.name, duration: item.duration }}
       >
         <ReferenceItem size={72} type={item.type === 'audio' ? 'audio' : 'image'} src={item.src} badge={label} />
       </PreviewPopover>
       {item.duration && <span className="kv-reference-stack__duration">{item.duration}</span>}
-      {quotable && !uploading && (
+      {quotable && !uploading && !covered && (
         <span className="kv-reference-stack__quote" aria-hidden="true">
           @
         </span>
@@ -546,7 +712,25 @@ function ReferenceStackCard({ item, label, layout, ghost, enter, open, onRemove,
           <UploadRing progress={progress} aria-label={`${item.name}上传中`} />
         </div>
       )}
-      {onRemove && (
+      {more && (
+        // 悬停出提示「查看全部」（照即梦）；外壳铺满卡片，提示对着整张卡居中
+        <Tooltip content="查看全部" disabled={!more.shown} className="kv-reference-stack__more-anchor">
+          <button
+            type="button"
+            className="kv-reference-stack__more"
+            aria-label={`查看全部素材（共 ${more.count} 个）`}
+            tabIndex={more.shown ? 0 : -1}
+            aria-hidden={!more.shown || undefined}
+            onClick={(e) => {
+              e.stopPropagation();
+              more.onClick();
+            }}
+          >
+            <Icon name="Expand" />
+          </button>
+        </Tooltip>
+      )}
+      {onRemove && !covered && (
         <button
           type="button"
           className="kv-reference-stack__remove"

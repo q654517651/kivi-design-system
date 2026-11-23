@@ -46,11 +46,21 @@ const DELETE_FOLDER_DESCRIPTION = "删除后，文件夹内容在'我的资产'�
 type NameTarget = { kind: 'new-folder' } | { kind: 'rename-folder'; id: string } | { kind: 'rename-canvas'; id: string } | null;
 
 /** 资产页主区（侧栏在 UI 页面预览的外壳里） */
-export function AssetsPage({ onOpenCanvas }: { onOpenCanvas: (canvasId: string) => void }) {
+export function AssetsPage({
+  onOpenCanvas,
+  initialView,
+  onBackOut,
+}: {
+  onOpenCanvas: (canvasId: string) => void;
+  /** 进来直接停在哪个二级页：创作首页最近项目「查看全部」进全部画布页 */
+  initialView?: 'canvases';
+  /** 二级页点返回：传了就回来源页（比如创作首页），不传回资产首页 */
+  onBackOut?: () => void;
+}) {
   const assets = useDB((s) => s.assets);
   const allFolders = useDB((s) => s.folders);
   const canvases = useDB((s) => s.canvases);
-  const [view, setView] = useState<View>(HOME);
+  const [view, setView] = useState<View>(initialView ? { kind: initialView } : HOME);
   const [nameTarget, setNameTarget] = useState<NameTarget>(null);
   // 置顶只是页面上的排序（原来就没存），置顶的排最前面
   const [pinned, setPinned] = useState<string[]>(['f1']);
@@ -127,7 +137,7 @@ export function AssetsPage({ onOpenCanvas }: { onOpenCanvas: (canvasId: string) 
   if (view.kind === 'canvases') {
     return (
       <>
-        <CanvasesPage onBack={home} onCreate={newCanvas} onOpen={onOpenCanvas} onRename={(c) => setNameTarget({ kind: 'rename-canvas', id: c.id })} />
+        <CanvasesPage onBack={onBackOut ?? home} onCreate={newCanvas} onOpen={onOpenCanvas} onRename={(c) => setNameTarget({ kind: 'rename-canvas', id: c.id })} />
         {dialog}
       </>
     );

@@ -18,7 +18,6 @@ import { TOOL_INTRO, toolOf, type ToolId } from '../../data/tools';
 import { ratioNum } from '../../data/mock';
 import { uid } from '../../data/store';
 import { confirm } from '../../flows/dialogs';
-import { confirmDelete } from '../../flows/delete';
 import { copyImage, downloadMedia } from '../../flows/files';
 import { MaskLayer } from './mask-layer';
 import { BRUSH, EDIT_MODES, EXPAND_DEFAULT, EXPAND_SCALES, toolCost, toolParams, type CostContext } from './options';
@@ -67,7 +66,7 @@ export interface ToolWorkbenchProps {
   source: Source | null;
   /** 上传：传了才有「上传」按钮和舞台右上的下载 / 重新上传（工具页用，创作页弹窗里不传） */
   onUpload?: () => void;
-  /** 删除原图 / 原视频，回到空态（先确认）。不传就没有删除键 */
+  /** 清空舞台：拿掉原图 / 原视频，回到空的上传状态（不确认、不提示，结果都还在历史里）。不传就没有清空键 */
   onRemove?: () => void;
   /** 视频拼接：拖了一个文件到视频1的位上 */
   onFile?: (file: File) => void;
@@ -77,7 +76,7 @@ export interface ToolWorkbenchProps {
   hidden?: boolean;
   /** 扩图、智能编辑的提示词放成一横条（左边下拉、中间一行输入、右边生成），给图多留地方：创作页工具弹窗用（11-12 用户定） */
   promptBar?: boolean;
-  /** AI 工具页（11-19 用户定）：坑铺满整栏高、和两边的框一样高，涂抹工具条、下载 / 换一张 / 删除浮在坑里顶上，参数面板浮在坑里底下，
+  /** AI 工具页（11-19 用户定）：坑铺满整栏高、和两边的框一样高，涂抹工具条、下载 / 换一张 / 清空浮在坑里顶上，参数面板浮在坑里底下，
    *  图放在它们中间（离坑四边至少 16）。不传是原来的排法（工具条在坑上面、参数面板在坑下面，创作页工具弹窗用） */
   floating?: boolean;
   /** 智能编辑固定成这一种方式、不能切（画布节点工具栏的「重绘」「元素去除」是两个工具）。不传就是自己切 */
@@ -315,7 +314,7 @@ export function ToolWorkbench({ tool, source, onUpload, onRemove, onFile, onGene
     />
   );
 
-  // 右键菜单、右上的重新上传 / 删除
+  // 右键菜单、右上的重新上传 / 清空
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const download = () => cur && void downloadMedia([{ src: cur.src }]);
   // 只有图片能复制（视频不出这一项）
@@ -424,7 +423,7 @@ export function ToolWorkbench({ tool, source, onUpload, onRemove, onFile, onGene
         <StageActions
           onDownload={download}
           onReupload={() => void reupload()}
-          onRemove={onRemove && (() => void confirmDelete(async () => onRemove()))}
+          onRemove={onRemove}
         />
       )}
 

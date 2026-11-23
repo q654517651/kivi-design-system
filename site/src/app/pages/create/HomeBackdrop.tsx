@@ -65,10 +65,14 @@ export function HomeAtmosphere({ targetRef }: { targetRef: React.RefObject<HTMLE
     const page = wrap?.parentElement;
     if (!wrap || !page) return;
     // 输入框不一定和背景同一次挂上（线上打包后第一次量时它还是空的，背景一直是 0 高、像素云不出），
-    // 所以每次量都现取；没取到就过一会儿再量（用定时器不用 requestAnimationFrame：后台标签页里后者不跑），取到了再盯着它的尺寸
+    // 所以每次量都现取；没取到就过一会儿再量（用定时器不用 requestAnimationFrame：后台标签页里后者不跑）。
+    // 量到输入框有高度后就定住，之后输入框自己变高（参考区展开全部、提示词多行）背景不跟着变：
+    // 跟着变的话像素云每帧重建画布、图案跟着拉伸，还掉帧（11-23）。只有页面变宽变窄时重量
     let retry = 0;
     let watched: HTMLElement | null = null;
-    const ro = new ResizeObserver(() => measure());
+    let settled = false;
+    let settle = 0;
+    let width = page.clientWidth;
     const measure = () => {
       const target = targetRef.current;
       if (!target) {
@@ -77,15 +81,31 @@ export function HomeAtmosphere({ targetRef }: { targetRef: React.RefObject<HTMLE
       }
       if (watched !== target) {
         watched = target;
-        ro.observe(target);
+        settled = false;
+        window.clearTimeout(settle);
+        settle = 0;
+        targetRo.observe(target);
       }
-      setHeight(Math.max(1, target.getBoundingClientRect().bottom - page.getBoundingClientRect().top + ATMOSPHERE_BELOW));
+      const rect = target.getBoundingClientRect();
+      // 刚挂上的半秒里还跟着变（字体、组件自己量完会再变一次），之后定住
+      if (rect.height > 0 && !settle) settle = window.setTimeout(() => (settled = true), 500);
+      setHeight(Math.max(1, rect.bottom - page.getBoundingClientRect().top + ATMOSPHERE_BELOW));
     };
+    const targetRo = new ResizeObserver(() => {
+      if (!settled) measure();
+    });
+    const pageRo = new ResizeObserver(() => {
+      if (page.clientWidth === width) return;
+      width = page.clientWidth;
+      measure();
+    });
     measure();
-    ro.observe(page);
+    pageRo.observe(page);
     return () => {
       window.clearTimeout(retry);
-      ro.disconnect();
+      window.clearTimeout(settle);
+      targetRo.disconnect();
+      pageRo.disconnect();
     };
   }, [targetRef]);
   return (

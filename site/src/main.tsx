@@ -14,7 +14,8 @@ const KiviApp = lazy(() => import('./app/App'));
 // 「浮层」类型要放在图片上看：演示区的图片底
 document.documentElement.style.setProperty(
   '--shell-media',
-  `url("${import.meta.env.BASE_URL}placeholders/kiwi-light-16x9.webp")`,
+  // 换成绝对地址：打包时 BASE_URL 是相对的「./」，写进 CSS 变量后会按样式表所在的 assets/ 去找，线上 404
+  `url("${new URL(`${import.meta.env.BASE_URL}placeholders/kiwi-light-16x9.webp`, document.baseURI).href}")`,
 );
 
 createRoot(document.getElementById('root')!).render(

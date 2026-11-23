@@ -23,7 +23,7 @@ import { HomeHead, RecentUpdates } from './HomeParts';
 import { genTaskInput } from './submit';
 import { handOffComposer } from './handoff';
 
-type HomeMode = 'generate' | 'canvas';
+export type HomeMode = 'generate' | 'canvas';
 
 /*
   创作首页（11-10，照用户的交互原型 kivi-prototype「创作页」：结构和交互照它，样子用组件库）。
@@ -60,6 +60,7 @@ export function CreateHome({
   onUseSkill,
   onExplore,
   onAllCanvases,
+  initialMode = 'generate',
 }: {
   /** 生成：对话建好、任务提交后，进这个对话页（参数是新对话的 id） */
   onSubmit: (chatId: string) => void;
@@ -71,10 +72,12 @@ export function CreateHome({
   onUseSkill: (name: string) => void;
   /** 广场搜索框回车（带着关键词）、「查看全部」「更多」：去探索页对应选项卡 */
   onExplore: (tab: ExploreTab, keyword?: string) => void;
-  /** 最近项目「查看全部」：去我的资产看全部画布 */
+  /** 最近项目「查看全部」：直接进全部画布页，返回回到这里的「画布」 */
   onAllCanvases: () => void;
+  /** 进来停在「生成」还是「画布」：从全部画布页返回时是「画布」 */
+  initialMode?: HomeMode;
 }) {
-  const [mode, setMode] = useState<HomeMode>('generate');
+  const [mode, setMode] = useState<HomeMode>(initialMode);
   // 生成输入框的参考区：探索页「添加到参考图」排着的素材进来就加上
   const [refs, setRefs] = useState<ReferenceStackItem[]>([]);
   useReferenceInbox((items) => {
@@ -133,34 +136,61 @@ export function CreateHome({
   /** 点阵氛围画到输入框下面 52，要量它 */
   const composerRef = useRef<HTMLDivElement>(null);
   const canvasBox = useRef<HTMLDivElement>(null);
-  // 画布那套至少和生成那套一样高：什么都没加时两套一样高，切换时外壳高度不动；画布里加了附件才比生成高
+  // 画布那套至少和生成那套平时一样高：什么都没加时两套一样高，切换时外壳高度不动。
+  // 只取生成那套平时的高度（挂上半秒后定住，页面变宽变窄时重量），生成里展开了参考区、写了多行不带着画布变高：
+  // 两套各是各的，切过去外壳 200ms 变到那套的高度，下面跟着动（11-23 用户定）
   const [generateHeight, setGenerateHeight] = useState<number>();
   useLayoutEffect(() => {
     const el = generateBox.current;
-    if (!el) return;
+    const page = el?.parentElement;
+    if (!el || !page) return;
+    let settled = false;
+    let width = page.clientWidth;
     const measure = () => setGenerateHeight(el.offsetHeight);
     measure();
-    const ro = new ResizeObserver(measure);
+    const settle = window.setTimeout(() => (settled = true), 500);
+    const ro = new ResizeObserver(() => {
+      if (!settled) measure();
+    });
     ro.observe(el);
-    return () => ro.disconnect();
+    const pageRo = new ResizeObserver(() => {
+      if (page.clientWidth === width) return;
+      width = page.clientWidth;
+      measure();
+    });
+    pageRo.observe(page);
+    return () => {
+      window.clearTimeout(settle);
+      ro.disconnect();
+      pageRo.disconnect();
+    };
   }, []);
-  const [shellHeight, setShellHeight] = useState<number>();
-  const [shellReady, setShellReady] = useState(false);
+  // 外壳高度 = 显示的那套的高度。直接写进 DOM，不走 React 状态：输入框自己在动画里变高时（参考区展开全部）每帧都会量到新高度，
+  // 走状态的话整个首页每帧重渲染一遍，掉帧（11-23）。
+  // 外壳只在切模式时自己做 200ms 过渡（data-switching，两套高度不一样）；平时跟着里面的输入框同步变高，不另加过渡，免得慢半拍
+  const shellRef = useRef<HTMLDivElement>(null);
+  const firstMode = useRef(true);
   useLayoutEffect(() => {
+    const shell = shellRef.current;
     const active = mode === 'generate' ? generateBox.current : canvasBox.current;
-    if (!active) return;
-    const measure = () => setShellHeight(active.offsetHeight);
+    if (!shell || !active) return;
+    let switching = 0;
+    if (firstMode.current) firstMode.current = false;
+    else {
+      shell.setAttribute('data-switching', '');
+      switching = window.setTimeout(() => shell.removeAttribute('data-switching'), 250);
+    }
+    const measure = () => {
+      shell.style.height = `${active.offsetHeight}px`;
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(active);
-    return () => ro.disconnect();
+    return () => {
+      window.clearTimeout(switching);
+      ro.disconnect();
+    };
   }, [mode]);
-  // 第一次量完不做动画，之后才有
-  useEffect(() => {
-    if (shellHeight == null) return;
-    const id = window.setTimeout(() => setShellReady(true), 50);
-    return () => window.clearTimeout(id);
-  }, [shellHeight != null]);
   const [square, setSquare] = useState<Exclude<ExploreTab, 'discover'>>('featured');
   // 一屏多高：量首页滚动区的可见高度，发现最高两屏
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -180,7 +210,7 @@ export function CreateHome({
   const swapContent = (m: HomeMode) => (
     <>
       {m === 'generate' ? (
-        <RecentUpdates onOpenCanvas={onOpenProject} />
+        <RecentUpdates onPreviewFlow={setFlow} />
       ) : (
         <section className="tpl-home__section" aria-label="最近项目">
           <HomeHead title="最近项目" onMore={onAllCanvases} />
@@ -270,7 +300,7 @@ export function CreateHome({
             <h1>今天想在 KIVI 创作什么？</h1>
             {/* 分段自己的底是白 10%，压在点阵上会透出来，外面垫一层玻璃（11-16 用户定），不改分段本身 */}
             <div className="tpl-home__mode-glass">
-              <Tabs variant="segment" size={36} value={mode} onChange={(v) => setMode(v as HomeMode)} aria-label="创作方式" className="tpl-home__mode">
+              <Tabs variant="segment-brand" size={36} value={mode} onChange={(v) => setMode(v as HomeMode)} aria-label="创作方式" className="tpl-home__mode">
                 <TabItem value="generate">生成</TabItem>
                 <TabItem value="canvas">画布</TabItem>
               </Tabs>
@@ -281,7 +311,7 @@ export function CreateHome({
           {/* 外壳只有一个（渐变底、描边、圆角）不动；两套内容叠在同一格里都挂着，切换时交叉淡化，框的大小位置不变、打的字也还在。
               一格的高度取两套里高的那个，所以两个一样高 */}
           <div ref={composerRef} className="tpl-home__composer">
-            <div className="tpl-home__shell" data-ready={shellReady || undefined} style={shellHeight != null ? { height: shellHeight } : undefined}>
+            <div ref={shellRef} className="tpl-home__shell">
               {SHOW_COMPOSER_MOTION && <ComposerMotion />}
               <div ref={generateBox} className="tpl-home__box" data-active={mode === 'generate' || undefined}>
                 <PromptBox placement="bottom-start" references={refs} onReferencesChange={setRefs} onSubmit={submit} skills={SKILL_ITEMS} skillCategories={SKILL_CATEGORIES} loraOptions={LORAS} />
@@ -294,9 +324,16 @@ export function CreateHome({
 
           {/* 切模式：中间一块和广场换掉，淡入 */}
           {/* 切模式：中间一块和广场直接换，不做淡入淡出（淡入要从全透明起，中间会空一帧、页面闪） */}
-          {/* 两套都挂着，只显示当前的（hidden）：不卸载，图片加载过的不用再从占位图重新加载，选项卡等状态也还在 */}
-          <div hidden={mode !== 'generate'}>{swapContent('generate')}</div>
-          <div hidden={mode !== 'canvas'}>{swapContent('canvas')}</div>
+          {/* 两套都挂着，只显示当前的：不卸载，图片加载过的不用再从占位图重新加载，选项卡等状态也还在。
+              不当前的那套不用 hidden（从排版里拿掉）：再显示时瀑布流要重新量宽重排、图片要重新解码，会闪一两帧（11-23 修）。
+              改成照样排版、只是看不见、高度收成 0（.tpl-home__swap），切换只换可见性 */}
+          <div className="tpl-home__swap">
+            {(['generate', 'canvas'] as const).map((m) => (
+              <div key={m} data-active={mode === m || undefined} aria-hidden={mode !== m || undefined} {...(mode !== m ? { inert: '' } : null)}>
+                {swapContent(m)}
+              </div>
+            ))}
+          </div>
         </div>
         </div>
       </ScrollArea>

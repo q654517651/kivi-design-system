@@ -198,6 +198,22 @@
   gap: var(--spacing-12);
 }
 
+/* 参考区展开全部（11-23 照即梦）：参考区一整行在上，提示词排到下面，间距 12。
+   换排法时内容区高度、提示词位置由 JS 从旧样子补间过去（参考区的时长，--motion-ease-expand） */
+.kv-prompt-box__content[data-all] {
+  flex-direction: column;
+  gap: var(--spacing-12);
+}
+
+.kv-prompt-box__content[data-all] > .kv-prompt-box__refs {
+  align-self: stretch;
+}
+
+.kv-prompt-box__content[data-all] > .kv-prompt-box__input {
+  flex: none;
+  width: 100%;
+}
+
 /* 有 Lora 时：Lora 格 ｜ 竖线 ｜ 参考区，竖线 32 高、上下居中（11-19，和画布生成面板一样） */
 .kv-prompt-box__refs:has(> .kv-lora-field) {
   --kv-divider-size: var(--spacing-32);

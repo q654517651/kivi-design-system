@@ -110,6 +110,7 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   Brush: { means: '画笔' },
   BrushSize: { means: '笔刷大小', note: '自绘' },
   Eraser: { means: '橡皮擦' },
+  Clean: { means: '清空（AI 工具页舞台：清回空的上传状态）', note: 'Hugeicons clean，去掉两个闪点' },
   // 视频剪辑（9）
   Cutting: { means: '剪切', note: '连线删除按钮也用它；旧名 Cutting1 已合并到这里' },
   Divide: { means: '分割、拆分', note: '自绘' },

@@ -51,4 +51,4 @@ import { ToolbarPlayground } from '../business/canvas.demos';
 
 ### 画布工具栏
 
-不是单独的组件：`ButtonGroup variant="surface" size={56}`，画布底部的胶囊，里面放 IconButton 32 · 无底：左边添加，右边工作流（`Template`）、上传、历史（11-09）。画布模板底部正中摆着。点添加往上弹菜单（Dropdown `top-start` + Menu 200）：小标题「添加节点」，文本生成、图片生成、视频生成、音频生成、视频剪辑（图标 Text、ImageGeneration、VideoGeneration、Audio、Cutting），照线上的添加节点面板；上传在工具栏上单独有，菜单里不放。高 56，内边距 12 / 16，间距 16，圆角 `--border-radius-round`，实色 surface 底、描边 border-subtle（不透明，不加模糊）；图标 24。第一个「添加」是 IconButton 主要（`variant="primary"`，品牌绿），图标 20。
+不是单独的组件：`ButtonGroup variant="surface" size={44} orientation="vertical"`，画布左边上下居中、离左 16 的竖条（11-23 从底部正中挪过来），里面放 IconButton 36 · 无底（图标 20）：上面添加，下面工作流（`Template`）、上传、历史（11-09）。提示往右出。点添加往右弹菜单（Dropdown `right-start`，离条 4 + Menu 200），工作流面板也往右出（离条 4）：小标题「添加节点」，文本生成、图片生成、视频生成、音频生成、视频剪辑（图标 Text、ImageGeneration、VideoGeneration、Audio、Cutting），照线上的添加节点面板；上传在工具栏上单独有，菜单里不放。宽 44，内边距 4，间距 4，圆角 12（11-23 照即梦：按钮大、排得紧；试过 56 胶囊、44 横条那套 32 按钮间距 8），实色 surface 底、描边 border-subtle（不透明，不加模糊）；图标 20。第一个「添加」是 IconButton 次要（`variant="secondary"`，白 10% 底，11-23 从主要改）。

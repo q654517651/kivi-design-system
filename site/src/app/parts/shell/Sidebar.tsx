@@ -71,7 +71,7 @@ export function Sidebar({ collapsed: collapsedProp, defaultCollapsed = false, on
       }
       return undefined;
     };
-    return sortRecent(chats).map((c) => ({ id: c.id, text: c.title, thumb: thumbOf(c.items), pinned: c.pinned }));
+    return sortRecent(chats).map((c) => ({ id: c.id, text: c.title, thumb: thumbOf(c.items), pinned: c.pinned || c.fixed, fixed: c.fixed }));
   }, [chats, tasks, assets]);
   const canvasItems = useMemo<HistoryItem[]>(() => sortRecent(canvases).map((c) => ({ id: c.id, text: c.name, thumb: c.covers[0], pinned: c.pinned })), [canvases]);
 

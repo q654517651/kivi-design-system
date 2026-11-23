@@ -250,7 +250,7 @@ const agentTurns: AgentTurn[] = [];
     items.push({ kind: 'task', taskId: r.id });
     if (r.id === 'r2') items.push({ kind: 'agent', id: 'a1' });
   }
-  chats.push({ id: 'chat-1', title: '猕猴桃饮料夏日海报', updatedAt: NOW - 3 * MIN, items });
+  chats.push({ id: 'chat-1', title: '默认对话', fixed: true, updatedAt: NOW - 3 * MIN, items });
 }
 
 SIMPLE.forEach(([title, kind, prompt], i) => {

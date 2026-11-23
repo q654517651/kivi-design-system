@@ -60,7 +60,7 @@ export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(function TabI
   const l = layout ?? tabs?.layout ?? 'horizontal';
   const s = size ?? tabs?.size ?? 32;
   const on = selected ?? (tabs ? value !== undefined && tabs.value === value : false);
-  const segment = v === 'segment';
+  const segment = v !== 'tab';
 
   return (
     <>
@@ -70,6 +70,7 @@ export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(function TabI
       className={cx(
         'kv-tab-item',
         `kv-tab-item--${v}`,
+        v === 'segment-brand' && 'kv-tab-item--segment',
         l === 'vertical' ? 'kv-tab-item--vertical' : `kv-tab-item--${s}`,
         className,
       )}

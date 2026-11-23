@@ -71,7 +71,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
     if (i < 0) return;
     let next = -1;
     // 选项卡竖排整组竖着排：上下切换。分段竖排只是单项上图标下文字，整组仍横排：左右切换；分段是 radiogroup，上下也认（WAI-ARIA radio）
-    const radio = variant === 'segment';
+    const radio = variant !== 'tab';
     const fwd = column ? e.key === 'ArrowDown' : e.key === 'ArrowRight' || (radio && e.key === 'ArrowDown');
     const back = column ? e.key === 'ArrowUp' : e.key === 'ArrowLeft' || (radio && e.key === 'ArrowUp');
     if (fwd) next = (i + 1) % items.length;
@@ -88,8 +88,8 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
     <TabsContext.Provider value={ctx}>
       <div
         ref={mergedRef}
-        className={cx('kv-tab-group', variant === 'segment' && 'kv-tab-group--segment', column && 'kv-tab-group--vertical', className)}
-        role={variant === 'segment' ? 'radiogroup' : 'tablist'}
+        className={cx('kv-tab-group', variant !== 'tab' && 'kv-tab-group--segment', column && 'kv-tab-group--vertical', className)}
+        role={variant !== 'tab' ? 'radiogroup' : 'tablist'}
         aria-orientation={column ? 'vertical' : undefined}
         data-columns={columns ? '' : undefined}
         style={columns ? ({ '--kv-tab-columns': columns, ...style } as CSSProperties) : style}

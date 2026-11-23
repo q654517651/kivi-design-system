@@ -12,8 +12,10 @@ export interface HistoryItem {
   id: string;
   text: string;
   thumb?: string;
-  /** 置顶：菜单里写「取消置顶」 */
+  /** 置顶：右边挂置顶图标（悬停换成「⋯」），菜单里写「取消置顶」 */
   pinned?: boolean;
+  /** 默认对话：一直置顶、排第一个（挂置顶图标），菜单里只有重命名（不能取消置顶、不能删，11-23 用户定） */
+  fixed?: boolean;
 }
 
 /** 侧栏历史默认显示几条、点「更多」每次多几条（照线上） */
@@ -74,6 +76,7 @@ export function HistoryGroup({ title, items, icon, selected, collapsed, onSelect
               thumb={c.thumb ? <AssetThumb size={24} type="image" src={c.thumb} /> : <AssetThumb size={24} type="icon" icon={icon} />}
               collapsed={collapsed}
               selected={selected === c.id || undefined}
+              pinned={c.pinned}
               onClick={() => onSelect(c.id)}
               editing={editing === c.id}
               onEditingChange={(v) => setEditing(v ? c.id : null)}
@@ -85,13 +88,17 @@ export function HistoryGroup({ title, items, icon, selected, collapsed, onSelect
                   <MenuItem icon="Rename" onClick={() => setEditing(c.id)}>
                     重命名
                   </MenuItem>
-                  <MenuItem icon="StickyOnTop" onClick={() => onPin(c.id)}>
-                    {c.pinned ? '取消置顶' : '置顶'}
-                  </MenuItem>
-                  <Divider />
-                  <MenuItem variant="danger" icon="Delete" onClick={() => onRemove(c.id)}>
-                    删除
-                  </MenuItem>
+                  {!c.fixed && (
+                    <>
+                      <MenuItem icon="StickyOnTop" onClick={() => onPin(c.id)}>
+                        {c.pinned ? '取消置顶' : '置顶'}
+                      </MenuItem>
+                      <Divider />
+                      <MenuItem variant="danger" icon="Delete" onClick={() => onRemove(c.id)}>
+                        删除
+                      </MenuItem>
+                    </>
+                  )}
                 </Menu>
               }
             >

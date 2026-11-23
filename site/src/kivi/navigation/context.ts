@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 
-export type TabVariant = 'tab' | 'segment';
+/** 选项卡 / 分段 / 分段 · 品牌（分段的样子，选中那项白底 + 品牌绿和黄绿两团光、黑字；只给创作首页「生成 / 画布」这种页面级主切换，11-23 用户定） */
+export type TabVariant = 'tab' | 'segment' | 'segment-brand';
 export type TabLayout = 'horizontal' | 'vertical';
 export type TabSize = 32 | 36;
 

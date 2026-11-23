@@ -8,9 +8,11 @@ import { uid } from './store';
 */
 
 export interface PendingReference {
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio';
   /** 图片地址；视频放封面（参考区缩略图用封面） */
   src: string;
+  /** 视频、音频时长，没给视频按 5s */
+  duration?: string;
 }
 
 let queue: PendingReference[] = [];
@@ -24,7 +26,7 @@ export function sendToReference(item: PendingReference) {
 /** 把排着的素材接成参考区的项，名字按已有的往后编号 */
 export function appendReferences(list: ReferenceStackItem[], items: PendingReference[]): ReferenceStackItem[] {
   return items.reduce<ReferenceStackItem[]>(
-    (acc, r) => [...acc, { id: uid('c'), type: r.type, name: referenceName(acc, r.type), src: r.src, duration: r.type === 'video' ? '5s' : undefined }],
+    (acc, r) => [...acc, { id: uid('c'), type: r.type, name: referenceName(acc, r.type), src: r.src, duration: r.duration ?? (r.type === 'video' ? '5s' : undefined) }],
     list,
   );
 }

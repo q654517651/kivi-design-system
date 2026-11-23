@@ -55,7 +55,7 @@
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: color var(--motion-duration-100) var(--motion-ease-in-out);
+  /* 悬停、选中的文字颜色直接切，不过渡（11-23 用户定） */
 }
 
 .kv-tab-item > .kv-icon {
@@ -90,6 +90,22 @@
   --kv-tab-fill-hover: var(--color-bg-fill-container-light-2);
   --kv-tab-fill-selected: var(--color-bg-fill-container-light-2);
   --kv-tab-content-hover: var(--color-text-fill-secondary);
+}
+
+/* 样式：分段 · 品牌（11-23 用户定）。造型、尺寸、底槽和分段一样，只换选中那项的配色：
+   反白底 --color-bg-fill-invert 上叠两团虚光（左品牌绿 gradient-2 35%、右黄绿 gradient-1 30%，往外渐隐），字和图标 --color-text-fill-invert。
+   没选中的项和分段一样。只给页面级的主切换用（创作首页「生成 / 画布」），参数选择还是用分段 */
+.kv-tab-item--segment-brand {
+  font-weight: var(--font-weight-medium); /* 选没选中都是中粗，切换时宽度不跳（11-23 用户要粗一点） */
+  --kv-tab-fill-selected:
+    radial-gradient(42% 120% at 22% 50%, color-mix(in srgb, var(--color-brand-gradient-2) 35%, transparent), transparent 70%),
+    radial-gradient(40% 120% at 80% 50%, color-mix(in srgb, var(--color-brand-gradient-1) 30%, transparent), transparent 70%),
+    var(--color-bg-fill-invert);
+}
+
+/* 多一级类名：写在下面「状态：选中」前面，要压过它的白字 */
+.kv-tab-item.kv-tab-item--segment-brand:is([aria-selected="true"], [aria-checked="true"]) {
+  color: var(--color-text-fill-invert);
 }
 
 /* 尺寸：中是默认 */

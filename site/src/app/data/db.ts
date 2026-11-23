@@ -12,7 +12,7 @@ import { workflowSeed } from './seed/workflows';
 */
 
 /** 改了 DB 的形状或种子数据就加 1，本机存的旧数据作废 */
-const VERSION = 12;
+const VERSION = 13;
 
 /** 初始余额 */
 export const INITIAL_BALANCE = 2000;
