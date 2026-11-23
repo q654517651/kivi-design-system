@@ -437,11 +437,24 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
     );
     onPickSkill?.(s);
   };
+  // 参考素材按任务各存一份（11-23 用户定）：Agent、图片、视频、音频的参考互不带着走，切过去是那个任务自己的，切回来还在。
+  // 当前任务的在 references 里，别的任务的存在这里；切任务时把当前的存起来、换上那个任务的，展开全部收回
+  const refStash = useRef<Partial<Record<GenTask, ReferenceStackItem[]>>>({});
+  const switchTask = (next: GenTask) => {
+    if (next === task) return;
+    refStash.current[task] = references;
+    const back = refStash.current[next] ?? [];
+    delete refStash.current[next];
+    setRefsAll(false);
+    setTask(next);
+    setReferences(back);
+  };
   // 素材改了名、删了：框里的 @ 标签跟着改、跟着删
-  // 外面传进来的名字不一定是新编的，按现在的顺序算一遍
+  // 外面传进来的名字不一定是新编的，按现在的顺序算一遍。别的任务存着的素材也算在内：切任务时它们引用的 @ 不删
   const named = relabelReferences(references);
   useLayoutEffect(() => {
-    if (!syncMentions(textRef.current, named)) return;
+    const stashed = Object.values(refStash.current).flatMap((list) => relabelReferences(list ?? []));
+    if (!syncMentions(textRef.current, [...named, ...stashed])) return;
     const next = promptText(textRef.current);
     shownText.current = next;
     setValue(next);
@@ -453,37 +466,56 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
   const contentRef = useRef<HTMLDivElement>(null);
   const [refsAll, setRefsAll] = useState(false);
   const flipFrom = useRef<{ height: number; left: number; top: number; duration: string } | null>(null);
+  // 真正按「展开全部」排的条件：切到首尾帧时参考区不在，排法回到一行（11-23 用户：切首尾帧高度跳变）
+  const allLayout = refsAll && !framesNow;
+  const lastAll = useRef(allLayout);
+  // 排法变了但不是点展开 / 收起来的（比如展开全部着切到首尾帧、再切回来）：渲染时 DOM 还是旧的，先量下旧样子，下面一样补间过去
+  if (lastAll.current !== allLayout && !flipFrom.current && contentRef.current && textRef.current) {
+    const r = textRef.current.getBoundingClientRect();
+    flipFrom.current = { height: contentRef.current.offsetHeight, left: r.left, top: r.top, duration: 'var(--motion-duration-400)' };
+  }
+  useLayoutEffect(() => {
+    lastAll.current = allLayout;
+  });
   useLayoutEffect(() => {
     const from = flipFrom.current;
     const content = contentRef.current;
     const input = textRef.current;
     flipFrom.current = null;
     if (!from || !content || !input) return;
-    const to = input.getBoundingClientRect();
-    const height = content.offsetHeight;
-    const ease = `${from.duration} var(--motion-ease-expand)`;
-    content.style.transition = 'none';
-    content.style.height = `${from.height}px`;
-    input.style.transition = 'none';
-    input.style.transform = `translate(${from.left - to.left}px, ${from.top - to.top}px)`;
-    void content.offsetHeight;
-    content.style.transition = `height ${ease}`;
-    content.style.height = `${height}px`;
-    input.style.transition = `transform ${ease}`;
-    input.style.transform = '';
+    let cancelled = false;
+    let t = 0;
     const done = () => {
       content.style.transition = '';
       content.style.height = '';
       input.style.transition = '';
     };
-    const ms = parseFloat(getComputedStyle(content).transitionDuration) * 1000;
-    const t = window.setTimeout(done, (Number.isFinite(ms) ? ms : 0) + 50);
+    // 等这一轮的同步更新都画完再量新样子：参考区刚挂上时（从首尾帧切回来）它在自己的 layout effect 里才量出一排放几格，
+    // 会再同步渲染一次；那一次比这里晚，直接量会量到没排好的高度。微任务在浏览器画之前跑，不会闪
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const to = input.getBoundingClientRect();
+      const height = content.offsetHeight;
+      const ease = `${from.duration} var(--motion-ease-expand)`;
+      content.style.transition = 'none';
+      content.style.height = `${from.height}px`;
+      input.style.transition = 'none';
+      input.style.transform = `translate(${from.left - to.left}px, ${from.top - to.top}px)`;
+      void content.offsetHeight;
+      content.style.transition = `height ${ease}`;
+      content.style.height = `${height}px`;
+      input.style.transition = `transform ${ease}`;
+      input.style.transform = '';
+      const ms = parseFloat(getComputedStyle(content).transitionDuration) * 1000;
+      t = window.setTimeout(done, (Number.isFinite(ms) ? ms : 0) + 50);
+    });
     return () => {
+      cancelled = true;
       window.clearTimeout(t);
       done();
       input.style.transform = '';
     };
-  }, [refsAll]);
+  }, [allLayout]);
 
   // 参考区展开了多宽，就把提示词左边这么宽、4 行高的一块藏起来（再多一段渐隐）
   const ctx = useMemo(
@@ -519,7 +551,7 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
         onPasteCapture={composeHandlers(onPasteCapture, paste.onPasteCapture)}
         {...rest}
       >
-        <div ref={contentRef} className="kv-prompt-box__content" data-all={refsAll && !framesNow ? '' : undefined}>
+        <div ref={contentRef} className="kv-prompt-box__content" data-all={allLayout ? '' : undefined}>
           <div className="kv-prompt-box__refs">
             {lora && (
               <>
@@ -548,7 +580,6 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
                 onExpandedChange={onReferencesExpandedChange}
                 onAdd={onAddReference ?? (() => fileRef.current?.click())}
                 onRemove={(id) => setReferences(references.filter((i) => i.id !== id))}
-                onClear={() => setReferences([])}
                 // 展开全部由输入框记着（它要跟着换排法）；切走首尾帧再回来还是展开的
                 showAll={refsAll}
                 onReorder={(from, to) => {
@@ -581,7 +612,7 @@ export const PromptBox = forwardRef<HTMLDivElement, PromptBoxProps>(function Pro
         </div>
         <div className="kv-prompt-box__toolbar">
           <div className="kv-prompt-box__toolbar-start">
-            <TaskSelect placement={placement} value={task} onChange={(t) => setTask(t as GenTask)} />
+            <TaskSelect placement={placement} value={task} onChange={(t) => switchTask(t as GenTask)} />
             <GenToolbar
               kind={task}
               model={model}
