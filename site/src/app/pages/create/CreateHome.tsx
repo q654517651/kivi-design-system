@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button, CreateCard, ExploreCard, Masonry, ProjectCard, PromptBox, ScrollArea, TabItem, Tabs, WorkCard, placeholderImageSrc, type PromptBoxSubmit, type ReferenceStackItem } from '@kivi';
 import { SKILL_CATEGORIES, SKILL_ITEMS } from '../../../docs/business/skill-data';
 import { LORAS } from '../../../docs/business/lora-data';
-import { RATIO, SKILLS, WORKS, flowsOf, type ExploreSkill, type Flow, type Work } from '../../data/catalog';
+import { FLOW_CATEGORIES, RATIO, SKILLS, SKILL_CATS, WORKS, flowsOf, type ExploreSkill, type Flow, type Work } from '../../data/catalog';
 import { sendAgent } from '../../data/agent';
 import { addChatTask, createChat, deleteChat } from '../../data/chats';
 import { useDB } from '../../data/db';
@@ -16,7 +16,7 @@ import { FlowPreview } from '../explore/FlowPreview';
 import { SkillDetail } from '../explore/SkillDetail';
 import { WorkViewer } from '../explore/WorkViewer';
 import { downloadWork } from '../explore/work-actions';
-import { WORK_COLUMNS } from '../explore/shared';
+import { CategoryTabs, WORK_COLUMNS } from '../explore/shared';
 import { setLiked, toggleFavorite, useFavorites, useLikes } from '../../data/favorites';
 import { ComposerMotion, HomeAtmosphere, SHOW_COMPOSER_MOTION } from './HomeBackdrop';
 import { HomeHead, RecentUpdates } from './HomeParts';
@@ -37,16 +37,16 @@ export type HomeMode = 'generate' | 'canvas';
 /** 最近项目一排几格（新建画布 + 最近 4 个） */
 const PROJECT_COLS = 5;
 
-const SQUARE_TABS: { value: Exclude<ExploreTab, 'discover'>; label: string }[] = [
+const SQUARE_TABS: { value: SquareTab; label: string }[] = [
   { value: 'featured', label: '创作精选' },
   { value: 'skill', label: '技能' },
   { value: 'workflow', label: '工作流' },
 ];
-/** 首页的广场是探索页同一类内容的前几条 */
+/** 首页的广场是探索页同一类内容的前几条；标题行下面一排分类（和探索页同一套，11-23 用户定），每个选项卡各记各的分类 */
 const HOME_COUNT = 8;
-const FEATURED = flowsOf('featured').slice(0, HOME_COUNT);
-const WORKFLOWS = flowsOf('workflow').slice(0, HOME_COUNT);
-const HOME_SKILLS = SKILLS.slice(0, HOME_COUNT);
+type SquareTab = Exclude<ExploreTab, 'discover'>;
+const SQUARE_CATS: Record<SquareTab, string[]> = { featured: FLOW_CATEGORIES, skill: SKILL_CATS, workflow: FLOW_CATEGORIES };
+const inCat = (cat: string) => (x: { category: string }) => cat === 'all' || x.category === cat;
 /** 发现放够两屏的量，多出来的截掉 */
 const HOME_WORKS = WORKS.slice(0, 40);
 /** 发现最高几屏（屏 = 首页滚动区的可见高度） */
@@ -71,7 +71,8 @@ export function CreateHome({
   /** 技能详情里点「使用」：新建画布，Agent 输入框带上这个技能 */
   onUseSkill: (name: string) => void;
   /** 广场搜索框回车（带着关键词）、「查看全部」「更多」：去探索页对应选项卡 */
-  onExplore: (tab: ExploreTab, keyword?: string) => void;
+  /** 去探索页：带上搜索词、分类（广场「查看全部」停在同一个分类） */
+  onExplore: (tab: ExploreTab, keyword?: string, category?: string) => void;
   /** 最近项目「查看全部」：直接进全部画布页，返回回到这里的「画布」 */
   onAllCanvases: () => void;
   /** 进来停在「生成」还是「画布」：从全部画布页返回时是「画布」 */
@@ -191,7 +192,11 @@ export function CreateHome({
       ro.disconnect();
     };
   }, [mode]);
-  const [square, setSquare] = useState<Exclude<ExploreTab, 'discover'>>('featured');
+  const [square, setSquare] = useState<SquareTab>('featured');
+  const [squareCat, setSquareCat] = useState<Record<SquareTab, string>>({ featured: 'all', skill: 'all', workflow: 'all' });
+  const cat = squareCat[square];
+  const squareSkills = useMemo(() => SKILLS.filter(inCat(squareCat.skill)).slice(0, HOME_COUNT), [squareCat.skill]);
+  const squareFlows = useMemo(() => (square === 'skill' ? [] : flowsOf(square).filter(inCat(cat)).slice(0, HOME_COUNT)), [square, cat]);
   // 一屏多高：量首页滚动区的可见高度，发现最高两屏
   const scrollRef = useRef<HTMLDivElement>(null);
   const [screen, setScreen] = useState<number>();
@@ -258,7 +263,7 @@ export function CreateHome({
         ) : (
           <>
             {/* 右边回到「查看全部」（11-17 用户定，11-16 换过搜索框），去探索页对应选项卡 */}
-            <HomeHead onMore={() => onExplore(square)}>
+            <HomeHead onMore={() => onExplore(square, '', cat)}>
               <Tabs size={36} value={square} onChange={(v) => setSquare(v as typeof square)} aria-label="画布内容分类">
                 {SQUARE_TABS.map((t) => (
                   <TabItem key={t.value} value={t.value}>
@@ -267,9 +272,17 @@ export function CreateHome({
                 ))}
               </Tabs>
             </HomeHead>
+            <CategoryTabs
+              key={square}
+              label={`${SQUARE_TABS.find((t) => t.value === square)?.label}分类`}
+              value={cat}
+              options={SQUARE_CATS[square]}
+              onChange={(v) => setSquareCat((c) => ({ ...c, [square]: v }))}
+              className="tpl-home__cats"
+            />
             <div className="tpl-ex__grid">
               {square === 'skill'
-                ? HOME_SKILLS.map((s) => (
+                ? squareSkills.map((s) => (
                     <ExploreCard
                       key={s.id}
                       name={s.title}
@@ -280,7 +293,7 @@ export function CreateHome({
                       onOpen={() => setSkill(s)}
                     />
                   ))
-                : (square === 'featured' ? FEATURED : WORKFLOWS).map((f) => (
+                : squareFlows.map((f) => (
                     <ExploreCard key={f.id} name={f.name} cover={f.cover} video={f.video} showTime author={f.author} onOpen={() => setFlow(f)} />
                   ))}
             </div>

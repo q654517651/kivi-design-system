@@ -20,8 +20,8 @@ const SORTS: { value: SkillSort; label: string }[] = [
   { value: 'uses', label: '按用量排序' },
 ];
 
-export function Skills({ onUse, moreRef, initialKeyword = '' }: { onUse: (s: ExploreSkill) => void; moreRef: MoreRef; initialKeyword?: string }) {
-  const [category, setCategory] = useState('all');
+export function Skills({ onUse, moreRef, initialKeyword = '', initialCategory = 'all' }: { onUse: (s: ExploreSkill) => void; moreRef: MoreRef; initialKeyword?: string; initialCategory?: string }) {
+  const [category, setCategory] = useState(initialCategory);
   const [sort, setSort] = useState<SkillSort>('time');
   const [keyword, setKeyword] = useState(initialKeyword);
   const k = useDebounced(keyword.trim());

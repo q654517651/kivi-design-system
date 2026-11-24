@@ -2823,3 +2823,8 @@
   justify-content: center;
   padding: var(--spacing-24) 0;
 }
+
+/* 创作首页广场（画布）：标题行下面一排分类，和探索页同一套（11-23） */
+.tpl-home__cats {
+  margin-bottom: var(--spacing-16);
+}

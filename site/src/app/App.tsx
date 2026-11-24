@@ -58,6 +58,7 @@ export function KiviApp({
   const [exploreTab, setExploreTab] = useState<ExploreTab>('discover');
   // 创作首页广场的搜索框里填的字，进探索页时带过去
   const [exploreKeyword, setExploreKeyword] = useState('');
+  const [exploreCategory, setExploreCategory] = useState<string>();
   // 进画布页时带着的技能：探索页技能点「使用」新建画布，Agent 输入框带上技能引用
   const [skill, setSkill] = useState<string | undefined>();
   // 创作首页停在「生成」还是「画布」：从全部画布页返回时回到「画布」
@@ -163,9 +164,10 @@ export function KiviApp({
               onOpenCanvas={openCanvas}
               onOpenProject={openCanvasById}
               onUseSkill={(name) => openCanvas(undefined, name)}
-              onExplore={(tab, keyword = '') => {
+              onExplore={(tab, keyword = '', category) => {
                 setExploreTab(tab);
                 setExploreKeyword(keyword);
+                setExploreCategory(category);
                 onNavigate('explore');
               }}
               onAllCanvases={() => {
@@ -176,9 +178,10 @@ export function KiviApp({
           ))}
         {page === 'explore' && (
           <ExplorePage
-            key={`${exploreTab}:${exploreKeyword}`}
+            key={`${exploreTab}:${exploreKeyword}:${exploreCategory}`}
             initialTab={exploreTab}
             initialKeyword={exploreKeyword}
+            initialCategory={exploreCategory}
             onUseSkill={(name) => openCanvas(undefined, name)}
             onOpenCanvas={openCanvasById}
           />

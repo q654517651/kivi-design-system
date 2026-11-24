@@ -10,9 +10,9 @@ export const WORK_COLUMNS: MasonryColumns = { default: 5, 1100: 4, 800: 3, 550: 
 */
 
 /** 分类：「全部」+ 后台配置的分类，一组选项卡 */
-export function CategoryTabs({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
+export function CategoryTabs({ label, value, options, onChange, className }: { label: string; value: string; options: string[]; onChange: (v: string) => void; className?: string }) {
   return (
-    <Tabs value={value} onChange={onChange} aria-label={label}>
+    <Tabs value={value} onChange={onChange} aria-label={label} className={className}>
       <TabItem value="all">全部</TabItem>
       {options.map((c) => (
         <TabItem key={c} value={c}>
