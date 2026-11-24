@@ -100,6 +100,7 @@ export function KiviApp({
     if (next === 'explore') {
       setExploreTab('discover');
       setExploreKeyword('');
+      setExploreCategory(undefined);
     }
     onNavigate(next);
   };
