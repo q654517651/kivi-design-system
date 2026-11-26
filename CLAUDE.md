@@ -27,7 +27,7 @@
   3. 部署时 `pages.yml` 自动找所有 `preview/` 分支，各打一份放在 `网站/功能名/`（打开直接进演示站），演示开关里的「分支」自动多一项，切过去停在同一页；功能分支的本机演示数据分开存（`src/app/preview.ts`）。不用改 `main`、不用发版。某个分支打包失败只跳过它。
   4. 分支要接着改：跟着 `test` 合（`test` → 预览分支），对方的合并请求提到这个分支。
   5. 用户确认 UI 后合进 `test`：先在分支上删掉那两个文件，开合并请求合进 `test`，再删掉 `preview/…` 分支，手动 `gh workflow run pages.yml --ref main` 重新发一次，切换按钮里那一项就没了。
-  - 现在挂着的：`preview/expert-mode`（专家模式，DD 提的）。
+  - 现在挂着的：`preview/expert-mode`（专家模式，DD 提的，产品的分支）；`preview/expert-mode-ui`（专家模式 UI，11-24 从 expert-mode 拉的，我们自己调 UI 用，产品那边的新改动要合过来）；`preview/onboarding`（用户引导，DD 提的 #26，11-26 从 expert-mode-ui 拉的）。
 - skill 和新 kit 一起正式上线（定 `1.0.0`）；上线前图标仓库要做好。技能改成克隆 `skill` 分支装，不再打包 `.skill`（11-05 定）。
 
 ## 目录

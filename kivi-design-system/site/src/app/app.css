@@ -18,6 +18,17 @@
   gap: var(--spacing-12);
 }
 
+/* 分支切换下拉：铺满面板宽 */
+.app-demo__panel > .app-demo__branch {
+  display: flex;
+  align-self: stretch;
+}
+
+.app-demo__branch .kv-select {
+  flex: 1;
+  min-width: 0;
+}
+
 /* 余额不足弹窗里的两行数字 */
 .app-balance {
   display: grid;
