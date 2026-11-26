@@ -1,7 +1,7 @@
 import { createContext, forwardRef, useContext, type CSSProperties, type HTMLAttributes } from 'react';
 import { ICONS, ICON_VIEWBOX, type IconName } from './icons';
 import { ICONS_V3 } from './icons-v3';
-import { ICONFONT_FAMILY, ICONFONT_NAMES, ICONFONT_PREFIX, ensureIconfont } from './iconfont';
+import { ICONFONT_FAMILY, ICONFONT_NAMES, ICONFONT_PENDING, ICONFONT_PREFIX, ensureIconfont } from './iconfont';
 import { cx } from './utils';
 
 export type IconSize = 16 | 20 | 24 | 40 | 64;
@@ -47,7 +47,7 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon({ name,
     return <span ref={ref} className={cls} data-icon={name} data-spinner="" aria-hidden="true" style={style} {...rest} />;
   }
   // V3 默认走 Iconfont 字体（11-05），和前端同一份；字体里没有的（Logo、Kiwi）往下走 SVG
-  if (set === 'v3' && ICONFONT_NAMES.has(name)) {
+  if (set === 'v3' && ICONFONT_NAMES.has(name) && !ICONFONT_PENDING.has(name)) {
     ensureIconfont();
     return <span ref={ref} className={cx(cls, ICONFONT_FAMILY, `${ICONFONT_PREFIX}${name}`)} data-icon={name} data-font="" aria-hidden="true" style={style} {...rest} />;
   }

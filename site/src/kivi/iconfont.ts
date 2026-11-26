@@ -7,7 +7,7 @@
 */
 
 /** Iconfont 生成的 CSS 地址，全站只写这一处 */
-export const ICONFONT_CSS_URL = 'https://at.alicdn.com/t/c/font_5250779_63w0fjekg1y.css';
+export const ICONFONT_CSS_URL = 'https://at.alicdn.com/t/c/font_5250779_jprwbdwi6g.css';
 /** 字体名（Iconfont 项目设置里的 FontFamily） */
 export const ICONFONT_FAMILY = 'iconfont-v2';
 /** 类名前缀（Iconfont 项目设置里的 FontClass 前缀） */
@@ -15,6 +15,9 @@ export const ICONFONT_PREFIX = 'icon-kivi-v2-';
 
 /** 字体里有的图标（188 个，和 Iconfont 项目一致） */
 export const ICONFONT_NAMES: ReadonlySet<string> = new Set(['AIEnhancement', 'AITools', 'Add', 'AddFile', 'AddFolder', 'AddSmall', 'AddToCanvas', 'Agent', 'Audio', 'Auto', 'AutoAspect', 'AutoLayout', 'Brain', 'Brush', 'BrushSize', 'Bytedance', 'Calendar', 'Canvas', 'CheckSmall', 'Close', 'ClosePreview', 'CloseSmall', 'Collect', 'CollectSolid', 'Configuration', 'Connecting', 'Copy', 'CopyTraceID', 'Create', 'Crop', 'CropLeft', 'CropRight', 'Cutting', 'Delete', 'DisableConstraint', 'DisableSnap', 'Divide', 'DividingLine', 'Document', 'DoubleLeftArrowSmall', 'DoubleRightArrowSmall', 'DownArrow', 'DownArrowSmall', 'Download', 'DragSelect', 'ElevenLabs', 'EnableConstraint', 'Eraser', 'Expand', 'Explore', 'Feedback', 'File', 'FileCsv', 'FileDoc', 'FileJson', 'FileMusic', 'FilePdf', 'FilePpt', 'FileTxt', 'FileXls', 'FileZip', 'Files', 'Filter', 'FirstLastFrame', 'FitContent', 'Flux', 'Fold', 'Folder', 'FontSize', 'FullScreen', 'Gemini', 'Group', 'H1', 'H2', 'H3', 'HD', 'Hand', 'HappyHorse', 'HideConnections', 'History', 'Home', 'HorizontalLayout', 'Image', 'ImageEditing', 'ImageGeneration', 'ImagePlus', 'ImageToImage', 'ImageToText', 'Kling', 'LeftArrow', 'LeftArrowSmall', 'Lightbulb', 'Link', 'LipSync', 'Loading', 'Localization', 'Locate', 'LoraModel', 'Manual', 'Map', 'Mdoel', 'Message', 'Minimax', 'More', 'MotionControl', 'MoveTo', 'Music', 'NewChat', 'NewWindow', 'NextStep', 'OmniReference', 'OneClickSameModel', 'Openai', 'OrderedList', 'OriginalProportions', 'Pack', 'Pause', 'Pin', 'Play', 'PlayLine', 'Preview', 'Previous', 'Qwen', 'ReUpload', 'Remove', 'RemoveEle', 'Rename', 'Reset', 'RightArrow', 'RightArrowLong', 'RightArrowSmall', 'Rmbg', 'ScanEye', 'Search', 'Send', 'Share', 'ShowConnections', 'Sidebar', 'Skill', 'SmartEditing', 'Snap', 'Sora', 'Square11', 'Square14', 'Square169', 'Square23', 'Square32', 'Square34', 'Square41', 'Square43', 'Square916', 'Square921', 'SquareLibrary', 'Stacking', 'StickyOnTop', 'Subtitle', 'Subtract', 'SubtractSmall', 'Switch', 'Template', 'Text', 'TextBold', 'TextEditing', 'TextItalic', 'ThumbsDown', 'ThumbsDownFill', 'ThumbsUp', 'ThumbsUpFill', 'Tool', 'UnGroup', 'UnOrderedList', 'UpArrowSmall', 'Upload', 'UseCanvas', 'VerticalLayout', 'Video', 'VideoEditing', 'VideoExtend', 'VideoGeneration', 'VideoLoop', 'Vidu', 'VolumeFull', 'VolumeHalf', 'VolumeLevel', 'VolumeOff', 'ZoomIn', 'ZoomOut', 'grok']);
+
+/** 改了图形、Iconfont 里还是旧字形的（重传后等审核）：先走 icons-v3.ts 的 SVG，Iconfont 换上新的、重新生成代码后从这里删掉 */
+export const ICONFONT_PENDING: ReadonlySet<string> = new Set([]);
 
 /** 第一次用到图标时把 Iconfont 的 CSS 挂到页面上，只挂一次 */
 let loaded = false;
