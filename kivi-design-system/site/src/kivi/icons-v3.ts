@@ -27,7 +27,7 @@ export const ICONS_V3: Partial<Record<IconName, string>> = {
   StickyOnTop: '<path d="M12 8.5V19.88" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.25 4.12H6.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.38 12C16.38 12 13.15 7.62 12 7.62C10.85 7.62 7.62 12 7.62 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   Switch: '<path d="M19 16.38H5M19 16.38C19 15.68 16.38 13.75 16.38 13.75M19 16.38C19 17.07 16.38 19 16.38 19M5.88 7.62H19M7.62 5C7.62 5 5 6.93 5 7.62C5 8.32 7.62 10.25 7.62 10.25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   // 基础操作（22）
-  Add: '<path d="M12 5.88V18.13M18.13 12H5.88" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  Add: '<path d="M12 4.4V19.6M19.6 12H4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   AddSmall: '<path d="M12 7.04V16.96M16.96 12H7.04" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
   Subtract: '<path d="M18.13 12H5.88" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
   SubtractSmall: '<path d="M16.96 12H7.04" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
