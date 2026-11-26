@@ -24,6 +24,7 @@ const TABS: { value: ExploreTab; label: string }[] = [
 export function ExplorePage({
   initialTab = 'discover',
   initialKeyword,
+  initialCategory,
   onUseSkill,
   onOpenCanvas,
 }: {
@@ -31,6 +32,8 @@ export function ExplorePage({
   initialTab?: ExploreTab;
   /** 进来时搜索框里已经填好的字：创作首页广场的搜索框带过来，只对 initialTab 那个选项卡生效 */
   initialKeyword?: string;
+  /** 进来时选好的分类：创作首页广场「查看全部」带过来，只对 initialTab 那个选项卡生效 */
+  initialCategory?: string;
   onUseSkill?: (name: string) => void;
   /** 应用画布建好了：打开这块新画布 */
   onOpenCanvas?: (canvasId: string) => void;
@@ -42,9 +45,9 @@ export function ExplorePage({
 
   const body: Record<ExploreTab, ReactNode> = {
     discover: <Discover moreRef={moreRef} initialKeyword={initialTab === 'discover' ? initialKeyword : undefined} />,
-    featured: <FlowGallery key="featured" kind="featured" onClone={(id) => onOpenCanvas?.(id)} moreRef={moreRef} initialKeyword={initialTab === 'featured' ? initialKeyword : undefined} />,
-    skill: <Skills onUse={(s) => onUseSkill?.(s.title)} moreRef={moreRef} initialKeyword={initialTab === 'skill' ? initialKeyword : undefined} />,
-    workflow: <FlowGallery key="workflow" kind="workflow" onClone={(id) => onOpenCanvas?.(id)} moreRef={moreRef} initialKeyword={initialTab === 'workflow' ? initialKeyword : undefined} />,
+    featured: <FlowGallery key="featured" kind="featured" onClone={(id) => onOpenCanvas?.(id)} moreRef={moreRef} initialKeyword={initialTab === 'featured' ? initialKeyword : undefined} initialCategory={initialTab === 'featured' ? initialCategory : undefined} />,
+    skill: <Skills onUse={(s) => onUseSkill?.(s.title)} moreRef={moreRef} initialKeyword={initialTab === 'skill' ? initialKeyword : undefined} initialCategory={initialTab === 'skill' ? initialCategory : undefined} />,
+    workflow: <FlowGallery key="workflow" kind="workflow" onClone={(id) => onOpenCanvas?.(id)} moreRef={moreRef} initialKeyword={initialTab === 'workflow' ? initialKeyword : undefined} initialCategory={initialTab === 'workflow' ? initialCategory : undefined} />,
   };
 
   return (

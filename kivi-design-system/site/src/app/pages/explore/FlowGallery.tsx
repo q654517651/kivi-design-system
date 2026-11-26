@@ -14,10 +14,10 @@ import { CardSkeleton, CategoryTabs, FilterBar } from './shared';
 /** 一屏 12 条（4 列 3 行） */
 const FLOW_PAGE = 12;
 
-export function FlowGallery({ kind, onClone, moreRef, initialKeyword = '' }: { kind: 'featured' | 'workflow'; onClone: (canvasId: string) => void; moreRef: MoreRef; initialKeyword?: string }) {
+export function FlowGallery({ kind, onClone, moreRef, initialKeyword = '', initialCategory = 'all' }: { kind: 'featured' | 'workflow'; onClone: (canvasId: string) => void; moreRef: MoreRef; initialKeyword?: string; initialCategory?: string }) {
   const noun = kind === 'featured' ? '案例' : '工作流';
   const items = useMemo(() => flowsOf(kind), [kind]);
-  const [category, setCategory] = useState('all');
+  const [category, setCategory] = useState(initialCategory);
   const [keyword, setKeyword] = useState(initialKeyword);
   const k = useDebounced(keyword.trim());
   const [view, setView] = useState<Flow | null>(null);
