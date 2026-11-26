@@ -1,4 +1,4 @@
-import { Button, IconButton, Popover, Switch, TabItem, Tabs, toast } from '@kivi';
+import { Button, Dropdown, IconButton, Menu, MenuItem, Popover, Select, Switch, toast } from '@kivi';
 import { db } from '../data/db';
 import { demo, setDemo, useDemo, type DemoSwitches } from '../data/demo';
 import { resetMemory } from '../data/memory';
@@ -59,15 +59,21 @@ export function DemoPanel() {
         title="演示开关"
         content={
           <div className="app-demo__panel">
-            {/* 部署的网站才有：切到别的分支版本，停在同一页（app/preview.ts） */}
+            {/* 部署的网站才有：切到别的分支版本，停在同一页（app/preview.ts）。分支多了分段放不下，用下拉（11-26 用户定） */}
             {PREVIEW_LINKS.length > 1 && (
-              <Tabs variant="segment" value={PREVIEW_BRANCH} onChange={switchPreview} aria-label="分支">
-                {PREVIEW_LINKS.map((l) => (
-                  <TabItem key={l.name} value={l.name}>
-                    {l.label}
-                  </TabItem>
-                ))}
-              </Tabs>
+              <Dropdown
+                className="app-demo__branch"
+                haspopup="listbox"
+                trigger={<Select aria-label="分支">{PREVIEW_LINKS.find((l) => l.name === PREVIEW_BRANCH)?.label ?? PREVIEW_BRANCH}</Select>}
+              >
+                <Menu role="listbox" aria-label="分支">
+                  {PREVIEW_LINKS.map((l) => (
+                    <MenuItem key={l.name} selected={l.name === PREVIEW_BRANCH} onClick={() => switchPreview(l.name)}>
+                      {l.label}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </Dropdown>
             )}
             {ROWS.map((r) => (
               <Switch key={r.key} checked={d[r.key]} onChange={(v) => setDemo({ [r.key]: v })}>
