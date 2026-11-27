@@ -209,6 +209,8 @@ export const ICON_INFO: Record<IconName, IconInfo> = {
   AITools: { means: 'AI 工具、应用', note: '主站侧栏「AI工具」用' },
   Sidebar: { means: '侧栏、收起、展开', note: '主站侧栏收起 / 展开用' },
   Kiwi: { means: '猕猴桃、积分、余额、消耗', note: '主站积分余额、生成按钮消耗用；颜色跟随所在位置，余额处用品牌绿' },
+  UserGroup: { means: '一群人、全部成员、团队', note: '用量管理侧栏「全部分组」用（Hugeicons user-group）' },
+  UserMultiple: { means: '几个人、分组、成员组', note: '用量管理侧栏的每个分组用（Hugeicons user-multiple）' },
   Mdoel: { means: '模型偏好、选择模型（入口按钮）', note: '名字拼错了，应为 Model；代码里在用，改名前要和后端确认', tag: '先不改' },
   Auto: { means: 'Agent 自动生成模式' },
   // 模型 Logo（11）

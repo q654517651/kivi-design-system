@@ -19,7 +19,7 @@ import { LogsTab } from './RecordsTabs';
   用量管理后台（11-27 原型）：账号菜单「用量管理」在新标签页打开（#/app/admin），单独一套页面，不套主站侧栏（11-27 用户定）。
   - 左边侧栏和主站侧栏同一套（GroupSide）：Logo（回 KIVI）、全部分组、「分组」一段（新建、组的「⋯」）；选哪个组右边就看哪个组
   - 右边：范围名、概览，选项卡 成员与额度 / 操作日志（申请在飞书审批里，状态同步不过来，不放申请单，11-27 用户定）；右上角色和头像；点成员进详情，侧栏不动
-  范围：管理员 = 本组（没有侧栏）；项目管理员 = 本项目；超管 = 侧栏里按项目分段，能看全平台、整个项目或某个组。
+  范围：管理员 = 本组（没有侧栏）；项目管理员 = 本项目；超管 = 侧栏顶上切项目（全平台 / 某个项目），切到项目后和项目管理员一样。
 */
 
 type Tab = 'members' | 'logs';
@@ -41,12 +41,13 @@ function Admin() {
   const { role } = useDemo();
   const balance = useBalance();
   const state = useKiwi((s) => s);
-  const base = scopeOf(role);
-  // 侧栏选的：'' = 全部（超管是全平台）、'p:项目 id' = 整个项目（超管）、组 id。管理员固定本组
+  // 超管切的项目（侧栏顶上的下拉），'' = 全平台
+  const [project, setProject] = useState('');
+  const base = scopeOf(role, project || undefined);
+  // 侧栏选的组，'' = 全部分组（全平台时就是全平台）。管理员固定本组
   const [group, setGroup] = useState('');
-  const pickedGroup = state.groups.find((g) => g.id === group && (!base.projectId || g.projectId === base.projectId));
-  const pickedProject = role === 'super-admin' && group.startsWith('p:') ? group.slice(2) : undefined;
-  const scope: KwScope = base.groupId ? base : pickedGroup ? { projectId: pickedGroup.projectId, groupId: pickedGroup.id } : pickedProject ? { projectId: pickedProject } : base;
+  const pickedGroup = base.projectId ? state.groups.find((g) => g.id === group && g.projectId === base.projectId) : undefined;
+  const scope: KwScope = base.groupId ? base : pickedGroup ? { projectId: pickedGroup.projectId, groupId: pickedGroup.id } : base;
 
   const [tab, setTab] = useState<Tab>('members');
   const [list, setListState] = useState<ListState>({ q: '', page: 1, selected: [] });
@@ -142,9 +143,14 @@ function Admin() {
           {canGroups && (
             <GroupSide
               project={state.projects.find((p) => p.id === base.projectId)}
+              canPickProject={role === 'super-admin'}
+              onPickProject={(id) => {
+                setProject(id);
+                choose('');
+              }}
               projects={state.projects}
               groups={sideGroups}
-              selected={pickedGroup?.id ?? (pickedProject ? `p:${pickedProject}` : '')}
+              selected={pickedGroup?.id ?? ''}
               onSelect={choose}
               onHome={goHome}
               onCreate={setCreating}

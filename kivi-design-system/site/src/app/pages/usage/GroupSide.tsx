@@ -1,25 +1,30 @@
-import { Fragment } from 'react';
-import { AssetThumb, Divider, Icon, IconButton, Menu, MenuItem, MenuLabel, ScrollArea } from '@kivi';
+import { Divider, Icon, IconButton, Menu, MenuItem, MenuLabel, ScrollArea } from '@kivi';
 import type { KwGroup, KwProject } from '../../data/kiwi';
+import { FilterSelect } from '../../parts/kiwi/FilterSelect';
 
 /*
   用量管理后台的侧栏：和主站侧栏同一套（tpl-ms__side 那几个类、Menu 无底、MenuLabel 分段），不另画（11-27 用户说：我们有侧边导航）。
   - 顶上 Logo，点了回 KIVI。
   - 导航第一项「全部分组」（超管是「全平台」）。
-  - 条目必须带图标或缩略图：侧栏菜单里不带的会被当成「更多」（12 号灰字、悬停没底色），11-27 去掉过一次就变成这样，又加回来了。
+  - 条目用导航那种图标（20，不带方框；11-27 用户定，缩略图格子是给对话历史这种有封面的）。全部分组 UserGroup、每个组 UserMultiple（Hugeicons 补的）。
+    条目必须带图标或缩略图：侧栏菜单里不带的会被当成「更多」（12 号灰字、悬停没底色），11-27 去掉过一次就变成这样，又加回来了。
   - 下面「分组」一段：标题点了展开收起，右边「+」新建分组；每个组悬停出「⋯」：任免组管理员、重命名、删除。
-  - 超管：每个项目一段（标题是项目名），段里第一项是「全部分组」（看整个项目），新建分组建在这个项目里。
+  - 超管：Logo 下面一个项目下拉（全平台 / 各项目），切到项目后和项目管理员一样；全平台时下面列项目，点了切过去（11-27 用户：超管要能切项目）。
   管理员只管一个组，没有这一栏。
-  选中值：'' = 全部 / 全平台，'p:项目 id' = 整个项目，其他 = 组 id。
 */
 
 export interface GroupSideProps {
-  /** 一个项目 = 只列这个项目的组；不传 = 全平台，按项目分段（超管） */
+  /** 当前项目；不传 = 全平台（只有超管会这样） */
   project?: KwProject;
   projects: KwProject[];
   groups: KwGroup[];
+  /** 选中的组 id，'' = 全部分组 / 全平台 */
   selected: string;
-  onSelect: (key: string) => void;
+  onSelect: (groupId: string) => void;
+  /** 超管：侧栏顶上能切项目 */
+  canPickProject?: boolean;
+  /** 切项目，'' = 全平台 */
+  onPickProject?: (projectId: string) => void;
   onHome: () => void;
   onCreate: (projectId: string) => void;
   onAdmins: (g: KwGroup) => void;
@@ -27,11 +32,11 @@ export interface GroupSideProps {
   onDelete: (g: KwGroup) => void;
 }
 
-export function GroupSide({ project, projects, groups, selected, onSelect, onHome, onCreate, onAdmins, onRename, onDelete }: GroupSideProps) {
+export function GroupSide({ project, projects, groups, selected, onSelect, canPickProject, onPickProject, onHome, onCreate, onAdmins, onRename, onDelete }: GroupSideProps) {
   const item = (g: KwGroup) => (
     <MenuItem
       key={g.id}
-      thumb={<AssetThumb size={24} type="icon" icon="Group" />}
+      icon="UserMultiple"
       selected={selected === g.id || undefined}
       onClick={() => onSelect(g.id)}
       more={
@@ -50,26 +55,6 @@ export function GroupSide({ project, projects, groups, selected, onSelect, onHom
       {g.name}
     </MenuItem>
   );
-  const section = (p: KwProject, title: string, withAll: boolean) => (
-    <MenuLabel
-      key={p.id}
-      collapsible
-      defaultExpanded
-      action={<IconButton icon="Add" label="新建分组" size={28} variant="ghost-muted" onClick={() => onCreate(p.id)} />}
-      items={
-        <>
-          {withAll && (
-            <MenuItem thumb={<AssetThumb size={24} type="icon" icon="Pack" />} selected={selected === `p:${p.id}` || undefined} onClick={() => onSelect(`p:${p.id}`)}>
-              全部分组
-            </MenuItem>
-          )}
-          {groups.filter((g) => g.projectId === p.id).map(item)}
-        </>
-      }
-    >
-      {title}
-    </MenuLabel>
-  );
 
   return (
     <div className="tpl-ms__side-wrap">
@@ -80,22 +65,42 @@ export function GroupSide({ project, projects, groups, selected, onSelect, onHom
               <Icon name="Logo" />
             </button>
           </div>
+          {canPickProject && (
+            <div className="app-kw-side__project">
+              <FilterSelect label="项目" value={project?.id ?? ''} options={[{ value: '', label: '全平台' }, ...projects.map((p) => ({ value: p.id, label: p.name }))]} onChange={(v) => onPickProject?.(v)} />
+            </div>
+          )}
           <Menu variant="plain" aria-label="用量管理导航">
-            <MenuItem icon="Home" selected={selected === '' || undefined} onClick={() => onSelect('')}>
+            <MenuItem icon="UserGroup" selected={selected === '' || undefined} onClick={() => onSelect('')}>
               {project ? '全部分组' : '全平台'}
             </MenuItem>
+            <div className="tpl-ms__gap" />
             {project ? (
-              <>
-                <div className="tpl-ms__gap" />
-                {section(project, '分组', false)}
-              </>
+              <MenuLabel
+                collapsible
+                defaultExpanded
+                action={<IconButton icon="Add" label="新建分组" size={28} variant="ghost-muted" onClick={() => onCreate(project.id)} />}
+                items={<>{groups.filter((g) => g.projectId === project.id).map(item)}</>}
+              >
+                分组
+              </MenuLabel>
             ) : (
-              projects.map((p) => (
-                <Fragment key={p.id}>
-                  <div className="tpl-ms__gap" />
-                  {section(p, p.name, true)}
-                </Fragment>
-              ))
+              // 全平台：列出项目，点了切到那个项目
+              <MenuLabel
+                collapsible
+                defaultExpanded
+                items={
+                  <>
+                    {projects.map((p) => (
+                      <MenuItem key={p.id} icon="Folder" onClick={() => onPickProject?.(p.id)}>
+                        {p.name}
+                      </MenuItem>
+                    ))}
+                  </>
+                }
+              >
+                项目
+              </MenuLabel>
             )}
           </Menu>
         </aside>

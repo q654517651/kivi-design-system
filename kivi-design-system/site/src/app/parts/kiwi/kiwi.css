@@ -575,3 +575,14 @@
   justify-content: center;
   height: 100%;
 }
+
+/* 超管侧栏顶上的项目切换：铺满侧栏宽，和下面的条目左右对齐 */
+.app-kw-side__project {
+  display: flex;
+  margin-bottom: var(--spacing-12);
+}
+
+.app-kw-side__project > .kv-dropdown.kv-dropdown {
+  flex: 1;
+  min-width: 0;
+}
