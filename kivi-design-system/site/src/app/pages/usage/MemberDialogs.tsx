@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Avatar, Button, Dialog, Input, Menu, MenuItem, ScrollArea, toast } from '@kivi';
+import { Avatar, Button, Dialog, Input, Menu, MenuItem, ScrollArea, TabItem, Tabs, toast } from '@kivi';
 import { AmountPicker } from '../../parts/kiwi/AmountPicker';
-import { addMember, DIRECTORY, moveMembers, useKiwi, type KwGroup } from '../../data/kiwi';
+import { addMember, DIRECTORY, MEMBER_ROLE_LABEL, moveMembers, roleOfMember, setMemberRole, useKiwi, type KwGroup, type KwMemberRole } from '../../data/kiwi';
 import { attempt } from '../../flows/errors';
 import { FilterSelect } from '../../parts/kiwi/FilterSelect';
 
@@ -152,6 +152,66 @@ export function MoveMemberDialog({ memberIds, groups, onDone, onClose }: { membe
       {first && (
         <FilterSelect label="分组" value={group} options={[...(group ? [] : [{ value: '', label: '选择分组' }]), ...options.map((g) => ({ value: g.id, label: g.name }))]} onChange={setGroup} />
       )}
+    </Dialog>
+  );
+}
+
+/** 调整权限：成员 / 组管理员。组管理员只能看和管本组的用量、成员和额度 */
+const ROLE_HINT: Record<KwMemberRole, string> = {
+  member: '只能看自己的用量',
+  'group-admin': '能看和管本组的用量、成员和额度',
+};
+
+export function RoleDialog({ memberId, onClose }: { memberId?: string; onClose: () => void }) {
+  const member = useKiwi((s) => s.members.find((m) => m.id === memberId));
+  const groups = useKiwi((s) => s.groups);
+  const group = groups.find((g) => g.id === member?.groupId);
+  const current = member ? roleOfMember(member, groups) : 'member';
+  const [role, setRole] = useState<KwMemberRole>('member');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (member) setRole(current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberId]);
+
+  const submit = async () => {
+    if (!member) return;
+    setBusy(true);
+    const done = await attempt(() => setMemberRole(member.id, role).then(() => true));
+    setBusy(false);
+    if (done) {
+      toast.success(`${member.name} 现在是${group?.name ?? ''}${MEMBER_ROLE_LABEL[role]}`);
+      onClose();
+    }
+  };
+
+  return (
+    <Dialog
+      open={!!memberId}
+      onOpenChange={(v) => !v && !busy && onClose()}
+      size={400}
+      title={`调整权限 · ${member?.name ?? ''}`}
+      footer={
+        <>
+          <Button size={36} variant="secondary" disabled={busy} onClick={onClose}>
+            取消
+          </Button>
+          <Button size={36} variant="primary" disabled={!member || role === current} loading={busy} onClick={submit}>
+            确定
+          </Button>
+        </>
+      }
+    >
+      <div className="app-kw-form">
+        <Tabs variant="segment" value={role} onChange={(v) => setRole(v as KwMemberRole)}>
+          {(Object.keys(MEMBER_ROLE_LABEL) as KwMemberRole[]).map((r) => (
+            <TabItem key={r} value={r}>
+              {MEMBER_ROLE_LABEL[r]}
+            </TabItem>
+          ))}
+        </Tabs>
+        <span className="app-kw-form__hint">{ROLE_HINT[role]}</span>
+      </div>
     </Dialog>
   );
 }

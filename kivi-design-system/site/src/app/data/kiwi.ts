@@ -224,13 +224,23 @@ export async function createGroup(projectId: string, name: string) {
   });
 }
 
-export async function setGroupAdmins(groupId: string, adminIds: string[]) {
+/** 成员的权限：普通成员 / 组管理员（11-27 用户定：在成员的「⋯ → 调整权限」里改，不在分组上任免） */
+export type KwMemberRole = 'member' | 'group-admin';
+export const MEMBER_ROLE_LABEL: Record<KwMemberRole, string> = { member: '成员', 'group-admin': '组管理员' };
+
+export const roleOfMember = (m: KwMember, groups = kiwi.get().groups): KwMemberRole => (groups.find((g) => g.id === m.groupId)?.adminIds.includes(m.id) ? 'group-admin' : 'member');
+
+export async function setMemberRole(memberId: string, role: KwMemberRole) {
   return request(() => {
-    const g = kiwi.get().groups.find((x) => x.id === groupId);
-    if (!g) return;
-    const names = (ids: string[]) => ids.map((id) => memberOf(id)?.name).filter(Boolean).join('、') || '无';
-    kiwi.set((s) => ({ ...s, groups: s.groups.map((x) => (x.id === groupId ? { ...x, adminIds } : x)) }));
-    log({ action: '任免组管理员', target: g.name, before: names(g.adminIds), after: names(adminIds), scope: g.name });
+    const m = memberOf(memberId);
+    if (!m) return;
+    const before = roleOfMember(m);
+    if (before === role) return;
+    kiwi.set((s) => ({
+      ...s,
+      groups: s.groups.map((g) => (g.id !== m.groupId ? g : { ...g, adminIds: role === 'group-admin' ? [...g.adminIds, m.id] : g.adminIds.filter((x) => x !== m.id) })),
+    }));
+    log({ action: '调整权限', target: m.name, before: MEMBER_ROLE_LABEL[before], after: MEMBER_ROLE_LABEL[role], scope: groupName(m.groupId) });
   });
 }
 

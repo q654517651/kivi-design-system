@@ -7,10 +7,10 @@ import { confirm, FlowHost } from '../../flows/dialogs';
 import { attempt } from '../../flows/errors';
 import { DemoPanel } from '../../parts/DemoPanel';
 import { Stats, useLoad } from '../../parts/kiwi/ui';
-import { AdminsDialog, CreateGroupDialog, RenameGroupDialog } from './GroupDialogs';
+import { CreateGroupDialog, RenameGroupDialog } from './GroupDialogs';
 import { GroupSide } from './GroupSide';
 import { MemberDetail } from './MemberDetail';
-import { AddMemberDialog, MoveMemberDialog } from './MemberDialogs';
+import { AddMemberDialog, MoveMemberDialog, RoleDialog } from './MemberDialogs';
 import { MembersTab, type ListState } from './MembersTab';
 import { QuotaDialog, type QuotaMode } from './QuotaDialog';
 import { LogsTab } from './RecordsTabs';
@@ -57,7 +57,7 @@ function Admin() {
   const [adding, setAdding] = useState(false);
   const [moving, setMoving] = useState<string[]>([]);
   const [creating, setCreating] = useState<string>();
-  const [adminsOf, setAdminsOf] = useState<KwGroup>();
+  const [roleOf, setRoleOf] = useState<string>();
   const [renaming, setRenaming] = useState<KwGroup>();
   const load = useLoad([role, scope.projectId, scope.groupId, tab]);
 
@@ -154,7 +154,6 @@ function Admin() {
               onSelect={choose}
               onHome={goHome}
               onCreate={setCreating}
-              onAdmins={setAdminsOf}
               onRename={setRenaming}
               onDelete={(g) => void removeGroup(g)}
             />
@@ -197,6 +196,7 @@ function Admin() {
                       onQuota={(mode, ids) => setQuota({ mode, ids })}
                       onAdd={() => setAdding(true)}
                       onMove={setMoving}
+                      onRole={setRoleOf}
                     />
                   )}
                   {tab === 'logs' && <LogsTab logs={logs} status={load.status} onRetry={load.retry} />}
@@ -211,7 +211,7 @@ function Admin() {
       <AddMemberDialog open={adding} groups={scope.groupId ? groups : projectGroups} fixedGroup={scope.groupId} onClose={() => setAdding(false)} />
       <MoveMemberDialog memberIds={moving} groups={projectGroups.length ? projectGroups : state.groups} onDone={() => setList({ selected: [] })} onClose={() => setMoving([])} />
       <CreateGroupDialog open={!!creating} projects={state.projects.filter((p) => p.id === creating)} defaultProject={creating} onCreated={choose} onClose={() => setCreating(undefined)} />
-      <AdminsDialog group={adminsOf} members={state.members} onClose={() => setAdminsOf(undefined)} />
+      <RoleDialog memberId={roleOf} onClose={() => setRoleOf(undefined)} />
       <RenameGroupDialog group={renaming} onClose={() => setRenaming(undefined)} />
     </>
   );

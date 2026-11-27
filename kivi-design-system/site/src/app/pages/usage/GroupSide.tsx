@@ -8,7 +8,7 @@ import { FilterSelect } from '../../parts/kiwi/FilterSelect';
   - 导航第一项「全部分组」（超管是「全平台」）。
   - 条目用导航那种图标（20，不带方框；11-27 用户定，缩略图格子是给对话历史这种有封面的）。全部分组 UserGroup、每个组 UserMultiple（Hugeicons 补的）。
     条目必须带图标或缩略图：侧栏菜单里不带的会被当成「更多」（12 号灰字、悬停没底色），11-27 去掉过一次就变成这样，又加回来了。
-  - 下面「分组」一段：标题点了展开收起，右边「+」新建分组；每个组悬停出「⋯」：任免组管理员、重命名、删除。
+  - 下面「分组」一段：标题点了展开收起，右边「+」新建分组；每个组悬停出「⋯」：重命名、删除（任免组管理员在成员的「⋯ → 调整权限」里，11-27 用户定）。
   - 超管：Logo 下面一个项目下拉（全平台 / 各项目），切到项目后和项目管理员一样；全平台时下面列项目，点了切过去（11-27 用户：超管要能切项目）。
   管理员只管一个组，没有这一栏。
 */
@@ -27,12 +27,11 @@ export interface GroupSideProps {
   onPickProject?: (projectId: string) => void;
   onHome: () => void;
   onCreate: (projectId: string) => void;
-  onAdmins: (g: KwGroup) => void;
   onRename: (g: KwGroup) => void;
   onDelete: (g: KwGroup) => void;
 }
 
-export function GroupSide({ project, projects, groups, selected, onSelect, canPickProject, onPickProject, onHome, onCreate, onAdmins, onRename, onDelete }: GroupSideProps) {
+export function GroupSide({ project, projects, groups, selected, onSelect, canPickProject, onPickProject, onHome, onCreate, onRename, onDelete }: GroupSideProps) {
   const item = (g: KwGroup) => (
     <MenuItem
       key={g.id}
@@ -41,7 +40,6 @@ export function GroupSide({ project, projects, groups, selected, onSelect, canPi
       onClick={() => onSelect(g.id)}
       more={
         <Menu>
-          <MenuItem onClick={() => onAdmins(g)}>任免组管理员</MenuItem>
           <MenuItem icon="Rename" onClick={() => onRename(g)}>
             重命名
           </MenuItem>

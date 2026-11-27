@@ -1,62 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Avatar, Button, Checkbox, Dialog, Input, ScrollArea, toast } from '@kivi';
-import { createGroup, renameGroup, setGroupAdmins, useKiwi, type KwGroup, type KwMember, type KwProject } from '../../data/kiwi';
+import { Button, Dialog, Input, toast } from '@kivi';
+import { createGroup, renameGroup, useKiwi, type KwGroup, type KwProject } from '../../data/kiwi';
 import { attempt } from '../../flows/errors';
 import { FilterSelect } from '../../parts/kiwi/FilterSelect';
 
 /*
-  分组的几个弹窗（项目管理员以上，从左栏分组的「⋯」和「新建分组」打开）：任免组管理员、新建分组、重命名分组。
+  分组的几个弹窗（项目管理员以上，从左栏分组的「⋯」和「新建分组」打开）：新建分组、重命名分组。
 */
-
-/** 任免组管理员：从本组成员里勾（可以多个） */
-export function AdminsDialog({ group, members, onClose }: { group?: KwGroup; members: KwMember[]; onClose: () => void }) {
-  const [ids, setIds] = useState<string[]>([]);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => setIds(group?.adminIds ?? []), [group]);
-  const inGroup = members.filter((m) => m.groupId === group?.id);
-  const submit = async () => {
-    if (!group) return;
-    setBusy(true);
-    const ok = await attempt(() => setGroupAdmins(group.id, ids).then(() => true));
-    setBusy(false);
-    if (ok) {
-      toast.success('已更新组管理员');
-      onClose();
-    }
-  };
-  return (
-    <Dialog
-      open={!!group}
-      onOpenChange={(v) => !v && !busy && onClose()}
-      size={400}
-      title={`任免组管理员 · ${group?.name ?? ''}`}
-      description="组管理员只能看和管本组的用量、成员和额度"
-      footer={
-        <>
-          <Button size={36} variant="secondary" disabled={busy} onClick={onClose}>
-            取消
-          </Button>
-          <Button size={36} variant="primary" loading={busy} onClick={submit}>
-            保存
-          </Button>
-        </>
-      }
-    >
-      <ScrollArea className="app-kw-people">
-        <div className="app-kw-form">
-          {inGroup.map((m) => (
-            <Checkbox key={m.id} checked={ids.includes(m.id)} onChange={(v) => setIds((all) => (v ? [...all, m.id] : all.filter((x) => x !== m.id)))}>
-              <span className="app-kw-name">
-                <Avatar name={m.name} size={24} type="text" />
-                <span>{m.name}</span>
-              </span>
-            </Checkbox>
-          ))}
-        </div>
-      </ScrollArea>
-    </Dialog>
-  );
-}
 
 export function CreateGroupDialog({ open, projects, defaultProject, onCreated, onClose }: { open: boolean; projects: KwProject[]; defaultProject?: string; onCreated?: (id: string) => void; onClose: () => void }) {
   const [name, setName] = useState('');

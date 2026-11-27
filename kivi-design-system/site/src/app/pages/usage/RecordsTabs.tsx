@@ -9,7 +9,7 @@ import { fmtTime, KwTable, Pager, pageOf, useFitRows, type Column, type LoadStat
 */
 
 
-const LOG_TYPES = ['全部', '调整周上限', '增加周额度', '增加临时额度', '减少临时额度', '添加成员', '移除成员', '调整分组', '新建分组', '任免组管理员', '重命名分组', '删除分组', '导出'];
+const LOG_TYPES = ['全部', '调整周上限', '增加周额度', '增加临时额度', '减少临时额度', '添加成员', '移除成员', '调整分组', '新建分组', '调整权限', '重命名分组', '删除分组', '导出'];
 
 export function LogsTab({ logs, status, onRetry }: { logs: KwLog[]; status: LoadStatus; onRetry: () => void }) {
   const [type, setType] = useState('全部');

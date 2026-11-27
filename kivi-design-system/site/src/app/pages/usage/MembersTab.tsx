@@ -10,7 +10,7 @@ import type { QuotaMode } from './QuotaDialog';
 /*
   成员与额度：搜索、分页（看哪个组在左栏选）；勾选后出批量操作栏（只对勾了的人生效，筛选不会隐式选中别人）。
   点一行进成员详情，返回时筛选、页码、勾选都还在（状态在 UsagePage 里）。
-  「⋯」：调整周上限、调整临时额度、调整分组（项目管理员以上）、移除。
+  「⋯」：调整周上限、调整临时额度、调整分组和调整权限（项目管理员以上）、移除。
 */
 
 export interface ListState {
@@ -34,6 +34,7 @@ export function MembersTab({
   onQuota,
   onAdd,
   onMove,
+  onRole,
 }: {
   scope: KwScope;
   /** 范围里的全部成员 */
@@ -50,6 +51,8 @@ export function MembersTab({
   onAdd: () => void;
   /** 调整分组：一个人或勾选的几个人 */
   onMove: (ids: string[]) => void;
+  /** 调整权限：成员 / 组管理员 */
+  onRole: (id: string) => void;
 }) {
   const balance = useBalance();
   // 一页几行按窗口高度算，表格铺到分页条
@@ -129,6 +132,7 @@ export function MembersTab({
               <MenuItem onClick={() => onQuota('limit', [m.id])}>调整周上限</MenuItem>
               <MenuItem onClick={() => onQuota('temp', [m.id])}>调整临时额度</MenuItem>
               {canMove && <MenuItem onClick={() => onMove([m.id])}>调整分组</MenuItem>}
+              {canMove && <MenuItem onClick={() => onRole(m.id)}>调整权限</MenuItem>}
               <MenuItem variant="danger" onClick={() => void remove(m)}>
                 移除
               </MenuItem>
