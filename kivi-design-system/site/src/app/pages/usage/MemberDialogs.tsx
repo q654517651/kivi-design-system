@@ -15,6 +15,10 @@ const DEFAULT_LIMIT = '3000';
 
 export function AddMemberDialog({ open, groups, fixedGroup, onClose }: { open: boolean; groups: KwGroup[]; fixedGroup?: string; onClose: () => void }) {
   const members = useKiwi((s) => s.members);
+  const projects = useKiwi((s) => s.projects);
+  // 能选的组跨了项目（超管看全平台）：分组名前面带上项目名
+  const multiProject = new Set(groups.map((g) => g.projectId)).size > 1;
+  const groupLabel = (g: KwGroup) => (multiProject ? `${projects.find((p) => p.id === g.projectId)?.name ?? ''} · ${g.name}` : g.name);
   const [q, setQ] = useState('');
   const [picked, setPicked] = useState<string>();
   const [group, setGroup] = useState(fixedGroup ?? groups[0]?.id ?? '');
@@ -94,7 +98,7 @@ export function AddMemberDialog({ open, groups, fixedGroup, onClose }: { open: b
         </ScrollArea>
         <label className="app-kw-form__field">
           <span>所属分组</span>
-          <FilterSelect label="所属分组" value={group} options={groups.map((g) => ({ value: g.id, label: g.name }))} onChange={setGroup} disabled={!!fixedGroup} />
+          <FilterSelect label="所属分组" value={group} options={groups.map((g) => ({ value: g.id, label: groupLabel(g) }))} onChange={setGroup} disabled={!!fixedGroup} />
         </label>
         <div className="app-kw-form__field">
           <span>初始周上限</span>
@@ -115,7 +119,8 @@ export function MoveMemberDialog({ memberIds, groups, onDone, onClose }: { membe
     if (first) setGroup(members.every((m) => m.groupId === first.groupId) ? first.groupId : '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberIds.join()]);
-  // 只能在同一个项目里换组
+  // 只能在同一个项目里换组：勾的人跨了项目（超管看全平台时）就不让调
+  const crossProject = members.some((m) => m.projectId !== first?.projectId);
   const options = groups.filter((g) => g.projectId === first?.projectId);
   const moving = members.filter((m) => m.groupId !== group);
   const target = options.find((g) => g.id === group);
@@ -137,19 +142,19 @@ export function MoveMemberDialog({ memberIds, groups, onDone, onClose }: { membe
       onOpenChange={(v) => !v && !busy && onClose()}
       size={400}
       title={members.length > 1 ? `把 ${members.length} 人移到分组` : '调整分组'}
-      description="之前的消耗还算在原来的组，换组后按新组管理"
+      description={crossProject ? '选中的人不在同一个项目里，只能在同一个项目里调分组' : '之前的消耗还算在原来的组，换组后按新组管理'}
       footer={
         <>
           <Button size={36} variant="secondary" disabled={busy} onClick={onClose}>
             取消
           </Button>
-          <Button size={36} variant="primary" disabled={!target || !moving.length} loading={busy} onClick={submit}>
+          <Button size={36} variant="primary" disabled={crossProject || !target || !moving.length} loading={busy} onClick={submit}>
             确定
           </Button>
         </>
       }
     >
-      {first && (
+      {first && !crossProject && (
         <FilterSelect label="分组" value={group} options={[...(group ? [] : [{ value: '', label: '选择分组' }]), ...options.map((g) => ({ value: g.id, label: g.name }))]} onChange={setGroup} />
       )}
     </Dialog>

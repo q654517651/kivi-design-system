@@ -183,6 +183,8 @@ export async function removeMember(id: string) {
 /** 跨组调整（项目管理员）：之前的消耗按原来的组算，不回溯。可以一次调几个人 */
 export async function moveMembers(ids: string[], groupId: string) {
   return request(() => {
+    const target = kiwi.get().groups.find((g) => g.id === groupId);
+    if (ids.some((id) => memberOf(id)?.projectId !== target?.projectId)) throw new ApiError('server', '只能在同一个项目里调分组');
     for (const id of ids) {
       const m = memberOf(id);
       if (!m || m.groupId === groupId) continue;

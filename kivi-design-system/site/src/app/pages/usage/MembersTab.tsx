@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Avatar, Button, Dropdown, IconButton, Input, Menu, MenuItem, Tag, toast } from '@kivi';
 import { useBalance } from '../../data/db';
-import { logExport, money, pct, removeMember, scopeLabel, statsOf, type KwGroup, type KwMember, type KwScope, type KwStats } from '../../data/kiwi';
+import { logExport, ME, money, pct, removeMember, scopeLabel, statsOf, type KwGroup, type KwMember, type KwScope, type KwStats } from '../../data/kiwi';
 import { confirm } from '../../flows/dialogs';
 import { attempt } from '../../flows/errors';
 import { downloadCsv, fmtTime, KwTable, Pager, pageOf, useFitRows, type Column, type LoadStatus } from '../../parts/kiwi/ui';
@@ -133,10 +133,13 @@ export function MembersTab({
               <MenuItem onClick={() => onQuota('limit', [m.id])}>调整周上限</MenuItem>
               <MenuItem onClick={() => onQuota('temp', [m.id])}>调整临时额度</MenuItem>
               {canMove && <MenuItem onClick={() => onMove([m.id])}>调整分组</MenuItem>}
-              <MenuItem onClick={() => onRole(m.id)}>调整权限</MenuItem>
-              <MenuItem variant="danger" onClick={() => void remove(m)}>
-                移除
-              </MenuItem>
+              {/* 自己不能改自己的权限、不能把自己移出（不然自己就管不了了） */}
+              {m.id !== ME && <MenuItem onClick={() => onRole(m.id)}>调整权限</MenuItem>}
+              {m.id !== ME && (
+                <MenuItem variant="danger" onClick={() => void remove(m)}>
+                  移除
+                </MenuItem>
+              )}
             </Menu>
           </Dropdown>
         </span>
