@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useState, type ReactNode, type RefObject } from 'react';
 import { Button, Checkbox, EmptyState, IconButton, ScrollArea, Skeleton, Tooltip } from '@kivi';
 import { cx } from '@kivi/utils';
 import { listDelay } from '../../data/api';
@@ -36,6 +36,8 @@ export interface Column<T> {
   /** 列宽，不写自适应 */
   width?: number;
   align?: 'left' | 'right';
+  /** 固定宽，不跟着表格变宽（比如最右边的「⋯」） */
+  fixed?: boolean;
   render: (row: T) => ReactNode;
 }
 
@@ -64,7 +66,8 @@ export function KwTable<T>({ columns, rows, rowKey, selected, onSelectedChange, 
     onSelectedChange!(allState === true ? selected!.filter((id) => !ids.includes(id)) : [...new Set([...selected!, ...ids])]);
   };
   const toggle = (id: string) => onSelectedChange?.(selected!.includes(id) ? selected!.filter((x) => x !== id) : [...selected!, id]);
-  const template = [selectable ? '40px' : '', ...columns.map((c) => (c.width ? `${c.width}px` : 'minmax(96px, 1fr)'))].filter(Boolean).join(' ');
+  // 列宽：写的宽度是最小值，表格比内容宽时按宽度的比例分掉多出来的（撑满整行，不在右边留空，11-27 用户说）
+  const template = [selectable ? '40px' : '', ...columns.map((c) => (c.fixed ? `${c.width ?? 64}px` : `minmax(${c.width ?? 160}px, ${c.width ?? 160}fr)`))].filter(Boolean).join(' ');
 
   let body: ReactNode;
   if (status === 'loading') {
@@ -146,6 +149,28 @@ export function KwTable<T>({ columns, rows, rowKey, selected, onSelectedChange, 
       </div>
     </ScrollArea>
   );
+}
+
+// ---------- 一页几行 ----------
+
+/**
+ * 一页放几行：按窗口高度算，表格正好铺到分页条（11-27 用户说：人多的时候下面要撑满）。
+ * ref 挂在表格外面那层上，量它离窗口顶多远；扣掉表头、分页条和底部留白，除以行高。窗口变了跟着算。
+ */
+export function useFitRows(ref: RefObject<HTMLElement>, { rowHeight = 52, reserve = 44 + 44 + 32, min = 5 } = {}) {
+  const [rows, setRows] = useState(10);
+  useLayoutEffect(() => {
+    const calc = () => {
+      const el = ref.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      setRows(Math.max(min, Math.floor((window.innerHeight - top - reserve) / rowHeight)));
+    };
+    calc();
+    window.addEventListener('resize', calc);
+    return () => window.removeEventListener('resize', calc);
+  }, [ref, rowHeight, reserve, min]);
+  return rows;
 }
 
 // ---------- 分页 ----------

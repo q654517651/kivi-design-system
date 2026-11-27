@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Avatar, Button, Dropdown, IconButton, Input, Menu, MenuItem, Tag, toast } from '@kivi';
 import { useBalance } from '../../data/db';
 import { logExport, money, pct, removeMember, scopeLabel, statsOf, type KwGroup, type KwMember, type KwScope, type KwStats } from '../../data/kiwi';
 import { confirm } from '../../flows/dialogs';
 import { attempt } from '../../flows/errors';
-import { downloadCsv, fmtTime, KwTable, Pager, pageOf, type Column, type LoadStatus } from '../../parts/kiwi/ui';
+import { downloadCsv, fmtTime, KwTable, Pager, pageOf, useFitRows, type Column, type LoadStatus } from '../../parts/kiwi/ui';
 import type { QuotaMode } from './QuotaDialog';
 
 /*
@@ -18,8 +18,6 @@ export interface ListState {
   page: number;
   selected: string[];
 }
-
-export const PAGE = 10;
 
 type Row = KwMember & { s: KwStats };
 
@@ -54,6 +52,9 @@ export function MembersTab({
   onMove: (ids: string[]) => void;
 }) {
   const balance = useBalance();
+  // 一页几行按窗口高度算，表格铺到分页条
+  const tableRef = useRef<HTMLDivElement>(null);
+  const PAGE = useFitRows(tableRef);
   const groupOf = (id: string) => groups.find((g) => g.id === id);
   const rows = useMemo<Row[]>(() => {
     const q = list.q.trim();
@@ -62,6 +63,11 @@ export function MembersTab({
       .map((m) => ({ ...m, s: statsOf(m, balance) }))
       .sort((a, b) => b.s.weekUsed - a.s.weekUsed);
   }, [members, list.q, balance]);
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+  useEffect(() => {
+    if (list.page > pages) setList({ page: pages });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages]);
   const selected = list.selected.filter((id) => members.some((m) => m.id === id));
 
   const remove = (m: Row) =>
@@ -114,6 +120,7 @@ export function MembersTab({
       key: 'more',
       title: '',
       width: 64,
+      fixed: true,
       align: 'right',
       render: (m) => (
         <span onClick={(e) => e.stopPropagation()}>
@@ -168,6 +175,7 @@ export function MembersTab({
           </div>
         </div>
       )}
+      <div ref={tableRef}>
       <KwTable
         columns={columns}
         rows={pageOf(rows, list.page, PAGE)}
@@ -180,6 +188,7 @@ export function MembersTab({
         empty={list.q ? '没有符合条件的成员' : '这个范围里还没有成员'}
         skeletonRows={PAGE}
       />
+      </div>
       {status === 'ready' && <Pager total={rows.length} page={list.page} pageSize={PAGE} onChange={(page) => setList({ page })} />}
     </>
   );
