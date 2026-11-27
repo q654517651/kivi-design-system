@@ -1,6 +1,8 @@
 import { Button, Dropdown, IconButton, Menu, MenuItem, Popover, Select, Switch, toast } from '@kivi';
 import { db } from '../data/db';
 import { demo, setDemo, useDemo, type DemoSwitches } from '../data/demo';
+import { kiwi, ROLE_LABEL } from '../data/kiwi';
+import type { KwRole } from '../data/kiwi-types';
 import { resetMemory } from '../data/memory';
 import { PREVIEW_BRANCH, PREVIEW_LINKS, switchPreview } from '../preview';
 
@@ -14,6 +16,7 @@ function resetDemo() {
   db.reset();
   demo.reset();
   resetMemory();
+  kiwi.reset();
   try {
     sessionStorage.setItem(RESET_FLAG, '1');
   } catch {
@@ -39,13 +42,18 @@ if (typeof window !== 'undefined') toastAfterReset();
   演示开关：右边竖向居中一个小按钮，点开切出错状态。不是产品功能，只在演示站里有。
 */
 
-const ROWS: { key: keyof DemoSwitches; label: string }[] = [
+type BoolSwitch = Exclude<keyof DemoSwitches, 'role'>;
+const ROWS: { key: BoolSwitch; label: string }[] = [
   { key: 'fast', label: '快速出结果（3 秒）' },
   { key: 'failNext', label: '下次生成失败' },
   { key: 'lowBalance', label: '余额不足' },
   { key: 'offline', label: '断网' },
   { key: 'slow', label: '慢网' },
+  { key: 'kiwiPartialFail', label: '批量额度部分失败' },
 ];
+
+/* 猕猴桃管理（11-27 原型）：当前角色。切了账号菜单、用量管理的范围和能做的操作跟着变 */
+const ROLES: KwRole[] = ['user', 'admin', 'project-admin', 'super-admin'];
 
 export function DemoPanel() {
   const d = useDemo();
@@ -75,6 +83,19 @@ export function DemoPanel() {
                 </Menu>
               </Dropdown>
             )}
+            <Dropdown
+              className="app-demo__branch"
+              haspopup="listbox"
+              trigger={<Select aria-label="当前角色">角色：{ROLE_LABEL[d.role]}</Select>}
+            >
+              <Menu role="listbox" aria-label="当前角色">
+                {ROLES.map((r) => (
+                  <MenuItem key={r} selected={d.role === r} onClick={() => setDemo({ role: r })}>
+                    {ROLE_LABEL[r]}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Dropdown>
             {ROWS.map((r) => (
               <Switch key={r.key} checked={d[r.key]} onChange={(v) => setDemo({ [r.key]: v })}>
                 {r.label}

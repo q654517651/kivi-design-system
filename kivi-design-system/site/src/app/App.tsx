@@ -12,6 +12,9 @@ import { CanvasPage } from './pages/canvas';
 import { CreateHome, CreatePage, type HomeMode } from './pages/create';
 import { ExplorePage, type ExploreTab } from './pages/explore';
 import { ToolsPage } from './pages/tools';
+import { UsagePage } from './pages/usage';
+import { MyUsageDialog } from './parts/kiwi/MyUsageDialog';
+import { useUsageAdminRequest } from './flows/kiwi';
 import { Sidebar, Wallet, type AppPage, type HistoryKind } from './parts/shell';
 import { DemoPanel } from './parts/DemoPanel';
 import type { AgentComposerMessage } from './parts/agent-composer';
@@ -30,7 +33,7 @@ import './app.css';
   网站里放在外框里（框里切）；单独开在 #/app/<页>，地址跟着切，浏览器前进后退能用。
 */
 
-const PAGES: AppPage[] = ['create', 'explore', 'tools', 'assets', 'canvas'];
+const PAGES: AppPage[] = ['create', 'explore', 'tools', 'assets', 'canvas', 'usage'];
 const NONE = { kind: 'chat' as HistoryKind, id: '' };
 
 export function KiviApp({
@@ -68,6 +71,13 @@ export function KiviApp({
   // 素材库（11-23 原型，3.14 不做）：创作页右上角点开，右侧推出一栏；挑的素材加进输入框的参考区
   const [libraryOpen, setLibraryOpen] = useState(false);
 
+  // 账号菜单点「用量管理」（11-27 原型）：切到用量管理页，画布页里点也一样
+  const usageRequest = useUsageAdminRequest();
+  useEffect(() => {
+    if (usageRequest) navigate('usage');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usageRequest]);
+
   // 选中的对话被删掉了，回到创作首页
   const chats = useDB((s) => s.chats);
   // 地址带 id 进来（新标签页打开、刷新）：选中那条对话 / 那块画布（11-20 修 S-1）
@@ -86,7 +96,7 @@ export function KiviApp({
 
   // 去了探索、AI 工具、资产，侧栏不再选中对话；从画布回到创作页，也不再选中那块画布
   useEffect(() => {
-    if (page === 'explore' || page === 'tools' || page === 'assets' || (page === 'create' && selected.kind === 'canvas')) {
+    if (page === 'explore' || page === 'tools' || page === 'assets' || page === 'usage' || (page === 'create' && selected.kind === 'canvas')) {
       setSelected(NONE);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -203,6 +213,7 @@ export function KiviApp({
             onOpenCanvas={openCanvasById}
           />
         )}
+        {page === 'usage' && <UsagePage />}
         {/* 公共的头：右上角余额和头像，每一页一样的位置（中线离顶 32，和侧栏 Logo 对齐），换页不动。AI 工具页的放进右栏顶上。
             创作页多一个素材库入口（11-23 原型，3.14 不做） */}
         {page !== 'tools' && <Wallet library={page === 'create' ? { open: libraryOpen, onToggle: () => setLibraryOpen((v) => !v) } : undefined} />}
@@ -243,6 +254,7 @@ export function KiviApp({
           onHome={() => navigate('create')}
         />
       )}
+      <MyUsageDialog />
       <DemoPanel />
     </>
   );

@@ -1,0 +1,20 @@
+name: Publish preview
+
+# 预览分支专用（合进 test 前和 .github/preview-label 一起删掉）：推了这个分支，就叫 main 上的「Publish design site」重新发一次网站，
+# 它会把所有 preview/ 分支打包放进网站的「功能名/」子目录，切换按钮里显示 .github/preview-label 写的名字。正式站内容不变。流程见 CLAUDE.md「功能分支预览」。
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-publish site with this preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main

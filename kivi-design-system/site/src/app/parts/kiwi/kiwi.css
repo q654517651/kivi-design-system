@@ -1,0 +1,543 @@
+/*
+  猕猴桃管理（11-27 原型）的样式，类名 app-kw-。只用 tokens.css 的变量。
+  表格、分页、额度条、趋势图组件库还没有，先在这里画，设计师调完、定了再收进组件库。
+*/
+
+/* ---------- 表格：网格行，表头浅底，行间细线 ---------- */
+.app-kw-table {
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.app-kw-table__inner {
+  min-width: 100%;
+  width: max-content;
+}
+
+.app-kw-table__row {
+  display: grid;
+  align-items: center;
+  min-width: 100%;
+  min-height: 52px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--font-size-14);
+}
+
+.app-kw-table__row:last-child {
+  border-bottom: 0;
+}
+
+.app-kw-table__head {
+  min-height: 44px;
+  background: var(--color-bg-fill-container-light-2);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+}
+
+.app-kw-table__row[data-clickable] {
+  cursor: pointer;
+}
+
+.app-kw-table__row[data-clickable]:hover,
+.app-kw-table__row[data-selected] {
+  background: var(--color-bg-fill-container-light-2-hover);
+}
+
+.app-kw-table__cell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-width: 0;
+  padding: var(--spacing-8) var(--spacing-16);
+  white-space: nowrap;
+}
+
+.app-kw-table__cell[data-align="right"] {
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-kw-table__state {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-32) 0;
+}
+
+/* 单元格里的次要字、加减号颜色 */
+.app-kw-muted {
+  color: var(--color-text-fill-tertiary);
+}
+
+.app-kw-plus {
+  color: var(--color-status-success);
+}
+
+.app-kw-minus {
+  color: var(--color-text-fill-primary);
+}
+
+.app-kw-danger {
+  color: var(--color-status-danger);
+}
+
+.app-kw-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
+
+.app-kw-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 分页 ---------- */
+.app-kw-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-16);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-13);
+}
+
+.app-kw-pager > span:first-child {
+  margin-right: var(--spacing-8);
+}
+
+.app-kw-pager__nums {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.app-kw-pager__gap {
+  padding: 0 var(--spacing-4);
+}
+
+/* ---------- 额度条 ---------- */
+.app-kw-bar__track {
+  display: flex;
+  gap: var(--spacing-2);
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--border-radius-round);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.app-kw-bar__track > span {
+  flex-basis: 0;
+  border-radius: var(--border-radius-round);
+}
+
+.app-kw-bar [data-tone="used"] {
+  --kw-tone: var(--color-text-fill-tertiary);
+}
+
+.app-kw-bar [data-tone="week"] {
+  --kw-tone: var(--color-brand-solid);
+}
+
+.app-kw-bar [data-tone="temp"] {
+  --kw-tone: var(--color-status-warning);
+}
+
+.app-kw-bar__track > span {
+  background: var(--kw-tone);
+}
+
+.app-kw-bar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8) var(--spacing-24);
+  margin-top: var(--spacing-12);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+}
+
+.app-kw-bar__legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-6);
+}
+
+.app-kw-bar__legend > span::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: var(--border-radius-round);
+  background: var(--kw-tone);
+}
+
+/* ---------- 统计格 ---------- */
+.app-kw-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--spacing-12);
+  margin: 0;
+}
+
+.app-kw-stats > div {
+  padding: var(--spacing-16);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.app-kw-stats dt {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+}
+
+.app-kw-stats dd {
+  margin: var(--spacing-8) 0 0;
+  font-size: var(--font-size-20);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-kw-stats p {
+  margin: var(--spacing-4) 0 0;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+/* ---------- 趋势图 ---------- */
+.app-kw-trend__bars {
+  display: flex;
+  align-items: stretch;
+  gap: var(--spacing-4);
+  height: 160px;
+}
+
+.app-kw-trend__tip {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.app-kw-trend__col {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  min-width: 0;
+  border-radius: var(--border-radius-4);
+  outline: none;
+}
+
+.app-kw-trend__col:hover,
+.app-kw-trend__col:focus-visible {
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.app-kw-trend__bar {
+  width: 100%;
+  border-radius: var(--border-radius-4);
+  background: var(--color-brand-solid);
+}
+
+.app-kw-trend__bar[data-empty] {
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.app-kw-trend__axis {
+  display: flex;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-8);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.app-kw-trend__axis > span {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+/* ---------- 「我的用量」弹窗 ---------- */
+.app-kw-mine__top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+  margin-bottom: var(--spacing-16);
+}
+
+.app-kw-mine__label {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-13);
+}
+
+.app-kw-mine__amount {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  margin-top: var(--spacing-4);
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-32);
+}
+
+.app-kw-mine__amount small {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+}
+
+.app-kw-mine__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-4) var(--spacing-16);
+  margin-top: var(--spacing-16);
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.app-kw-mine__tabs {
+  margin: var(--spacing-24) 0 var(--spacing-16);
+}
+
+/* 筛选条：左边筛选，右边说明 */
+.app-kw-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-8);
+  margin-bottom: var(--spacing-12);
+}
+
+.app-kw-filters__note {
+  margin-left: auto;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.app-kw-filters > .kv-input {
+  width: 220px;
+}
+
+/* ---------- 用量管理页 ---------- */
+.app-kw-page {
+  min-width: 0;
+  background: var(--color-bg-fill-base);
+  color: var(--color-text-fill-primary);
+  font-family: var(--font-family);
+}
+
+.app-kw-page__body {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: calc(var(--spacing-32) * 2) var(--spacing-32) var(--spacing-32); /* 顶上让开右上角余额、头像 */
+}
+
+.app-kw-page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-24);
+}
+
+.app-kw-page__head h1 {
+  margin: 0;
+  font-size: var(--font-size-20);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-28);
+}
+
+.app-kw-page__scope {
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+}
+
+.app-kw-page__updated {
+  margin-left: auto;
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.app-kw-page__tabs {
+  margin: var(--spacing-24) 0 var(--spacing-16);
+}
+
+.app-kw-section + .app-kw-section {
+  margin-top: var(--spacing-32);
+}
+
+.app-kw-section > h2 {
+  margin: 0 0 var(--spacing-16);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--font-line-height-24);
+}
+
+.app-kw-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-8);
+  margin-bottom: var(--spacing-12);
+}
+
+.app-kw-toolbar > .kv-input {
+  width: 220px;
+}
+
+.app-kw-toolbar__end {
+  display: flex;
+  gap: var(--spacing-8);
+  margin-left: auto;
+}
+
+/* 批量操作栏：勾了人才出来，盖在工具条上 */
+.app-kw-batch {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-height: 36px;
+  margin-bottom: var(--spacing-12);
+  padding: 0 var(--spacing-8) 0 var(--spacing-16);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-1);
+  font-size: var(--font-size-14);
+}
+
+.app-kw-batch > span {
+  margin-right: auto;
+}
+
+/* 成员详情两栏：趋势 + 模型占比 */
+.app-kw-detail__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr);
+  gap: var(--spacing-16);
+}
+
+.app-kw-card {
+  padding: var(--spacing-16);
+  border-radius: var(--border-radius-12);
+  background: var(--color-bg-fill-container-light-2);
+}
+
+.app-kw-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  margin-bottom: var(--spacing-16);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 模型占比：一行一个模型，名字 + 细条 + 数 */
+.app-kw-share {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-13);
+}
+
+.app-kw-share li {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--spacing-12);
+}
+
+.app-kw-share__bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--border-radius-round);
+  background: var(--color-bg-fill-container-light-1);
+}
+
+.app-kw-share__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--border-radius-round);
+  background: var(--color-brand-solid);
+}
+
+.app-kw-share__num {
+  color: var(--color-text-fill-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 弹窗里的表单 */
+.app-kw-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+}
+
+.app-kw-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  font-size: var(--font-size-14);
+}
+
+.app-kw-form__field > span:first-child {
+  color: var(--color-text-fill-secondary);
+}
+
+.app-kw-form__hint {
+  color: var(--color-text-fill-tertiary);
+  font-size: var(--font-size-12);
+}
+
+.app-kw-form__error {
+  color: var(--color-status-danger);
+  font-size: var(--font-size-12);
+}
+
+/* 调整前后对照：成员 · 前 → 后 */
+.app-kw-diff {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  margin: 0;
+  padding: var(--spacing-12) var(--spacing-16);
+  border-radius: var(--border-radius-8);
+  background: var(--color-bg-fill-container-light-2);
+  list-style: none;
+  font-size: var(--font-size-13);
+}
+
+.app-kw-diff li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+}
+
+.app-kw-diff__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.app-kw-summary {
+  margin: 0 0 var(--spacing-12);
+  color: var(--color-text-fill-secondary);
+  font-size: var(--font-size-14);
+}
+
+/* 飞书人员搜索结果 */
+.app-kw-people {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  max-height: 240px;
+}
+
+/* 筛选下拉：填充型 Select 默认撑满一行，筛选条里给固定宽 */
+.app-kw-filters > .kv-dropdown.kv-dropdown,
+.app-kw-toolbar > .kv-dropdown.kv-dropdown,
+.app-kw-page__head > .kv-dropdown.kv-dropdown {
+  flex: none;
+  width: 160px;
+}

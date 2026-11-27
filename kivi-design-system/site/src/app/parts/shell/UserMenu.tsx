@@ -1,6 +1,9 @@
 import { Avatar, Button, Divider, Dropdown, Menu, MenuItem, MenuSub, placeholderImageSrc, toast } from '@kivi';
 import { useCopy } from '@kivi/hooks';
+import { useDemo } from '../../data/demo';
+import { isManager } from '../../data/kiwi';
 import { setLang, useLang, type Lang } from '../../data/lang';
+import { openMyUsage, openUsageAdmin } from '../../flows/kiwi';
 
 /*
   点头像出的菜单（11-12 用户定）：顶栏原来的教程、反馈、语言、复制用户 Key 都收进来，余额胶囊还在外面。
@@ -17,6 +20,7 @@ const LANGUAGES: { key: Lang; label: string }[] = [
 export function UserMenu() {
   const lang = useLang();
   const { copied, copy } = useCopy();
+  const { role } = useDemo();
   return (
     <>
       <Dropdown
@@ -36,6 +40,16 @@ export function UserMenu() {
           <Button variant="secondary" className="tpl-ms__user-key" rightIcon={copied ? 'CheckSmall' : 'Copy'} onClick={() => copy('kivi-demo-user-key')}>
             复制用户 Key
           </Button>
+          <Divider />
+          {/* 猕猴桃管理（11-27 原型）：人人有「我的用量」，管理员以上多一个「用量管理」。图标先借用，等定 */}
+          <MenuItem icon="Kiwi" onClick={openMyUsage}>
+            我的用量
+          </MenuItem>
+          {isManager(role) && (
+            <MenuItem icon="Configuration" onClick={openUsageAdmin}>
+              用量管理
+            </MenuItem>
+          )}
           <Divider />
           <MenuItem icon="Document" onClick={() => window.open('https://micoworld.feishu.cn/wiki/K6ARwr4JZimr4kkE8vXcwgEenoc', '_blank', 'noopener')}>
             教程

@@ -1,3 +1,4 @@
+import type { KwRole } from './kiwi-types';
 import { createStore, useStore } from './store';
 
 /*
@@ -7,6 +8,8 @@ import { createStore, useStore } from './store';
   - offline：所有请求报网络错误
   - slow：所有请求慢 1.5–3 秒（看加载态）
   - fast：生成 3 秒出结果（平时按任务类型估时：图片 20 秒、视频 60 秒、音频 15 秒）
+  - role：猕猴桃管理（11-27 原型）的当前角色，切了账号菜单和用量管理的范围跟着变
+  - kiwiPartialFail：猕猴桃管理的批量额度操作，第一次提交部分成员失败（看逐人结果和重试）
 */
 
 export interface DemoSwitches {
@@ -15,12 +18,14 @@ export interface DemoSwitches {
   offline: boolean;
   slow: boolean;
   fast: boolean;
+  role: KwRole;
+  kiwiPartialFail: boolean;
 }
 
 export const demo = createStore<DemoSwitches>({
   key: 'kivi-app-demo',
-  version: 1,
-  init: () => ({ failNext: false, lowBalance: false, offline: false, slow: false, fast: true }),
+  version: 2,
+  init: () => ({ failNext: false, lowBalance: false, offline: false, slow: false, fast: true, role: 'admin', kiwiPartialFail: false }),
 });
 
 export const useDemo = () => useStore(demo, (s) => s);
