@@ -43,8 +43,6 @@ export interface KwRecord {
   model?: string;
   /** 正数加、负数扣 */
   amount: number;
-  /** 关联会话标识 */
-  session?: string;
 }
 
 /** 操作日志 */

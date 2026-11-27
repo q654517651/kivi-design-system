@@ -84,7 +84,6 @@ function dayRecords(member: KwMember, day: number, now: number): KwRecord[] {
       reason: kind === 'image' ? '图片生成' : kind === 'video' ? '视频生成' : '音频生成',
       model,
       amount: -cost,
-      session: `S-${Math.floor(r() * 1e8).toString(36).toUpperCase()}`,
     });
     spent += cost;
     i++;

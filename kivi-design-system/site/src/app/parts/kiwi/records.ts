@@ -35,7 +35,7 @@ export function ledgerOf(m: KwMember, from: number, to: number, now = Date.now()
     for (const t of db.get().tasks) {
       if (t.createdAt < from || t.createdAt >= to || !t.cost || t.status === 'failed' || t.status === 'cancelled') continue;
       const reason = t.kind === 'tool' ? `${t.label ?? 'AI 工具'}` : t.media === 'video' ? '视频生成' : t.media === 'audio' ? '音频生成' : '图片生成';
-      out.push({ id: t.id, at: t.createdAt, reason, model: t.model, amount: -t.cost, session: t.id.toUpperCase() });
+      out.push({ id: t.id, at: t.createdAt, reason, model: t.model, amount: -t.cost });
     }
   }
   return out.sort((a, b) => b.at - a.at);
