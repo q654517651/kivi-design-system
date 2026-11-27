@@ -57,7 +57,6 @@ export interface KwLog {
   target: string;
   before?: string;
   after?: string;
-  reason?: string;
   /** 在哪个范围里做的：项目 · 分组 */
   scope?: string;
 }

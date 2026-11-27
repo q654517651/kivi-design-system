@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Dialog, Icon, TabItem, Tabs, Textarea, toast } from '@kivi';
+import { Button, Dialog, Icon, TabItem, Tabs, toast } from '@kivi';
 import { AmountPicker } from '../../parts/kiwi/AmountPicker';
 import { applyQuota, kiwi, previewQuota, statsOf, useKiwi, type QuotaOp, type QuotaResult } from '../../data/kiwi';
 import { handleError } from '../../flows/errors';
@@ -27,7 +27,6 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
   const [value, setValue] = useState('');
   const [kind, setKind] = useState<'week' | 'temp'>('temp');
   const [sign, setSign] = useState<'add' | 'sub'>('add');
-  const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<QuotaResult[]>([]);
 
@@ -40,7 +39,6 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
   useEffect(() => {
     if (!open) return;
     setStep('form');
-    setReason('');
     setResults([]);
     setKind('temp');
     setSign('add');
@@ -53,7 +51,7 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
   const op: QuotaOp | null = !valid ? null : mode === 'limit' ? { kind: 'set-limit', value: n } : mode === 'add' ? (kind === 'week' ? { kind: 'add-limit', value: n } : { kind: 'temp', value: n }) : { kind: 'temp', value: sign === 'add' ? n : -n };
   const previews = op ? targets.map((m) => ({ m, ...previewQuota(m, op) })) : [];
   const invalid = previews.filter((p) => p.error);
-  const canNext = !!op && !!reason.trim() && !invalid.length;
+  const canNext = !!op && !invalid.length;
 
   const opLabel = !op ? '' : op.kind === 'set-limit' ? '调整周上限' : op.kind === 'add-limit' ? '增加周额度（周上限）' : op.value >= 0 ? '增加临时额度' : '减少临时额度';
   const unitLabel = op?.kind === 'temp' ? '临时额度' : '周上限';
@@ -62,7 +60,7 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
     if (!op) return;
     setBusy(true);
     try {
-      const res = await applyQuota(ids, op, reason.trim(), { retry });
+      const res = await applyQuota(ids, op, { retry });
       const merged = retry ? results.map((r) => res.find((x) => x.id === r.id) ?? r) : res;
       setResults(merged);
       if (!batch && merged.every((r) => r.ok)) {
@@ -128,10 +126,6 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
           )}
           {invalid.length > 0 && <span className="app-kw-form__error">{batch ? `${invalid.length} 人${invalid[0].error}（${invalid.map((p) => p.m.name).join('、')}）` : invalid[0].error}</span>}
         </div>
-        <label className="app-kw-form__field">
-          <span>操作原因</span>
-          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="会写进操作日志" rows={2} />
-        </label>
       </div>
     );
     footer = (
@@ -160,7 +154,6 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
             </li>
           ))}
         </ul>
-        <p className="app-kw-form__hint">原因：{reason}</p>
       </>
     );
     footer = (

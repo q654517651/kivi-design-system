@@ -130,7 +130,7 @@ export interface QuotaResult {
  * 给一批成员做额度操作，逐人返回结果（批量也走这里）。
  * 演示开关「批量部分失败」开着时，第一次提交每 3 人里失败 1 个；重试只发失败的那几个，成功的不会再做一遍。
  */
-export async function applyQuota(ids: string[], op: QuotaOp, reason: string, { retry = false } = {}): Promise<QuotaResult[]> {
+export async function applyQuota(ids: string[], op: QuotaOp, { retry = false } = {}): Promise<QuotaResult[]> {
   return request(() => {
     const partialFail = demo.get().kiwiPartialFail && !retry && ids.length > 1;
     return ids.map((id, i) => {
@@ -143,11 +143,11 @@ export async function applyQuota(ids: string[], op: QuotaOp, reason: string, { r
         const tempLeft = statsOf(m).tempLeft + op.value;
         patchMember(id, { tempLeft });
         bumpBalance(id, op.value);
-        log({ action: op.value >= 0 ? '增加临时额度' : '减少临时额度', target: m.name, before: String(p.before), after: String(p.after), reason, scope: groupName(m.groupId) });
+        log({ action: op.value >= 0 ? '增加临时额度' : '减少临时额度', target: m.name, before: String(p.before), after: String(p.after), scope: groupName(m.groupId) });
       } else {
         patchMember(id, { weeklyLimit: p.after });
         bumpBalance(id, p.after - p.before);
-        log({ action: op.kind === 'set-limit' ? '调整周上限' : '增加周额度', target: m.name, before: String(p.before), after: String(p.after), reason, scope: groupName(m.groupId) });
+        log({ action: op.kind === 'set-limit' ? '调整周上限' : '增加周额度', target: m.name, before: String(p.before), after: String(p.after), scope: groupName(m.groupId) });
       }
       return { id, ok: true };
     });

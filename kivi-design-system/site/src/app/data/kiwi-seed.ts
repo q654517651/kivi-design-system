@@ -173,12 +173,12 @@ export function seedKiwi(): KwState {
   const now = Date.now();
   const byName = (i: number) => members[i];
   const logs: KwLog[] = [
-    { action: '增加临时额度', target: byName(8).name, before: '0', after: '10000', reason: '新角色立绘批量生成（飞书审批已通过）', hours: 50, operator: 'KIVI' },
-    { action: '调整周上限', target: byName(4).name, before: '2000', after: '3000', reason: '负责主 KV，长期用量大', hours: 72, operator: 'KIVI' },
-    { action: '添加成员', target: byName(9).name, before: '', after: '设计组 · 周上限 2000', reason: '', hours: 120, operator: 'KIVI' },
-    { action: '导出', target: '设计组成员列表', before: '', after: '本周 · 12 人', reason: '', hours: 130, operator: 'KIVI' },
-    { action: '移除成员', target: '吴子轩', before: '设计组', after: '', reason: '转岗', hours: 160, operator: 'KIVI' },
-  ].map((l, i) => ({ id: `log-seed-${i}`, at: now - l.hours * 3_600_000, operator: l.operator, action: l.action, target: l.target, before: l.before, after: l.after, reason: l.reason, scope: 'KIVI · 设计组' }));
+    { action: '增加临时额度', target: byName(8).name, before: '0', after: '10000', hours: 50, operator: 'KIVI' },
+    { action: '调整周上限', target: byName(4).name, before: '2000', after: '3000', hours: 72, operator: 'KIVI' },
+    { action: '添加成员', target: byName(9).name, before: '', after: '设计组 · 周上限 2000', hours: 120, operator: 'KIVI' },
+    { action: '导出', target: '设计组成员列表', before: '', after: '本周 · 12 人', hours: 130, operator: 'KIVI' },
+    { action: '移除成员', target: '吴子轩', before: '设计组', after: '', hours: 160, operator: 'KIVI' },
+  ].map((l, i) => ({ id: `log-seed-${i}`, at: now - l.hours * 3_600_000, operator: l.operator, action: l.action, target: l.target, before: l.before, after: l.after, scope: 'KIVI · 设计组' }));
 
   return { projects: PROJECTS, groups, members, logs };
 }

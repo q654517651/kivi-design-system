@@ -5,7 +5,7 @@ import { FilterSelect } from '../../parts/kiwi/FilterSelect';
 import { fmtTime, KwTable, Pager, pageOf, type Column, type LoadStatus } from '../../parts/kiwi/ui';
 
 /*
-  操作日志：额度调整、成员增删、分组和管理员变更、导出，记操作人、时间、对象、前后值、原因。
+  操作日志：额度调整、成员增删、分组和管理员变更、导出，记操作人、时间、对象、前后值（不记原因，11-27 用户定）。
 */
 
 const PAGE = 10;
@@ -36,7 +36,6 @@ export function LogsTab({ logs, status, onRetry }: { logs: KwLog[]; status: Load
           <span className="app-kw-muted">—</span>
         ),
     },
-    { key: 'reason', title: '原因', width: 200, render: (l) => l.reason || <span className="app-kw-muted">—</span> },
   ];
   return (
     <>
