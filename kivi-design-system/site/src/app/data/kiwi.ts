@@ -15,7 +15,7 @@ import { createStore, uid, useStore } from './store';
 export * from './kiwi-seed';
 export type * from './kiwi-types';
 
-export const kiwi = createStore<KwState>({ key: 'kivi-app-kiwi', version: 1, init: seedKiwi });
+export const kiwi = createStore<KwState>({ key: 'kivi-app-kiwi', version: 2, init: seedKiwi });
 export const useKiwi = <S,>(selector: (s: KwState) => S) => useStore(kiwi, selector);
 
 /** 当前操作人（演示里就是「我」） */
@@ -231,23 +231,6 @@ export async function setGroupAdmins(groupId: string, adminIds: string[]) {
     const names = (ids: string[]) => ids.map((id) => memberOf(id)?.name).filter(Boolean).join('、') || '无';
     kiwi.set((s) => ({ ...s, groups: s.groups.map((x) => (x.id === groupId ? { ...x, adminIds } : x)) }));
     log({ action: '任免组管理员', target: g.name, before: names(g.adminIds), after: names(adminIds), scope: g.name });
-  });
-}
-
-/** 超管人工补发加额失败的申请单：以申请单号为凭据，已到账的不再加 */
-export async function compensate(appId: string) {
-  return request(() => {
-    const app = kiwi.get().applications.find((a) => a.id === appId);
-    if (!app) return 'missing' as const;
-    if (app.granted) return 'already' as const;
-    const m = memberOf(app.memberId);
-    kiwi.set((s) => ({ ...s, applications: s.applications.map((a) => (a.id === appId ? { ...a, status: 'approved', granted: true, compensatedAt: Date.now() } : a)) }));
-    if (m) {
-      patchMember(m.id, { tempLeft: statsOf(m).tempLeft + app.amount });
-      bumpBalance(m.id, app.amount);
-    }
-    log({ action: '人工补发', target: app.id, before: '加额失败', after: `${m?.name ?? ''} +${app.amount} 临时额度`, scope: m ? groupName(m.groupId) : '' });
-    return 'done' as const;
   });
 }
 

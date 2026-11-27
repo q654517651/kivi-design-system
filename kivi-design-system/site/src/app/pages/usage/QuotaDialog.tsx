@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Dialog, Icon, NumberInput, TabItem, Tabs, Textarea, toast } from '@kivi';
+import { Button, Dialog, Icon, TabItem, Tabs, Textarea, toast } from '@kivi';
+import { AmountPicker } from '../../parts/kiwi/AmountPicker';
 import { applyQuota, kiwi, previewQuota, statsOf, useKiwi, type QuotaOp, type QuotaResult } from '../../data/kiwi';
 import { handleError } from '../../flows/errors';
 
@@ -98,27 +99,27 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
         )}
         {batch && <p className="app-kw-summary">已选 {targets.length} 人，只对勾选的人生效</p>}
         {mode === 'add' && (
-          <label className="app-kw-form__field">
+          <div className="app-kw-form__field">
             <span>额度类型</span>
             <Tabs variant="segment" value={kind} onChange={(v) => setKind(v as typeof kind)}>
               <TabItem value="temp">临时额度</TabItem>
               <TabItem value="week">周额度</TabItem>
             </Tabs>
             <span className="app-kw-form__hint">{kind === 'week' ? '加在现有周上限上，以后每周都按新上限发放' : '单独入账，不随周清零，先扣完周额度才扣它'}</span>
-          </label>
+          </div>
         )}
         {mode === 'temp' && (
-          <label className="app-kw-form__field">
+          <div className="app-kw-form__field">
             <span>操作</span>
             <Tabs variant="segment" value={sign} onChange={(v) => setSign(v as typeof sign)}>
               <TabItem value="add">增加</TabItem>
               <TabItem value="sub">减少</TabItem>
             </Tabs>
-          </label>
+          </div>
         )}
-        <label className="app-kw-form__field">
+        <div className="app-kw-form__field">
           <span>{mode === 'limit' ? '调整后的周上限' : '数量'}</span>
-          <NumberInput value={value} onChange={setValue} min={0} precision={0} unit="猕猴桃" placeholder={mode === 'limit' ? '比如 3000' : '正整数'} />
+          <AmountPicker value={value} onChange={setValue} placeholder={mode === 'limit' ? '调整后的周上限' : '正整数'} />
           {value !== '' && !valid && <span className="app-kw-form__error">请填{mode === 'limit' ? '不小于 0 的整数' : '正整数'}</span>}
           {single && op && !previews[0]?.error && (
             <span className="app-kw-form__hint">
@@ -126,7 +127,7 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
             </span>
           )}
           {invalid.length > 0 && <span className="app-kw-form__error">{batch ? `${invalid.length} 人${invalid[0].error}（${invalid.map((p) => p.m.name).join('、')}）` : invalid[0].error}</span>}
-        </label>
+        </div>
         <label className="app-kw-form__field">
           <span>操作原因</span>
           <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="会写进操作日志" rows={2} />

@@ -1,5 +1,5 @@
 import { MODELS } from '@kivi';
-import type { KwApplication, KwGroup, KwLog, KwMember, KwProject, KwRecord, KwState } from './kiwi-types';
+import type { KwGroup, KwLog, KwMember, KwProject, KwRecord, KwState } from './kiwi-types';
 
 /*
   猕猴桃管理（11-27 原型）的种子数据和逐笔消耗记录。
@@ -8,8 +8,6 @@ import type { KwApplication, KwGroup, KwLog, KwMember, KwProject, KwRecord, KwSt
 
 /** 1 猕猴桃 ≈ 0.035 美元（平台固定汇率，文档 2 节） */
 export const KIWI_USD = 0.035;
-/** 申请档位 */
-export const APPLY_TIERS = [3000, 5000, 7000, 10000];
 /** 演示里的「我」：账号菜单顶上那个 KIVI */
 export const ME = 'me';
 
@@ -174,44 +172,15 @@ export function seedKiwi(): KwState {
 
   const now = Date.now();
   const byName = (i: number) => members[i];
-  const apps: KwApplication[] = [
-    { status: 'pending', who: 3, amount: 5000, reason: '双十二投放素材赶工，周额度不够', hours: 2 },
-    { status: 'failed', who: 5, amount: 3000, reason: '视频分镜测试，需要多跑几轮', hours: 6, error: '加额接口超时，已自动重试 3 次' },
-    { status: 'failed', who: 20, amount: 7000, reason: '本地化宣传片 6 个语种', hours: 20, error: '额度服务返回 500，已自动重试 3 次' },
-    { status: 'approved', who: 0, amount: 3000, reason: '活动页 KV 出图', hours: 30 },
-    { status: 'approved', who: 8, amount: 10000, reason: '新角色立绘批量生成', hours: 50 },
-    { status: 'rejected', who: 11, amount: 10000, reason: '想多试几个模型', hours: 54, note: '本周额度还剩一半，先用完再申请' },
-    { status: 'cancelled', who: 2, amount: 5000, reason: '临时需求', hours: 80 },
-    { status: 'approved', who: 30, amount: 5000, reason: '3D 资产贴图', hours: 100 },
-    { status: 'pending', who: 0, amount: 5000, reason: '下周评审前要出 3 版方案', hours: 1 },
-  ].map((a, i) => {
-    const m = byName(a.who);
-    const at = now - a.hours * 3_600_000;
-    const d = new Date(at);
-    const no = `KW${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}${String(i + 1).padStart(3, '0')}`;
-    return {
-      id: no,
-      memberId: m.id,
-      amount: a.amount,
-      reason: a.reason,
-      status: a.status as KwApplication['status'],
-      createdAt: at,
-      approver: '直属上级',
-      note: a.note,
-      error: a.error,
-      granted: a.status === 'approved',
-    };
-  });
-
   const logs: KwLog[] = [
-    { action: '增加临时额度', target: byName(8).name, before: '0', after: '10000', reason: '申请单通过自动加额', hours: 50, operator: '系统' },
+    { action: '增加临时额度', target: byName(8).name, before: '0', after: '10000', reason: '新角色立绘批量生成（飞书审批已通过）', hours: 50, operator: 'KIVI' },
     { action: '调整周上限', target: byName(4).name, before: '2000', after: '3000', reason: '负责主 KV，长期用量大', hours: 72, operator: 'KIVI' },
     { action: '添加成员', target: byName(9).name, before: '', after: '设计组 · 周上限 2000', reason: '', hours: 120, operator: 'KIVI' },
     { action: '导出', target: '设计组成员列表', before: '', after: '本周 · 12 人', reason: '', hours: 130, operator: 'KIVI' },
     { action: '移除成员', target: '吴子轩', before: '设计组', after: '', reason: '转岗', hours: 160, operator: 'KIVI' },
   ].map((l, i) => ({ id: `log-seed-${i}`, at: now - l.hours * 3_600_000, operator: l.operator, action: l.action, target: l.target, before: l.before, after: l.after, reason: l.reason, scope: 'KIVI · 设计组' }));
 
-  return { projects: PROJECTS, groups, members, applications: apps, logs };
+  return { projects: PROJECTS, groups, members, logs };
 }
 
 /** 飞书通讯录（添加用户时搜的人，演示用） */

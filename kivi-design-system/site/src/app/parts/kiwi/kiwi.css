@@ -529,89 +529,48 @@
   width: 160px;
 }
 
-/* ---------- 用量管理后台（新标签页，#/app/admin）：顶栏 + 左栏分组 + 右边内容 ---------- */
+/* ---------- 用量管理后台（新标签页，#/app/admin）：左边侧栏（和主站侧栏同一套类）+ 右边内容 ---------- */
 .app-kw-admin {
   position: relative; /* 演示开关贴着它的右边 */
-  display: grid;
-  grid-template-rows: 56px minmax(0, 1fr);
   height: 100vh;
   background: var(--color-bg-fill-base);
   color: var(--color-text-fill-primary);
   font-family: var(--font-family);
 }
 
-.app-kw-admin__top {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-12);
-  padding: 0 var(--spacing-16) 0 var(--spacing-24);
-  border-bottom: var(--border-width-1) solid var(--color-border-subtle);
-}
-
-.app-kw-admin__logo {
-  width: auto;
-  height: 20px;
-}
-
-.app-kw-admin__name {
-  padding-left: var(--spacing-12);
-  border-left: var(--border-width-1) solid var(--color-border-subtle);
-  font-size: var(--font-size-16);
-  font-weight: var(--font-weight-medium);
-}
-
-.app-kw-admin__top > .kv-dropdown.kv-dropdown {
-  flex: none;
-  width: 160px;
-}
-
-.app-kw-admin__end {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-12);
-  margin-left: auto;
-  font-size: var(--font-size-13);
-}
-
 .app-kw-admin__main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
 }
 
 .app-kw-admin__main[data-side] {
-  grid-template-columns: 240px minmax(0, 1fr);
-}
-
-.app-kw-admin__side {
-  min-height: 0;
-  border-right: var(--border-width-1) solid var(--color-border-subtle);
+  grid-template-columns: auto minmax(0, 1fr);
 }
 
 .app-kw-admin__content {
   min-height: 0;
 }
 
+/* 标题行的中线和侧栏 Logo 对齐（离顶 32） */
 .app-kw-admin__body {
   max-width: 1600px;
   margin: 0 auto;
-  padding: var(--spacing-24) var(--spacing-32) var(--spacing-32);
+  padding: var(--spacing-16) var(--spacing-32) var(--spacing-32);
+}
+
+/* 右上：角色、头像 */
+.app-kw-admin__account {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+  font-size: var(--font-size-13);
 }
 
 .app-kw-admin__denied {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* 左栏分组：和主站侧栏一样的列表（Menu 无底），底部新建 */
-.app-kw-side {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-8);
-  padding: var(--spacing-16);
-}
-
-.app-kw-side__new {
-  align-self: flex-start;
+  height: 100%;
 }

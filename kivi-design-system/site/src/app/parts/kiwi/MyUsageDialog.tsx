@@ -51,7 +51,7 @@ export function MyUsageDialog() {
 function MyUsage() {
   const balance = useBalance();
   const me = useKiwi((s) => s.members.find((m) => m.id === ME));
-  const applications = useKiwi((s) => s.applications);
+  const logs = useKiwi((s) => s.logs);
   const tasks = useDB((s) => s.tasks);
   const [range, setRange] = useState<RangeKey>("7");
   const [model, setModel] = useState("all");
@@ -60,7 +60,7 @@ function MyUsage() {
 
   const all = useMemo(
     () => (me ? ledgerOf(me, rangeFrom(range), Date.now() + 1) : []),
-    [me, range, tasks, applications],
+    [me, range, tasks, logs],
   ); // eslint-disable-line react-hooks/exhaustive-deps
   const models = useMemo(
     () => [...new Set(all.map((r) => r.model).filter(Boolean) as string[])],
@@ -126,7 +126,7 @@ function MyUsage() {
           variant="secondary"
           onClick={() =>
             toast.info(
-              "正式站跳转飞书「猕猴桃临时额度申请」流程，+1 审批通过后自动到账",
+              "正式站跳转飞书「猕猴桃临时额度申请」流程",
             )
           }
         >

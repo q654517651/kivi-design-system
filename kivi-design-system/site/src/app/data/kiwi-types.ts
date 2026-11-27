@@ -47,28 +47,6 @@ export interface KwRecord {
   session?: string;
 }
 
-export type KwApplicationStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'failed';
-
-/** 临时额度申请单（飞书流程里发起，这里只看状态、补发） */
-export interface KwApplication {
-  /** 申请单号，加额幂等的凭据 */
-  id: string;
-  memberId: string;
-  amount: number;
-  reason: string;
-  status: KwApplicationStatus;
-  createdAt: number;
-  approver: string;
-  /** 驳回理由 */
-  note?: string;
-  /** 加额失败的原因 */
-  error?: string;
-  /** 已到账：重试、补发都先看它，不重复加额 */
-  granted: boolean;
-  /** 超管人工补发的时间 */
-  compensatedAt?: number;
-}
-
 /** 操作日志 */
 export interface KwLog {
   id: string;
@@ -88,6 +66,5 @@ export interface KwState {
   projects: KwProject[];
   groups: KwGroup[];
   members: KwMember[];
-  applications: KwApplication[];
   logs: KwLog[];
 }

@@ -22,7 +22,7 @@ export function MemberDetail({ memberId, onBack, onQuota }: { memberId: string; 
   const m = useKiwi((s) => s.members.find((x) => x.id === memberId));
   const group = useKiwi((s) => s.groups.find((g) => g.id === m?.groupId));
   const project = useKiwi((s) => s.projects.find((p) => p.id === m?.projectId));
-  const applications = useKiwi((s) => s.applications);
+  const logs = useKiwi((s) => s.logs);
   const tasks = useDB((s) => s.tasks);
   const [range, setRange] = useState<Range>('7');
   const [custom, setCustom] = useState<DateRange>({ start: null, end: null });
@@ -34,7 +34,7 @@ export function MemberDetail({ memberId, onBack, onQuota }: { memberId: string; 
     if (range === 'custom' && custom.start && custom.end) return [custom.start.getTime(), custom.end.getTime() + DAY];
     return [rangeFrom(range === '30' ? '30' : '7'), Date.now() + 1];
   }, [range, custom]);
-  const ledger = useMemo(() => (m ? ledgerOf(m, from, to) : []), [m, from, to, tasks, applications]); // eslint-disable-line react-hooks/exhaustive-deps
+  const ledger = useMemo(() => (m ? ledgerOf(m, from, to) : []), [m, from, to, tasks, logs]); // eslint-disable-line react-hooks/exhaustive-deps
   const spend = useMemo(() => ledger.filter((r) => r.amount < 0 && r.model), [ledger]);
   const share = useMemo(() => modelShare(spend), [spend]);
   const days = useMemo(() => dailySpend(spend, from, Math.min(to, Date.now() + 1)), [spend, from, to]);

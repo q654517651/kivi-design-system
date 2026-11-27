@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Avatar, Button, Dialog, Input, Menu, MenuItem, NumberInput, ScrollArea, toast } from '@kivi';
+import { Avatar, Button, Dialog, Input, Menu, MenuItem, ScrollArea, toast } from '@kivi';
+import { AmountPicker } from '../../parts/kiwi/AmountPicker';
 import { addMember, DIRECTORY, moveMembers, useKiwi, type KwGroup } from '../../data/kiwi';
 import { attempt } from '../../flows/errors';
 import { FilterSelect } from '../../parts/kiwi/FilterSelect';
@@ -51,7 +52,9 @@ export function AddMemberDialog({ open, groups, fixedGroup, onClose }: { open: b
     <Dialog
       open={open}
       onOpenChange={(v) => !v && !busy && onClose()}
+      // 定高（设计规则 · 浮层）：搜人、切「自定义」时弹窗不跳
       size={560}
+      height={640}
       title="添加成员"
       footer={
         <>
@@ -93,10 +96,10 @@ export function AddMemberDialog({ open, groups, fixedGroup, onClose }: { open: b
           <span>所属分组</span>
           <FilterSelect label="所属分组" value={group} options={groups.map((g) => ({ value: g.id, label: g.name }))} onChange={setGroup} disabled={!!fixedGroup} />
         </label>
-        <label className="app-kw-form__field">
+        <div className="app-kw-form__field">
           <span>初始周上限</span>
-          <NumberInput value={limit} onChange={setLimit} min={0} precision={0} unit="猕猴桃" />
-        </label>
+          <AmountPicker value={limit} onChange={setLimit} />
+        </div>
       </div>
     </Dialog>
   );

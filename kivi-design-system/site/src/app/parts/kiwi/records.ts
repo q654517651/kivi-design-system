@@ -23,11 +23,11 @@ export function ledgerOf(m: KwMember, from: number, to: number, now = Date.now()
     }
   }
 
-  // 临时额度到账：申请单通过（含超管补发）
-  for (const a of kiwi.get().applications) {
-    if (a.memberId !== m.id || !a.granted) continue;
-    const at = a.compensatedAt ?? a.createdAt + 3_600_000;
-    if (at >= from && at < to) out.push({ id: `${m.id}-temp-${a.id}`, at, reason: '临时额度添加', amount: a.amount, session: a.id });
+  // 临时额度变动：管理员在用量管理里加减的（操作日志里有）。飞书申请的状态同步不过来，到账也是管理员在这里加（11-27 用户定）
+  for (const l of kiwi.get().logs) {
+    if (l.target !== m.name || l.at < from || l.at >= to || !/临时额度/.test(l.action)) continue;
+    const delta = Number(l.after) - Number(l.before);
+    if (delta) out.push({ id: `${m.id}-temp-${l.id}`, at: l.at, reason: delta > 0 ? '临时额度添加' : '临时额度减少', amount: delta });
   }
 
   // 「我」在演示站里真生成过的
