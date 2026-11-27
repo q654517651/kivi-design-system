@@ -6,7 +6,7 @@ import { deleteGroup, inScope, isManager, money, ROLE_LABEL, scopeOf, statsOf, u
 import { confirm, FlowHost } from '../../flows/dialogs';
 import { attempt } from '../../flows/errors';
 import { DemoPanel } from '../../parts/DemoPanel';
-import { fmtTime, Stats, useLoad } from '../../parts/kiwi/ui';
+import { Stats, useLoad } from '../../parts/kiwi/ui';
 import { AdminsDialog, CreateGroupDialog, RenameGroupDialog } from './GroupDialogs';
 import { GroupSide } from './GroupSide';
 import { MemberDetail } from './MemberDetail';
@@ -162,7 +162,6 @@ function Admin() {
                   <div className="app-kw-page__head">
                     <h1>{title}</h1>
                     {group0 && <span className="app-kw-page__scope">管理员：{group0.adminIds.map((id) => state.members.find((m) => m.id === id)?.name).filter(Boolean).join('、') || '未设置'}</span>}
-                    <span className="app-kw-page__updated">额度实时 · 消耗和花费可能有几分钟延迟 · 更新于 {fmtTime(Date.now()).slice(11)}</span>
                     {account}
                   </div>
                   <Stats

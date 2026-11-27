@@ -329,9 +329,9 @@
 
 .app-kw-page__head h1 {
   margin: 0;
-  font-size: var(--font-size-20);
+  font-size: var(--font-size-16); /* 和资产页等的标题行一样：16 / 24 中粗 */
   font-weight: var(--font-weight-medium);
-  line-height: var(--font-line-height-28);
+  line-height: var(--font-line-height-24);
 }
 
 .app-kw-page__scope {
@@ -563,6 +563,7 @@
 /* 右上：角色、头像 */
 .app-kw-admin__account {
   display: flex;
+  margin-left: auto;
   align-items: center;
   gap: var(--spacing-12);
   font-size: var(--font-size-13);
