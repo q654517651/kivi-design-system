@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Avatar, Button, DateRangeFilter, TabItem, Tabs, toast, type DateRange } from '@kivi';
 import { logExport, money, pct, recordsOf, scopeLabel, usd, type KwGroup, type KwMember, type KwProject, type KwRecord, type KwScope } from '../../data/kiwi';
-import { ModelShareList, SpendTrend, trendTitle } from '../../parts/kiwi/charts';
+import { UsageChart } from '../../parts/kiwi/charts';
 import { PERIOD_OPTIONS, type PeriodKey } from '../../parts/kiwi/records';
 import { downloadCsv, fmtTime, KwTable, Pager, pageOf, Stats, type Column, type LoadStatus } from '../../parts/kiwi/ui';
 
@@ -178,20 +178,7 @@ export function StatsTab({
         ]}
       />
 
-      <div className="app-kw-detail__grid app-kw-stats-charts">
-        <section className="app-kw-card">
-          <div className="app-kw-card__head">
-            <span>{trendTitle(from, to)}</span>
-          </div>
-          <SpendTrend spend={spend} from={from} to={to} />
-        </section>
-        <section className="app-kw-card">
-          <div className="app-kw-card__head">
-            <span>模型消耗占比</span>
-          </div>
-          <ModelShareList spend={spend} />
-        </section>
-      </div>
+      <UsageChart spend={spend} from={from} to={to} />
 
       {!scope.groupId && (
         <section className="app-kw-section">

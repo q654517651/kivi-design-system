@@ -3,7 +3,7 @@ import { Avatar, Button, DateRangeFilter, Icon, TabItem, Tabs, toast, type DateR
 import { useBalance, useDB } from '../../data/db';
 import { KIWI_USD, logExport, modelInfo, money, pct, statsOf, usd, useKiwi, type KwRecord } from '../../data/kiwi';
 import { FilterSelect } from '../../parts/kiwi/FilterSelect';
-import { ModelShareList, SpendTrend, trendTitle } from '../../parts/kiwi/charts';
+import { UsageChart } from '../../parts/kiwi/charts';
 import { ledgerOf, modelShare, rangeFrom } from '../../parts/kiwi/records';
 import { downloadCsv, fmtTime, KwTable, Pager, pageOf, Stats, useLoad, type Column } from '../../parts/kiwi/ui';
 import type { QuotaMode } from './QuotaDialog';
@@ -144,21 +144,7 @@ export function MemberDetail({
         {range === 'custom' && <DateRangeFilter value={custom} onChange={(v) => { setCustom(v); setPage(1); }} max={new Date()} />}
       </div>
 
-      <div className="app-kw-detail__grid">
-        <section className="app-kw-card">
-          <div className="app-kw-card__head">
-            <span>{trendTitle(from, to)}</span>
-            <span className="app-kw-muted">合计 {share.total.toLocaleString()} 猕猴桃 · {usd(share.total)}</span>
-          </div>
-          <SpendTrend spend={spend} from={from} to={to} />
-        </section>
-        <section className="app-kw-card">
-          <div className="app-kw-card__head">
-            <span>模型消耗占比</span>
-          </div>
-          <ModelShareList spend={spend} />
-        </section>
-      </div>
+      <UsageChart spend={spend} from={from} to={to} />
 
       <section className="app-kw-section">
         <div className="app-kw-filters" style={{ marginTop: 'var(--spacing-24)' }}>

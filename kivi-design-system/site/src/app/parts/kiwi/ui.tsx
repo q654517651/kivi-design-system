@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useState, type ReactNode, type RefObject } from 'react';
-import { Button, Checkbox, EmptyState, IconButton, ScrollArea, Skeleton, Tooltip } from '@kivi';
+import { Button, Checkbox, EmptyState, IconButton, ScrollArea, Skeleton } from '@kivi';
 import { cx } from '@kivi/utils';
 import { listDelay } from '../../data/api';
 import { demo } from '../../data/demo';
 import './kiwi.css';
 
 /*
-  猕猴桃管理（11-27 原型）用的几块：表格、分页、额度条、统计格、趋势图、加载状态。
+  猕猴桃管理（11-27 原型）用的几块：表格、分页、额度条、统计格、加载状态（趋势图在 charts.tsx）。
   组件库里还没有表格、分页、进度条、图表，用户说先搭原型、组件定了再做（11-27），
   所以先写在这里（类名 app-kw-），样子都是临时的，设计师会再调；定了再收进 src/kivi/。
 */
@@ -238,32 +238,6 @@ export function Stats({ items }: { items: { label: ReactNode; value: ReactNode; 
         </div>
       ))}
     </dl>
-  );
-}
-
-// ---------- 趋势图 ----------
-
-/** 每天一根柱子，悬停看当天消耗；没数据的天是一条底线 */
-export function TrendChart({ data }: { data: { label: string; value: number; tip: ReactNode }[] }) {
-  const max = Math.max(1, ...data.map((d) => d.value));
-  const step = data.length > 14 ? Math.ceil(data.length / 8) : 1;
-  return (
-    <div className="app-kw-trend">
-      <div className="app-kw-trend__bars">
-        {data.map((d, i) => (
-          <Tooltip key={i} content={d.tip} className="app-kw-trend__tip">
-            <span className="app-kw-trend__col" tabIndex={0}>
-              <span className="app-kw-trend__bar" style={{ height: `${Math.max(2, (d.value / max) * 100)}%` }} data-empty={d.value ? undefined : ''} />
-            </span>
-          </Tooltip>
-        ))}
-      </div>
-      <div className="app-kw-trend__axis">
-        {data.map((d, i) => (
-          <span key={i}>{i % step === 0 ? d.label : ''}</span>
-        ))}
-      </div>
-    </div>
   );
 }
 
