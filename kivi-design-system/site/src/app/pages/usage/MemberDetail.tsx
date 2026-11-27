@@ -55,7 +55,7 @@ export function MemberDetail({ memberId, onBack, onQuota }: { memberId: string; 
   const exportDetail = () => {
     downloadCsv(
       `猕猴桃用量-${m.name}-${fmtTime(Date.now(), false)}`,
-      ['时间', '模型', '消耗猕猴桃', '折算花费(美元)', '关联会话'],
+      ['时间', '模型', '消耗猕猴桃', '预估花费(美元)', '关联会话'],
       spend.map((r) => [fmtTime(r.at), modelInfo(r.model!).label, -r.amount, (-r.amount * KIWI_USD).toFixed(2), r.session ?? '']),
       [
         `成员：${m.name}（${project?.name} · ${group?.name}）`,
@@ -86,7 +86,7 @@ export function MemberDetail({ memberId, onBack, onQuota }: { memberId: string; 
     },
     { key: 'reason', title: '类型', width: 112, render: (r) => r.reason },
     { key: 'amount', title: '消耗猕猴桃', width: 112, align: 'right', render: (r) => -r.amount },
-    { key: 'usd', title: '折算花费', width: 104, align: 'right', render: (r) => usd(-r.amount) },
+    { key: 'usd', title: '预估花费', width: 104, align: 'right', render: (r) => usd(-r.amount) },
     { key: 'session', title: '关联会话', width: 140, render: (r) => <span className="app-kw-muted">{r.session}</span> },
   ];
 

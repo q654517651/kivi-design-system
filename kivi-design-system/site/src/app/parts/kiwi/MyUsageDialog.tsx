@@ -101,7 +101,7 @@ function MyUsage() {
     },
     {
       key: "usd",
-      title: "预估美金",
+      title: "预估花费",
       width: 104,
       align: "right",
       render: (r) => (

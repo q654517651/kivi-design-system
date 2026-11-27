@@ -10,7 +10,8 @@ import type { QuotaMode } from './QuotaDialog';
 /*
   成员与额度：搜索、分页（看哪个组在左栏选）；勾选后出批量操作栏（只对勾了的人生效，筛选不会隐式选中别人）。
   点一行进成员详情，返回时筛选、页码、勾选都还在（状态在 UsagePage 里）。
-  「⋯」：调整周上限、调整临时额度、调整分组和调整权限（项目管理员以上）、移除。
+  「⋯」：调整周上限、调整临时额度、调整分组（项目管理员以上）、调整权限、移除。
+  调整权限组管理员也能做：在本组里设别人为组管理员、取消别的组管理员（11-27 用户定，照 Figma）。
 */
 
 export interface ListState {
@@ -132,7 +133,7 @@ export function MembersTab({
               <MenuItem onClick={() => onQuota('limit', [m.id])}>调整周上限</MenuItem>
               <MenuItem onClick={() => onQuota('temp', [m.id])}>调整临时额度</MenuItem>
               {canMove && <MenuItem onClick={() => onMove([m.id])}>调整分组</MenuItem>}
-              {canMove && <MenuItem onClick={() => onRole(m.id)}>调整权限</MenuItem>}
+              <MenuItem onClick={() => onRole(m.id)}>调整权限</MenuItem>
               <MenuItem variant="danger" onClick={() => void remove(m)}>
                 移除
               </MenuItem>

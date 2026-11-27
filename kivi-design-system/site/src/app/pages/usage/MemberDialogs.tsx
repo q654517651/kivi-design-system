@@ -156,7 +156,7 @@ export function MoveMemberDialog({ memberIds, groups, onDone, onClose }: { membe
   );
 }
 
-/** 调整权限：成员 / 组管理员。组管理员只能看和管本组的用量、成员和额度 */
+/** 调整权限：成员 / 组管理员。组管理员只能看和管本组的用量、成员和额度；组管理员也能在本组里设、取消别的组管理员 */
 const ROLE_HINT: Record<KwMemberRole, string> = {
   member: '只能看自己的用量',
   'group-admin': '能看和管本组的用量、成员和额度',
