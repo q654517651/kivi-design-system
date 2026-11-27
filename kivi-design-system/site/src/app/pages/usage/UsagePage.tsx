@@ -172,9 +172,9 @@ function Admin() {
                   </div>
                   <Stats
                     items={[
-                      { label: '人数', value: members.length, hint: scope.groupId ? undefined : `${groups.length} 个分组` },
-                      { label: '本周总消耗', value: overview.used.toLocaleString(), hint: '猕猴桃，周一 00:00 起' },
-                      { label: '本周预估花费', value: money(overview.cost), hint: '已发生消耗 × 0.035' },
+                      { label: '人数', value: members.length },
+                      { label: '本周总消耗', value: overview.used.toLocaleString() },
+                      { label: '本周预估花费', value: money(overview.cost) },
                       { label: '周额度合计', value: overview.limit.toLocaleString() },
                       { label: '临时额度剩余', value: overview.temp.toLocaleString() },
                     ]}

@@ -118,9 +118,9 @@ export function MemberDetail({ memberId, onBack, onQuota }: { memberId: string; 
         items={[
           { label: '周上限', value: s.weeklyLimit.toLocaleString() },
           { label: '本周已用', value: s.weekUsed.toLocaleString() },
-          { label: '本周剩余', value: s.weekLeft.toLocaleString(), hint: '只算周额度' },
+          { label: '本周剩余', value: s.weekLeft.toLocaleString() },
           { label: '临时额度剩余', value: s.tempLeft.toLocaleString() },
-          { label: '本周预估花费', value: money(s.cost), hint: '已发生消耗 × 0.035' },
+          { label: '本周预估花费', value: money(s.cost) },
           { label: '采纳率 / 下载率', value: `${pct(m.adoption)} / ${pct(m.download)}` },
         ]}
       />
