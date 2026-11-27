@@ -214,7 +214,9 @@ export function QuotaDialog({ mode, memberIds, onClose }: { mode: QuotaMode | nu
     <Dialog
       open={open}
       onOpenChange={(v) => !v && !busy && onClose()}
+      // 填写、确认、结果三步内容不一样长，弹窗高度定死不跳（设计规则 · 浮层），放不下在里面滚
       size={560}
+      height={560}
       title={step === 'confirm' ? `确认${mode ? TITLE[mode][batch ? 1 : 0] : ''}` : step === 'result' ? '操作结果' : mode ? TITLE[mode][batch ? 1 : 0] : ''}
       footer={footer}
     >

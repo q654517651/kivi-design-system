@@ -20,7 +20,8 @@ const PAGE = 10;
 export function MyUsageDialog() {
   const open = useMyUsageOpen();
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && closeMyUsage()} size={800} title="我的用量">
+    // 固定 800 × 720（11-27 用户定）：切页签、筛选、翻页内容变了，弹窗大小不跟着变，放不下在里面滚
+    <Dialog open={open} onOpenChange={(v) => !v && closeMyUsage()} size={800} height={720} title="我的用量">
       {open && <MyUsage />}
     </Dialog>
   );

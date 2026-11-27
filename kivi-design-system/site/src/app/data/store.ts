@@ -62,6 +62,16 @@ export function createStore<T>({ key: rawKey, version = 1, init, save }: StoreOp
     listeners.forEach((l) => l());
   }
 
+  // 别的标签页改了同一份本机数据（比如用量管理开在新标签页，那边切了角色、调了额度），这边跟着换成新的
+  if (key && typeof window !== 'undefined') {
+    window.addEventListener('storage', (e) => {
+      if (e.key !== key) return;
+      clearTimeout(timer);
+      state = load() ?? init();
+      emit();
+    });
+  }
+
   return {
     get: () => state,
     set(next) {

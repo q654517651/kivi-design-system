@@ -4,19 +4,17 @@ import { useBalance } from '../../data/db';
 import { logExport, money, pct, removeMember, scopeLabel, statsOf, type KwGroup, type KwMember, type KwScope, type KwStats } from '../../data/kiwi';
 import { confirm } from '../../flows/dialogs';
 import { attempt } from '../../flows/errors';
-import { FilterSelect } from '../../parts/kiwi/FilterSelect';
 import { downloadCsv, fmtTime, KwTable, Pager, pageOf, type Column, type LoadStatus } from '../../parts/kiwi/ui';
 import type { QuotaMode } from './QuotaDialog';
 
 /*
-  成员与额度：搜索、按组筛选、分页；勾选后出批量操作栏（只对勾了的人生效，筛选不会隐式选中别人）。
+  成员与额度：搜索、分页（看哪个组在左栏选）；勾选后出批量操作栏（只对勾了的人生效，筛选不会隐式选中别人）。
   点一行进成员详情，返回时筛选、页码、勾选都还在（状态在 UsagePage 里）。
   「⋯」：调整周上限、调整临时额度、调整分组（项目管理员以上）、移除。
 */
 
 export interface ListState {
   q: string;
-  group: string;
   page: number;
   selected: string[];
 }
@@ -52,17 +50,18 @@ export function MembersTab({
   onOpen: (id: string) => void;
   onQuota: (mode: QuotaMode, ids: string[]) => void;
   onAdd: () => void;
-  onMove: (id: string) => void;
+  /** 调整分组：一个人或勾选的几个人 */
+  onMove: (ids: string[]) => void;
 }) {
   const balance = useBalance();
   const groupOf = (id: string) => groups.find((g) => g.id === id);
   const rows = useMemo<Row[]>(() => {
     const q = list.q.trim();
     return members
-      .filter((m) => (list.group === 'all' || m.groupId === list.group) && (!q || m.name.includes(q)))
+      .filter((m) => !q || m.name.includes(q))
       .map((m) => ({ ...m, s: statsOf(m, balance) }))
       .sort((a, b) => b.s.weekUsed - a.s.weekUsed);
-  }, [members, list.q, list.group, balance]);
+  }, [members, list.q, balance]);
   const selected = list.selected.filter((id) => members.some((m) => m.id === id));
 
   const remove = (m: Row) =>
@@ -122,7 +121,7 @@ export function MembersTab({
             <Menu>
               <MenuItem onClick={() => onQuota('limit', [m.id])}>调整周上限</MenuItem>
               <MenuItem onClick={() => onQuota('temp', [m.id])}>调整临时额度</MenuItem>
-              {canMove && <MenuItem onClick={() => onMove(m.id)}>调整分组</MenuItem>}
+              {canMove && <MenuItem onClick={() => onMove([m.id])}>调整分组</MenuItem>}
               <MenuItem variant="danger" onClick={() => void remove(m)}>
                 移除
               </MenuItem>
@@ -144,6 +143,11 @@ export function MembersTab({
           <Button size={28} variant="secondary" onClick={() => onQuota('add', selected)}>
             批量增加额度
           </Button>
+          {canMove && (
+            <Button size={28} variant="secondary" onClick={() => onMove(selected)}>
+              移到分组
+            </Button>
+          )}
           <Button size={28} variant="secondary" onClick={() => exportRows(rows.filter((r) => selected.includes(r.id)), '勾选的成员')}>
             导出所选
           </Button>
@@ -154,9 +158,6 @@ export function MembersTab({
       ) : (
         <div className="app-kw-toolbar">
           <Input value={list.q} onChange={(e) => setList({ q: e.target.value, page: 1 })} leftIcon="Search" placeholder="搜索姓名" clearable onClear={() => setList({ q: '', page: 1 })} />
-          {!scope.groupId && (
-            <FilterSelect label="分组" value={list.group} options={[{ value: 'all', label: '全部分组' }, ...groups.map((g) => ({ value: g.id, label: g.name }))]} onChange={(v) => setList({ group: v, page: 1 })} />
-          )}
           <div className="app-kw-toolbar__end">
             <Button size={32} variant="secondary" leftIcon="Download" disabled={status !== 'ready' || !rows.length} onClick={() => exportRows(rows, '当前筛选')}>
               导出
@@ -176,7 +177,7 @@ export function MembersTab({
         onRowClick={(m) => onOpen(m.id)}
         status={status}
         onRetry={onRetry}
-        empty={list.q || list.group !== 'all' ? '没有符合条件的成员' : '这个范围里还没有成员'}
+        empty={list.q ? '没有符合条件的成员' : '这个范围里还没有成员'}
         skeletonRows={PAGE}
       />
       {status === 'ready' && <Pager total={rows.length} page={list.page} pageSize={PAGE} onChange={(page) => setList({ page })} />}

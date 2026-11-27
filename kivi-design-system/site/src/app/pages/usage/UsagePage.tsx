@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react';
-import { EmptyState, ScrollArea, TabItem, Tabs } from '@kivi';
+import { Avatar, Button, EmptyState, Icon, Notifier, placeholderImageSrc, ScrollArea, TabItem, Tabs, Toaster, toast } from '@kivi';
 import { useBalance } from '../../data/db';
 import { useDemo } from '../../data/demo';
-import { inScope, isManager, money, ROLE_LABEL, scopeLabel, scopeOf, statsOf, useKiwi } from '../../data/kiwi';
+import { deleteGroup, inScope, isManager, money, ROLE_LABEL, scopeOf, statsOf, useKiwi, type KwGroup, type KwScope } from '../../data/kiwi';
+import { confirm, FlowHost } from '../../flows/dialogs';
+import { attempt } from '../../flows/errors';
+import { DemoPanel } from '../../parts/DemoPanel';
 import { FilterSelect } from '../../parts/kiwi/FilterSelect';
 import { fmtTime, Stats, useLoad } from '../../parts/kiwi/ui';
-import { GroupsTab } from './GroupsTab';
+import { AdminsDialog, CreateGroupDialog, RenameGroupDialog } from './GroupDialogs';
+import { GroupSide } from './GroupSide';
 import { MemberDetail } from './MemberDetail';
 import { AddMemberDialog, MoveMemberDialog } from './MemberDialogs';
 import { MembersTab, type ListState } from './MembersTab';
@@ -13,39 +17,72 @@ import { QuotaDialog, type QuotaMode } from './QuotaDialog';
 import { ApplicationsTab, LogsTab } from './RecordsTabs';
 
 /*
-  用量管理（11-27 原型）：账号菜单「用量管理」进来，管理员以上才有。整页，在主站侧栏右边，和资产页一个位置。
-  范围跟角色走（演示开关里切）：管理员 = 当前项目的本组；项目管理员 = 本项目全部分组；超管 = 可切项目或看全平台。
-  上面：标题、范围、数据更新时间、概览（人数、本周总消耗、预估花费、周额度合计、临时额度剩余）。
-  下面选项卡：成员与额度 / 分组管理（项目管理员以上）/ 申请单（加额失败在这里补发，超管）/ 操作日志。
-  点成员进详情，返回时列表的筛选、页码、勾选都留着。
+  用量管理后台（11-27 原型）：账号菜单「用量管理」在新标签页打开（#/app/admin），单独一套页面，不套主站侧栏（11-27 用户定）。
+  - 顶栏：Logo · 用量管理｜项目切换（只有超管）｜角色、返回 KIVI、头像
+  - 左栏（项目管理员以上）：分组列表，选哪个组右边就看哪个组（GroupSide）
+  - 右边：范围名、概览，选项卡 成员与额度 / 申请单 / 操作日志；点成员进详情，左栏不动
+  范围：管理员 = 本组（没有左栏）；项目管理员 = 本项目；超管 = 顶栏切项目或全平台。
 */
 
-type Tab = 'members' | 'groups' | 'apps' | 'logs';
+type Tab = 'members' | 'apps' | 'logs';
 const ALL = '__all__';
+const ME_AVATAR = placeholderImageSrc('ip-peek', '1:1');
 
-export function UsagePage() {
+export function UsageAdmin() {
+  return (
+    <div className="app-kw-admin">
+      <Toaster />
+      <Notifier />
+      <FlowHost />
+      <Admin />
+      <DemoPanel />
+    </div>
+  );
+}
+
+function Admin() {
   const { role } = useDemo();
   const balance = useBalance();
   const state = useKiwi((s) => s);
   const [project, setProject] = useState(ALL);
-  const scope = scopeOf(role, project === ALL ? undefined : project);
+  const base = scopeOf(role, project === ALL ? undefined : project);
+  // 左栏选的组（'' = 全部）。管理员固定本组
+  const [group, setGroup] = useState('');
+  const pickedGroup = state.groups.find((g) => g.id === group && (!base.projectId || g.projectId === base.projectId));
+  const scope: KwScope = base.groupId ? base : pickedGroup ? { projectId: pickedGroup.projectId, groupId: pickedGroup.id } : base;
+
   const [tab, setTab] = useState<Tab>('members');
-  const [list, setListState] = useState<ListState>({ q: '', group: 'all', page: 1, selected: [] });
+  const [list, setListState] = useState<ListState>({ q: '', page: 1, selected: [] });
   const setList = (patch: Partial<ListState>) => setListState((l) => ({ ...l, ...patch }));
   const [detail, setDetail] = useState<string>();
   const [quota, setQuota] = useState<{ mode: QuotaMode; ids: string[] } | null>(null);
   const [adding, setAdding] = useState(false);
-  const [moving, setMoving] = useState<string>();
-  const load = useLoad([role, project, tab]);
+  const [moving, setMoving] = useState<string[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [adminsOf, setAdminsOf] = useState<KwGroup>();
+  const [renaming, setRenaming] = useState<KwGroup>();
+  const load = useLoad([role, scope.projectId, scope.groupId, tab]);
 
+  // 换范围：回到列表第一页、清掉勾选、退出详情
+  const choose = (groupId: string) => {
+    setGroup(groupId);
+    setDetail(undefined);
+    setList({ page: 1, selected: [] });
+  };
+
+  // 左栏的范围（不受选中的组影响）
+  const sideGroups = useMemo(() => state.groups.filter((g) => !base.projectId || g.projectId === base.projectId), [state.groups, base.projectId]);
+  const sideMembers = useMemo(() => state.members.filter((m) => inScope(m, { projectId: base.projectId })), [state.members, base.projectId]);
   const members = useMemo(() => state.members.filter((m) => inScope(m, scope)), [state.members, scope.projectId, scope.groupId]); // eslint-disable-line react-hooks/exhaustive-deps
   const groups = useMemo(() => state.groups.filter((g) => (!scope.projectId || g.projectId === scope.projectId) && (!scope.groupId || g.id === scope.groupId)), [state.groups, scope.projectId, scope.groupId]);
+  // 移到分组、添加成员能选的组：同项目里的全部组
+  const projectGroups = useMemo(() => state.groups.filter((g) => !scope.projectId || g.projectId === scope.projectId), [state.groups, scope.projectId]);
   const applications = useMemo(() => state.applications.filter((a) => members.some((m) => m.id === a.memberId)), [state.applications, members]);
   const logs = useMemo(() => {
-    if (role === 'super-admin' && !scope.projectId) return state.logs;
-    const names = new Set([...groups.map((g) => g.name), ...state.projects.filter((p) => p.id === scope.projectId).map((p) => p.name)]);
-    return state.logs.filter((l) => !l.scope || [...names].some((n) => l.scope!.includes(n)) || members.some((m) => m.name === l.target));
-  }, [state.logs, state.projects, groups, members, role, scope.projectId]);
+    if (!scope.projectId) return state.logs;
+    const names = new Set([...groups.map((g) => g.name), ...(scope.groupId ? [] : state.projects.filter((p) => p.id === scope.projectId).map((p) => p.name))]);
+    return state.logs.filter((l) => (l.scope && [...names].some((n) => l.scope!.includes(n))) || members.some((m) => m.name === l.target));
+  }, [state.logs, state.projects, groups, members, scope.projectId, scope.groupId]);
 
   const overview = useMemo(() => {
     const stats = members.map((m) => statsOf(m, balance));
@@ -57,107 +94,129 @@ export function UsagePage() {
     };
   }, [members, balance]);
 
-  // 角色切成「用户」还停在这页：无权限
-  if (!isManager(role)) {
-    return (
-      <ScrollArea className="app-kw-page">
-        <div className="app-kw-page__body">
-          <EmptyState type="empty" size={160} title="没有权限" description="用量管理只给管理员、项目管理员和超级管理员。你可以在账号菜单里看「我的用量」。" />
-        </div>
-      </ScrollArea>
-    );
-  }
-
+  const project0 = state.projects.find((p) => p.id === scope.projectId);
+  const group0 = state.groups.find((g) => g.id === scope.groupId);
+  const title = group0 ? group0.name : project0 ? `${project0.name} · 全部分组` : '全平台';
   const canGroups = role === 'project-admin' || role === 'super-admin';
+
+  const removeGroup = (g: KwGroup) =>
+    confirm({
+      title: `删除分组「${g.name}」？`,
+      description: '组里还有成员时不能删，先把他们调到别的组。历史消耗和日志都保留。',
+      confirmText: '删除',
+      onConfirm: async () => {
+        const ok = await attempt(() => deleteGroup(g.id).then(() => true));
+        if (!ok) throw new Error('delete failed');
+        if (group === g.id) choose('');
+        toast.success(`已删除「${g.name}」`);
+      },
+    });
+
   const failed = applications.filter((a) => a.status === 'failed').length;
-  const tabs: { value: Tab; label: string }[] = [
-    { value: 'members', label: '成员与额度' },
-    ...(canGroups ? [{ value: 'groups' as Tab, label: '分组管理' }] : []),
-    { value: 'apps', label: failed ? `申请单 · ${failed} 张加额失败` : '申请单' },
-    { value: 'logs', label: '操作日志' },
-  ];
-  const current = tabs.some((t) => t.value === tab) ? tab : 'members';
 
   return (
-    <ScrollArea className="app-kw-page">
-      <div className="app-kw-page__body">
-        {detail ? (
-          <MemberDetail memberId={detail} onBack={() => setDetail(undefined)} onQuota={(mode, ids) => setQuota({ mode, ids })} />
-        ) : (
-          <>
-            <div className="app-kw-page__head">
-              <h1>用量管理</h1>
-              {role === 'super-admin' ? (
-                <FilterSelect
-                  label="项目"
-                  value={project}
-                  options={[{ value: ALL, label: '全平台' }, ...state.projects.map((p) => ({ value: p.id, label: p.name }))]}
-                  onChange={(v) => {
-                    setProject(v);
-                    setList({ group: 'all', page: 1, selected: [] });
-                  }}
-                />
-              ) : (
-                <span className="app-kw-page__scope">{scopeLabel(scope, state)}</span>
-              )}
-              <span className="app-kw-muted">{ROLE_LABEL[role]}</span>
-              <span className="app-kw-page__updated">额度实时 · 消耗和花费可能有几分钟延迟 · 更新于 {fmtTime(Date.now()).slice(11)}</span>
-            </div>
-            <Stats
-              items={[
-                { label: '范围', value: scopeLabel(scope, state), hint: `${groups.length} 个分组` },
-                { label: '人数', value: members.length },
-                { label: '本周总消耗', value: overview.used.toLocaleString(), hint: '猕猴桃，周一 00:00 起' },
-                { label: '本周预估花费', value: money(overview.cost), hint: '已发生消耗 × 0.035' },
-                { label: '周额度合计', value: overview.limit.toLocaleString() },
-                { label: '临时额度剩余', value: overview.temp.toLocaleString() },
-              ]}
-            />
-            <Tabs className="app-kw-page__tabs" value={current} onChange={(v) => setTab(v as Tab)}>
-              {tabs.map((t) => (
-                <TabItem key={t.value} value={t.value}>
-                  {t.label}
-                </TabItem>
-              ))}
-            </Tabs>
-            {current === 'members' && (
-              <MembersTab
-                scope={scope}
-                members={members}
-                groups={groups}
-                list={list}
-                setList={setList}
-                status={load.status}
-                onRetry={load.retry}
-                canMove={canGroups}
-                onOpen={setDetail}
-                onQuota={(mode, ids) => setQuota({ mode, ids })}
-                onAdd={() => setAdding(true)}
-                onMove={setMoving}
-              />
-            )}
-            {current === 'groups' && (
-              <GroupsTab
-                groups={groups}
-                members={members}
-                projects={state.projects.filter((p) => !scope.projectId || p.id === scope.projectId)}
-                showProject={!scope.projectId}
-                status={load.status}
-                onRetry={load.retry}
-                onDrill={(groupId) => {
-                  setList({ group: groupId, page: 1, selected: [] });
-                  setTab('members');
-                }}
-              />
-            )}
-            {current === 'apps' && <ApplicationsTab applications={applications} members={members} groups={groups} canCompensate={role === 'super-admin'} status={load.status} onRetry={load.retry} />}
-            {current === 'logs' && <LogsTab logs={logs} status={load.status} onRetry={load.retry} />}
-          </>
+    <>
+      <header className="app-kw-admin__top">
+        <Icon name="Logo" className="app-kw-admin__logo" />
+        <span className="app-kw-admin__name">用量管理</span>
+        {role === 'super-admin' && (
+          <FilterSelect
+            label="项目"
+            value={project}
+            options={[{ value: ALL, label: '全平台' }, ...state.projects.map((p) => ({ value: p.id, label: p.name }))]}
+            onChange={(v) => {
+              setProject(v);
+              choose('');
+            }}
+          />
         )}
-      </div>
+        <div className="app-kw-admin__end">
+          <span className="app-kw-muted">{ROLE_LABEL[role]}</span>
+          <Button size={32} variant="ghost-muted" leftIcon="LeftArrowSmall" onClick={() => (location.hash = '#/app/create')}>
+            返回 KIVI
+          </Button>
+          <Avatar name="KIVI" size={32} src={ME_AVATAR} />
+        </div>
+      </header>
+
+      {!isManager(role) ? (
+        <div className="app-kw-admin__denied">
+          <EmptyState type="empty" size={160} title="没有权限" description="用量管理只给管理员、项目管理员和超级管理员。你可以在账号菜单里看「我的用量」。" />
+        </div>
+      ) : (
+        <div className="app-kw-admin__main" data-side={canGroups ? '' : undefined}>
+          {canGroups && (
+            <ScrollArea className="app-kw-admin__side">
+              <GroupSide
+                project={state.projects.find((p) => p.id === base.projectId)}
+                projects={state.projects}
+                groups={sideGroups}
+                members={sideMembers}
+                selected={pickedGroup?.id ?? ''}
+                onSelect={choose}
+                onCreate={() => setCreating(true)}
+                onAdmins={setAdminsOf}
+                onRename={setRenaming}
+                onDelete={(g) => void removeGroup(g)}
+              />
+            </ScrollArea>
+          )}
+          <ScrollArea className="app-kw-admin__content">
+            <div className="app-kw-admin__body">
+              {detail ? (
+                <MemberDetail memberId={detail} onBack={() => setDetail(undefined)} onQuota={(mode, ids) => setQuota({ mode, ids })} />
+              ) : (
+                <>
+                  <div className="app-kw-page__head">
+                    <h1>{title}</h1>
+                    {group0 && <span className="app-kw-page__scope">管理员：{group0.adminIds.map((id) => state.members.find((m) => m.id === id)?.name).filter(Boolean).join('、') || '未设置'}</span>}
+                    <span className="app-kw-page__updated">额度实时 · 消耗和花费可能有几分钟延迟 · 更新于 {fmtTime(Date.now()).slice(11)}</span>
+                  </div>
+                  <Stats
+                    items={[
+                      { label: '人数', value: members.length, hint: scope.groupId ? undefined : `${groups.length} 个分组` },
+                      { label: '本周总消耗', value: overview.used.toLocaleString(), hint: '猕猴桃，周一 00:00 起' },
+                      { label: '本周预估花费', value: money(overview.cost), hint: '已发生消耗 × 0.035' },
+                      { label: '周额度合计', value: overview.limit.toLocaleString() },
+                      { label: '临时额度剩余', value: overview.temp.toLocaleString() },
+                    ]}
+                  />
+                  <Tabs className="app-kw-page__tabs" value={tab} onChange={(v) => setTab(v as Tab)}>
+                    <TabItem value="members">成员与额度</TabItem>
+                    <TabItem value="apps">{failed ? `申请单 · ${failed} 张加额失败` : '申请单'}</TabItem>
+                    <TabItem value="logs">操作日志</TabItem>
+                  </Tabs>
+                  {tab === 'members' && (
+                    <MembersTab
+                      scope={scope}
+                      members={members}
+                      groups={projectGroups}
+                      list={list}
+                      setList={setList}
+                      status={load.status}
+                      onRetry={load.retry}
+                      canMove={canGroups}
+                      onOpen={setDetail}
+                      onQuota={(mode, ids) => setQuota({ mode, ids })}
+                      onAdd={() => setAdding(true)}
+                      onMove={setMoving}
+                    />
+                  )}
+                  {tab === 'apps' && <ApplicationsTab applications={applications} members={members} groups={projectGroups} canCompensate={role === 'super-admin'} status={load.status} onRetry={load.retry} />}
+                  {tab === 'logs' && <LogsTab logs={logs} status={load.status} onRetry={load.retry} />}
+                </>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
+
       <QuotaDialog mode={quota?.mode ?? null} memberIds={quota?.ids ?? []} onClose={() => setQuota(null)} />
-      <AddMemberDialog open={adding} groups={groups} fixedGroup={scope.groupId} onClose={() => setAdding(false)} />
-      <MoveMemberDialog memberId={moving} groups={groups} onClose={() => setMoving(undefined)} />
-    </ScrollArea>
+      <AddMemberDialog open={adding} groups={scope.groupId ? groups : projectGroups} fixedGroup={scope.groupId} onClose={() => setAdding(false)} />
+      <MoveMemberDialog memberIds={moving} groups={projectGroups.length ? projectGroups : state.groups} onDone={() => setList({ selected: [] })} onClose={() => setMoving([])} />
+      <CreateGroupDialog open={creating} projects={base.projectId ? state.projects.filter((p) => p.id === base.projectId) : state.projects} defaultProject={base.projectId} onCreated={choose} onClose={() => setCreating(false)} />
+      <AdminsDialog group={adminsOf} members={state.members} onClose={() => setAdminsOf(undefined)} />
+      <RenameGroupDialog group={renaming} onClose={() => setRenaming(undefined)} />
+    </>
   );
 }

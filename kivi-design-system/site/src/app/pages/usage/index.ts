@@ -1,1 +1,1 @@
-export { UsagePage } from './UsagePage';
+export { UsageAdmin } from './UsagePage';

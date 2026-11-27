@@ -17,7 +17,7 @@ import { HistoryGroup, type HistoryItem } from './HistoryGroup';
 */
 
 /** UI 页面预览里能切的页：侧栏四个导航 + 画布 */
-export type AppPage = 'create' | 'explore' | 'tools' | 'assets' | 'canvas' | 'usage';
+export type AppPage = 'create' | 'explore' | 'tools' | 'assets' | 'canvas';
 export type HistoryKind = 'chat' | 'canvas';
 
 const NAV_ITEMS: { page: AppPage; icon: 'Create' | 'Explore' | 'AITools' | 'Pack'; label: string }[] = [

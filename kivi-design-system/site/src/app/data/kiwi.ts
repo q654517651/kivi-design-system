@@ -180,14 +180,37 @@ export async function removeMember(id: string) {
   });
 }
 
-/** 跨组调整（项目管理员）：之前的消耗按原来的组算，不回溯 */
-export async function moveMember(id: string, groupId: string) {
+/** 跨组调整（项目管理员）：之前的消耗按原来的组算，不回溯。可以一次调几个人 */
+export async function moveMembers(ids: string[], groupId: string) {
   return request(() => {
-    const m = memberOf(id);
-    if (!m || m.groupId === groupId) return;
-    patchMember(id, { groupId });
-    kiwi.set((s) => ({ ...s, groups: s.groups.map((g) => (g.id === m.groupId ? { ...g, adminIds: g.adminIds.filter((a) => a !== id) } : g)) }));
-    log({ action: '调整分组', target: m.name, before: groupName(m.groupId), after: groupName(groupId) });
+    for (const id of ids) {
+      const m = memberOf(id);
+      if (!m || m.groupId === groupId) continue;
+      patchMember(id, { groupId });
+      kiwi.set((s) => ({ ...s, groups: s.groups.map((g) => (g.id === m.groupId ? { ...g, adminIds: g.adminIds.filter((a) => a !== id) } : g)) }));
+      log({ action: '调整分组', target: m.name, before: groupName(m.groupId), after: groupName(groupId) });
+    }
+  });
+}
+
+export async function renameGroup(groupId: string, name: string) {
+  return request(() => {
+    const g = kiwi.get().groups.find((x) => x.id === groupId);
+    if (!g || g.name === name) return;
+    if (kiwi.get().groups.some((x) => x.projectId === g.projectId && x.name === name)) throw new ApiError('server', '这个项目里已经有同名分组');
+    kiwi.set((s) => ({ ...s, groups: s.groups.map((x) => (x.id === groupId ? { ...x, name } : x)) }));
+    log({ action: '重命名分组', target: name, before: g.name, after: name, scope: name });
+  });
+}
+
+/** 删除分组：组里还有人就不能删，先把人调走 */
+export async function deleteGroup(groupId: string) {
+  return request(() => {
+    const g = kiwi.get().groups.find((x) => x.id === groupId);
+    if (!g) return;
+    if (kiwi.get().members.some((m) => m.groupId === groupId)) throw new ApiError('server', '组里还有成员，先把他们调到别的组');
+    kiwi.set((s) => ({ ...s, groups: s.groups.filter((x) => x.id !== groupId) }));
+    log({ action: '删除分组', target: g.name, before: g.name, scope: kiwi.get().projects.find((p) => p.id === g.projectId)?.name });
   });
 }
 

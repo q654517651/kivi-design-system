@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Avatar, Button, Dialog, Input, Menu, MenuItem, NumberInput, ScrollArea, toast } from '@kivi';
-import { addMember, DIRECTORY, moveMember, useKiwi, type KwGroup } from '../../data/kiwi';
+import { addMember, DIRECTORY, moveMembers, useKiwi, type KwGroup } from '../../data/kiwi';
 import { attempt } from '../../flows/errors';
 import { FilterSelect } from '../../parts/kiwi/FilterSelect';
 
 /*
   添加成员：飞书通讯录里搜人（演示是一份假名单），选分组（管理员只能是本组）、填初始周上限。
   已在当前项目里的人列表里直接标「已在 X」不能选；后端也再拦一次。
-  调整分组（项目管理员以上）：同项目里换组，之前的消耗按原来的组算。
+  调整分组 / 批量移到分组（项目管理员以上）：同项目里换组，之前的消耗按原来的组算。
 */
 
 const DEFAULT_LIMIT = '3000';
@@ -102,46 +102,53 @@ export function AddMemberDialog({ open, groups, fixedGroup, onClose }: { open: b
   );
 }
 
-export function MoveMemberDialog({ memberId, groups, onClose }: { memberId?: string; groups: KwGroup[]; onClose: () => void }) {
-  const member = useKiwi((s) => s.members.find((m) => m.id === memberId));
+export function MoveMemberDialog({ memberIds, groups, onDone, onClose }: { memberIds: string[]; groups: KwGroup[]; onDone?: () => void; onClose: () => void }) {
+  const all = useKiwi((s) => s.members);
+  const members = all.filter((m) => memberIds.includes(m.id));
+  const first = members[0];
   const [group, setGroup] = useState('');
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    if (member) setGroup(member.groupId);
+    if (first) setGroup(members.every((m) => m.groupId === first.groupId) ? first.groupId : '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memberId]);
-  const options = groups.filter((g) => g.projectId === member?.projectId);
+  }, [memberIds.join()]);
+  // 只能在同一个项目里换组
+  const options = groups.filter((g) => g.projectId === first?.projectId);
+  const moving = members.filter((m) => m.groupId !== group);
+  const target = options.find((g) => g.id === group);
 
   const submit = async () => {
-    if (!member) return;
     setBusy(true);
-    const done = await attempt(() => moveMember(member.id, group).then(() => true));
+    const done = await attempt(() => moveMembers(moving.map((m) => m.id), group).then(() => true));
     setBusy(false);
     if (done) {
-      toast.success(`已把 ${member.name} 调到「${options.find((g) => g.id === group)?.name}」`);
+      toast.success(moving.length > 1 ? `已把 ${moving.length} 人调到「${target?.name}」` : `已把 ${moving[0]?.name} 调到「${target?.name}」`);
+      onDone?.();
       onClose();
     }
   };
 
   return (
     <Dialog
-      open={!!memberId}
+      open={memberIds.length > 0}
       onOpenChange={(v) => !v && !busy && onClose()}
       size={400}
-      title="调整分组"
+      title={members.length > 1 ? `把 ${members.length} 人移到分组` : '调整分组'}
       description="之前的消耗还算在原来的组，换组后按新组管理"
       footer={
         <>
           <Button size={36} variant="secondary" disabled={busy} onClick={onClose}>
             取消
           </Button>
-          <Button size={36} variant="primary" disabled={!member || group === member.groupId} loading={busy} onClick={submit}>
+          <Button size={36} variant="primary" disabled={!target || !moving.length} loading={busy} onClick={submit}>
             确定
           </Button>
         </>
       }
     >
-      {member && <FilterSelect label="分组" value={group} options={options.map((g) => ({ value: g.id, label: g.name }))} onChange={setGroup} />}
+      {first && (
+        <FilterSelect label="分组" value={group} options={[...(group ? [] : [{ value: '', label: '选择分组' }]), ...options.map((g) => ({ value: g.id, label: g.name }))]} onChange={setGroup} />
+      )}
     </Dialog>
   );
 }
