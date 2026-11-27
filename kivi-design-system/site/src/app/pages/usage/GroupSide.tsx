@@ -1,11 +1,12 @@
 import { Fragment } from 'react';
-import { Divider, Icon, IconButton, Menu, MenuItem, MenuLabel, ScrollArea } from '@kivi';
+import { AssetThumb, Divider, Icon, IconButton, Menu, MenuItem, MenuLabel, ScrollArea } from '@kivi';
 import type { KwGroup, KwProject } from '../../data/kiwi';
 
 /*
   用量管理后台的侧栏：和主站侧栏同一套（tpl-ms__side 那几个类、Menu 无底、MenuLabel 分段），不另画（11-27 用户说：我们有侧边导航）。
   - 顶上 Logo，点了回 KIVI。
-  - 导航第一项「全部分组」（超管是「全平台」）。条目都不带图标（11-27 用户定）。
+  - 导航第一项「全部分组」（超管是「全平台」）。
+  - 条目必须带图标或缩略图：侧栏菜单里不带的会被当成「更多」（12 号灰字、悬停没底色），11-27 去掉过一次就变成这样，又加回来了。
   - 下面「分组」一段：标题点了展开收起，右边「+」新建分组；每个组悬停出「⋯」：任免组管理员、重命名、删除。
   - 超管：每个项目一段（标题是项目名），段里第一项是「全部分组」（看整个项目），新建分组建在这个项目里。
   管理员只管一个组，没有这一栏。
@@ -30,6 +31,7 @@ export function GroupSide({ project, projects, groups, selected, onSelect, onHom
   const item = (g: KwGroup) => (
     <MenuItem
       key={g.id}
+      thumb={<AssetThumb size={24} type="icon" icon="Group" />}
       selected={selected === g.id || undefined}
       onClick={() => onSelect(g.id)}
       more={
@@ -57,7 +59,7 @@ export function GroupSide({ project, projects, groups, selected, onSelect, onHom
       items={
         <>
           {withAll && (
-            <MenuItem selected={selected === `p:${p.id}` || undefined} onClick={() => onSelect(`p:${p.id}`)}>
+            <MenuItem thumb={<AssetThumb size={24} type="icon" icon="Pack" />} selected={selected === `p:${p.id}` || undefined} onClick={() => onSelect(`p:${p.id}`)}>
               全部分组
             </MenuItem>
           )}
@@ -79,7 +81,7 @@ export function GroupSide({ project, projects, groups, selected, onSelect, onHom
             </button>
           </div>
           <Menu variant="plain" aria-label="用量管理导航">
-            <MenuItem selected={selected === '' || undefined} onClick={() => onSelect('')}>
+            <MenuItem icon="Home" selected={selected === '' || undefined} onClick={() => onSelect('')}>
               {project ? '全部分组' : '全平台'}
             </MenuItem>
             {project ? (
