@@ -204,11 +204,19 @@
 }
 
 /* ---------- 趋势图 ---------- */
+/* 趋势图铺满卡片剩下的高度：旁边模型占比卡更高时，这张卡被拉高，柱子跟着变高，不在下面空着（11-27 用户说） */
+.app-kw-trend {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
 .app-kw-trend__bars {
   display: flex;
+  flex: 1;
   align-items: stretch;
   gap: var(--spacing-4);
-  height: 160px;
+  min-height: 160px;
 }
 
 .app-kw-trend__tip {
@@ -403,6 +411,8 @@
 }
 
 .app-kw-card {
+  display: flex;
+  flex-direction: column;
   padding: var(--spacing-16);
   border-radius: var(--border-radius-12);
   background: var(--color-bg-fill-container-light-2);
