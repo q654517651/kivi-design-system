@@ -68,3 +68,36 @@ export function modelShare(list: KwRecord[]) {
   const total = [...map.values()].reduce((a, b) => a + b, 0);
   return { total, rows: [...map.entries()].map(([model, value]) => ({ model, value, share: total ? value / total : NaN })).sort((a, b) => b.value - a.value) };
 }
+
+/** 每周消耗多少：按周一分段，第一段从 from 开始 */
+export function weeklySpend(list: KwRecord[], from: number, to: number) {
+  const weeks: { start: number; value: number }[] = [];
+  for (let w = weekStart(from); w < to; w += WEEK) weeks.push({ start: Math.max(w, from), value: 0 });
+  for (const r of list) {
+    if (r.amount >= 0 || !r.model) continue;
+    const slot = [...weeks].reverse().find((w) => r.at >= w.start);
+    if (slot) slot.value += -r.amount;
+  }
+  return weeks;
+}
+
+// ---------- 统计周期（用量统计页签） ----------
+
+export type PeriodKey = 'week' | 'last-week' | '4w' | '3m' | 'custom';
+export const PERIOD_OPTIONS: { value: PeriodKey; label: string }[] = [
+  { value: 'week', label: '本周' },
+  { value: 'last-week', label: '上周' },
+  { value: '4w', label: '近 4 周' },
+  { value: '3m', label: '近 3 个月' },
+  { value: 'custom', label: '自定义' },
+];
+
+/** 周期的起止 [from, to)，自定义传日期 */
+export function periodRange(key: PeriodKey, custom?: { start: Date | null; end: Date | null }, now = Date.now()): [number, number] {
+  const ws = weekStart(now);
+  if (key === 'last-week') return [ws - WEEK, ws];
+  if (key === '4w') return [ws - 3 * WEEK, now + 1];
+  if (key === '3m') return [dayStart(now) - 89 * DAY, now + 1];
+  if (key === 'custom' && custom?.start && custom.end) return [dayStart(custom.start.getTime()), dayStart(custom.end.getTime()) + DAY];
+  return [ws, now + 1];
+}

@@ -14,15 +14,17 @@ import { AddMemberDialog, MoveMemberDialog, RoleDialog } from './MemberDialogs';
 import { MembersTab, type ListState } from './MembersTab';
 import { QuotaDialog, type QuotaMode } from './QuotaDialog';
 import { LogsTab } from './RecordsTabs';
+import { StatsTab, type PeriodState } from './StatsTab';
+import { periodRange } from '../../parts/kiwi/records';
 
 /*
   用量管理后台（11-27 原型）：账号菜单「用量管理」在新标签页打开（#/app/admin），单独一套页面，不套主站侧栏（11-27 用户定）。
   - 左边侧栏和主站侧栏同一套（GroupSide）：Logo（回 KIVI）、全部分组、「分组」一段（新建、组的「⋯」）；选哪个组右边就看哪个组
-  - 右边：范围名、概览，选项卡 成员与额度 / 操作日志（申请在飞书审批里，状态同步不过来，不放申请单，11-27 用户定）；右上角色和头像；点成员进详情，侧栏不动
+  - 右边：范围名、概览，选项卡 成员与额度 / 用量统计 / 操作日志（申请在飞书审批里，状态同步不过来，不放申请单，11-27 用户定）；右上角色和头像；点成员进详情，侧栏不动
   范围：管理员 = 本组（没有侧栏）；项目管理员 = 本项目；超管 = 侧栏顶上切项目（全平台 / 某个项目），切到项目后和项目管理员一样。
 */
 
-type Tab = 'members' | 'logs';
+type Tab = 'members' | 'stats' | 'logs';
 const ME_AVATAR = placeholderImageSrc('ip-peek', '1:1');
 
 export function UsageAdmin() {
@@ -53,13 +55,18 @@ function Admin() {
   const [list, setListState] = useState<ListState>({ q: '', page: 1, selected: [] });
   const setList = (patch: Partial<ListState>) => setListState((l) => ({ ...l, ...patch }));
   const [detail, setDetail] = useState<string>();
+  // 从用量统计点进成员详情：详情停在同一段时间
+  const [detailPeriod, setDetailPeriod] = useState<[number, number]>();
+  // 用量统计的周期：放在这一层，切页签、从详情返回都还在
+  const [period, setPeriod] = useState<PeriodState>({ key: 'week', custom: { start: null, end: null } });
+  const range = useMemo(() => periodRange(period.key, period.custom), [period]);
   const [quota, setQuota] = useState<{ mode: QuotaMode; ids: string[] } | null>(null);
   const [adding, setAdding] = useState(false);
   const [moving, setMoving] = useState<string[]>([]);
   const [creating, setCreating] = useState<string>();
   const [roleOf, setRoleOf] = useState<string>();
   const [renaming, setRenaming] = useState<KwGroup>();
-  const load = useLoad([role, scope.projectId, scope.groupId, tab]);
+  const load = useLoad([role, scope.projectId, scope.groupId, tab, range[0], range[1]]);
 
   // 换范围：回到列表第一页、清掉勾选、退出详情
   const choose = (groupId: string) => {
@@ -161,7 +168,15 @@ function Admin() {
           <ScrollArea className="app-kw-admin__content">
             <div className="app-kw-admin__body">
               {detail ? (
-                <MemberDetail memberId={detail} onBack={() => setDetail(undefined)} onQuota={(mode, ids) => setQuota({ mode, ids })} />
+                <MemberDetail
+                  memberId={detail}
+                  period={detailPeriod}
+                  onBack={() => {
+                    setDetail(undefined);
+                    setDetailPeriod(undefined);
+                  }}
+                  onQuota={(mode, ids) => setQuota({ mode, ids })}
+                />
               ) : (
                 <>
                   <div className="app-kw-page__head">
@@ -169,20 +184,22 @@ function Admin() {
                     {group0 && <span className="app-kw-page__scope">管理员：{group0.adminIds.map((id) => state.members.find((m) => m.id === id)?.name).filter(Boolean).join('、') || '未设置'}</span>}
                     {account}
                   </div>
-                  <Stats
-                    items={[
-                      { label: '人数', value: members.length },
-                      { label: '本周总消耗', value: overview.used.toLocaleString() },
-                      { label: '本周预估花费', value: money(overview.cost) },
-                      { label: '周额度合计', value: overview.limit.toLocaleString() },
-                      { label: '临时额度剩余', value: overview.temp.toLocaleString() },
-                    ]}
-                  />
                   <Tabs className="app-kw-page__tabs" value={tab} onChange={(v) => setTab(v as Tab)}>
                     <TabItem value="members">成员与额度</TabItem>
+                    <TabItem value="stats">用量统计</TabItem>
                     <TabItem value="logs">操作日志</TabItem>
                   </Tabs>
                   {tab === 'members' && (
+                    <>
+                      <Stats
+                        items={[
+                          { label: '人数', value: members.length },
+                          { label: '本周总消耗', value: overview.used.toLocaleString() },
+                          { label: '本周预估花费', value: money(overview.cost) },
+                          { label: '周额度合计', value: overview.limit.toLocaleString() },
+                          { label: '临时额度剩余', value: overview.temp.toLocaleString() },
+                        ]}
+                      />
                     <MembersTab
                       scope={scope}
                       members={members}
@@ -197,6 +214,29 @@ function Admin() {
                       onAdd={() => setAdding(true)}
                       onMove={setMoving}
                       onRole={setRoleOf}
+                    />
+                    </>
+                  )}
+                  {tab === 'stats' && (
+                    <StatsTab
+                      scope={scope}
+                      members={members}
+                      groups={groups}
+                      projects={state.projects}
+                      period={period}
+                      onPeriodChange={setPeriod}
+                      range={range}
+                      status={load.status}
+                      onRetry={load.retry}
+                      onPickGroup={(id) => (canGroups ? choose(id) : undefined)}
+                      onPickProject={(id) => {
+                        setProject(id);
+                        choose('');
+                      }}
+                      onOpenMember={(id) => {
+                        setDetailPeriod(range);
+                        setDetail(id);
+                      }}
                     />
                   )}
                   {tab === 'logs' && <LogsTab logs={logs} status={load.status} onRetry={load.retry} />}

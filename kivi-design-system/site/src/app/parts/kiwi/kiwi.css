@@ -596,3 +596,18 @@
   flex: 1;
   min-width: 0;
 }
+
+/* 用量统计：统计格下面的两张图 */
+.app-kw-stats-charts {
+  margin-top: var(--spacing-16);
+}
+
+.app-kw-stats-charts + .app-kw-section {
+  margin-top: var(--spacing-32);
+}
+
+/* 统计格下面接工具条（成员与额度）：空 16 */
+.app-kw-stats + .app-kw-toolbar,
+.app-kw-stats + .app-kw-batch {
+  margin-top: var(--spacing-16);
+}
